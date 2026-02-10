@@ -51,74 +51,41 @@
         align-items: center;
         justify-content: center;
     }
-    /* Banner hero text */
-    .banner--compact .banner-hero-text {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        height: 100%;
-    }
-    .banner--compact .banner-hero-text__count {
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        padding: 10px 24px;
-        background: rgba(69,248,130,0.06);
-        border: 1px solid rgba(69,248,130,0.15);
-        border-radius: 30px;
-        margin-bottom: 20px;
-    }
-    .banner--compact .banner-hero-text__count i {
-        color: #45f882;
-        font-size: 14px;
-    }
-    .banner--compact .banner-hero-text__count span {
-        font-size: 14px;
-        font-weight: 700;
-        color: #45f882;
-        letter-spacing: 0.5px;
-    }
-    .banner--compact .banner-hero-text__big {
-        font-size: 72px;
-        font-weight: 900;
-        text-transform: uppercase;
-        letter-spacing: 6px;
+    /* Banner hero - full width centered text */
+    .banner--compact .banner__content .title {
+        font-size: 62px;
+        margin-bottom: 16px;
         line-height: 1;
-        margin-bottom: 8px;
-        background: linear-gradient(135deg, #fff 0%, #45f882 50%, rgba(69,248,130,0.6) 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        filter: drop-shadow(0 0 30px rgba(69,248,130,0.15));
     }
-    .banner--compact .banner-hero-text__sub {
-        font-size: 15px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 6px;
-        color: rgba(255,255,255,0.3);
+    .banner--compact .banner__content .sub-title {
+        font-size: 20px;
+        max-width: 500px;
+        line-height: 1.4;
+        letter-spacing: normal;
+        padding: 0;
+        color: rgba(255,255,255,0.7);
+        font-weight: 400;
+        margin-bottom: 28px;
+    }
+    .banner--compact .banner__content .sub-title::before {
+        display: none;
+    }
+    .banner--compact .banner__content .banner__btn {
+        margin: 0;
+    }
+    .banner--compact .banner__content .title .text-stroke {
+        display: none;
     }
     @media (max-width: 1199.98px) {
         .banner__area-four.banner--compact { padding: 80px 0 60px; }
-        .banner--compact .slider__img5 { margin-bottom: 10px; }
         .banner--compact .banner__content.slider__content { text-align: center; }
         .banner--compact .banner__content .sub-title { margin-left: auto; margin-right: auto; }
         .banner--compact .banner__content .banner__btn { justify-content: center; }
-        .banner--compact .banner-hero-text__big { font-size: 56px; letter-spacing: 4px; }
     }
     @media (max-width: 767.98px) {
         .banner__area-four.banner--compact { padding: 60px 0 50px; }
         .banner--compact .banner__content .title { font-size: 40px; }
         .banner--compact .banner__content .sub-title { font-size: 16px; }
-        .banner--compact .banner-hero-text__big { font-size: 36px; letter-spacing: 3px; }
-        .banner--compact .banner-hero-text__sub { font-size: 11px; letter-spacing: 3px; }
-        .banner--compact .banner-hero-text__count { padding: 8px 18px; }
-        .banner--compact .banner-hero-text__count span { font-size: 12px; }
-    }
-    @media (max-width: 480px) {
-        .banner--compact .banner-hero-text__big { font-size: 28px; letter-spacing: 2px; }
     }
 
     /* ===== AREA BACKGROUND WRAPPER ===== */
@@ -1145,24 +1112,12 @@
             {% endif %}
         </div>
         <div class="container custom-container4">
-            <div class="row gy-4 align-items-center flex-row-reverse">
-                <div class="col-xl-5">
-                    <div class="slider__img5">
-                        <div class="banner-hero-text wow fadeInRight" data-wow-delay=".2s">
-                            <div class="banner-hero-text__count">
-                                <i class="fas fa-server"></i>
-                                <span>Game Server Ranking</span>
-                            </div>
-                            <div class="banner-hero-text__big">NEX<br>ARENA</div>
-                            <div class="banner-hero-text__sub">Classement de serveurs</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-xl-7">
-                    <div class="banner__content slider__content">
+            <div class="row justify-content-center">
+                <div class="col-xl-8 col-lg-10">
+                    <div class="banner__content slider__content text-center">
                         <h2 class="title wow fadeInUp" data-wow-delay=".1s">{{ setting('banner_title', 'Nexarena') }}</h2>
-                        <h3 class="sub-title wow fadeInUp" data-wow-delay=".2s">{{ setting('banner_subtitle', 'Trouvez et votez pour les meilleurs serveurs de jeux') }}</h3>
-                        <div class="banner__btn d-flex wow fadeInUp" data-wow-delay=".4s">
+                        <h3 class="sub-title wow fadeInUp" data-wow-delay=".2s" style="margin-left:auto;margin-right:auto;">{{ setting('banner_subtitle', 'Trouvez et votez pour les meilleurs serveurs de jeux') }}</h3>
+                        <div class="banner__btn d-flex justify-content-center wow fadeInUp" data-wow-delay=".4s">
                             <a href="{{ setting('banner_cta_url', '#categories') }}" class="tg-btn-5">
                                 <span>{{ setting('banner_cta_text', 'Voir les jeux') }}</span>
                             </a>
