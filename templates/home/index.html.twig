@@ -51,41 +51,74 @@
         align-items: center;
         justify-content: center;
     }
-    .banner--compact .banner-logo-wrap {
-        position: relative;
-        width: 340px;
-        max-width: 100%;
+    /* Banner hero text */
+    .banner--compact .banner-hero-text {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        height: 100%;
     }
-    .banner--compact .banner-logo-wrap::before {
-        content: "";
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 260px;
-        height: 260px;
-        background: radial-gradient(circle, rgba(69,248,130,0.08) 0%, transparent 70%);
-        border-radius: 50%;
-        pointer-events: none;
+    .banner--compact .banner-hero-text__count {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 24px;
+        background: rgba(69,248,130,0.06);
+        border: 1px solid rgba(69,248,130,0.15);
+        border-radius: 30px;
+        margin-bottom: 20px;
     }
-    .banner--compact .banner-logo-wrap img {
-        width: 100%;
-        height: auto;
+    .banner--compact .banner-hero-text__count i {
+        color: #45f882;
+        font-size: 14px;
+    }
+    .banner--compact .banner-hero-text__count span {
+        font-size: 14px;
+        font-weight: 700;
+        color: #45f882;
+        letter-spacing: 0.5px;
+    }
+    .banner--compact .banner-hero-text__big {
+        font-size: 72px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 6px;
+        line-height: 1;
+        margin-bottom: 8px;
+        background: linear-gradient(135deg, #fff 0%, #45f882 50%, rgba(69,248,130,0.6) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
         filter: drop-shadow(0 0 30px rgba(69,248,130,0.15));
+    }
+    .banner--compact .banner-hero-text__sub {
+        font-size: 15px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 6px;
+        color: rgba(255,255,255,0.3);
     }
     @media (max-width: 1199.98px) {
         .banner__area-four.banner--compact { padding: 80px 0 60px; }
         .banner--compact .slider__img5 { margin-bottom: 10px; }
-        .banner--compact .banner-logo-wrap { width: 260px; margin: 0 auto; }
         .banner--compact .banner__content.slider__content { text-align: center; }
         .banner--compact .banner__content .sub-title { margin-left: auto; margin-right: auto; }
         .banner--compact .banner__content .banner__btn { justify-content: center; }
+        .banner--compact .banner-hero-text__big { font-size: 56px; letter-spacing: 4px; }
     }
     @media (max-width: 767.98px) {
         .banner__area-four.banner--compact { padding: 60px 0 50px; }
         .banner--compact .banner__content .title { font-size: 40px; }
         .banner--compact .banner__content .sub-title { font-size: 16px; }
-        .banner--compact .banner-logo-wrap { width: 200px; }
+        .banner--compact .banner-hero-text__big { font-size: 36px; letter-spacing: 3px; }
+        .banner--compact .banner-hero-text__sub { font-size: 11px; letter-spacing: 3px; }
+        .banner--compact .banner-hero-text__count { padding: 8px 18px; }
+        .banner--compact .banner-hero-text__count span { font-size: 12px; }
+    }
+    @media (max-width: 480px) {
+        .banner--compact .banner-hero-text__big { font-size: 28px; letter-spacing: 2px; }
     }
 
     /* ===== AREA BACKGROUND WRAPPER ===== */
@@ -1115,8 +1148,13 @@
             <div class="row gy-4 align-items-center flex-row-reverse">
                 <div class="col-xl-5">
                     <div class="slider__img5">
-                        <div class="banner-logo-wrap" data-magnetic="">
-                            <img src="{{ asset('assets/img/logo/new_logo.png') }}" alt="Nexarena">
+                        <div class="banner-hero-text wow fadeInRight" data-wow-delay=".2s">
+                            <div class="banner-hero-text__count">
+                                <i class="fas fa-server"></i>
+                                <span>Game Server Ranking</span>
+                            </div>
+                            <div class="banner-hero-text__big">NEX<br>ARENA</div>
+                            <div class="banner-hero-text__sub">Classement de serveurs</div>
                         </div>
                     </div>
                 </div>

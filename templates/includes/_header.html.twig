@@ -13,7 +13,7 @@
                         <nav class="tgmenu__nav">
 
                             {# ── Logo ── #}
-                            <div class="logo">
+                            <div class="logo nx-logo">
                                 <a href="{{ path('app_home') }}">
                                     <img src="{{ asset('assets/img/logo/new_logoh.png') }}" alt="{{ setting('site_name', 'Nexarena') }}">
                                 </a>
@@ -155,7 +155,7 @@
     <div class="tgmobile__menu">
         <nav class="tgmobile__menu-box">
             <div class="close-btn"><i class="flaticon-swords-in-cross-arrangement"></i></div>
-            <div class="nav-logo">
+            <div class="nav-logo nx-logo nx-logo--mobile">
                 <a href="{{ path('app_home') }}">
                     <img src="{{ asset('assets/img/logo/new_logoh.png') }}" alt="{{ setting('site_name', 'Nexarena') }}">
                 </a>
@@ -257,7 +257,7 @@
     <div class="offCanvas__wrap">
         <div class="offCanvas__body">
             <div class="offCanvas__top">
-                <div class="offCanvas__logo logo">
+                <div class="offCanvas__logo logo nx-logo nx-logo--offcanvas">
                     <a href="{{ path('app_home') }}">
                         <img src="{{ asset('assets/img/logo/new_logoh.png') }}" alt="{{ setting('site_name', 'Nexarena') }}">
                     </a>
@@ -603,6 +603,35 @@
 .nx-mobile-user__logout:hover {
     color: #dc3545 !important;
     background: rgba(220,53,69,0.05) !important;
+}
+
+/* ─── Navbar Logo Enhancement ─── */
+.nx-logo a {
+    display: flex;
+    align-items: center;
+}
+.nx-logo img {
+    height: 52px !important;
+    width: auto !important;
+    max-width: none !important;
+    filter: drop-shadow(0 0 12px rgba(69,248,130,0.25)) drop-shadow(0 0 30px rgba(69,248,130,0.08));
+    transition: filter 0.4s ease, transform 0.4s ease;
+}
+.nx-logo a:hover img {
+    filter: drop-shadow(0 0 16px rgba(69,248,130,0.4)) drop-shadow(0 0 40px rgba(69,248,130,0.15));
+    transform: scale(1.03);
+}
+.nx-logo--mobile img {
+    height: 44px !important;
+}
+.nx-logo--offcanvas img {
+    height: 46px !important;
+}
+@media (max-width: 1199.98px) {
+    .nx-logo img { height: 44px !important; }
+}
+@media (max-width: 575.98px) {
+    .nx-logo img { height: 38px !important; }
 }
 
 /* ─── Off-Canvas Tweaks ─── */
