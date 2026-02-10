@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Nexarena Admin{% endblock %}</title>
+    <link rel="icon" type="image/svg+xml" href="{{ asset('assets/img/logo/favicon.svg') }}">
     <link rel="icon" type="image/png" href="{{ asset('assets/img/logo/favicon.png') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/fontawesome-all.min.css') }}">
@@ -16,7 +17,7 @@
     <aside class="admin-sidebar" id="adminSidebar">
         <div class="admin-sidebar__logo">
             <a href="{{ path('app_home') }}">
-                <img src="{{ asset('assets/img/logo/new_logoh.png') }}" alt="{{ setting('site_name', 'Nexarena') }}">
+                <img src="{{ asset('assets/img/logo/logo-h.svg') }}" alt="{{ setting('site_name', 'Nexarena') }}">
             </a>
             <span>Administration</span>
         </div>

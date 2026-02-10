@@ -37,13 +37,13 @@
     transform: scale(1.04);
 }
 .nx-footer__logo-img {
-    height: 120px;
+    height: 160px;
     width: auto;
-    filter: drop-shadow(0 0 20px rgba(69,248,130,0.2)) drop-shadow(0 0 50px rgba(69,248,130,0.08));
+    filter: drop-shadow(0 0 22px rgba(69,248,130,0.25)) drop-shadow(0 0 55px rgba(69,248,130,0.1));
     transition: filter 0.4s ease;
 }
 .nx-footer__logo-link:hover .nx-footer__logo-img {
-    filter: drop-shadow(0 0 24px rgba(69,248,130,0.35)) drop-shadow(0 0 60px rgba(69,248,130,0.12));
+    filter: drop-shadow(0 0 28px rgba(69,248,130,0.4)) drop-shadow(0 0 70px rgba(69,248,130,0.15));
 }
 .nx-footer__tagline {
     font-size: 14px;

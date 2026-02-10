@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 120" fill="none">
+  <defs>
+    <!-- Green glow filter -->
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feFlood flood-color="#45f882" flood-opacity="0.35" result="color"/>
+      <feComposite in="color" in2="blur" operator="in" result="glowColor"/>
+      <feMerge>
+        <feMergeNode in="glowColor"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="glowStrong" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feFlood flood-color="#45f882" flood-opacity="0.5" result="color"/>
+      <feComposite in="color" in2="blur" operator="in" result="glowColor"/>
+      <feMerge>
+        <feMergeNode in="glowColor"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <!-- Shield gradient -->
+    <linearGradient id="shieldFill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0d2818"/>
+      <stop offset="50%" stop-color="#091a10"/>
+      <stop offset="100%" stop-color="#061208"/>
+    </linearGradient>
+    <linearGradient id="shieldBorder" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#45f882"/>
+      <stop offset="50%" stop-color="#2ecc71"/>
+      <stop offset="100%" stop-color="#45f882"/>
+    </linearGradient>
+    <!-- Play button gradient -->
+    <linearGradient id="playGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#5dfc96"/>
+      <stop offset="100%" stop-color="#38d970"/>
+    </linearGradient>
+    <!-- Text gradient -->
+    <linearGradient id="textGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#5dfc96"/>
+      <stop offset="40%" stop-color="#45f882"/>
+      <stop offset="100%" stop-color="#2ecc71"/>
+    </linearGradient>
+    <!-- Circuit pattern -->
+    <pattern id="circuit" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse" patternTransform="rotate(15)">
+      <path d="M0 10h8M12 10h8M10 0v8M10 12v8" stroke="#45f882" stroke-width="0.3" opacity="0.15"/>
+      <circle cx="10" cy="10" r="1" fill="#45f882" opacity="0.12"/>
+    </pattern>
+  </defs>
+
+  <!-- Shield group (centered vertically, left side) -->
+  <g transform="translate(60, 60)" filter="url(#glow)">
+    <!-- Bar chart towers on top -->
+    <rect x="-6" y="-52" width="5" height="12" rx="1.5" fill="#45f882" opacity="0.7"/>
+    <rect x="-14" y="-46" width="5" height="6" rx="1.5" fill="#45f882" opacity="0.5"/>
+    <rect x="2" y="-48" width="5" height="8" rx="1.5" fill="#45f882" opacity="0.6"/>
+
+    <!-- Shield shape -->
+    <path d="M0-38 L32-24 L32 8 Q32 28 0 42 Q-32 28 -32 8 L-32-24 Z" fill="url(#shieldFill)" stroke="url(#shieldBorder)" stroke-width="2"/>
+    <!-- Circuit overlay on shield -->
+    <path d="M0-38 L32-24 L32 8 Q32 28 0 42 Q-32 28 -32 8 L-32-24 Z" fill="url(#circuit)"/>
+    <!-- Inner shield border -->
+    <path d="M0-30 L25-19 L25 5 Q25 22 0 33 Q-25 22 -25 5 L-25-19 Z" fill="none" stroke="#45f882" stroke-width="0.7" opacity="0.3"/>
+
+    <!-- Play triangle -->
+    <path d="M-10-14 L18 0 L-10 14 Z" fill="url(#playGrad)" filter="url(#glowStrong)"/>
+
+    <!-- Circuit decorative lines extending from shield -->
+    <g opacity="0.25" stroke="#45f882" stroke-width="0.8">
+      <path d="M32-5 h12 l4 4 h8"/>
+      <path d="M32 2 h18"/>
+      <path d="M-32-5 h-12 l-4 4 h-8"/>
+      <path d="M-32 2 h-18"/>
+      <circle cx="56" cy="-1" r="1.5" fill="#45f882"/>
+      <circle cx="-56" cy="-1" r="1.5" fill="#45f882"/>
+    </g>
+  </g>
+
+  <!-- Text "NEX ARENA" -->
+  <g transform="translate(130, 52)">
+    <text font-family="'Segoe UI', 'Arial Black', Impact, sans-serif" font-weight="900" font-size="48" letter-spacing="5" fill="url(#textGrad)" filter="url(#glow)">NEX ARENA</text>
+  </g>
+
+  <!-- Subtitle "GAME SERVER RANKING" -->
+  <g transform="translate(135, 78)">
+    <text font-family="'Segoe UI', Arial, sans-serif" font-weight="700" font-size="14" letter-spacing="6" fill="#45f882" opacity="0.55">GAME SERVER RANKING</text>
+  </g>
+
+  <!-- Decorative line under text -->
+  <line x1="132" y1="85" x2="460" y2="85" stroke="#45f882" stroke-width="0.5" opacity="0.2"/>
+  <line x1="132" y1="87" x2="380" y2="87" stroke="#45f882" stroke-width="0.3" opacity="0.12"/>
+</svg>

@@ -295,34 +295,34 @@
     align-items: center;
 }
 .nx-logo img {
-    height: 80px;
+    height: 70px;
     width: auto;
-    filter: drop-shadow(0 0 16px rgba(69,248,130,0.35)) drop-shadow(0 0 45px rgba(69,248,130,0.12));
+    filter: drop-shadow(0 0 18px rgba(69,248,130,0.4)) drop-shadow(0 0 50px rgba(69,248,130,0.15));
     transition: filter 0.4s ease, transform 0.4s ease;
 }
 .nx-logo a:hover img {
-    filter: drop-shadow(0 0 22px rgba(69,248,130,0.5)) drop-shadow(0 0 55px rgba(69,248,130,0.18));
-    transform: scale(1.05);
+    filter: drop-shadow(0 0 24px rgba(69,248,130,0.55)) drop-shadow(0 0 60px rgba(69,248,130,0.2));
+    transform: scale(1.04);
 }
 
 /* Mobile / Off-canvas logos */
 .nx-logo--mobile img {
-    height: 55px !important;
+    height: 50px !important;
     width: auto !important;
-    filter: drop-shadow(0 0 12px rgba(69,248,130,0.25));
+    filter: drop-shadow(0 0 14px rgba(69,248,130,0.3));
 }
 .nx-logo--offcanvas img {
-    height: 55px !important;
+    height: 50px !important;
     width: auto !important;
-    filter: drop-shadow(0 0 12px rgba(69,248,130,0.25));
+    filter: drop-shadow(0 0 14px rgba(69,248,130,0.3));
 }
 
 @media (max-width: 1199.98px) {
-    .nx-logo img { height: 65px; }
+    .nx-logo img { height: 58px; }
 }
 @media (max-width: 575.98px) {
-    .nx-logo img { height: 55px; }
-    .nx-logo--mobile img { height: 45px !important; }
+    .nx-logo img { height: 48px; }
+    .nx-logo--mobile img { height: 42px !important; }
 }
 
 /* ─── Off-Canvas Tweaks ─── */
