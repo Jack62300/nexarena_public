@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Top Votants - {{ server.name }} - Nexarena</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: transparent;
+            margin: 0;
+            padding: 0;
+        }
+        .widget-card {
+            background: {{ params.bg }};
+            {% if params.bg != 'transparent' %}
+            border: 1px solid rgba({{ params.borderRgb }}, 0.5);
+            {% endif %}
+            border-radius: {{ params.radius }}px;
+            padding: 20px;
+            max-width: 350px;
+            margin: 0 auto;
+            overflow: hidden;
+        }
+        .widget-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid rgba({{ params.borderRgb }}, 0.3);
+        }
+        .widget-logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+        .widget-logo-fallback {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: rgba({{ params.accentRgb }}, 0.12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .widget-logo-fallback i {
+            font-size: 17px;
+            color: {{ params.accent }};
+        }
+        .widget-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: {{ params.text }};
+            line-height: 1.3;
+        }
+        .widget-subtitle {
+            font-size: 11px;
+            color: {{ params.accent }};
+            font-weight: 600;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .voters-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .voters-table th {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: {{ params.textSec }};
+            font-weight: 600;
+            padding: 8px 6px;
+            text-align: left;
+            border-bottom: 1px solid rgba({{ params.borderRgb }}, 0.3);
+        }
+        .voters-table th:last-child { text-align: right; }
+        .voters-table td {
+            padding: 9px 6px;
+            font-size: 13px;
+            color: {{ params.text }};
+            border-bottom: 1px solid rgba({{ params.borderRgb }}, 0.12);
+        }
+        .voters-table tbody tr:nth-child(even) td {
+            background: rgba({{ params.accentRgb }}, 0.03);
+        }
+        .voters-table tr:last-child td { border-bottom: none; }
+        .voters-table td:last-child {
+            text-align: right;
+            font-weight: 700;
+            color: {{ params.accent }};
+        }
+        .rank { font-weight: 700; width: 32px; }
+        .rank-medal {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            font-size: 12px;
+        }
+        .rank-1 .rank-medal { background: rgba(255,215,0,0.15); color: #FFD700; }
+        .rank-2 .rank-medal { background: rgba(192,192,192,0.15); color: #C0C0C0; }
+        .rank-3 .rank-medal { background: rgba(205,127,50,0.15); color: #CD7F32; }
+        .rank-default { color: {{ params.textSec }}; }
+        .player-name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 180px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .empty-msg {
+            text-align: center;
+            padding: 30px 10px;
+            color: {{ params.textSec }};
+            font-size: 13px;
+        }
+        .empty-msg i {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 22px;
+            opacity: 0.5;
+        }
+        .widget-footer {
+            text-align: center;
+            margin-top: 14px;
+            padding-top: 12px;
+            border-top: 1px solid rgba({{ params.borderRgb }}, 0.3);
+        }
+        .widget-footer a {
+            font-size: 11px;
+            font-weight: 600;
+            color: {{ params.accent }};
+            text-decoration: none;
+            opacity: 0.85;
+            transition: all 0.2s;
+            letter-spacing: 0.2px;
+        }
+        .widget-footer a:hover { opacity: 1; }
+        .widget-footer i { margin-right: 4px; font-size: 10px; }
+    </style>
+</head>
+<body>
+    <div class="widget-card">
+        <div class="widget-header">
+            {# Logo priority: gameCategory.image > category.image > category.icon > fallback #}
+            {% if server.gameCategory and server.gameCategory.image %}
+                <img src="{{ app.request.schemeAndHttpHost }}/uploads/categories/{{ server.gameCategory.image }}" alt="{{ server.gameCategory.name }}" class="widget-logo">
+            {% elseif server.category.image %}
+                <img src="{{ app.request.schemeAndHttpHost }}/uploads/categories/{{ server.category.image }}" alt="{{ server.category.name }}" class="widget-logo">
+            {% else %}
+                <div class="widget-logo-fallback">
+                    <i class="{{ server.category.icon ?: 'fas fa-gamepad' }}"></i>
+                </div>
+            {% endif %}
+            <div style="min-width:0;flex:1;">
+                <div class="widget-title"><i class="fas fa-trophy" style="color:{{ params.accent }};margin-right:6px;font-size:13px;"></i>Top Votants</div>
+                <div class="widget-subtitle">{{ server.name }}</div>
+            </div>
+        </div>
+
+        {% if voters|length > 0 %}
+            <table class="voters-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Joueur</th>
+                        <th>Votes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for voter in voters %}
+                        <tr>
+                            <td class="rank {{ loop.index <= 3 ? 'rank-' ~ loop.index : 'rank-default' }}">
+                                {% if loop.index == 1 %}
+                                    <span class="rank-medal"><i class="fas fa-crown"></i></span>
+                                {% elseif loop.index == 2 %}
+                                    <span class="rank-medal"><i class="fas fa-medal"></i></span>
+                                {% elseif loop.index == 3 %}
+                                    <span class="rank-medal"><i class="fas fa-award"></i></span>
+                                {% else %}
+                                    {{ loop.index }}
+                                {% endif %}
+                            </td>
+                            <td><span class="player-name">{{ voter.username }}</span></td>
+                            <td>{{ voter.votes }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="empty-msg">
+                <i class="fas fa-vote-yea"></i>
+                Aucun vote pour le moment.
+            </div>
+        {% endif %}
+
+        {% if not params.hideFooter %}
+            <div class="widget-footer">
+                <a href="{{ url('app_home') }}" target="_blank" rel="noopener"><i class="fas fa-bolt"></i> Propulse par Nexarena</a>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>

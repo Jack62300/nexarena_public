@@ -1,0 +1,194 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}{{ listing.title }} - Recrutement Admin{% endblock %}
+{% block page_title %}Detail de l'annonce{% endblock %}
+
+{% block admin_body %}
+
+<a href="{{ path('admin_recruitment_list') }}" style="display:inline-flex;align-items:center;gap:6px;color:var(--text-secondary);margin-bottom:20px;font-size:13px;">
+    <i class="fas fa-arrow-left"></i> Retour a la liste
+</a>
+
+<div style="display:flex;gap:25px;flex-wrap:wrap;">
+    {# ===== LEFT: LISTING DETAIL ===== #}
+    <div style="flex:1;min-width:0;overflow:hidden;">
+        <div style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:10px;padding:25px;margin-bottom:20px;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+                <div>
+                    <h2 style="font-size:22px;font-weight:700;margin:0 0 8px;">{{ listing.title }}</h2>
+                    <div style="display:flex;align-items:center;gap:12px;color:var(--text-secondary);font-size:13px;">
+                        <span><i class="fas fa-server"></i> {{ listing.server.name }}</span>
+                        <span><i class="fas fa-user"></i> {{ listing.author.username }}</span>
+                        <span><i class="fas fa-calendar"></i> {{ listing.createdAt|date('d/m/Y H:i') }}</span>
+                    </div>
+                </div>
+                <div>
+                    {% if listing.status == 'draft' %}
+                        <span class="role-badge" style="background:#5a5c6922;color:#8b949e;border:1px solid #5a5c6944;font-size:13px;padding:6px 14px;">Brouillon</span>
+                    {% elseif listing.status == 'pending' %}
+                        <span class="role-badge" style="background:#f6c23e22;color:#f6c23e;border:1px solid #f6c23e44;font-size:13px;padding:6px 14px;">En attente</span>
+                    {% elseif listing.status == 'approved' %}
+                        <span class="role-badge" style="background:#1cc88a22;color:#1cc88a;border:1px solid #1cc88a44;font-size:13px;padding:6px 14px;">Approuvee</span>
+                    {% elseif listing.status == 'revision_requested' %}
+                        <span class="role-badge" style="background:#36b9cc22;color:#36b9cc;border:1px solid #36b9cc44;font-size:13px;padding:6px 14px;">Revision demandee</span>
+                    {% elseif listing.status == 'rejected' %}
+                        <span class="role-badge" style="background:#e74a3b22;color:#e74a3b;border:1px solid #e74a3b44;font-size:13px;padding:6px 14px;">Rejetee</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            {# Images #}
+            {% if listing.image1 or listing.image2 %}
+                <div style="display:flex;gap:15px;margin-bottom:20px;flex-wrap:wrap;">
+                    {% if listing.image1 %}
+                        <img src="{{ asset('uploads/recruitment/' ~ listing.image1) }}" style="max-width:300px;max-height:200px;border-radius:8px;object-fit:cover;border:1px solid var(--border-color);">
+                    {% endif %}
+                    {% if listing.image2 %}
+                        <img src="{{ asset('uploads/recruitment/' ~ listing.image2) }}" style="max-width:300px;max-height:200px;border-radius:8px;object-fit:cover;border:1px solid var(--border-color);">
+                    {% endif %}
+                </div>
+            {% endif %}
+
+            {# Description #}
+            <div class="recruit-desc" style="color:var(--text-primary);line-height:1.7;font-size:14px;overflow:hidden;word-break:break-word;overflow-wrap:break-word;">
+                {{ listing.description|raw }}
+            </div>
+            <style>
+                .recruit-desc img { max-width: 100%; height: auto; border-radius: 8px; }
+                .recruit-desc pre { overflow-x: auto; max-width: 100%; white-space: pre-wrap; }
+                .recruit-desc table { max-width: 100%; overflow-x: auto; display: block; }
+                .recruit-desc iframe, .recruit-desc video, .recruit-desc embed { max-width: 100%; }
+                .recruit-desc p { margin: 0 0 10px; }
+                .recruit-desc * { max-width: 100%; }
+            </style>
+        </div>
+
+        {# Form Fields Preview #}
+        {% if listing.formFields|length > 0 %}
+            <div style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:10px;padding:25px;">
+                <h3 style="font-size:16px;font-weight:600;margin:0 0 18px;"><i class="fas fa-clipboard-list" style="color:var(--accent);margin-right:8px;"></i> Formulaire ({{ listing.formFields|length }} champ{{ listing.formFields|length > 1 ? 's' : '' }})</h3>
+                {% for field in listing.formFields %}
+                    <div style="margin-bottom:14px;padding:12px 16px;background:rgba(0,0,0,0.15);border-radius:8px;border:1px solid var(--border-color);">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                            <span style="font-weight:600;font-size:14px;">{{ field.label }}</span>
+                            <span class="role-badge" style="background:#36b9cc22;color:#36b9cc;border:1px solid #36b9cc44;font-size:10px;padding:2px 8px;">{{ field.type }}</span>
+                            {% if field.required %}
+                                <span style="color:var(--danger);font-size:11px;">requis</span>
+                            {% endif %}
+                        </div>
+                        {% if field.placeholder is defined and field.placeholder %}
+                            <div style="font-size:12px;color:var(--text-secondary);">Placeholder: {{ field.placeholder }}</div>
+                        {% endif %}
+                        {% if field.options is defined and field.options %}
+                            <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">Options: {{ field.options|join(', ') }}</div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+
+    {# ===== RIGHT: ACTIONS ===== #}
+    <div class="recruit-sidebar" style="width:320px;flex-shrink:0;">
+        <style>
+            @media (max-width: 991px) { .recruit-sidebar { width: 100% !important; } }
+        </style>
+        {# Info Card #}
+        <div style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:10px;padding:20px;margin-bottom:20px;">
+            <h4 style="font-size:14px;font-weight:600;margin:0 0 15px;text-transform:uppercase;letter-spacing:1px;color:var(--text-secondary);">Informations</h4>
+            <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;">
+                <div style="display:flex;justify-content:space-between;">
+                    <span style="color:var(--text-secondary);">Actif</span>
+                    <span>{{ listing.isActive ? 'Oui' : 'Non' }}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;">
+                    <span style="color:var(--text-secondary);">Formulaire</span>
+                    <span>{{ listing.formFields|length > 0 ? listing.formFields|length ~ ' champs' : 'Non configure' }}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;">
+                    <span style="color:var(--text-secondary);">Candidatures</span>
+                    <span>{{ listing.applications|length }}</span>
+                </div>
+                {% if listing.approvedBy %}
+                    <div style="display:flex;justify-content:space-between;">
+                        <span style="color:var(--text-secondary);">Approuvee par</span>
+                        <span>{{ listing.approvedBy.username }}</span>
+                    </div>
+                {% endif %}
+                {% if listing.approvedAt %}
+                    <div style="display:flex;justify-content:space-between;">
+                        <span style="color:var(--text-secondary);">Approuvee le</span>
+                        <span>{{ listing.approvedAt|date('d/m/Y H:i') }}</span>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {# Revision/Rejection Reasons #}
+        {% if listing.revisionReason %}
+            <div style="background:rgba(54,185,204,0.08);border:1px solid rgba(54,185,204,0.3);border-radius:10px;padding:16px;margin-bottom:20px;">
+                <h4 style="font-size:13px;font-weight:600;color:var(--info);margin:0 0 8px;"><i class="fas fa-edit"></i> Raison de la revision</h4>
+                <p style="font-size:13px;color:var(--text-primary);margin:0;">{{ listing.revisionReason }}</p>
+            </div>
+        {% endif %}
+
+        {% if listing.rejectionReason %}
+            <div style="background:rgba(231,74,59,0.08);border:1px solid rgba(231,74,59,0.3);border-radius:10px;padding:16px;margin-bottom:20px;">
+                <h4 style="font-size:13px;font-weight:600;color:var(--danger);margin:0 0 8px;"><i class="fas fa-times-circle"></i> Raison du rejet</h4>
+                <p style="font-size:13px;color:var(--text-primary);margin:0;">{{ listing.rejectionReason }}</p>
+            </div>
+        {% endif %}
+
+        {# Actions #}
+        {% if is_granted('ROLE_MANAGER') %}
+            <div style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:10px;padding:20px;margin-bottom:20px;">
+                <h4 style="font-size:14px;font-weight:600;margin:0 0 15px;text-transform:uppercase;letter-spacing:1px;color:var(--text-secondary);">Actions</h4>
+
+                {% if listing.status in ['pending', 'revision_requested', 'draft'] %}
+                    {# Approve #}
+                    <form method="post" action="{{ path('admin_recruitment_approve', {id: listing.id}) }}" style="margin-bottom:10px;">
+                        <input type="hidden" name="_token" value="{{ csrf_token('recruitment_action_' ~ listing.id) }}">
+                        <button type="submit" class="btn-admin btn-admin--primary" style="width:100%;">
+                            <i class="fas fa-check"></i> Approuver
+                        </button>
+                    </form>
+                {% endif %}
+
+                {% if listing.status in ['pending', 'approved', 'draft'] %}
+                    {# Revision #}
+                    <form method="post" action="{{ path('admin_recruitment_revision', {id: listing.id}) }}" style="margin-bottom:10px;" id="revisionForm">
+                        <input type="hidden" name="_token" value="{{ csrf_token('recruitment_action_' ~ listing.id) }}">
+                        <textarea name="reason" placeholder="Raison de la demande de revision..." style="width:100%;background:var(--bg-dark);border:1px solid var(--border-color);color:var(--text-primary);padding:10px;border-radius:6px;font-size:13px;min-height:60px;resize:vertical;margin-bottom:8px;"></textarea>
+                        <button type="submit" class="btn-admin btn-admin--outline" style="width:100%;border-color:var(--info);color:var(--info);">
+                            <i class="fas fa-edit"></i> Demander revision
+                        </button>
+                    </form>
+                {% endif %}
+
+                {% if listing.status != 'rejected' %}
+                    {# Reject #}
+                    <form method="post" action="{{ path('admin_recruitment_reject', {id: listing.id}) }}" style="margin-bottom:10px;">
+                        <input type="hidden" name="_token" value="{{ csrf_token('recruitment_action_' ~ listing.id) }}">
+                        <textarea name="reason" placeholder="Raison du rejet..." style="width:100%;background:var(--bg-dark);border:1px solid var(--border-color);color:var(--text-primary);padding:10px;border-radius:6px;font-size:13px;min-height:60px;resize:vertical;margin-bottom:8px;"></textarea>
+                        <button type="submit" class="btn-admin btn-admin--outline" style="width:100%;border-color:var(--danger);color:var(--danger);">
+                            <i class="fas fa-times"></i> Rejeter
+                        </button>
+                    </form>
+                {% endif %}
+            </div>
+
+            {# Delete #}
+            <div style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:10px;padding:20px;">
+                <h4 style="font-size:14px;font-weight:600;margin:0 0 15px;text-transform:uppercase;letter-spacing:1px;color:var(--danger);">Zone dangereuse</h4>
+                <form method="post" action="{{ path('admin_recruitment_delete', {id: listing.id}) }}" onsubmit="return confirm('Supprimer definitivement cette annonce et toutes ses candidatures ?');">
+                    <input type="hidden" name="_token" value="{{ csrf_token('recruitment_delete_' ~ listing.id) }}">
+                    <button type="submit" class="btn-admin" style="width:100%;background:var(--danger);color:#fff;">
+                        <i class="fas fa-trash"></i> Supprimer definitivement
+                    </button>
+                </form>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

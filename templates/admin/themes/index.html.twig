@@ -1,0 +1,255 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block page_title %}Themes des pages serveur{% endblock %}
+{% block title %}Nexarena Admin - Themes{% endblock %}
+
+{% block admin_css %}
+    .theme-admin-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 24px;
+    }
+    .theme-admin-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    .theme-admin-card__header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .theme-admin-card__preview {
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    .theme-admin-card__preview i {
+        font-size: 20px;
+        color: #fff;
+    }
+    .theme-admin-card__title {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+    .theme-admin-card__key {
+        font-size: 12px;
+        color: var(--text-secondary);
+        font-family: monospace;
+    }
+    .theme-admin-card__colors {
+        display: flex;
+        gap: 6px;
+        margin-left: auto;
+    }
+    .theme-admin-card__dot {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        border: 2px solid rgba(255,255,255,0.1);
+    }
+    .theme-admin-card__body {
+        padding: 24px;
+    }
+    .theme-images-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+    }
+    @media (max-width: 900px) {
+        .theme-images-grid { grid-template-columns: 1fr; }
+    }
+    .theme-image-slot {
+        background: var(--bg-darker);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 16px;
+    }
+    .theme-image-slot__label {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 12px;
+    }
+    .theme-image-slot__preview {
+        width: 100%;
+        height: 120px;
+        border-radius: 8px;
+        border: 1px dashed var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 12px;
+        overflow: hidden;
+        background: rgba(0,0,0,0.2);
+    }
+    .theme-image-slot__preview img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+    }
+    .theme-image-slot__preview--empty {
+        color: var(--text-secondary);
+        font-size: 12px;
+        flex-direction: column;
+        gap: 6px;
+    }
+    .theme-image-slot__preview--empty i {
+        font-size: 24px;
+        opacity: 0.3;
+    }
+    .theme-image-slot__actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+    .theme-image-slot__actions form {
+        flex: 1;
+    }
+    .theme-image-slot__upload {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+    .theme-image-slot__file {
+        flex: 1;
+        padding: 6px 10px;
+        background: var(--bg-dark);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        color: var(--text-primary);
+        font-size: 12px;
+        min-width: 0;
+    }
+    .theme-image-slot__btn {
+        padding: 6px 12px;
+        border: none;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        white-space: nowrap;
+    }
+    .theme-image-slot__btn--upload {
+        background: var(--accent);
+        color: var(--bg-darker);
+    }
+    .theme-image-slot__btn--upload:hover {
+        background: var(--accent-hover);
+    }
+    .theme-image-slot__btn--delete {
+        background: rgba(231,74,59,0.15);
+        color: #e74a3b;
+        border: 1px solid rgba(231,74,59,0.2);
+    }
+    .theme-image-slot__btn--delete:hover {
+        background: rgba(231,74,59,0.25);
+    }
+    .theme-image-slot__hint {
+        font-size: 11px;
+        color: var(--text-secondary);
+        margin-top: 8px;
+    }
+    .theme-admin-intro {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 20px 24px;
+        margin-bottom: 24px;
+        color: var(--text-secondary);
+        font-size: 14px;
+        line-height: 1.6;
+    }
+    .theme-admin-intro strong {
+        color: var(--text-primary);
+    }
+{% endblock %}
+
+{% block admin_body %}
+    <div class="theme-admin-intro">
+        <strong><i class="fas fa-palette"></i> Configuration des themes</strong><br>
+        Chaque theme modifie l'apparence de la page publique des serveurs. Vous pouvez configurer 3 images par theme :
+        <ul style="margin:8px 0 0;padding-left:20px;">
+            <li><strong>Image de fond</strong> : wallpaper pleine page (1920x1080 recommande, JPG/WebP)</li>
+            <li><strong>Element gauche</strong> : personnage ou objet decoratif cote gauche (PNG transparent, ~500px de haut)</li>
+            <li><strong>Element droite</strong> : personnage ou objet decoratif cote droit (PNG transparent, ~500px de haut)</li>
+        </ul>
+    </div>
+
+    <div class="theme-admin-grid">
+        {% for key, theme in themes %}
+            <div class="theme-admin-card" id="theme-{{ key }}">
+                <div class="theme-admin-card__header">
+                    <div class="theme-admin-card__preview" style="background: linear-gradient(135deg, {{ theme.primary }} 0%, {{ theme.secondary }} 100%);">
+                        <i class="{{ theme.icon }}"></i>
+                    </div>
+                    <div>
+                        <div class="theme-admin-card__title">{{ theme.label }}</div>
+                        <div class="theme-admin-card__key">{{ key }}</div>
+                    </div>
+                    <div class="theme-admin-card__colors">
+                        <div class="theme-admin-card__dot" style="background:{{ theme.primary }};" title="Primary: {{ theme.primary }}"></div>
+                        <div class="theme-admin-card__dot" style="background:{{ theme.secondary }};" title="Secondary: {{ theme.secondary }}"></div>
+                        <div class="theme-admin-card__dot" style="background:{{ theme.bg_body }};" title="Fond: {{ theme.bg_body }}"></div>
+                    </div>
+                </div>
+                <div class="theme-admin-card__body">
+                    <div class="theme-images-grid">
+                        {% for type, label in image_labels %}
+                            <div class="theme-image-slot">
+                                <div class="theme-image-slot__label">{{ label }}</div>
+                                <div class="theme-image-slot__preview {{ theme_images[key][type] is null ? 'theme-image-slot__preview--empty' : '' }}">
+                                    {% if theme_images[key][type] %}
+                                        <img src="{{ asset(theme_images[key][type]) }}" alt="{{ label }}">
+                                    {% else %}
+                                        <i class="fas fa-image"></i>
+                                        <span>Aucune image</span>
+                                    {% endif %}
+                                </div>
+                                <div class="theme-image-slot__actions">
+                                    <form method="post" action="{{ path('admin_themes_upload', {key: key}) }}" enctype="multipart/form-data">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('theme_upload_' ~ key) }}">
+                                        <input type="hidden" name="image_type" value="{{ type }}">
+                                        <div class="theme-image-slot__upload">
+                                            <input type="file" name="image" accept="image/*" class="theme-image-slot__file" required>
+                                            <button type="submit" class="theme-image-slot__btn theme-image-slot__btn--upload">
+                                                <i class="fas fa-upload"></i>
+                                            </button>
+                                        </div>
+                                    </form>
+                                    {% if theme_images[key][type] %}
+                                        <form method="post" action="{{ path('admin_themes_delete', {key: key}) }}" onsubmit="return confirm('Supprimer cette image ?');">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('theme_delete_' ~ key) }}">
+                                            <input type="hidden" name="image_type" value="{{ type }}">
+                                            <button type="submit" class="theme-image-slot__btn theme-image-slot__btn--delete">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                </div>
+                                <div class="theme-image-slot__hint">
+                                    {% if type == 'bg' %}
+                                        JPG/WebP, 1920x1080 min
+                                    {% else %}
+                                        PNG transparent, ~500px haut
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}

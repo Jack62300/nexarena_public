@@ -1,0 +1,96 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block page_title %}{{ serverType ? 'Modifier le type' : 'Nouveau type de serveur' }}{% endblock %}
+{% block title %}Nexarena Admin - {{ serverType ? 'Modifier' : 'Nouveau' }} type de serveur{% endblock %}
+
+{% block admin_css %}
+    .form-group { margin-bottom: 20px; }
+    .form-group label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .form-control-admin {
+        width: 100%;
+        padding: 10px 14px;
+        background: var(--bg-darker);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        color: var(--text-primary);
+        font-size: 14px;
+        transition: border-color 0.2s;
+    }
+    .form-control-admin:focus {
+        outline: none;
+        border-color: var(--accent);
+    }
+    .form-check-admin {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+    }
+    .form-check-admin input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        accent-color: var(--accent);
+    }
+{% endblock %}
+
+{% block admin_body %}
+    <div style="max-width:800px;">
+        <div class="admin-table">
+            <div class="admin-table__header">
+                <h3>{{ serverType ? 'Modifier le type' : 'Creer un type de serveur' }}</h3>
+                <a href="{{ path('admin_server_types_list') }}" class="btn-admin btn-admin--outline btn-admin--sm">
+                    <i class="fas fa-arrow-left"></i> Retour
+                </a>
+            </div>
+            <div style="padding:25px;">
+                <form method="post">
+                    <input type="hidden" name="_token" value="{{ csrf_token('server_type_form') }}">
+
+                    <div class="form-group">
+                        <label for="category_id">Categorie parente</label>
+                        <select id="category_id" name="category_id" class="form-control-admin" required>
+                            <option value="">-- Selectionner --</option>
+                            {% for cat in categories %}
+                                <option value="{{ cat.id }}" {{ serverType and serverType.category and serverType.category.id == cat.id ? 'selected' : '' }}>
+                                    {{ cat.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="name">Nom du type</label>
+                        <input type="text" id="name" name="name" class="form-control-admin" value="{{ serverType ? serverType.name : '' }}" required placeholder="PvP, RP, Creative...">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="position">Position (ordre d'affichage)</label>
+                        <input type="number" id="position" name="position" class="form-control-admin" value="{{ serverType ? serverType.position : 0 }}" min="0">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-check-admin">
+                            <input type="checkbox" name="is_active" value="1" {{ (serverType is null or serverType.isActive) ? 'checked' : '' }}>
+                            Type actif
+                        </label>
+                    </div>
+
+                    <div style="display:flex;gap:10px;padding-top:10px;">
+                        <button type="submit" class="btn-admin btn-admin--primary">
+                            <i class="fas fa-save"></i> {{ serverType ? 'Enregistrer' : 'Creer' }}
+                        </button>
+                        <a href="{{ path('admin_server_types_list') }}" class="btn-admin btn-admin--outline">Annuler</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

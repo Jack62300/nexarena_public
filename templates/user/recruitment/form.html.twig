@@ -1,0 +1,215 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ listing ? 'Modifier' : 'Creer' }} une annonce - {{ setting('site_name', 'Nexarena') }}{% endblock %}
+
+{% block stylesheets %}
+<style>
+    .rf-page { padding: 120px 0 80px; min-height: 100vh; }
+    .rf-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: rgba(255,255,255,0.5);
+        font-size: 13px;
+        margin-bottom: 20px;
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+    .rf-back:hover { color: #45f882; }
+    .rf-title {
+        font-size: 26px;
+        font-weight: 800;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+    }
+    .rf-title span { color: #45f882; }
+    .rf-subtitle {
+        color: rgba(255,255,255,0.5);
+        font-size: 14px;
+        margin-bottom: 30px;
+    }
+    .rf-card {
+        background: rgba(22,34,49,0.6);
+        border: 1px solid rgba(69,248,130,0.08);
+        border-radius: 12px;
+        padding: 30px;
+        margin-bottom: 20px;
+    }
+    .rf-section-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: #45f882;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid rgba(69,248,130,0.1);
+    }
+    .rf-group { margin-bottom: 20px; }
+    .rf-label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: rgba(255,255,255,0.7);
+        margin-bottom: 6px;
+    }
+    .rf-label .required { color: #e74a3b; }
+    .rf-input, .rf-textarea {
+        width: 100%;
+        background: rgba(10,16,24,0.8);
+        border: 1px solid rgba(69,248,130,0.1);
+        color: #e4e6eb;
+        padding: 10px 14px;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: border-color 0.2s;
+    }
+    .rf-input:focus, .rf-textarea:focus {
+        border-color: #45f882;
+        outline: none;
+    }
+    .rf-textarea { min-height: 100px; resize: vertical; }
+    .rf-hint {
+        font-size: 12px;
+        color: rgba(255,255,255,0.35);
+        margin-top: 4px;
+    }
+    .rf-images {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+    @media (max-width: 600px) { .rf-images { grid-template-columns: 1fr; } }
+    .rf-img-preview {
+        max-width: 100%;
+        max-height: 150px;
+        border-radius: 8px;
+        margin-top: 8px;
+        border: 1px solid rgba(69,248,130,0.1);
+    }
+    .rf-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+    }
+    .rf-btn {
+        padding: 10px 24px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 700;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .rf-btn--primary {
+        background: linear-gradient(135deg, #45f882, #2bc866);
+        color: #0a1018;
+    }
+    .rf-btn--primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(69,248,130,0.25); color: #0a1018; }
+    .rf-btn--outline {
+        background: transparent;
+        border: 1px solid rgba(255,255,255,0.1);
+        color: rgba(255,255,255,0.6);
+    }
+    .rf-btn--outline:hover { border-color: rgba(255,255,255,0.3); color: #fff; }
+</style>
+{% endblock %}
+
+{% block body %}
+<section class="rf-page">
+    <div class="container" style="max-width:800px;">
+
+        <a href="{{ path('user_recruitment_list') }}" class="rf-back">
+            <i class="fas fa-arrow-left"></i> Retour a mes recrutements
+        </a>
+
+        <h1 class="rf-title">{{ listing ? 'Modifier' : 'Creer' }} une <span>annonce</span></h1>
+        <p class="rf-subtitle">
+            Serveur : <strong style="color:#45f882;">{{ server.name }}</strong>
+        </p>
+
+        {% for type, messages in app.flashes %}
+            {% for message in messages %}
+                <div style="padding:12px 16px;border-radius:8px;margin-bottom:16px;font-size:13px;background:{{ type == 'error' ? 'rgba(231,74,59,0.1)' : 'rgba(69,248,130,0.08)' }};border:1px solid {{ type == 'error' ? 'rgba(231,74,59,0.2)' : 'rgba(69,248,130,0.15)' }};color:{{ type == 'error' ? '#e74a3b' : '#45f882' }};">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endfor %}
+
+        <form method="post" enctype="multipart/form-data">
+            <input type="hidden" name="_token" value="{{ csrf_token('recruitment_form') }}">
+
+            <div class="rf-card">
+                <div class="rf-section-title"><i class="fas fa-info-circle"></i> Informations</div>
+
+                <div class="rf-group">
+                    <label class="rf-label">Titre de l'annonce <span class="required">*</span></label>
+                    <input type="text" name="title" class="rf-input" required maxlength="255"
+                           placeholder="Ex: Recherche Developpeur Lua"
+                           value="{{ listing ? listing.title : '' }}">
+                </div>
+
+                <div class="rf-group">
+                    <label class="rf-label">Description <span class="required">*</span></label>
+                    {% include 'includes/_quill_editor.html.twig' with {
+                        editor_id: 'recruitEditor',
+                        textarea_id: 'description',
+                        content: listing ? listing.description|default('') : ''
+                    } %}
+                    <div class="rf-hint">Decrivez le poste, les missions, les conditions, etc.</div>
+                </div>
+            </div>
+
+            <div class="rf-card">
+                <div class="rf-section-title"><i class="fas fa-cog"></i> Parametres</div>
+
+                <div class="rf-group">
+                    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;color:#e4e6eb;font-size:14px;">
+                        <input type="checkbox" name="requires_login" value="1"
+                               {{ listing and listing.requiresLogin ? 'checked' : '' }}
+                               style="width:18px;height:18px;accent-color:#45f882;">
+                        <span><i class="fas fa-lock" style="color:#36b9cc;margin-right:4px;"></i> Reservee aux membres inscrits</span>
+                    </label>
+                    <div class="rf-hint">Si active, seuls les utilisateurs connectes pourront postuler a cette annonce.</div>
+                </div>
+            </div>
+
+            <div class="rf-card">
+                <div class="rf-section-title"><i class="fas fa-images"></i> Images (optionnel)</div>
+
+                <div class="rf-images">
+                    <div class="rf-group">
+                        <label class="rf-label">Image 1</label>
+                        <input type="file" name="image1" class="rf-input" accept="image/jpeg,image/png,image/gif,image/webp">
+                        {% if listing and listing.image1 %}
+                            <img src="{{ asset('uploads/recruitment/' ~ listing.image1) }}" class="rf-img-preview">
+                        {% endif %}
+                        <div class="rf-hint">JPEG, PNG, GIF ou WebP (max 5 Mo)</div>
+                    </div>
+                    <div class="rf-group">
+                        <label class="rf-label">Image 2</label>
+                        <input type="file" name="image2" class="rf-input" accept="image/jpeg,image/png,image/gif,image/webp">
+                        {% if listing and listing.image2 %}
+                            <img src="{{ asset('uploads/recruitment/' ~ listing.image2) }}" class="rf-img-preview">
+                        {% endif %}
+                        <div class="rf-hint">JPEG, PNG, GIF ou WebP (max 5 Mo)</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rf-actions">
+                <a href="{{ path('user_recruitment_list') }}" class="rf-btn rf-btn--outline">Annuler</a>
+                <button type="submit" class="rf-btn rf-btn--primary">
+                    <i class="fas fa-save"></i> {{ listing ? 'Enregistrer' : 'Creer le brouillon' }}
+                </button>
+            </div>
+        </form>
+
+    </div>
+</section>
+{% endblock %}

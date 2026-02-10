@@ -1,0 +1,125 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block page_title %}Plugins{% endblock %}
+{% block title %}Nexarena Admin - Plugins{% endblock %}
+
+{% block admin_body %}
+    <div class="admin-table">
+        <div class="admin-table__header">
+            <h3>Plugins</h3>
+            <a href="{{ path('admin_plugins_new') }}" class="btn-admin btn-admin--primary">
+                <i class="fas fa-plus"></i> Nouveau plugin
+            </a>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Icone</th>
+                    <th>Nom</th>
+                    <th>Plateforme</th>
+                    <th>Categorie</th>
+                    <th>Version</th>
+                    <th>Taille</th>
+                    <th>Telechargements</th>
+                    <th>Scan VT</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for plugin in plugins %}
+                    <tr>
+                        <td>
+                            {% if plugin.iconFileName %}
+                                <img src="{{ asset('uploads/plugins/icons/' ~ plugin.iconFileName) }}" alt="" style="width:32px;height:32px;border-radius:6px;object-fit:cover;">
+                            {% else %}
+                                <span style="display:inline-flex;width:32px;height:32px;align-items:center;justify-content:center;background:var(--bg-darker);border-radius:6px;color:var(--text-secondary);font-size:14px;">
+                                    <i class="fas fa-puzzle-piece"></i>
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td><strong>{{ plugin.name }}</strong></td>
+                        <td>
+                            <span class="role-badge" style="background:rgba(54,185,204,0.12);color:#36b9cc;border:1px solid rgba(54,185,204,0.25);">
+                                {{ plugin.platform }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if plugin.category == 'game' %}
+                                <span class="role-badge" style="background:rgba(69,248,130,0.12);color:#45f882;border:1px solid rgba(69,248,130,0.25);">Jeux</span>
+                            {% elseif plugin.category == 'vocal' %}
+                                <span class="role-badge" style="background:rgba(114,137,218,0.12);color:#7289da;border:1px solid rgba(114,137,218,0.25);">Vocal</span>
+                            {% elseif plugin.category == 'hosting' %}
+                                <span class="role-badge" style="background:rgba(246,194,62,0.12);color:#f6c23e;border:1px solid rgba(246,194,62,0.25);">Hebergement</span>
+                            {% else %}
+                                <span style="color:var(--text-secondary);">{{ plugin.category }}</span>
+                            {% endif %}
+                        </td>
+                        <td style="color:var(--text-secondary);">v{{ plugin.version }}</td>
+                        <td style="color:var(--text-secondary);">
+                            {% if plugin.fileSize %}
+                                {{ (plugin.fileSize / 1024)|round(1) }} Ko
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                        <td>{{ plugin.downloadCount }}</td>
+                        <td>
+                            {% if plugin.virusTotalStatus == 'clean' %}
+                                <span class="role-badge" style="background:rgba(28,200,138,0.12);color:#1cc88a;border:1px solid rgba(28,200,138,0.25);">
+                                    <i class="fas fa-check-circle"></i> Clean
+                                </span>
+                            {% elseif plugin.virusTotalStatus == 'flagged' %}
+                                <span class="role-badge" style="background:rgba(231,74,59,0.12);color:#e74a3b;border:1px solid rgba(231,74,59,0.25);">
+                                    <i class="fas fa-exclamation-triangle"></i> Flagged
+                                </span>
+                            {% elseif plugin.virusTotalStatus == 'error' %}
+                                <span class="role-badge" style="background:rgba(246,194,62,0.12);color:#f6c23e;border:1px solid rgba(246,194,62,0.25);">
+                                    <i class="fas fa-times-circle"></i> Erreur
+                                </span>
+                            {% else %}
+                                <span class="role-badge" style="background:rgba(246,194,62,0.12);color:#f6c23e;border:1px solid rgba(246,194,62,0.25);">
+                                    <i class="fas fa-clock"></i> Pending
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if plugin.isActive %}
+                                <span class="status-dot status-dot--active"></span>Actif
+                            {% else %}
+                                <span class="status-dot status-dot--inactive"></span>Inactif
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                                <a href="{{ path('admin_plugins_edit', {id: plugin.id}) }}" class="btn-admin btn-admin--outline btn-admin--sm">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form method="post" action="{{ path('admin_plugins_refresh_scan', {id: plugin.id}) }}" style="display:inline;">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('refresh_scan_' ~ plugin.id) }}">
+                                    <button type="submit" class="btn-admin btn-admin--sm" style="background:var(--info);color:#fff;border:none;" title="Rafraichir scan VT">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button>
+                                </form>
+                                {% if is_granted('ROLE_MANAGER') %}
+                                    <form method="post" action="{{ path('admin_plugins_delete', {id: plugin.id}) }}" onsubmit="return confirm('Supprimer ce plugin ?');" style="display:inline;">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete_' ~ plugin.id) }}">
+                                        <button type="submit" class="btn-admin btn-admin--sm" style="background:var(--danger);color:#fff;border:none;">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="10" style="text-align:center;color:var(--text-secondary);padding:30px;">
+                            Aucun plugin pour le moment.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

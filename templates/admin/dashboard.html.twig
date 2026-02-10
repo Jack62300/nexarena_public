@@ -1,0 +1,271 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block page_title %}Dashboard{% endblock %}
+{% block title %}Nexarena Admin - Dashboard{% endblock %}
+
+{% block admin_body %}
+
+    {# ===== STATS CARDS ===== #}
+    <div class="row g-4 mb-4">
+        {% for key, stat in stats %}
+            <div class="col-xl-2 col-lg-4 col-md-6">
+                <div class="stat-card">
+                    <div class="stat-card__header">
+                        <div>
+                            <div class="stat-card__label">{{ stat.label }}</div>
+                            <div class="stat-card__value">{{ stat.value }}</div>
+                        </div>
+                        <div class="stat-card__icon" style="background: {{ stat.color }};">
+                            <i class="{{ stat.icon }}"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    {# ===== CHARTS ===== #}
+    <div class="row g-4 mb-4">
+        <div class="col-xl-4">
+            <div class="stat-card chart-container">
+                <h4><i class="fas fa-chart-pie" style="margin-right:8px;color:var(--accent);"></i>Serveurs par catégorie</h4>
+                <canvas id="chartServersByCategory"></canvas>
+            </div>
+        </div>
+        <div class="col-xl-4">
+            <div class="stat-card chart-container">
+                <h4><i class="fas fa-chart-line" style="margin-right:8px;color:var(--accent);"></i>Inscriptions (12 mois)</h4>
+                <canvas id="chartUsersByMonth"></canvas>
+            </div>
+        </div>
+        <div class="col-xl-4">
+            <div class="stat-card chart-container">
+                <h4><i class="fas fa-chart-bar" style="margin-right:8px;color:var(--accent);"></i>Votes (12 mois)</h4>
+                <canvas id="chartVotesByMonth"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        {# ===== DERNIERS UTILISATEURS ===== #}
+        <div class="col-xl-8">
+            <div class="admin-table">
+                <div class="admin-table__header">
+                    <h3>Derniers utilisateurs inscrits</h3>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Utilisateur</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Inscription</th>
+                            <th>Methode</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in recent_users %}
+                            <tr>
+                                <td>
+                                    <div style="display:flex;align-items:center;gap:10px;">
+                                        {% set av = user_avatar(user) %}
+                                        {% if av %}
+                                            <img src="{{ av starts with 'http' ? av : asset(av) }}" alt="" style="width:30px;height:30px;border-radius:50%;object-fit:cover;">
+                                        {% else %}
+                                            <div style="width:30px;height:30px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;">
+                                                {{ user.username|slice(0, 1)|upper }}
+                                            </div>
+                                        {% endif %}
+                                        {{ user.username }}
+                                    </div>
+                                </td>
+                                <td style="color:var(--text-secondary);">{{ user.email }}</td>
+                                <td>{{ role_badge(user.roles)|raw }}</td>
+                                <td style="color:var(--text-secondary);">{{ user.createdAt|date('d/m/Y H:i') }}</td>
+                                <td>
+                                    {% if user.googleId %}
+                                        <i class="fab fa-google" style="color:#ea4335;" title="Google"></i>
+                                    {% endif %}
+                                    {% if user.discordId %}
+                                        <i class="fab fa-discord" style="color:#5865f2;" title="Discord"></i>
+                                    {% endif %}
+                                    {% if user.twitchId %}
+                                        <i class="fab fa-twitch" style="color:#9146ff;" title="Twitch"></i>
+                                    {% endif %}
+                                    {% if user.steamId %}
+                                        <i class="fab fa-steam" style="color:#c7d5e0;" title="Steam"></i>
+                                    {% endif %}
+                                    {% if user.password %}
+                                        <i class="fas fa-envelope" style="color:var(--text-secondary);" title="Email/Password"></i>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="5" style="text-align:center;color:var(--text-secondary);padding:30px;">
+                                    Aucun utilisateur inscrit pour le moment.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {# ===== DERNIERS ARTICLES ===== #}
+        <div class="col-xl-4">
+            <div class="admin-table">
+                <div class="admin-table__header">
+                    <h3>Derniers articles</h3>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Titre</th>
+                            <th>Statut</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for article in recent_articles %}
+                            <tr>
+                                <td>{{ article.title }}</td>
+                                <td>
+                                    {% if article.isPublished %}
+                                        <span class="status-dot status-dot--active"></span>Publie
+                                    {% else %}
+                                        <span class="status-dot status-dot--inactive"></span>Brouillon
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="2" style="text-align:center;color:var(--text-secondary);padding:30px;">
+                                    Aucun article pour le moment.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {# ===== HIERARCHIE DES ROLES ===== #}
+
+        </div>
+    </div>
+
+    <style>
+        .chart-container { position: relative; padding: 20px; }
+        .chart-container h4 { margin-bottom: 16px; font-size: 15px; font-weight: 600; color: var(--text-primary); }
+        .chart-container canvas { max-height: 280px; }
+    </style>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const textSecondary = getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim() || '#8a8d93';
+            const gridColor = 'rgba(255,255,255,0.06)';
+
+            {# ===== DOUGHNUT: Serveurs par categorie ===== #}
+            const doughnutColors = [
+                '#45f882', '#4e73df', '#e74a3b', '#f6c23e', '#1cc88a',
+                '#36b9cc', '#5a5c69', '#fd7e14', '#6f42c1', '#e83e8c',
+                '#20c997', '#17a2b8', '#6610f2', '#ffc107', '#28a745'
+            ];
+
+            new Chart(document.getElementById('chartServersByCategory'), {
+                type: 'doughnut',
+                data: {
+                    labels: {{ chart_servers_by_category|map(i => i.name)|json_encode|raw }},
+                    datasets: [{
+                        data: {{ chart_servers_by_category|map(i => i.count)|json_encode|raw }},
+                        backgroundColor: doughnutColors.slice(0, {{ chart_servers_by_category|length }}),
+                        borderWidth: 0,
+                        hoverOffset: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: textSecondary, padding: 12, font: { size: 12 } }
+                        }
+                    }
+                }
+            });
+
+            {# ===== LINE: Inscriptions par mois ===== #}
+            new Chart(document.getElementById('chartUsersByMonth'), {
+                type: 'line',
+                data: {
+                    labels: {{ chart_users_by_month|map(i => i.month)|json_encode|raw }},
+                    datasets: [{
+                        label: 'Inscriptions',
+                        data: {{ chart_users_by_month|map(i => i.count)|json_encode|raw }},
+                        borderColor: '#45f882',
+                        backgroundColor: 'rgba(69, 248, 130, 0.1)',
+                        fill: true,
+                        tension: 0.3,
+                        pointBackgroundColor: '#45f882',
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: textSecondary, font: { size: 11 } },
+                            grid: { color: gridColor }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: textSecondary, font: { size: 11 }, precision: 0 },
+                            grid: { color: gridColor }
+                        }
+                    }
+                }
+            });
+
+            {# ===== BAR: Votes par mois ===== #}
+            new Chart(document.getElementById('chartVotesByMonth'), {
+                type: 'bar',
+                data: {
+                    labels: {{ chart_votes_by_month|map(i => i.month)|json_encode|raw }},
+                    datasets: [{
+                        label: 'Votes',
+                        data: {{ chart_votes_by_month|map(i => i.count)|json_encode|raw }},
+                        backgroundColor: 'rgba(69, 248, 130, 0.6)',
+                        hoverBackgroundColor: 'rgba(69, 248, 130, 0.85)',
+                        borderRadius: 4,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: textSecondary, font: { size: 11 } },
+                            grid: { color: gridColor }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: textSecondary, font: { size: 11 }, precision: 0 },
+                            grid: { color: gridColor }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+
+{% endblock %}

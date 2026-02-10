@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Nexarena Admin{% endblock %}</title>
+    <link rel="icon" type="image/svg+xml" href="{{ asset(setting('site_favicon', 'assets/img/logo/icon.svg')) }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/fontawesome-all.min.css') }}">
+    <style>
+        :root {
+            --sidebar-width: 260px;
+            --header-height: 60px;
+            --bg-dark: #0f1923;
+            --bg-darker: #0a1018;
+            --bg-card: #162231;
+            --bg-card-hover: #1c2d3f;
+            --text-primary: #e4e6eb;
+            --text-secondary: #8b949e;
+            --accent: #45f882;
+            --accent-hover: #33d96e;
+            --border-color: #1e3048;
+            --success: #1cc88a;
+            --warning: #f6c23e;
+            --danger: #e74a3b;
+            --info: #36b9cc;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { color: var(--accent-hover); }
+
+        /* ===== SIDEBAR ===== */
+        .admin-sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--bg-darker);
+            border-right: 1px solid var(--border-color);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s;
+        }
+
+        .admin-sidebar__logo {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .admin-sidebar__logo img {
+            max-height: 40px;
+        }
+
+        .admin-sidebar__logo span {
+            display: block;
+            font-size: 11px;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 5px;
+        }
+
+        .admin-sidebar__nav {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px 0;
+        }
+
+        .admin-sidebar__section {
+            padding: 8px 20px 5px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-secondary);
+            margin-top: 10px;
+        }
+
+        .admin-sidebar__link {
+            display: flex;
+            align-items: center;
+            padding: 10px 20px;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+
+        .admin-sidebar__link:hover,
+        .admin-sidebar__link.active {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border-left-color: var(--accent);
+        }
+
+        .admin-sidebar__link i {
+            width: 22px;
+            margin-right: 12px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .admin-sidebar__link .badge {
+            margin-left: auto;
+            font-size: 10px;
+            padding: 3px 8px;
+            border-radius: 10px;
+        }
+
+        .admin-sidebar__footer {
+            padding: 15px 20px;
+            border-top: 1px solid var(--border-color);
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* ===== HEADER ===== */
+        .admin-header {
+            position: fixed;
+            top: 0;
+            left: var(--sidebar-width);
+            right: 0;
+            height: var(--header-height);
+            background: var(--bg-darker);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 25px;
+        }
+
+        .admin-header__left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .admin-header__toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .admin-header__title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .admin-header__right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .admin-header__user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-primary);
+        }
+
+        .admin-header__user img {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .admin-header__user-avatar-placeholder {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        /* ===== MAIN ===== */
+        .admin-main {
+            margin-left: var(--sidebar-width);
+            margin-top: var(--header-height);
+            padding: 25px;
+            min-height: calc(100vh - var(--header-height));
+        }
+
+        /* ===== STAT CARDS ===== */
+        .stat-card {
+            background: var(--bg-card);
+            border-radius: 10px;
+            padding: 22px;
+            border: 1px solid var(--border-color);
+            transition: transform 0.2s, box-shadow 0.2s;
+            height: 100%;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .stat-card__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .stat-card__label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .stat-card__value {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .stat-card__icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: #fff;
+        }
+
+        /* ===== TABLE ===== */
+        .admin-table {
+            background: var(--bg-card);
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .admin-table__header {
+            padding: 18px 22px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .admin-table__header h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .admin-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .admin-table th {
+            padding: 12px 22px;
+            text-align: left;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border-color);
+            background: rgba(0,0,0,0.15);
+        }
+
+        .admin-table td {
+            padding: 12px 22px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 14px;
+        }
+
+        .admin-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .admin-table tr:hover td {
+            background: var(--bg-card-hover);
+        }
+
+        /* ===== BADGES ===== */
+        .role-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .role-badge--fondateur { background: #e74a3b22; color: #e74a3b; border: 1px solid #e74a3b44; }
+        .role-badge--developpeur { background: #45f88222; color: #6fffa0; border: 1px solid #45f88244; }
+        .role-badge--responsable { background: #f6c23e22; color: #f6c23e; border: 1px solid #f6c23e44; }
+        .role-badge--manager { background: #36b9cc22; color: #36b9cc; border: 1px solid #36b9cc44; }
+        .role-badge--editeur { background: #1cc88a22; color: #1cc88a; border: 1px solid #1cc88a44; }
+        .role-badge--user { background: #5a5c6922; color: #8b949e; border: 1px solid #5a5c6944; }
+
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+
+        .status-dot--active { background: var(--success); }
+        .status-dot--inactive { background: var(--text-secondary); }
+
+        /* ===== BTN ===== */
+        .btn-admin {
+            padding: 8px 18px;
+            border-radius: 6px;
+            border: none;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-admin--primary {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .btn-admin--primary:hover {
+            background: var(--accent-hover);
+            color: #fff;
+        }
+
+        .btn-admin--outline {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-admin--outline:hover {
+            color: var(--text-primary);
+            border-color: var(--text-secondary);
+        }
+
+        .btn-admin--sm {
+            padding: 5px 12px;
+            font-size: 12px;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 991px) {
+            .admin-sidebar {
+                transform: translateX(-100%);
+            }
+            .admin-sidebar.open {
+                transform: translateX(0);
+            }
+            .admin-header {
+                left: 0;
+            }
+            .admin-header__toggle {
+                display: block;
+            }
+            .admin-main {
+                margin-left: 0;
+            }
+        }
+
+        {% block admin_css %}{% endblock %}
+    </style>
+</head>
+<body>
+
+    {# ===== SIDEBAR ===== #}
+    <aside class="admin-sidebar" id="adminSidebar">
+        <div class="admin-sidebar__logo">
+            <a href="{{ path('app_home') }}">
+                <img src="{{ asset(setting('site_logo', 'assets/img/logo/logo.svg')) }}" alt="{{ setting('site_name', 'Nexarena') }}">
+            </a>
+            <span>Administration</span>
+        </div>
+
+        <nav class="admin-sidebar__nav">
+            <div class="admin-sidebar__section">Principal</div>
+            <a href="{{ path('admin_dashboard') }}" class="admin-sidebar__link {{ app.request.get('_route') == 'admin_dashboard' ? 'active' : '' }}">
+                <i class="fas fa-tachometer-alt"></i> Dashboard
+            </a>
+
+            <div class="admin-sidebar__section">Contenu</div>
+            <a href="{{ path('admin_articles_list') }}" class="admin-sidebar__link {{ app.request.get('_route') starts with 'admin_articles_' ? 'active' : '' }}">
+                <i class="fas fa-newspaper"></i> Articles
+            </a>
+            <a href="{{ path('admin_parent_categories_list') }}" class="admin-sidebar__link {{ app.request.get('_route') starts with 'admin_parent_categories_' ? 'active' : '' }}">
+                <i class="fas fa-layer-group"></i> Categories
+            </a>
+            <a href="{{ path('admin_categories_list') }}" class="admin-sidebar__link {{ app.request.get('_route') starts with 'admin_categories_' ? 'active' : '' }}">
+                <i class="fas fa-gamepad"></i> Sous-categories
+            </a>
+            <a href="{{ path('admin_server_types_list') }}" class="admin-sidebar__link {{ app.request.get('_route') starts with 'admin_server_types_' ? 'active' : '' }}">
+                <i class="fas fa-tags"></i> Types de serveur
+            </a>
+            <a href="{{ path('admin_servers_list') }}" class="admin-sidebar__link {{ app.request.get('_route') starts with 'admin_servers_' ? 'active' : '' }}">
+                <i class="fas fa-server"></i> Serveurs
+            </a>
+            <a href="{{ path('admin_comments_flagged') }}" class="admin-sidebar__link {{ app.request.get('_route') starts with 'admin_comments_' ? 'active' : '' }}">
+                <i class="fas fa-comments"></i> Commentaires
+                {% set flaggedCount = flagged_comments_count() %}
+                {% if flaggedCount > 0 %}
+                    <span class="badge bg-danger">{{ flaggedCount }}</span>
+                {% endif %}
+            </a>
+            <a href="{{ path('admin_plugins_list') }}" class="admin-sidebar__link {{ app.request.get('_route') starts with 'admin_plugins_' ? 'active' : '' }}">
+                <i class="fas fa-puzzle-piece"></i> Plugins
+            </a>
+            <a href="{{ path('admin_partners_list') }}" class="admin-sidebar__link {{ app.request.get('_route') starts with 'admin_partners_' ? 'active' : '' }}">
+                <i class="fas fa-handshake"></i> Partenaires
+            </a>
+            <a href="{{ path('admin_recruitment_list') }}" class="admin-sidebar__link {{ app.request.get('_route') starts with 'admin_recruitment_' ? 'active' : '' }}">
+                <i class="fas fa-bullhorn"></i> Recrutement
+                {% set pendingRecruitments = pending_recruitments_count() %}
+                {% if pendingRecruitments > 0 %}
+                    <span class="badge bg-warning text-dark">{{ pendingRecruitments }}</span>
+                {% endif %}
+            </a>
+            <a href="{{ path('admin_featured_list') }}" class="admin-sidebar__link {{ app.request.get('_route') starts with 'admin_featured_' ? 'active' : '' }}">
+                <i class="fas fa-star"></i> Mise en avant
+            </a>
+
+            <div class="admin-sidebar__section">Utilisateurs</div>
+            <a href="{{ path('admin_users_list') }}" class="admin-sidebar__link {{ app.request.get('_route') starts with 'admin_users_' ? 'active' : '' }}">
+                <i class="fas fa-users"></i> Utilisateurs
+            </a>
+            <a href="{{ path('admin_votes_list') }}" class="admin-sidebar__link {{ app.request.get('_route') starts with 'admin_votes_' ? 'active' : '' }}">
+                <i class="fas fa-vote-yea"></i> Votes
+            </a>
+
+            {% if is_granted('ROLE_RESPONSABLE') %}
+            <div class="admin-sidebar__section">Configuration</div>
+            <a href="{{ path('admin_settings_index') }}" class="admin-sidebar__link {{ app.request.get('_route') starts with 'admin_settings_' ? 'active' : '' }}">
+                <i class="fas fa-cog"></i> Parametres
+            </a>
+            <a href="{{ path('admin_roles_index') }}" class="admin-sidebar__link {{ app.request.get('_route') starts with 'admin_roles_' ? 'active' : '' }}">
+                <i class="fas fa-shield-alt"></i> Roles & Permissions
+            </a>
+            <a href="{{ path('admin_themes_index') }}" class="admin-sidebar__link {{ app.request.get('_route') starts with 'admin_themes_' ? 'active' : '' }}">
+                <i class="fas fa-palette"></i> Themes
+            </a>
+            {% endif %}
+
+            {% if is_granted('ROLE_DEVELOPPEUR') %}
+            <div class="admin-sidebar__section">Technique</div>
+            <a href="{{ path('admin_webhooks_list') }}" class="admin-sidebar__link {{ app.request.get('_route') starts with 'admin_webhooks_' ? 'active' : '' }}">
+                <i class="fas fa-plug"></i> Webhooks
+            </a>
+            <a href="{{ path('admin_logs_list') }}" class="admin-sidebar__link {{ app.request.get('_route') starts with 'admin_logs_' ? 'active' : '' }}">
+                <i class="fas fa-terminal"></i> Logs
+            </a>
+            {% endif %}
+        </nav>
+
+        <div class="admin-sidebar__footer">
+            <a href="{{ path('app_home') }}"><i class="fas fa-arrow-left"></i> Retour au site</a>
+        </div>
+    </aside>
+
+    {# ===== HEADER ===== #}
+    <header class="admin-header">
+        <div class="admin-header__left">
+            <button class="admin-header__toggle" onclick="document.getElementById('adminSidebar').classList.toggle('open')">
+                <i class="fas fa-bars"></i>
+            </button>
+            <span class="admin-header__title">{% block page_title %}Dashboard{% endblock %}</span>
+        </div>
+        <div class="admin-header__right">
+            <a href="{{ path('app_home') }}" class="btn-admin btn-admin--outline btn-admin--sm">
+                <i class="fas fa-external-link-alt"></i> Voir le site
+            </a>
+            <div class="admin-header__user">
+                {% set av = user_avatar(app.user) %}
+                {% if av %}
+                    <img src="{{ av starts with 'http' ? av : asset(av) }}" alt="{{ app.user.username }}">
+                {% else %}
+                    <div class="admin-header__user-avatar-placeholder">
+                        {{ app.user.username|slice(0, 1)|upper }}
+                    </div>
+                {% endif %}
+                <span>{{ app.user.username }}</span>
+            </div>
+            <a href="{{ path('app_logout') }}" class="btn-admin btn-admin--outline btn-admin--sm" title="Deconnexion">
+                <i class="fas fa-sign-out-alt"></i>
+            </a>
+        </div>
+    </header>
+
+    {# ===== MAIN ===== #}
+    <main class="admin-main">
+        {% for type, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="alert alert-{{ type }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endfor %}
+
+        {% block admin_body %}{% endblock %}
+    </main>
+
+    <script src="{{ asset('assets/js/vendor/jquery-3.6.0.min.js') }}"></script>
+    <script src="{{ asset('assets/js/bootstrap.min.js') }}"></script>
+    {% block admin_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,83 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nexarena - Finaliser l'inscription{% endblock %}
+
+{% block body %}
+
+    {# breadcrumb-area #}
+    <section class="breadcrumb-area" data-background="{{ asset('assets/img/bg/breadcrumb_bg01.jpg') }}">
+        <div class="container">
+            <div class="breadcrumb__wrapper">
+                <div class="row">
+                    <div class="col-xl-6 col-lg-7">
+                        <div class="breadcrumb__content">
+                            <h2 class="title">Finaliser l'inscription</h2>
+                            <nav aria-label="breadcrumb">
+                                <ol class="breadcrumb">
+                                    <li class="breadcrumb-item"><a href="{{ path('app_home') }}">Accueil</a></li>
+                                    <li class="breadcrumb-item active" aria-current="page">Finaliser l'inscription</li>
+                                </ol>
+                            </nav>
+                        </div>
+                    </div>
+                    <div class="col-xl-6 col-lg-5 position-relative d-none d-lg-block">
+                        <div class="breadcrumb__img">
+                            <img src="{{ asset('assets/img/others/breadcrumb_img02.png') }}" alt="img">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {# complete-registration-area #}
+    <section class="signup__area team-bg section-pt-120 section-pb-120" data-background="{{ asset('assets/img/bg/team_bg.jpg') }}">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-xl-6 col-lg-8">
+                    <div class="singUp-wrap">
+                        <h2 class="title">Derniere etape !</h2>
+
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            {% if pending.provider == 'steam' %}
+                                <i class="fab fa-steam" style="font-size:28px;color:#fff;"></i>
+                            {% elseif pending.provider == 'discord' %}
+                                <i class="fab fa-discord" style="font-size:28px;color:#5865F2;"></i>
+                            {% elseif pending.provider == 'twitch' %}
+                                <i class="fab fa-twitch" style="font-size:28px;color:#9146FF;"></i>
+                            {% elseif pending.provider == 'google' %}
+                                <i class="fab fa-google" style="font-size:28px;color:#EA4335;"></i>
+                            {% endif %}
+                            <span style="color:#fff;font-size:16px;">
+                                Connecte via <strong>{{ pending.provider|capitalize }}</strong> en tant que <strong>{{ pending.username }}</strong>
+                            </span>
+                        </div>
+
+                        <p class="mb-4" style="color:rgba(255,255,255,0.7);font-size:14px;">
+                            Votre provider ne nous a pas transmis votre adresse email. Veuillez la saisir pour finaliser votre inscription.
+                            Si vous avez deja un compte Nexarena avec cette adresse, vos comptes seront automatiquement lies.
+                        </p>
+
+                        {% for message in app.flashes('error') %}
+                            <div class="alert alert-danger">{{ message }}</div>
+                        {% endfor %}
+
+                        <form action="{{ path('app_oauth_complete_registration') }}" method="post" class="account__form">
+                            <input type="hidden" name="_csrf_token" value="{{ csrf_token('oauth_complete') }}">
+                            <div class="form-grp">
+                                <label for="email">Adresse email</label>
+                                <input type="email" id="email" name="email" value="{{ last_email }}" placeholder="votre@email.com" required autofocus>
+                            </div>
+                            <button type="submit" class="btn btn-two arrow-btn">Finaliser l'inscription</button>
+                        </form>
+
+                        <div class="account__switch mt-3">
+                            <p><a href="{{ path('app_login') }}">Retour a la connexion</a></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+{% endblock %}

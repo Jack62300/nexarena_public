@@ -1,0 +1,87 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block page_title %}Utilisateurs{% endblock %}
+{% block title %}Nexarena Admin - Utilisateurs{% endblock %}
+
+{% block admin_body %}
+    <div class="admin-table">
+        <div class="admin-table__header">
+            <h3>Liste des utilisateurs</h3>
+            <span style="color:var(--text-secondary);font-size:13px;">{{ users|length }} utilisateur(s)</span>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Utilisateur</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Inscription</th>
+                    <th>Methode</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                    <tr>
+                        <td>
+                            <div style="display:flex;align-items:center;gap:10px;">
+                                {% set av = user_avatar(user) %}
+                                {% if av %}
+                                    <img src="{{ av starts with 'http' ? av : asset(av) }}" alt="" style="width:30px;height:30px;border-radius:50%;object-fit:cover;">
+                                {% else %}
+                                    <div style="width:30px;height:30px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;">
+                                        {{ user.username|slice(0, 1)|upper }}
+                                    </div>
+                                {% endif %}
+                                {{ user.username }}
+                            </div>
+                        </td>
+                        <td style="color:var(--text-secondary);">{{ user.email }}</td>
+                        <td>{{ role_badge(user.roles)|raw }}</td>
+                        <td style="color:var(--text-secondary);">{{ user.createdAt|date('d/m/Y H:i') }}</td>
+                        <td>
+                            {% if user.googleId %}
+                                <i class="fab fa-google" style="color:#ea4335;" title="Google"></i>
+                            {% endif %}
+                            {% if user.discordId %}
+                                <i class="fab fa-discord" style="color:#5865f2;" title="Discord"></i>
+                            {% endif %}
+                            {% if user.twitchId %}
+                                <i class="fab fa-twitch" style="color:#9146ff;" title="Twitch"></i>
+                            {% endif %}
+                            {% if user.steamId %}
+                                <i class="fab fa-steam" style="color:#c7d5e0;" title="Steam"></i>
+                            {% endif %}
+                            {% if user.password %}
+                                <i class="fas fa-envelope" style="color:var(--text-secondary);" title="Email/Password"></i>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div style="display:flex;gap:8px;">
+                                {% if is_granted('ROLE_RESPONSABLE') %}
+                                    <a href="{{ path('admin_users_edit', {id: user.id}) }}" class="btn-admin btn-admin--outline btn-admin--sm">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                {% endif %}
+                                {% if is_granted('ROLE_FONDATEUR') and user != app.user %}
+                                    <form method="post" action="{{ path('admin_users_delete', {id: user.id}) }}" onsubmit="return confirm('Supprimer cet utilisateur ?');" style="display:inline;">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete_' ~ user.id) }}">
+                                        <button type="submit" class="btn-admin btn-admin--sm" style="background:var(--danger);color:#fff;border:none;">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="6" style="text-align:center;color:var(--text-secondary);padding:30px;">
+                            Aucun utilisateur inscrit.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

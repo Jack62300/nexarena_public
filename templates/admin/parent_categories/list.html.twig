@@ -1,0 +1,82 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block page_title %}Categories{% endblock %}
+{% block title %}Nexarena Admin - Categories{% endblock %}
+
+{% block admin_body %}
+    <div class="admin-table">
+        <div class="admin-table__header">
+            <h3>Categories parentes</h3>
+            <a href="{{ path('admin_parent_categories_new') }}" class="btn-admin btn-admin--primary">
+                <i class="fas fa-plus"></i> Nouvelle categorie
+            </a>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Icone</th>
+                    <th>Nom</th>
+                    <th>Sous-categories</th>
+                    <th>Position</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for category in categories %}
+                    <tr>
+                        <td>
+                            {% if category.icon %}
+                                <i class="{{ category.icon }}" style="font-size:20px;color:var(--accent);"></i>
+                            {% elseif category.image %}
+                                <img src="{{ asset('uploads/categories/' ~ category.image) }}" alt="" style="width:40px;height:40px;object-fit:cover;border-radius:4px;">
+                            {% else %}
+                                <i class="fas fa-folder" style="font-size:20px;color:var(--text-secondary);"></i>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <strong>{{ category.name }}</strong>
+                            {% if category.description %}
+                                <br><small style="color:var(--text-secondary);">{{ category.description|slice(0, 60) }}{% if category.description|length > 60 %}...{% endif %}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge" style="background:var(--accent);color:#fff;padding:4px 10px;border-radius:10px;font-size:12px;">
+                                {{ category.gameCategories|length }}
+                            </span>
+                        </td>
+                        <td style="color:var(--text-secondary);">{{ category.position }}</td>
+                        <td>
+                            {% if category.isActive %}
+                                <span class="status-dot status-dot--active"></span>Active
+                            {% else %}
+                                <span class="status-dot status-dot--inactive"></span>Inactive
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div style="display:flex;gap:8px;">
+                                <a href="{{ path('admin_parent_categories_edit', {id: category.id}) }}" class="btn-admin btn-admin--outline btn-admin--sm">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                {% if is_granted('ROLE_MANAGER') %}
+                                    <form method="post" action="{{ path('admin_parent_categories_delete', {id: category.id}) }}" onsubmit="return confirm('Supprimer cette categorie ? Les sous-categories seront conservees mais detachees.');" style="display:inline;">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete_' ~ category.id) }}">
+                                        <button type="submit" class="btn-admin btn-admin--sm" style="background:var(--danger);color:#fff;border:none;">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="6" style="text-align:center;color:var(--text-secondary);padding:30px;">
+                            Aucune categorie pour le moment.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

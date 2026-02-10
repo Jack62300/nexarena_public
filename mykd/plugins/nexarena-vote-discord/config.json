@@ -1,0 +1,10 @@
+{
+  "bot_token": "YOUR_BOT_TOKEN",
+  "client_id": "YOUR_CLIENT_ID",
+  "guild_id": "YOUR_GUILD_ID",
+  "nexarena_api_url": "https://nexarena.fr",
+  "nexarena_server_token": "YOUR_SERVER_TOKEN",
+  "vote_url": "https://nexarena.fr/serveur/your-server-slug",
+  "reward_role_id": "YOUR_ROLE_ID",
+  "embed_color": "#45f882"
+}

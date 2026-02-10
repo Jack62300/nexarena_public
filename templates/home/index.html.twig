@@ -1,0 +1,1474 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ setting('seo_title', 'Nexarena - Classement de Serveurs de Jeux') }}{% endblock %}
+
+{% block stylesheets %}
+<style>
+    /* ===== BANNER ===== */
+    .banner__area-four.banner--compact {
+        padding: 100px 0 80px;
+    }
+    .banner--compact .banner__bg::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.5) 100%);
+        z-index: 1;
+    }
+    .banner--compact .banner__bg img {
+        filter: brightness(0.6);
+    }
+    .banner--compact .banner__content.slider__content {
+        margin: 0;
+    }
+    .banner--compact .banner__content .title {
+        font-size: 62px;
+        margin-bottom: 16px;
+        line-height: 1;
+    }
+    .banner--compact .banner__content .sub-title {
+        font-size: 20px;
+        max-width: 400px;
+        line-height: 1.4;
+        letter-spacing: normal;
+        padding: 0;
+        color: rgba(255,255,255,0.7);
+        font-weight: 400;
+        margin-bottom: 28px;
+    }
+    .banner--compact .banner__content .sub-title::before {
+        display: none;
+    }
+    .banner--compact .banner__content .banner__btn {
+        margin: 0;
+    }
+    .banner--compact .banner__content .title .text-stroke {
+        display: none;
+    }
+    .banner--compact .slider__img5 {
+        margin: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .banner--compact .banner-logo-wrap {
+        position: relative;
+        width: 340px;
+        max-width: 100%;
+    }
+    .banner--compact .banner-logo-wrap::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 260px;
+        height: 260px;
+        background: radial-gradient(circle, rgba(69,248,130,0.08) 0%, transparent 70%);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+    .banner--compact .banner-logo-wrap img {
+        width: 100%;
+        height: auto;
+        filter: drop-shadow(0 0 30px rgba(69,248,130,0.15));
+    }
+    @media (max-width: 1199.98px) {
+        .banner__area-four.banner--compact { padding: 80px 0 60px; }
+        .banner--compact .slider__img5 { margin-bottom: 10px; }
+        .banner--compact .banner-logo-wrap { width: 260px; margin: 0 auto; }
+        .banner--compact .banner__content.slider__content { text-align: center; }
+        .banner--compact .banner__content .sub-title { margin-left: auto; margin-right: auto; }
+        .banner--compact .banner__content .banner__btn { justify-content: center; }
+    }
+    @media (max-width: 767.98px) {
+        .banner__area-four.banner--compact { padding: 60px 0 50px; }
+        .banner--compact .banner__content .title { font-size: 40px; }
+        .banner--compact .banner__content .sub-title { font-size: 16px; }
+        .banner--compact .banner-logo-wrap { width: 200px; }
+    }
+
+    /* ===== AREA BACKGROUND WRAPPER ===== */
+    .home-area-bg {
+        position: relative;
+        overflow: hidden;
+    }
+    .home-area-bg::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg,
+            rgba(9, 14, 22, 0.92) 0%,
+            rgba(9, 14, 22, 0.85) 30%,
+            rgba(9, 14, 22, 0.88) 60%,
+            rgba(9, 14, 22, 0.95) 100%
+        );
+        z-index: 1;
+        pointer-events: none;
+    }
+    .home-area-bg > * {
+        position: relative;
+        z-index: 2;
+    }
+
+    /* ===== HOME SECTIONS ===== */
+    .home-section {
+        padding: 80px 0;
+    }
+    .home-section:first-child {
+        padding-top: 100px;
+    }
+    .home-section:last-child {
+        padding-bottom: 100px;
+    }
+
+    /* Section titles */
+    .home-section .section__title::after {
+        display: none;
+    }
+    .home-section .section__title .sub-title {
+        color: #45f882;
+        font-size: 13px;
+        letter-spacing: 3px;
+        margin-bottom: 10px;
+    }
+    .home-section .section__title .title {
+        font-size: 36px;
+    }
+
+    /* ===== TOP 5 LEADERBOARD — VERTICAL CARDS ===== */
+    .lb-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 14px;
+        align-items: end;
+    }
+    .lb-card {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 24px 14px 20px;
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        color: #e4e6eb;
+        overflow: hidden;
+    }
+    /* Background image layer */
+    .lb-card__bg {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+    }
+    .lb-card__bg img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0.15;
+    }
+    .lb-card__bg::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(10,15,24,0.7) 0%, rgba(10,15,24,0.9) 60%, rgba(10,15,24,0.95) 100%);
+    }
+    .lb-card > *:not(.lb-card__bg) {
+        position: relative;
+        z-index: 1;
+    }
+    .lb-card:hover .lb-card__bg img {
+        opacity: 0.25;
+    }
+    .lb-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: rgba(255,255,255,0.06);
+        border-radius: 12px 12px 0 0;
+        z-index: 2;
+    }
+    .lb-card:hover {
+        border-color: rgba(69,248,130,0.18);
+        transform: translateY(-6px);
+        color: #fff;
+    }
+
+    /* #1 — Gold highlight */
+    .lb-card--1 {
+        background: linear-gradient(180deg, rgba(255,215,0,0.06) 0%, rgba(255,255,255,0.02) 40%);
+        border-color: rgba(255,215,0,0.15);
+        padding-top: 28px;
+        padding-bottom: 24px;
+    }
+    .lb-card--1::before {
+        height: 3px;
+        background: linear-gradient(90deg, transparent, #FFD700, transparent);
+        box-shadow: 0 0 12px rgba(255,215,0,0.3);
+    }
+    .lb-card--1:hover { border-color: rgba(255,215,0,0.35); }
+
+    /* #2 — Silver */
+    .lb-card--2::before { background: linear-gradient(90deg, transparent, #C0C0C0, transparent); }
+    .lb-card--2 { border-color: rgba(192,192,192,0.1); }
+
+    /* #3 — Bronze */
+    .lb-card--3::before { background: linear-gradient(90deg, transparent, #CD7F32, transparent); }
+    .lb-card--3 { border-color: rgba(205,127,50,0.1); }
+
+    /* Rank badge */
+    .lb-card__rank {
+        width: 38px;
+        height: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        font-weight: 900;
+        border-radius: 10px;
+        margin-bottom: 16px;
+        font-family: 'Poppins', sans-serif;
+    }
+    .lb-card--1 .lb-card__rank {
+        width: 46px;
+        height: 46px;
+        font-size: 20px;
+        background: linear-gradient(135deg, #FFD700, #FFA500);
+        color: #0a0f18;
+        box-shadow: 0 0 18px rgba(255,215,0,0.3), inset 0 1px 0 rgba(255,255,255,0.3);
+    }
+    .lb-card--2 .lb-card__rank {
+        background: linear-gradient(135deg, #C0C0C0, #A0A0A0);
+        color: #1a1a2e;
+        box-shadow: 0 0 12px rgba(192,192,192,0.2);
+    }
+    .lb-card--3 .lb-card__rank {
+        background: linear-gradient(135deg, #CD7F32, #A0622E);
+        color: #1a1a2e;
+        box-shadow: 0 0 12px rgba(205,127,50,0.2);
+    }
+    .lb-card--4 .lb-card__rank,
+    .lb-card--5 .lb-card__rank {
+        background: rgba(255,255,255,0.06);
+        color: rgba(255,255,255,0.45);
+    }
+
+    /* Server image */
+    .lb-card__img {
+        width: 72px;
+        height: 72px;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 14px;
+        border: 2px solid rgba(255,255,255,0.06);
+        background: rgba(255,255,255,0.03);
+        flex-shrink: 0;
+    }
+    .lb-card--1 .lb-card__img {
+        width: 84px;
+        height: 84px;
+        border-color: rgba(255,215,0,0.2);
+    }
+    .lb-card__img img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .lb-card__img--placeholder {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        font-size: 24px;
+        color: rgba(255,255,255,0.1);
+    }
+
+    /* Server name */
+    .lb-card__name {
+        font-size: 14px;
+        font-weight: 700;
+        margin-bottom: 4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+    }
+    .lb-card--1 .lb-card__name {
+        font-size: 16px;
+    }
+
+    /* Category meta */
+    .lb-card__meta {
+        font-size: 11px;
+        color: rgba(255,255,255,0.3);
+        margin-bottom: 14px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+    }
+    .lb-card__meta i { margin-right: 3px; font-size: 10px; }
+
+    /* Vote count */
+    .lb-card__votes {
+        font-size: 22px;
+        font-weight: 900;
+        color: #45f882;
+        line-height: 1;
+    }
+    .lb-card--1 .lb-card__votes {
+        font-size: 28px;
+        text-shadow: 0 0 16px rgba(69,248,130,0.3);
+    }
+    .lb-card__votes-label {
+        font-size: 10px;
+        color: rgba(255,255,255,0.3);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-top: 4px;
+    }
+
+    /* Responsive */
+    @media (max-width: 1199.98px) {
+        .lb-grid { grid-template-columns: repeat(5, 1fr); gap: 10px; }
+        .lb-card { padding: 20px 10px 16px; }
+        .lb-card__img { width: 60px; height: 60px; }
+        .lb-card--1 .lb-card__img { width: 68px; height: 68px; }
+        .lb-card__name { font-size: 13px; }
+        .lb-card--1 .lb-card__name { font-size: 14px; }
+        .lb-card__votes { font-size: 18px; }
+        .lb-card--1 .lb-card__votes { font-size: 22px; }
+    }
+    @media (max-width: 991.98px) {
+        .lb-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 575.98px) {
+        .lb-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+        .lb-card { padding: 16px 8px 14px; }
+        .lb-card__rank { width: 32px; height: 32px; font-size: 14px; margin-bottom: 10px; }
+        .lb-card--1 .lb-card__rank { width: 38px; height: 38px; font-size: 17px; }
+        .lb-card__img { width: 52px; height: 52px; }
+        .lb-card--1 .lb-card__img { width: 58px; height: 58px; }
+        .lb-card__name { font-size: 12px; }
+        .lb-card__votes { font-size: 16px; }
+        .lb-card--1 .lb-card__votes { font-size: 20px; }
+    }
+
+    /* ===== FEATURED SERVERS — SPOTLIGHT ===== */
+    .nx-spot {
+        position: relative;
+        padding: 10px 0 0;
+    }
+    .nx-spot__header {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 28px;
+    }
+    .nx-spot__badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 16px;
+        background: linear-gradient(135deg, rgba(255,180,50,0.12) 0%, rgba(255,120,20,0.06) 100%);
+        border: 1px solid rgba(255,180,50,0.25);
+        border-radius: 6px;
+        clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 0 100%);
+        white-space: nowrap;
+    }
+    .nx-spot__badge i {
+        font-size: 13px;
+        color: #ffb432;
+    }
+    .nx-spot__badge span {
+        font-size: 13px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: #ffb432;
+    }
+    .nx-spot__line {
+        flex: 1;
+        height: 1px;
+        background: linear-gradient(90deg, rgba(255,180,50,0.25) 0%, transparent 100%);
+    }
+
+    /* Featured grid */
+    .nx-spot__grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 14px;
+    }
+
+    /* Individual featured card */
+    .nx-spot__card {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 14px 18px;
+        background: rgba(255,180,50,0.02);
+        border: 1px solid rgba(255,180,50,0.08);
+        border-radius: 8px;
+        text-decoration: none;
+        color: #d0d3da;
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+    .nx-spot__card::before {
+        content: "";
+        position: absolute;
+        top: 0; left: 0; bottom: 0;
+        width: 3px;
+        background: linear-gradient(180deg, #ffb432, #ff8c1a);
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+    .nx-spot__card:hover::before {
+        opacity: 1;
+    }
+    .nx-spot__card:hover {
+        background: rgba(255,180,50,0.05);
+        border-color: rgba(255,180,50,0.2);
+        color: #fff;
+        transform: translateX(4px);
+        box-shadow: 0 4px 20px rgba(255,180,50,0.08);
+    }
+
+    /* Rank index */
+    .nx-spot__idx {
+        flex-shrink: 0;
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 800;
+        color: rgba(255,180,50,0.35);
+        border: 1px solid rgba(255,180,50,0.1);
+        border-radius: 6px;
+        background: rgba(255,180,50,0.03);
+        font-family: 'Poppins', sans-serif;
+    }
+    .nx-spot__card:hover .nx-spot__idx {
+        color: #ffb432;
+        border-color: rgba(255,180,50,0.3);
+        background: rgba(255,180,50,0.08);
+    }
+
+    /* Server image */
+    .nx-spot__img {
+        width: 46px;
+        height: 46px;
+        border-radius: 8px;
+        overflow: hidden;
+        flex-shrink: 0;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,180,50,0.08);
+        transition: border-color 0.3s;
+    }
+    .nx-spot__card:hover .nx-spot__img {
+        border-color: rgba(255,180,50,0.25);
+    }
+    .nx-spot__img img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .nx-spot__img--ph {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        font-size: 18px;
+        color: rgba(255,255,255,0.12);
+    }
+
+    /* Info */
+    .nx-spot__info {
+        flex: 1;
+        min-width: 0;
+    }
+    .nx-spot__name {
+        font-size: 14px;
+        font-weight: 700;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .nx-spot__meta {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 3px;
+        font-size: 11px;
+        color: rgba(255,255,255,0.3);
+    }
+    .nx-spot__meta-cat {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .nx-spot__meta-cat i { font-size: 9px; color: rgba(255,180,50,0.4); }
+    .nx-spot__meta-star {
+        color: #ffb432;
+        font-size: 9px;
+    }
+
+    /* Votes */
+    .nx-spot__votes {
+        flex-shrink: 0;
+        text-align: center;
+        padding-left: 12px;
+        border-left: 1px solid rgba(255,180,50,0.06);
+    }
+    .nx-spot__votes-num {
+        font-size: 17px;
+        font-weight: 800;
+        color: #ffb432;
+        line-height: 1;
+    }
+    .nx-spot__card:hover .nx-spot__votes-num {
+        text-shadow: 0 0 10px rgba(255,180,50,0.3);
+    }
+    .nx-spot__votes-lbl {
+        font-size: 9px;
+        color: rgba(255,255,255,0.25);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-top: 2px;
+    }
+
+    @media (max-width: 767.98px) {
+        .nx-spot__grid { grid-template-columns: 1fr; }
+        .nx-spot__card { padding: 12px 14px; gap: 10px; }
+        .nx-spot__img { width: 40px; height: 40px; }
+        .nx-spot__name { font-size: 13px; }
+    }
+
+    /* ===== CATEGORIES — GAMING REDESIGN ===== */
+
+    /* Parent category group */
+    .cat-group {
+        margin-bottom: 50px;
+    }
+    .cat-group:last-child {
+        margin-bottom: 0;
+    }
+
+    /* Parent header — bold gaming style */
+    .cat-group__header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    .cat-group__badge {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 20px 8px 14px;
+        background: linear-gradient(135deg, rgba(69,248,130,0.12) 0%, rgba(69,248,130,0.03) 100%);
+        border: 1px solid rgba(69,248,130,0.2);
+        clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 0 100%, 0 0);
+        white-space: nowrap;
+    }
+    .cat-group__badge i {
+        font-size: 16px;
+        color: #45f882;
+    }
+    .cat-group__badge span {
+        font-size: 14px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: #fff;
+    }
+    .cat-group__line {
+        flex: 1;
+        height: 1px;
+        background: linear-gradient(90deg, rgba(69,248,130,0.2) 0%, transparent 100%);
+    }
+
+    /* Sub-category tiles grid */
+    .cat-tiles {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 12px;
+    }
+
+    /* Individual tile — uses --tile-color custom property */
+    .cat-tile {
+        --tc: var(--tile-color, 69,248,130);
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px 18px;
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(var(--tc), 0.25);
+        border-radius: 4px;
+        clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
+        text-decoration: none;
+        color: #c8ccd4;
+        transition: all 0.25s ease;
+        overflow: hidden;
+    }
+
+    /* Background image */
+    .cat-tile__bg {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+    }
+    .cat-tile__bg img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    .cat-tile__bg::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, rgba(10,15,24,0.8) 0%, rgba(10,15,24,0.55) 100%);
+    }
+    .cat-tile > *:not(.cat-tile__bg) {
+        position: relative;
+        z-index: 1;
+    }
+    .cat-tile:hover .cat-tile__bg img {
+        opacity: 0.3;
+    }
+
+    /* Corner cut decoration */
+    .cat-tile::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 16px;
+        height: 16px;
+        border-bottom: 1px solid rgba(var(--tc), 0.2);
+        transform: rotate(45deg) translate(5px, -8px);
+        pointer-events: none;
+        z-index: 2;
+    }
+    .cat-tile:hover {
+        background: rgba(var(--tc), 0.06);
+        border-color: rgba(var(--tc), 0.45);
+        color: #fff;
+        transform: translateY(-3px);
+        box-shadow: 0 6px 24px rgba(var(--tc), 0.12);
+    }
+
+    /* Tile icon */
+    .cat-tile__icon {
+        flex-shrink: 0;
+        width: 38px;
+        height: 38px;
+        border-radius: 8px;
+        overflow: hidden;
+        background: rgba(var(--tc), 0.06);
+        border: 1px solid rgba(var(--tc), 0.12);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.25s;
+    }
+    .cat-tile__icon img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .cat-tile__icon i {
+        font-size: 16px;
+        color: rgba(var(--tc), 0.5);
+        transition: color 0.25s;
+    }
+    .cat-tile:hover .cat-tile__icon i {
+        color: rgb(var(--tc));
+    }
+    .cat-tile:hover .cat-tile__icon {
+        border-color: rgba(var(--tc), 0.3);
+        background: rgba(var(--tc), 0.1);
+    }
+
+    /* Tile name */
+    .cat-tile__name {
+        flex: 1;
+        font-size: 14px;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Tile arrow */
+    .cat-tile__arrow {
+        flex-shrink: 0;
+        font-size: 11px;
+        color: rgba(255,255,255,0.15);
+        transition: all 0.25s;
+    }
+    .cat-tile:hover .cat-tile__arrow {
+        color: rgb(var(--tc));
+        transform: translateX(3px);
+    }
+
+    /* ===== FLOATING TOOLTIP ===== */
+    .cat-float-tip {
+        position: absolute;
+        z-index: 9999;
+        display: none;
+        width: 270px;
+        padding: 16px;
+        background: rgba(12, 17, 28, 0.97);
+        border: 1px solid rgba(var(--tip-c, 69,248,130), 0.3);
+        border-radius: 10px;
+        backdrop-filter: blur(14px);
+        pointer-events: none;
+        opacity: 0;
+        transform: translateY(6px);
+        transition: opacity 0.2s ease, transform 0.2s ease;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 20px rgba(var(--tip-c, 69,248,130), 0.08);
+    }
+    .cat-float-tip.is-visible {
+        display: block;
+        opacity: 1;
+        transform: translateY(0);
+    }
+    .cat-float-tip::after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border: 6px solid transparent;
+        border-top-color: rgba(var(--tip-c, 69,248,130), 0.3);
+    }
+    .cat-float-tip__head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid rgba(var(--tip-c), 0.12);
+    }
+    .cat-float-tip__icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        overflow: hidden;
+        flex-shrink: 0;
+        border: 1px solid rgba(var(--tip-c), 0.2);
+    }
+    .cat-float-tip__icon img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .cat-float-tip__name {
+        font-size: 14px;
+        font-weight: 700;
+        color: #fff;
+        line-height: 1.2;
+    }
+    .cat-float-tip__desc {
+        font-size: 12px;
+        color: rgba(255,255,255,0.55);
+        line-height: 1.5;
+        margin-bottom: 12px;
+    }
+    .cat-float-tip__stats {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 12px;
+        background: rgba(var(--tip-c), 0.08);
+        border: 1px solid rgba(var(--tip-c), 0.12);
+        border-radius: 6px;
+    }
+    .cat-float-tip__stats i {
+        font-size: 12px;
+        color: rgb(var(--tip-c));
+    }
+    .cat-float-tip__stats-count {
+        font-size: 14px;
+        font-weight: 800;
+        color: rgb(var(--tip-c));
+    }
+    .cat-float-tip__stats-label {
+        font-size: 11px;
+        color: rgba(255,255,255,0.45);
+    }
+
+    @media (max-width: 991.98px) {
+        .cat-tiles { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+    }
+    @media (max-width: 575.98px) {
+        .cat-tiles { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+        .cat-tile { padding: 12px 12px; gap: 10px; }
+        .cat-tile__icon { width: 30px; height: 30px; }
+        .cat-tile__name { font-size: 12px; }
+        .cat-group__badge span { font-size: 12px; letter-spacing: 1px; }
+        .cat-float-tip { display: none !important; }
+    }
+
+    /* ===== SECTION SEPARATOR ===== */
+    .home-separator {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0;
+        padding: 10px 0;
+        max-width: 500px;
+        margin: 0 auto;
+    }
+    .home-separator__line {
+        flex: 1;
+        height: 1px;
+        background: linear-gradient(90deg, transparent 0%, rgba(69,248,130,0.3) 100%);
+    }
+    .home-separator__line--right {
+        background: linear-gradient(90deg, rgba(69,248,130,0.3) 0%, transparent 100%);
+    }
+    .home-separator__center {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0 14px;
+        position: relative;
+    }
+    .home-separator__diamond {
+        width: 8px;
+        height: 8px;
+        background: #45f882;
+        transform: rotate(45deg);
+        opacity: 0.6;
+        box-shadow: 0 0 10px rgba(69,248,130,0.4), 0 0 20px rgba(69,248,130,0.15);
+    }
+    .home-separator__dot {
+        width: 3px;
+        height: 3px;
+        background: #45f882;
+        opacity: 0.3;
+        transform: rotate(45deg);
+    }
+
+    /* ===== PARTNERS / SERVICES — GAMING STRIP ===== */
+    .nx-partners-zone {
+        position: relative;
+        padding: 70px 0 80px;
+        overflow: hidden;
+    }
+    .nx-partners-zone::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg,
+            rgba(9,14,22,0) 0%,
+            rgba(69,248,130,0.02) 30%,
+            rgba(69,248,130,0.03) 70%,
+            rgba(9,14,22,0) 100%
+        );
+        pointer-events: none;
+    }
+    /* Top and bottom glowing lines */
+    .nx-partners-zone::after {
+        content: "";
+        position: absolute;
+        top: 0; left: 10%; right: 10%; height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(69,248,130,0.2), transparent);
+    }
+    .nx-pz-bottom-line {
+        position: absolute;
+        bottom: 0; left: 10%; right: 10%; height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(69,248,130,0.2), transparent);
+    }
+
+    /* Section header */
+    .nx-pz-header {
+        text-align: center;
+        margin-bottom: 45px;
+    }
+    .nx-pz-header__tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 18px;
+        background: rgba(69,248,130,0.06);
+        border: 1px solid rgba(69,248,130,0.15);
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        color: #45f882;
+        margin-bottom: 16px;
+    }
+    .nx-pz-header__tag i { font-size: 10px; }
+    .nx-pz-header__title {
+        font-size: 28px;
+        font-weight: 800;
+        color: #fff;
+        margin: 0;
+    }
+    .nx-pz-header__sub {
+        font-size: 14px;
+        color: rgba(255,255,255,0.35);
+        margin-top: 8px;
+    }
+
+    /* Row with two columns: partners left, services right */
+    .nx-pz-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+    }
+
+    /* Column card */
+    .nx-pz-col {
+        position: relative;
+        padding: 28px;
+        background: rgba(255,255,255,0.015);
+        border: 1px solid rgba(255,255,255,0.05);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    .nx-pz-col::before {
+        content: "";
+        position: absolute;
+        top: 0; left: 0; right: 0; height: 2px;
+        border-radius: 12px 12px 0 0;
+    }
+    .nx-pz-col--partners::before {
+        background: linear-gradient(90deg, transparent, #45f882, transparent);
+        opacity: 0.4;
+    }
+    .nx-pz-col--services::before {
+        background: linear-gradient(90deg, transparent, #4fc3f7, transparent);
+        opacity: 0.4;
+    }
+
+    /* Column label */
+    .nx-pz-col__label {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 22px;
+        padding-bottom: 14px;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .nx-pz-col__label-icon {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        font-size: 14px;
+    }
+    .nx-pz-col--partners .nx-pz-col__label-icon {
+        background: rgba(69,248,130,0.1);
+        color: #45f882;
+        border: 1px solid rgba(69,248,130,0.15);
+    }
+    .nx-pz-col--services .nx-pz-col__label-icon {
+        background: rgba(79,195,247,0.1);
+        color: #4fc3f7;
+        border: 1px solid rgba(79,195,247,0.15);
+    }
+    .nx-pz-col__label-text {
+        font-size: 13px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: rgba(255,255,255,0.6);
+    }
+    .nx-pz-col__label-count {
+        margin-left: auto;
+        font-size: 11px;
+        color: rgba(255,255,255,0.25);
+        font-weight: 600;
+    }
+
+    /* Partner/Service items grid */
+    .nx-pz-items {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 10px;
+    }
+
+    /* Individual item card */
+    .nx-pz-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 18px 12px;
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.04);
+        border-radius: 8px;
+        text-decoration: none;
+        color: rgba(255,255,255,0.45);
+        transition: all 0.3s ease;
+        text-align: center;
+    }
+    .nx-pz-col--partners .nx-pz-item:hover {
+        background: rgba(69,248,130,0.04);
+        border-color: rgba(69,248,130,0.2);
+        color: #fff;
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(69,248,130,0.08);
+    }
+    .nx-pz-col--services .nx-pz-item:hover {
+        background: rgba(79,195,247,0.04);
+        border-color: rgba(79,195,247,0.2);
+        color: #fff;
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(79,195,247,0.08);
+    }
+    .nx-pz-item__logo {
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+    .nx-pz-item__logo img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        filter: grayscale(80%) brightness(1.3);
+        transition: filter 0.3s ease;
+    }
+    .nx-pz-item:hover .nx-pz-item__logo img {
+        filter: grayscale(0%) brightness(1);
+    }
+    .nx-pz-item__logo i {
+        font-size: 24px;
+        opacity: 0.3;
+    }
+    .nx-pz-item__name {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+    }
+
+    /* Single column fallback if only one type */
+    .nx-pz-grid--single {
+        grid-template-columns: 1fr;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    @media (max-width: 991.98px) {
+        .nx-pz-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 575.98px) {
+        .nx-partners-zone { padding: 50px 0 60px; }
+        .nx-pz-header__title { font-size: 22px; }
+        .nx-pz-col { padding: 20px; }
+        .nx-pz-items { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; }
+        .nx-pz-item { padding: 14px 8px; }
+        .nx-pz-item__logo { width: 36px; height: 36px; }
+    }
+
+    @media (max-width: 767.98px) {
+        .home-section { padding: 60px 0; }
+        .home-section .section__title .title { font-size: 28px; }
+        .home-section:first-child { padding-top: 70px; }
+        .home-section:last-child { padding-bottom: 70px; }
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+
+    {# ===== BANNER / HERO ===== #}
+    <section class="banner__area banner__area-four banner--compact">
+        <div class="banner__bg tg-jarallax">
+            {% if setting('banner_bg_image') %}
+                <img src="{{ asset(setting('banner_bg_image')) }}" alt="img">
+            {% else %}
+                <img src="{{ asset('assets/img/slider/banner_bg5.png') }}" alt="img">
+            {% endif %}
+        </div>
+        <div class="container custom-container4">
+            <div class="row gy-4 align-items-center flex-row-reverse">
+                <div class="col-xl-5">
+                    <div class="slider__img5">
+                        <div class="banner-logo-wrap" data-magnetic="">
+                            <img src="{{ asset('assets/img/logo/logo-banner.svg') }}" alt="Nexarena">
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-7">
+                    <div class="banner__content slider__content">
+                        <h2 class="title wow fadeInUp" data-wow-delay=".1s">{{ setting('banner_title', 'Nexarena') }}</h2>
+                        <h3 class="sub-title wow fadeInUp" data-wow-delay=".2s">{{ setting('banner_subtitle', 'Trouvez et votez pour les meilleurs serveurs de jeux') }}</h3>
+                        <div class="banner__btn d-flex wow fadeInUp" data-wow-delay=".4s">
+                            <a href="{{ setting('banner_cta_url', '#categories') }}" class="tg-btn-5">
+                                <span>{{ setting('banner_cta_text', 'Voir les jeux') }}</span>
+                            </a>
+                            <a href="{{ path('articles_list') }}" class="tg-btn-line">
+                                <span>Actualites</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {# ===== MAIN CONTENT AREA — Shared background, no dividers ===== #}
+    <div class="home-area-bg area-background" data-background="{{ asset('assets/img/bg/area_bg02.jpg') }}">
+
+        {# ===== TOP 5 SERVEURS ===== #}
+        <section class="home-section">
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-xl-6 col-lg-7 col-md-10">
+                        <div class="section__title text-center mb-50">
+                            <span class="sub-title tg__animate-text">{{ setting('homepage_top_servers_subtitle', 'Les serveurs les plus votes ce mois-ci') }}</span>
+                            <h3 class="title">{{ setting('homepage_top_servers_title', 'TOP SERVEURS') }}</h3>
+                        </div>
+                    </div>
+                </div>
+
+                {% set top5 = topServers|slice(0, 5) %}
+                {% if top5|length > 0 %}
+                    <div class="lb-grid">
+                        {% for server in top5 %}
+                            {% set rank = loop.index %}
+                            <a href="{{ path('server_show', {slug: server.slug}) }}" class="lb-card lb-card--{{ rank }}">
+                                {% if server.presentationImage %}
+                                    <div class="lb-card__bg"><img src="{{ asset('uploads/servers/presentations/' ~ server.presentationImage) }}" alt=""></div>
+                                {% endif %}
+                                <div class="lb-card__rank">{{ rank }}</div>
+                                <div class="lb-card__img">
+                                    {% if server.presentationImage %}
+                                        <img src="{{ asset('uploads/servers/presentations/' ~ server.presentationImage) }}" alt="{{ server.name }}">
+                                    {% else %}
+                                        <div class="lb-card__img--placeholder"><i class="fas fa-server"></i></div>
+                                    {% endif %}
+                                </div>
+                                <div class="lb-card__name">{{ server.name }}</div>
+                                <div class="lb-card__meta">
+                                    {% if server.gameCategory %}
+                                        <i class="fas fa-gamepad"></i> {{ server.gameCategory.name }}
+                                    {% elseif server.category %}
+                                        <i class="{{ server.category.icon ?? 'fas fa-server' }}"></i> {{ server.category.name }}
+                                    {% endif %}
+                                </div>
+                                <div class="lb-card__votes">{{ server.monthlyVotes }}</div>
+                                <div class="lb-card__votes-label">votes</div>
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center" style="padding:40px 0;">
+                        <i class="fas fa-server" style="font-size:48px;color:rgba(255,255,255,0.15);margin-bottom:15px;display:block;"></i>
+                        <p style="color:rgba(255,255,255,0.4);">Aucun serveur pour le moment. Soyez le premier a ajouter le votre !</p>
+                    </div>
+                {% endif %}
+            </div>
+        </section>
+
+        {# ===== SERVEURS MIS EN AVANT ===== #}
+        {% if featuredServers|length > 0 %}
+            <div class="home-separator">
+                    <div class="home-separator__line"></div>
+                    <div class="home-separator__center">
+                        <div class="home-separator__dot"></div>
+                        <div class="home-separator__dot"></div>
+                        <div class="home-separator__diamond"></div>
+                        <div class="home-separator__dot"></div>
+                        <div class="home-separator__dot"></div>
+                    </div>
+                    <div class="home-separator__line home-separator__line--right"></div>
+                </div>
+
+            <section class="home-section">
+                <div class="container">
+                    <div class="nx-spot">
+                        <div class="nx-spot__header">
+                            <div class="nx-spot__badge">
+                                <i class="fas fa-star"></i>
+                                <span>Mis en avant</span>
+                            </div>
+                            <div class="nx-spot__line"></div>
+                        </div>
+                        <div class="nx-spot__grid">
+                            {% for server in featuredServers %}
+                                <a href="{{ path('server_show', {slug: server.slug}) }}" class="nx-spot__card">
+                                    <div class="nx-spot__idx">{{ loop.index }}</div>
+                                    <div class="nx-spot__img">
+                                        {% if server.presentationImage %}
+                                            <img src="{{ asset('uploads/servers/presentations/' ~ server.presentationImage) }}" alt="{{ server.name }}">
+                                        {% else %}
+                                            <div class="nx-spot__img--ph"><i class="fas fa-server"></i></div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="nx-spot__info">
+                                        <div class="nx-spot__name">{{ server.name }}</div>
+                                        <div class="nx-spot__meta">
+                                            <span class="nx-spot__meta-star"><i class="fas fa-star"></i></span>
+                                            <span class="nx-spot__meta-cat">
+                                                <i class="fas fa-gamepad"></i>
+                                                {% if server.gameCategory %}
+                                                    {{ server.gameCategory.name }}
+                                                {% elseif server.category %}
+                                                    {{ server.category.name }}
+                                                {% endif %}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="nx-spot__votes">
+                                        <div class="nx-spot__votes-num">{{ server.monthlyVotes }}</div>
+                                        <div class="nx-spot__votes-lbl">votes</div>
+                                    </div>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </section>
+        {% endif %}
+
+        {# ===== CATEGORIES — single section ===== #}
+        <div class="home-separator">
+            <div class="home-separator__line"></div>
+            <div class="home-separator__center">
+                <div class="home-separator__dot"></div>
+                <div class="home-separator__dot"></div>
+                <div class="home-separator__diamond"></div>
+                <div class="home-separator__dot"></div>
+                <div class="home-separator__dot"></div>
+            </div>
+            <div class="home-separator__line home-separator__line--right"></div>
+        </div>
+
+        <section id="categories" class="home-section">
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-xl-6 col-lg-7 col-md-10">
+                        <div class="section__title text-center mb-50">
+                            <span class="sub-title tg__animate-text">Explorez nos classements</span>
+                            <h3 class="title">Nos categories</h3>
+                        </div>
+                    </div>
+                </div>
+
+                {% for parentCategory in categories %}
+                    {% set activeGames = [] %}
+                    {% for game in parentCategory.gameCategories %}
+                        {% if game.isActive %}
+                            {% set activeGames = activeGames|merge([game]) %}
+                        {% endif %}
+                    {% endfor %}
+                    {% if activeGames|length > 0 %}
+                        <div class="cat-group" id="categories-{{ parentCategory.slug }}">
+                            <div class="cat-group__header">
+                                <div class="cat-group__badge">
+                                    <i class="{{ parentCategory.icon ?? 'fas fa-gamepad' }}"></i>
+                                    <span>{{ parentCategory.name }}</span>
+                                </div>
+                                <div class="cat-group__line"></div>
+                            </div>
+                            <div class="cat-tiles">
+                                {% for game in activeGames %}
+                                    {% set gcImg = game.image ? asset('uploads/categories/' ~ game.image) : (parentCategory.image ? asset('uploads/categories/' ~ parentCategory.image) : null) %}
+                                    {% set sCount = serverCounts[game.id] ?? 0 %}
+                                    <a href="{{ path('ranking_game_category', {slug: game.slug}) }}" class="cat-tile"
+                                       {% if game.color %}style="--tile-color:{{ game.color|hex_to_rgb }}"{% endif %}
+                                       data-tip-name="{{ game.name }}"
+                                       data-tip-desc="{{ game.description|default('') }}"
+                                       data-tip-count="{{ sCount }}"
+                                       data-tip-img="{{ gcImg ?? '' }}"
+                                       data-tip-color="{{ game.color ? game.color|hex_to_rgb : '69,248,130' }}">
+                                        {% if gcImg %}
+                                            <div class="cat-tile__bg"><img src="{{ gcImg }}" alt=""></div>
+                                        {% endif %}
+                                        <div class="cat-tile__icon">
+                                            {% if gcImg %}
+                                                <img src="{{ gcImg }}" alt="{{ game.name }}">
+                                            {% else %}
+                                                <i class="{{ parentCategory.icon ?? 'fas fa-gamepad' }}"></i>
+                                            {% endif %}
+                                        </div>
+                                        <div class="cat-tile__name">{{ game.name }}</div>
+                                        <div class="cat-tile__arrow"><i class="fas fa-chevron-right"></i></div>
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </section>
+
+    </div>
+    {# end home-area-bg #}
+
+    {# ===== PARTENAIRES & SERVICES ===== #}
+    {% if partners|length > 0 or services|length > 0 %}
+        <section class="nx-partners-zone">
+            <div class="nx-pz-bottom-line"></div>
+            <div class="container">
+                <div class="nx-pz-header">
+                    <div class="nx-pz-header__tag"><i class="fas fa-handshake"></i> Ecosysteme</div>
+                    <h3 class="nx-pz-header__title">Nos partenaires & services</h3>
+                    <p class="nx-pz-header__sub">Ils nous font confiance et accompagnent la communaute Nexarena</p>
+                </div>
+
+                <div class="nx-pz-grid {{ (partners|length == 0 or services|length == 0) ? 'nx-pz-grid--single' : '' }}">
+                    {% if partners|length > 0 %}
+                        <div class="nx-pz-col nx-pz-col--partners">
+                            <div class="nx-pz-col__label">
+                                <div class="nx-pz-col__label-icon"><i class="fas fa-handshake"></i></div>
+                                <span class="nx-pz-col__label-text">Partenaires</span>
+                                <span class="nx-pz-col__label-count">{{ partners|length }}</span>
+                            </div>
+                            <div class="nx-pz-items">
+                                {% for p in partners %}
+                                    <a href="{{ p.url }}" class="nx-pz-item" target="_blank" rel="noopener" title="{{ p.name }}">
+                                        <div class="nx-pz-item__logo">
+                                            {% if p.logoFileName %}
+                                                <img src="{{ asset('uploads/partners/' ~ p.logoFileName) }}" alt="{{ p.name }}">
+                                            {% else %}
+                                                <i class="fas fa-globe"></i>
+                                            {% endif %}
+                                        </div>
+                                        <span class="nx-pz-item__name">{{ p.name }}</span>
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {% if services|length > 0 %}
+                        <div class="nx-pz-col nx-pz-col--services">
+                            <div class="nx-pz-col__label">
+                                <div class="nx-pz-col__label-icon"><i class="fas fa-satellite-dish"></i></div>
+                                <span class="nx-pz-col__label-text">Services suivis</span>
+                                <span class="nx-pz-col__label-count">{{ services|length }}</span>
+                            </div>
+                            <div class="nx-pz-items">
+                                {% for s in services %}
+                                    <a href="{{ s.url }}" class="nx-pz-item" target="_blank" rel="noopener" title="{{ s.name }}">
+                                        <div class="nx-pz-item__logo">
+                                            {% if s.logoFileName %}
+                                                <img src="{{ asset('uploads/partners/' ~ s.logoFileName) }}" alt="{{ s.name }}">
+                                            {% else %}
+                                                <i class="fas fa-server"></i>
+                                            {% endif %}
+                                        </div>
+                                        <span class="nx-pz-item__name">{{ s.name }}</span>
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+    {% endif %}
+
+    {# ===== FLOATING TOOLTIP ===== #}
+    <div class="cat-float-tip" id="catFloatTip">
+        <div class="cat-float-tip__head">
+            <div class="cat-float-tip__icon"><img id="tipImg" src="" alt=""></div>
+            <div class="cat-float-tip__name" id="tipName"></div>
+        </div>
+        <div class="cat-float-tip__desc" id="tipDesc"></div>
+        <div class="cat-float-tip__stats">
+            <i class="fas fa-server"></i>
+            <span class="cat-float-tip__stats-count" id="tipCount"></span>
+            <span class="cat-float-tip__stats-label" id="tipLabel"></span>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+(function(){
+    var tip = document.getElementById('catFloatTip');
+    if (!tip) return;
+    var tipImg = document.getElementById('tipImg');
+    var tipName = document.getElementById('tipName');
+    var tipDesc = document.getElementById('tipDesc');
+    var tipCount = document.getElementById('tipCount');
+    var tipLabel = document.getElementById('tipLabel');
+    var hideTimer;
+
+    document.querySelectorAll('.cat-tile[data-tip-name]').forEach(function(tile){
+        tile.addEventListener('mouseenter', function(){
+            clearTimeout(hideTimer);
+            var name = tile.dataset.tipName;
+            var desc = tile.dataset.tipDesc;
+            var count = parseInt(tile.dataset.tipCount) || 0;
+            var img = tile.dataset.tipImg;
+            var color = tile.dataset.tipColor || '69,248,130';
+
+            tipName.textContent = name;
+            tipDesc.textContent = desc;
+            tipDesc.style.display = desc ? '' : 'none';
+            tipCount.textContent = count;
+            tipLabel.textContent = count !== 1 ? 'serveurs actifs' : 'serveur actif';
+            tip.style.setProperty('--tip-c', color);
+
+            if (img) {
+                tipImg.src = img;
+                tipImg.parentElement.style.display = '';
+            } else {
+                tipImg.parentElement.style.display = 'none';
+            }
+
+            var rect = tile.getBoundingClientRect();
+            var tipW = 270;
+            tip.style.visibility = 'hidden';
+            tip.style.display = 'block';
+            tip.classList.remove('is-visible');
+            var tipH = tip.offsetHeight;
+            tip.style.visibility = '';
+
+            var left = rect.left + rect.width / 2 - tipW / 2;
+            if (left < 8) left = 8;
+            if (left + tipW > window.innerWidth - 8) left = window.innerWidth - tipW - 8;
+
+            var top = rect.top - tipH - 10 + window.scrollY;
+            tip.style.position = 'absolute';
+            tip.style.left = left + 'px';
+            tip.style.top = top + 'px';
+            tip.classList.add('is-visible');
+        });
+
+        tile.addEventListener('mouseleave', function(){
+            hideTimer = setTimeout(function(){
+                tip.classList.remove('is-visible');
+            }, 80);
+        });
+    });
+})();
+</script>
+{% endblock %}

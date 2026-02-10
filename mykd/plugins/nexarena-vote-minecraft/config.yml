@@ -1,0 +1,37 @@
+# =============================================================
+# NexarenaVote - Configuration
+# =============================================================
+# Nexarena vote integration for Minecraft servers.
+# Documentation: https://nexarena.fr/docs/api
+# =============================================================
+
+# Base URL of your Nexarena instance (no trailing slash)
+api-url: "https://nexarena.fr"
+
+# Your server API token (found in your server management panel on Nexarena)
+server-token: "CHANGE_ME"
+
+# Vote page URL sent to players. {player} will be replaced with the player name.
+vote-url: "https://nexarena.fr/serveur/your-server-slug"
+
+# Commands executed as console when a player successfully claims their vote reward.
+# Use {player} as a placeholder for the player's name.
+reward-commands:
+  - "give {player} diamond 1"
+  - "say {player} a vote pour le serveur sur Nexarena ! Merci !"
+
+# Duration in minutes before a player can claim another reward.
+# This prevents double-claiming. The cache resets on server restart.
+claim-cooldown-minutes: 120
+
+# Messages sent to players. Supports color codes with &.
+messages:
+  vote-link: "&a&l[Nexarena] &fVotez pour nous : &b&n{url}"
+  reward-received: "&a&l[Nexarena] &fMerci pour votre vote ! Vos recompenses ont ete distribuees."
+  already-claimed: "&e&l[Nexarena] &fVous avez deja recupere votre recompense. Reessayez plus tard."
+  not-voted: "&c&l[Nexarena] &fVous n'avez pas encore vote. Utilisez &b/vote &fpour obtenir le lien."
+  error: "&c&l[Nexarena] &fUne erreur est survenue lors de la verification. Reessayez plus tard."
+  cooldown: "&e&l[Nexarena] &fVeuillez patienter avant de verifier a nouveau."
+
+# Cooldown in seconds between /checkvote uses per player (prevents API spam)
+check-cooldown-seconds: 30

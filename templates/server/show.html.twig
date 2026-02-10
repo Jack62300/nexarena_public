@@ -1,0 +1,1787 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ server.name }} - {{ setting('site_name', 'Nexarena') }}{% endblock %}
+{% block meta_description %}{{ server.shortDescription }}{% endblock %}
+
+{% block stylesheets %}
+{% set theme = server_theme(server.pageTemplate) %}
+{% set theme_bg = theme_image(server.pageTemplate, 'bg') %}
+{% set theme_decor_l = theme_image(server.pageTemplate, 'decor-left') %}
+{% set theme_decor_r = theme_image(server.pageTemplate, 'decor-right') %}
+<style>
+    :root {
+        --sv-accent: {{ theme.primary }};
+        --sv-accent-dark: {{ theme.secondary }};
+        --sv-accent-rgb: {{ theme.rgb }};
+        --sv-bg-body: {{ theme.bg_body }};
+        --sv-bg-card-rgb: {{ theme.bg_card_rgb }};
+        --sv-border-rgb: {{ theme.border_rgb }};
+        --sv-hero-from: {{ theme.hero_from }};
+        --sv-hero-to: {{ theme.hero_to }};
+        --sv-glow: {{ theme.glow }};
+    }
+
+    /* Override base body bg so theme bg image shows through */
+    body.bg-black2 {
+        background: transparent;
+    }
+
+    /* ===== THEME BACKGROUND (full page) ===== */
+    .sv-page-bg {
+        position: fixed;
+        inset: 0;
+        z-index: -2;
+        background-color: var(--sv-bg-body);
+    }
+    .sv-page-bg__img {
+        position: absolute;
+        inset: 0;
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+    }
+    .sv-page-bg__overlay {
+        position: absolute;
+        inset: 0;
+        background: var(--sv-bg-body);
+        opacity: {{ theme.overlay_opacity }};
+    }
+    .sv-page-bg__vignette {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(ellipse at center, transparent 30%, var(--sv-bg-body) 100%);
+    }
+
+    /* Decorative elements (characters/objects on sides) */
+    .sv-decor {
+        position: fixed;
+        bottom: 0;
+        z-index: -1;
+        pointer-events: none;
+        max-height: 85vh;
+        width: auto;
+        opacity: 0.35;
+        filter: brightness(0.7);
+        transition: opacity 0.3s;
+    }
+    .sv-decor--left {
+        left: -30px;
+        max-width: 280px;
+    }
+    .sv-decor--right {
+        right: -30px;
+        max-width: 280px;
+    }
+    @media (max-width: 1400px) {
+        .sv-decor { opacity: 0.15; }
+    }
+    @media (max-width: 1100px) {
+        .sv-decor { display: none; }
+    }
+
+    /* ===== HERO ===== */
+    .sv-hero {
+        position: relative;
+        padding: 140px 0 0;
+        overflow: hidden;
+    }
+    .sv-hero::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, transparent 0%, rgba(var(--sv-bg-card-rgb),0.7) 100%);
+        z-index: 1;
+    }
+    .sv-hero__bg {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, var(--sv-hero-from) 0%, var(--sv-hero-to) 50%, var(--sv-hero-from) 100%);
+        opacity: 0.5;
+    }
+    .sv-hero__banner {
+        width: 100%;
+        max-height: 220px;
+        object-fit: cover;
+        border-radius: 14px;
+        border: 2px solid rgba(var(--sv-accent-rgb),0.2);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.5), 0 0 40px rgba(var(--sv-accent-rgb),0.1);
+        margin-bottom: 28px;
+    }
+    .sv-hero__bg-glow {
+        position: absolute;
+        width: 600px;
+        height: 600px;
+        border-radius: 50%;
+        filter: blur(120px);
+        opacity: 0.25;
+        top: -200px;
+        right: -100px;
+        background: var(--sv-glow);
+    }
+    .sv-hero__bg-glow-left {
+        position: absolute;
+        width: 400px;
+        height: 400px;
+        border-radius: 50%;
+        filter: blur(100px);
+        opacity: 0.15;
+        top: -100px;
+        left: -50px;
+        background: var(--sv-accent);
+    }
+    .sv-hero__inner {
+        position: relative;
+        z-index: 2;
+    }
+
+    /* Hero header row */
+    .sv-hero__header {
+        display: flex;
+        align-items: flex-start;
+        gap: 30px;
+        padding-bottom: 35px;
+    }
+    .sv-hero__icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, var(--sv-accent) 0%, var(--sv-accent-dark) 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+        color: #fff;
+        flex-shrink: 0;
+        box-shadow: 0 8px 30px rgba(var(--sv-accent-rgb),0.3);
+    }
+    .sv-hero__info { flex: 1; min-width: 0; }
+    .sv-hero__name {
+        font-size: 34px;
+        font-weight: 800;
+        color: #fff;
+        margin: 0 0 10px;
+        line-height: 1.2;
+        text-shadow: 0 2px 20px rgba(0,0,0,0.5);
+    }
+    .sv-hero__tags {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+    }
+    .sv-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 14px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        backdrop-filter: blur(10px);
+    }
+    .sv-tag--cat { background: rgba(var(--sv-accent-rgb),0.15); color: var(--sv-accent); border: 1px solid rgba(var(--sv-accent-rgb),0.25); }
+    .sv-tag--game { background: rgba(28,200,138,0.12); color: #1cc88a; border: 1px solid rgba(28,200,138,0.2); }
+    .sv-tag--type { background: rgba(54,185,204,0.12); color: #36b9cc; border: 1px solid rgba(54,185,204,0.2); }
+    .sv-tag--slots { background: rgba(246,194,62,0.1); color: #f6c23e; border: 1px solid rgba(246,194,62,0.2); }
+    .sv-tag--access { background: rgba(255,255,255,0.06); color: #8b949e; border: 1px solid rgba(255,255,255,0.08); }
+    .sv-tag--status { background: rgba(90,92,105,0.15); color: #8b949e; border: 1px solid rgba(90,92,105,0.25); transition: all 0.3s; }
+    .sv-tag--status.online { background: rgba(28,200,138,0.12); color: #1cc88a; border-color: rgba(28,200,138,0.25); }
+    .sv-tag--status.offline { background: rgba(231,74,59,0.12); color: #e74a3b; border-color: rgba(231,74,59,0.25); }
+    .sv-status-dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #5a5c69;
+    }
+    .sv-tag--status.online .sv-status-dot { background: #1cc88a; animation: pulse-dot 2s infinite; }
+    .sv-tag--status.offline .sv-status-dot { background: #e74a3b; }
+    .sv-hero__short {
+        color: #b0b8c4;
+        font-size: 15px;
+        line-height: 1.6;
+        margin: 0;
+        text-shadow: 0 1px 10px rgba(0,0,0,0.4);
+    }
+
+    /* Vote widget (sidebar) */
+    .sv-vote-widget {
+        background: rgba(var(--sv-bg-card-rgb),0.6);
+        border: 1px solid rgb(var(--sv-border-rgb));
+        border-radius: 14px;
+        padding: 22px;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+    .sv-vote__count {
+        font-size: 52px;
+        font-weight: 900;
+        background: linear-gradient(135deg, var(--sv-accent), var(--sv-accent-dark));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 1;
+    }
+    .sv-vote__label {
+        font-size: 11px;
+        color: #5a5c69;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin-bottom: 6px;
+    }
+    .sv-vote__total {
+        font-size: 12px;
+        color: #3d4250;
+        margin-bottom: 22px;
+    }
+    .sv-vote__sep {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: #3d4250;
+        text-align: center;
+        margin: 10px 0;
+        position: relative;
+    }
+    .sv-vote__sep::before,
+    .sv-vote__sep::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        width: 28%;
+        height: 1px;
+        background: rgb(var(--sv-border-rgb));
+    }
+    .sv-vote__sep::before { left: 0; }
+    .sv-vote__sep::after { right: 0; }
+    .sv-vote__btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        width: 100%;
+        padding: 13px 16px;
+        border: none;
+        border-radius: 12px;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        letter-spacing: 0.3px;
+        text-decoration: none;
+        color: #fff;
+        position: relative;
+        overflow: hidden;
+    }
+    .sv-vote__btn::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        transition: opacity 0.25s;
+        border-radius: 12px;
+    }
+    .sv-vote__btn:hover {
+        transform: translateY(-2px);
+        color: #fff;
+    }
+    .sv-vote__btn:hover::before {
+        opacity: 1;
+    }
+    .sv-vote__btn i {
+        font-size: 16px;
+        position: relative;
+        z-index: 1;
+    }
+    .sv-vote__btn span {
+        position: relative;
+        z-index: 1;
+    }
+    .sv-vote__btn--discord {
+        background: linear-gradient(135deg, #5865F2 0%, #4752C4 100%);
+        box-shadow: 0 4px 15px rgba(88,101,242,0.25);
+    }
+    .sv-vote__btn--discord::before {
+        background: linear-gradient(135deg, #6974F5 0%, #5865F2 100%);
+    }
+    .sv-vote__btn--discord:hover {
+        box-shadow: 0 8px 25px rgba(88,101,242,0.4);
+    }
+    .sv-vote__btn--steam {
+        background: linear-gradient(135deg, #1b2838 0%, #171a21 100%);
+        border: 1px solid rgba(255,255,255,0.08);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+    .sv-vote__btn--steam::before {
+        background: linear-gradient(135deg, #2a475e 0%, #1b2838 100%);
+    }
+    .sv-vote__btn--steam:hover {
+        box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+        border-color: rgba(255,255,255,0.12);
+    }
+    .sv-vote__btn--disabled {
+        opacity: 0.4;
+        pointer-events: none;
+        cursor: not-allowed;
+        transform: none !important;
+        filter: grayscale(0.3);
+    }
+    .sv-vote__timer {
+        margin-top: 14px;
+        font-size: 13px;
+        color: #f6c23e;
+        display: none;
+    }
+    .sv-vote__msg {
+        margin-top: 12px;
+        font-size: 12px;
+        padding: 8px 10px;
+        border-radius: 8px;
+        display: none;
+    }
+    .sv-vote__msg--ok { background: rgba(28,200,138,0.1); color: #1cc88a; border: 1px solid rgba(28,200,138,0.2); display: block; }
+    .sv-vote__msg--err { background: rgba(231,74,59,0.1); color: #e74a3b; border: 1px solid rgba(231,74,59,0.2); display: block; }
+
+    /* ===== NAV TABS ===== */
+    .sv-nav {
+        position: relative;
+        z-index: 2;
+        border-bottom: 1px solid rgba(var(--sv-accent-rgb),0.15);
+        margin-bottom: 0;
+        background: rgba(var(--sv-bg-card-rgb),0.75);
+        backdrop-filter: blur(16px);
+    }
+    .sv-nav__inner {
+        display: flex;
+        gap: 0;
+        overflow-x: auto;
+    }
+    .sv-nav__link {
+        padding: 16px 22px;
+        color: #5a5c69;
+        font-size: 13px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        white-space: nowrap;
+        border-bottom: 2px solid transparent;
+        transition: all 0.2s;
+        cursor: pointer;
+        text-decoration: none;
+    }
+    .sv-nav__link:hover, .sv-nav__link.active {
+        color: #fff;
+        border-bottom-color: var(--sv-accent);
+    }
+    .sv-nav__badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 20px;
+        height: 20px;
+        padding: 0 6px;
+        border-radius: 10px;
+        font-size: 11px;
+        font-weight: 700;
+        background: rgba(var(--sv-accent-rgb),0.15);
+        color: var(--sv-accent);
+        margin-left: 6px;
+    }
+
+    /* ===== CONTENT AREA ===== */
+    .sv-content {
+        padding: 40px 0 80px;
+    }
+
+    /* Tab panes */
+    .sv-pane { display: none; }
+    .sv-pane.active { display: block; }
+
+    /* Description */
+    .sv-desc {
+        color: #c4c9d2;
+        font-size: 15px;
+        line-height: 1.8;
+        max-width: 100%;
+        overflow-wrap: break-word;
+        word-wrap: break-word;
+        word-break: break-word;
+    }
+    .sv-desc h1, .sv-desc h2, .sv-desc h3 { color: #fff; margin: 25px 0 12px; }
+    .sv-desc h1 { font-size: 24px; }
+    .sv-desc h2 { font-size: 20px; }
+    .sv-desc h3 { font-size: 17px; }
+    .sv-desc a { color: var(--sv-accent); text-decoration: underline; text-underline-offset: 3px; }
+    .sv-desc a:hover { color: var(--sv-accent-dark); }
+    .sv-desc img { max-width: 100%; border-radius: 10px; margin: 15px 0; }
+    .sv-desc blockquote {
+        border-left: 3px solid var(--sv-accent);
+        padding: 12px 20px;
+        margin: 20px 0;
+        background: rgba(var(--sv-accent-rgb),0.05);
+        border-radius: 0 8px 8px 0;
+        color: #8b949e;
+    }
+    .sv-desc pre {
+        background: var(--sv-bg-body);
+        padding: 16px;
+        border-radius: 8px;
+        border: 1px solid rgb(var(--sv-border-rgb));
+        overflow-x: auto;
+        font-size: 13px;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+    .sv-desc p {
+        overflow-wrap: break-word;
+        word-break: break-word;
+    }
+    .sv-desc ul, .sv-desc ol { padding-left: 24px; }
+    .sv-desc li { margin-bottom: 6px; }
+
+    /* Presentation image */
+    .sv-presentation {
+        margin-top: 35px;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid rgb(var(--sv-border-rgb));
+    }
+    .sv-presentation img {
+        width: 100%;
+        display: block;
+    }
+
+    /* ===== COMMENTS ===== */
+    .sv-comments { max-width: 800px; }
+    .sv-comment-form {
+        display: flex;
+        gap: 14px;
+        margin-bottom: 30px;
+        padding: 20px;
+        background: rgba(var(--sv-bg-card-rgb),0.5);
+        border: 1px solid rgb(var(--sv-border-rgb));
+        border-radius: 14px;
+    }
+    .sv-comment-form__avatar {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        object-fit: cover;
+        flex-shrink: 0;
+    }
+    .sv-comment-form__avatar-placeholder {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--sv-accent), var(--sv-accent-dark));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--sv-bg-body);
+        flex-shrink: 0;
+    }
+    .sv-comment-form__body { flex: 1; }
+    .sv-comment-form__textarea {
+        width: 100%;
+        min-height: 80px;
+        background: var(--sv-bg-body);
+        border: 1px solid rgb(var(--sv-border-rgb));
+        border-radius: 10px;
+        padding: 12px 14px;
+        color: #e4e6eb;
+        font-size: 14px;
+        font-family: inherit;
+        resize: vertical;
+        transition: border-color 0.2s;
+    }
+    .sv-comment-form__textarea:focus {
+        outline: none;
+        border-color: var(--sv-accent);
+    }
+    .sv-comment-form__textarea::placeholder { color: #5a5c69; }
+    .sv-comment-form__actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 10px;
+    }
+    .sv-comment-form__btn {
+        padding: 10px 24px;
+        background: linear-gradient(135deg, var(--sv-accent), var(--sv-accent-dark));
+        color: var(--sv-bg-body);
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    .sv-comment-form__btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 15px rgba(var(--sv-accent-rgb),0.3);
+    }
+    .sv-comment-login {
+        padding: 30px;
+        text-align: center;
+        background: rgba(var(--sv-bg-card-rgb),0.5);
+        border: 1px solid rgb(var(--sv-border-rgb));
+        border-radius: 14px;
+        margin-bottom: 30px;
+    }
+    .sv-comment-login__text {
+        color: #8b949e;
+        font-size: 14px;
+        margin-bottom: 12px;
+    }
+    .sv-comment-login__link {
+        display: inline-block;
+        padding: 10px 24px;
+        background: rgba(var(--sv-accent-rgb),0.1);
+        border: 1px solid rgba(var(--sv-accent-rgb),0.2);
+        border-radius: 8px;
+        color: var(--sv-accent);
+        font-weight: 600;
+        font-size: 14px;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+    .sv-comment-login__link:hover {
+        background: rgba(var(--sv-accent-rgb),0.2);
+        color: #fff;
+    }
+
+    .sv-comment {
+        display: flex;
+        gap: 14px;
+        padding: 18px 0;
+        border-bottom: 1px solid rgba(var(--sv-border-rgb),0.5);
+    }
+    .sv-comment:last-child { border-bottom: none; }
+    .sv-comment__avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        object-fit: cover;
+        flex-shrink: 0;
+    }
+    .sv-comment__avatar-placeholder {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: rgba(var(--sv-accent-rgb),0.12);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--sv-accent);
+        flex-shrink: 0;
+    }
+    .sv-comment__body { flex: 1; min-width: 0; }
+    .sv-comment__header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 6px;
+        flex-wrap: wrap;
+    }
+    .sv-comment__author {
+        font-size: 14px;
+        font-weight: 700;
+        color: #e4e6eb;
+    }
+    .sv-comment__date {
+        font-size: 12px;
+        color: #5a5c69;
+    }
+    .sv-comment__flagged-badge {
+        font-size: 10px;
+        padding: 2px 8px;
+        border-radius: 8px;
+        background: rgba(246,194,62,0.12);
+        color: #f6c23e;
+        border: 1px solid rgba(246,194,62,0.2);
+        font-weight: 600;
+    }
+    .sv-comment__content {
+        color: #c4c9d2;
+        font-size: 14px;
+        line-height: 1.6;
+        word-break: break-word;
+    }
+    .sv-comment__actions {
+        margin-top: 8px;
+    }
+    .sv-comment__flag-btn {
+        background: none;
+        border: none;
+        color: #5a5c69;
+        font-size: 12px;
+        cursor: pointer;
+        padding: 4px 8px;
+        border-radius: 4px;
+        transition: all 0.2s;
+    }
+    .sv-comment__flag-btn:hover {
+        color: #f6c23e;
+        background: rgba(246,194,62,0.08);
+    }
+    .sv-comment-empty {
+        text-align: center;
+        padding: 40px;
+        color: #5a5c69;
+    }
+    .sv-comment-empty__icon {
+        font-size: 36px;
+        margin-bottom: 10px;
+        color: #3d4250;
+    }
+    .sv-comment-empty__text {
+        font-size: 14px;
+    }
+
+    /* Flag modal */
+    .sv-flag-modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 1050;
+        background: rgba(0,0,0,0.6);
+        align-items: center;
+        justify-content: center;
+    }
+    .sv-flag-modal.active { display: flex; }
+    .sv-flag-modal__content {
+        background: rgb(var(--sv-bg-card-rgb));
+        border: 1px solid rgb(var(--sv-border-rgb));
+        border-radius: 14px;
+        padding: 28px;
+        max-width: 450px;
+        width: 90%;
+    }
+    .sv-flag-modal__title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 16px;
+    }
+    .sv-flag-modal__textarea {
+        width: 100%;
+        min-height: 80px;
+        background: var(--sv-bg-body);
+        border: 1px solid rgb(var(--sv-border-rgb));
+        border-radius: 8px;
+        padding: 12px;
+        color: #e4e6eb;
+        font-size: 14px;
+        font-family: inherit;
+        resize: vertical;
+        margin-bottom: 16px;
+    }
+    .sv-flag-modal__textarea:focus { outline: none; border-color: #f6c23e; }
+    .sv-flag-modal__actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+    .sv-flag-modal__cancel {
+        padding: 10px 20px;
+        background: transparent;
+        border: 1px solid rgb(var(--sv-border-rgb));
+        border-radius: 8px;
+        color: #8b949e;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .sv-flag-modal__cancel:hover { border-color: #5a5c69; color: #e4e6eb; }
+    .sv-flag-modal__submit {
+        padding: 10px 20px;
+        background: #f6c23e;
+        border: none;
+        border-radius: 8px;
+        color: var(--sv-bg-body);
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .sv-flag-modal__submit:hover { background: #e5b438; }
+
+    /* ===== SIDEBAR (right column) ===== */
+    .sv-sidebar { position: sticky; top: 100px; }
+
+    /* Connection box */
+    .sv-connect {
+        background: rgba(var(--sv-bg-card-rgb),0.6);
+        border: 1px solid rgb(var(--sv-border-rgb));
+        border-radius: 14px;
+        padding: 22px;
+        margin-bottom: 20px;
+    }
+    .sv-connect__title {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: #5a5c69;
+        margin-bottom: 14px;
+    }
+    .sv-connect__ip {
+        display: flex;
+        align-items: center;
+        background: var(--sv-bg-body);
+        border: 1px solid rgb(var(--sv-border-rgb));
+        border-radius: 8px;
+        padding: 10px 14px;
+        margin-bottom: 10px;
+    }
+    .sv-connect__ip code {
+        flex: 1;
+        font-size: 14px;
+        font-weight: 600;
+        color: #fff;
+        letter-spacing: 0.5px;
+    }
+    .sv-connect__copy {
+        background: none;
+        border: none;
+        color: var(--sv-accent);
+        cursor: pointer;
+        padding: 4px 8px;
+        font-size: 14px;
+        transition: color 0.2s;
+    }
+    .sv-connect__copy:hover { color: var(--sv-accent-dark); }
+    .sv-connect__url {
+        display: block;
+        text-align: center;
+        padding: 10px;
+        background: rgba(var(--sv-accent-rgb),0.08);
+        border: 1px solid rgba(var(--sv-accent-rgb),0.15);
+        border-radius: 8px;
+        color: var(--sv-accent);
+        font-weight: 600;
+        font-size: 13px;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+    .sv-connect__url:hover { background: rgba(var(--sv-accent-rgb),0.15); color: #fff; }
+
+    /* Social icons row */
+    .sv-socials {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+    }
+    .sv-social {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        background: rgba(var(--sv-bg-card-rgb),0.6);
+        border: 1px solid rgb(var(--sv-border-rgb));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #5a5c69;
+        font-size: 16px;
+        text-decoration: none;
+        transition: all 0.25s;
+    }
+    .sv-social:hover { transform: translateY(-2px); }
+    .sv-social--website:hover { background: rgba(28,200,138,0.15); border-color: #1cc88a55; color: #1cc88a; }
+    .sv-social--discord:hover { background: rgba(88,101,242,0.15); border-color: #5865F255; color: #5865F2; }
+    .sv-social--twitter:hover { background: rgba(29,161,242,0.15); border-color: #1DA1F255; color: #1DA1F2; }
+    .sv-social--youtube:hover { background: rgba(255,0,0,0.12); border-color: #FF000044; color: #FF0000; }
+    .sv-social--instagram:hover { background: rgba(228,64,95,0.15); border-color: #E4405F55; color: #E4405F; }
+    .sv-social--twitch:hover { background: rgba(145,70,255,0.15); border-color: #9146FF55; color: #9146FF; }
+
+    /* Similar servers */
+    .sv-similar {
+        background: rgba(var(--sv-bg-card-rgb),0.6);
+        border: 1px solid rgb(var(--sv-border-rgb));
+        border-radius: 14px;
+        padding: 22px;
+    }
+    .sv-similar__title {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: #5a5c69;
+        margin-bottom: 16px;
+    }
+    .sv-similar__item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px;
+        margin: 0 -10px;
+        border-radius: 8px;
+        text-decoration: none;
+        transition: background 0.2s;
+    }
+    .sv-similar__item:hover { background: rgba(var(--sv-accent-rgb),0.06); }
+    .sv-similar__item-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        background: rgba(var(--sv-accent-rgb),0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--sv-accent);
+        font-size: 14px;
+        flex-shrink: 0;
+    }
+    .sv-similar__item-name {
+        flex: 1;
+        font-size: 14px;
+        font-weight: 600;
+        color: #e4e6eb;
+    }
+    .sv-similar__item-votes {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--sv-accent);
+    }
+
+    /* ===== TWITCH ===== */
+    .sv-twitch {
+        margin-top: 35px;
+    }
+    .sv-twitch__label {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: #9146FF;
+        font-weight: 700;
+        margin-bottom: 14px;
+    }
+    .sv-twitch__label .live-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #e74a3b;
+        animation: pulse-dot 2s infinite;
+    }
+    @keyframes pulse-dot {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.4; }
+    }
+    .sv-twitch iframe {
+        width: 100%;
+        height: 400px;
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    }
+
+    /* ===== MOBILE VOTE (sticky bottom) ===== */
+    .sv-mobile-vote {
+        display: none;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 900;
+        background: rgba(var(--sv-bg-card-rgb),0.95);
+        backdrop-filter: blur(20px);
+        border-top: 1px solid rgb(var(--sv-border-rgb));
+        padding: 12px 20px;
+    }
+    .sv-mobile-vote__inner {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    .sv-mobile-vote__info {
+        flex: 1;
+    }
+    .sv-mobile-vote__count {
+        font-size: 22px;
+        font-weight: 800;
+        color: var(--sv-accent);
+    }
+    .sv-mobile-vote__label {
+        font-size: 10px;
+        color: #5a5c69;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    .sv-mobile-vote__btns {
+        display: flex;
+        gap: 8px;
+    }
+    .sv-mobile-vote__btn {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        padding: 11px 18px;
+        border: none;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 13px;
+        cursor: pointer;
+        text-decoration: none;
+        color: #fff;
+        transition: all 0.2s;
+    }
+    .sv-mobile-vote__btn:hover { color: #fff; }
+    .sv-mobile-vote__btn--discord {
+        background: linear-gradient(135deg, #5865F2 0%, #4752C4 100%);
+        box-shadow: 0 2px 10px rgba(88,101,242,0.3);
+    }
+    .sv-mobile-vote__btn--steam {
+        background: linear-gradient(135deg, #1b2838 0%, #171a21 100%);
+        border: 1px solid rgba(255,255,255,0.08);
+        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+
+    /* ===== SERVER STATUS TAB ===== */
+    .sv-status-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 24px;
+        padding: 20px;
+        background: rgba(var(--sv-bg-card-rgb),0.5);
+        border: 1px solid rgb(var(--sv-border-rgb));
+        border-radius: 14px;
+    }
+    .sv-status-header__count {
+        font-size: 36px;
+        font-weight: 900;
+        background: linear-gradient(135deg, var(--sv-accent), var(--sv-accent-dark));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 1;
+    }
+    .sv-status-header__label {
+        font-size: 14px;
+        color: #8b949e;
+    }
+    .sv-status-header__label strong {
+        color: #e4e6eb;
+    }
+    .sv-status-header__map {
+        margin-left: auto;
+        font-size: 13px;
+        color: #8b949e;
+        padding: 6px 14px;
+        background: rgba(var(--sv-bg-card-rgb),0.6);
+        border: 1px solid rgb(var(--sv-border-rgb));
+        border-radius: 8px;
+    }
+    .sv-status-header__map i {
+        color: var(--sv-accent);
+        margin-right: 6px;
+    }
+    .sv-player-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .sv-player-table thead th {
+        padding: 12px 16px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #5a5c69;
+        border-bottom: 1px solid rgb(var(--sv-border-rgb));
+        text-align: left;
+    }
+    .sv-player-table tbody tr {
+        transition: background 0.15s;
+    }
+    .sv-player-table tbody tr:hover {
+        background: rgba(var(--sv-accent-rgb),0.04);
+    }
+    .sv-player-table tbody td {
+        padding: 10px 16px;
+        font-size: 14px;
+        color: #c4c9d2;
+        border-bottom: 1px solid rgba(var(--sv-border-rgb),0.4);
+    }
+    .sv-player-table tbody td:first-child {
+        font-family: monospace;
+        color: #5a5c69;
+        font-size: 12px;
+        width: 60px;
+    }
+    .sv-player-table .sv-player-name {
+        font-weight: 600;
+        color: #e4e6eb;
+    }
+    .sv-player-table .sv-player-ping {
+        font-family: monospace;
+        font-size: 12px;
+    }
+    .sv-player-ping--good { color: #1cc88a; }
+    .sv-player-ping--medium { color: #f6c23e; }
+    .sv-player-ping--bad { color: #e74a3b; }
+    .sv-status-loading {
+        text-align: center;
+        padding: 60px 20px;
+        color: #5a5c69;
+    }
+    .sv-status-loading i {
+        font-size: 32px;
+        margin-bottom: 12px;
+        display: block;
+        animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    .sv-status-offline {
+        text-align: center;
+        padding: 60px 20px;
+        color: #5a5c69;
+    }
+    .sv-status-offline i {
+        font-size: 36px;
+        margin-bottom: 10px;
+        display: block;
+        color: #e74a3b;
+    }
+    .sv-status-empty {
+        text-align: center;
+        padding: 40px 20px;
+        color: #5a5c69;
+    }
+    .sv-status-empty i {
+        font-size: 36px;
+        margin-bottom: 10px;
+        display: block;
+        color: #3d4250;
+    }
+    .sv-player-search {
+        width: 100%;
+        padding: 10px 14px;
+        background: rgba(var(--sv-bg-card-rgb),0.5);
+        border: 1px solid rgb(var(--sv-border-rgb));
+        border-radius: 10px;
+        color: #e4e6eb;
+        font-size: 14px;
+        margin-bottom: 16px;
+        transition: border-color 0.2s;
+    }
+    .sv-player-search:focus {
+        outline: none;
+        border-color: var(--sv-accent);
+    }
+    .sv-player-search::placeholder { color: #5a5c69; }
+
+    @media (max-width: 991px) {
+        .sv-hero__header { flex-direction: column; }
+        .sv-mobile-vote { display: block; }
+        .sv-hero__name { font-size: 26px; }
+        .sv-sidebar { position: static; }
+        .sv-vote-widget { display: none; }
+    }
+    @media (max-width: 575px) {
+        .sv-hero__icon { width: 56px; height: 56px; font-size: 24px; border-radius: 12px; }
+        .sv-hero__name { font-size: 22px; }
+        .sv-hero__header { gap: 16px; }
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+{% set theme = server_theme(server.pageTemplate) %}
+{% set theme_bg = theme_image(server.pageTemplate, 'bg') %}
+{% set theme_decor_l = theme_image(server.pageTemplate, 'decor-left') %}
+{% set theme_decor_r = theme_image(server.pageTemplate, 'decor-right') %}
+
+{# ===== THEME BACKGROUND ===== #}
+<div class="sv-page-bg">
+    {% if theme_bg %}
+        <div class="sv-page-bg__img" style="background-image: url('{{ asset(theme_bg) }}')"></div>
+    {% endif %}
+    <div class="sv-page-bg__overlay"></div>
+    <div class="sv-page-bg__vignette"></div>
+</div>
+
+{# ===== DECORATIVE ELEMENTS ===== #}
+{% if theme_decor_l %}
+    <img src="{{ asset(theme_decor_l) }}" alt="" class="sv-decor sv-decor--left">
+{% endif %}
+{% if theme_decor_r %}
+    <img src="{{ asset(theme_decor_r) }}" alt="" class="sv-decor sv-decor--right">
+{% endif %}
+
+{# ===== HERO SECTION ===== #}
+<section class="sv-hero">
+    <div class="sv-hero__bg">
+        <div class="sv-hero__bg-glow"></div>
+        <div class="sv-hero__bg-glow-left"></div>
+    </div>
+    <div class="container sv-hero__inner">
+
+        {% if server.banner %}
+            <img src="{{ asset('uploads/servers/banners/' ~ server.banner) }}" alt="{{ server.name }}" class="sv-hero__banner">
+        {% endif %}
+
+        <div class="sv-hero__header">
+            <div class="sv-hero__icon">
+                {% if server.category and server.category.icon %}
+                    <i class="{{ server.category.icon }}"></i>
+                {% else %}
+                    <i class="fas fa-server"></i>
+                {% endif %}
+            </div>
+
+            <div class="sv-hero__info">
+                <h1 class="sv-hero__name">{{ server.name }}</h1>
+                <div class="sv-hero__tags">
+                    {% if server.category %}
+                        <span class="sv-tag sv-tag--cat"><i class="fas fa-folder"></i> {{ server.category.name }}</span>
+                    {% endif %}
+                    {% if server.gameCategory %}
+                        <span class="sv-tag sv-tag--game"><i class="fas fa-gamepad"></i> {{ server.gameCategory.name }}</span>
+                    {% endif %}
+                    {% if server.serverType %}
+                        <span class="sv-tag sv-tag--type"><i class="fas fa-tag"></i> {{ server.serverType.name }}</span>
+                    {% endif %}
+                    {% if server.slots > 0 %}
+                        <span class="sv-tag sv-tag--slots"><i class="fas fa-users"></i> {{ server.slots }} slots</span>
+                    {% endif %}
+                    <span class="sv-tag sv-tag--access">
+                        <i class="fas {{ server.isPrivate ? 'fa-lock' : 'fa-lock-open' }}"></i>
+                        {{ server.isPrivate ? 'Prive' : 'Public' }}
+                    </span>
+                    {% if server.statusCheckEnabled and server.ip and server.port %}
+                        <span class="sv-tag sv-tag--status" id="statusBadge">
+                            <span class="sv-status-dot"></span> Verification...
+                        </span>
+                    {% endif %}
+                </div>
+                {% if server.shortDescription %}
+                    <p class="sv-hero__short">{{ server.shortDescription }}</p>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+</section>
+
+{# ===== NAV TABS ===== #}
+<div class="sv-nav">
+    <div class="container">
+        <div class="sv-nav__inner">
+            <a class="sv-nav__link active" data-tab="description">Description</a>
+            <a class="sv-nav__link" data-tab="avis">
+                Avis <span class="sv-nav__badge">{{ commentCount }}</span>
+            </a>
+            {% if server.ip and server.port %}
+                <a class="sv-nav__link" data-tab="serveur">
+                    Serveur <span class="sv-nav__badge" id="playerCountBadge">...</span>
+                </a>
+            {% endif %}
+            {% if server.twitchChannel %}
+                <a class="sv-nav__link" data-tab="stream">Stream</a>
+            {% endif %}
+            {% if server.ip or server.website or server.discordUrl %}
+                <a class="sv-nav__link" data-tab="infos">Infos</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{# ===== CONTENT ===== #}
+<section class="sv-content">
+    <div class="container">
+        <div class="row g-4">
+
+            {# ===== MAIN COL ===== #}
+            <div class="col-lg-8">
+
+                {# Tab: Description #}
+                <div class="sv-pane active" id="pane-description">
+                    {% if server.fullDescription %}
+                        <div class="sv-desc">
+                            {{ server.fullDescription|raw }}
+                        </div>
+                    {% else %}
+                        <div class="sv-desc" style="color:#5a5c69;">
+                            <p>Aucune description detaillee pour le moment.</p>
+                        </div>
+                    {% endif %}
+
+                    {% if server.presentationImage %}
+                        <div class="sv-presentation">
+                            <img src="{{ asset('uploads/servers/presentations/' ~ server.presentationImage) }}" alt="{{ server.name }}">
+                        </div>
+                    {% endif %}
+                </div>
+
+                {# Tab: Avis (Comments) #}
+                <div class="sv-pane" id="pane-avis">
+                    <div class="sv-comments" id="comments">
+
+                        {# Comment form or login prompt #}
+                        {% if app.user %}
+                            <form method="post" action="{{ path('server_comment_post', {slug: server.slug}) }}" class="sv-comment-form">
+                                <input type="hidden" name="_token" value="{{ csrf_token('comment_' ~ server.id) }}">
+                                {% set av = user_avatar(app.user) %}
+                                {% if av %}
+                                    <img src="{{ av starts with 'http' ? av : asset(av) }}" alt="{{ app.user.username }}" class="sv-comment-form__avatar">
+                                {% else %}
+                                    <div class="sv-comment-form__avatar-placeholder">
+                                        {{ app.user.username|slice(0, 1)|upper }}
+                                    </div>
+                                {% endif %}
+                                <div class="sv-comment-form__body">
+                                    <textarea name="content" class="sv-comment-form__textarea" placeholder="Partagez votre avis sur ce serveur..." required minlength="3" maxlength="2000"></textarea>
+                                    <div class="sv-comment-form__actions">
+                                        <button type="submit" class="sv-comment-form__btn">
+                                            <i class="fas fa-paper-plane"></i>&nbsp; Publier
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        {% else %}
+                            <div class="sv-comment-login">
+                                <div class="sv-comment-login__text">
+                                    <i class="fas fa-comment-dots" style="font-size:20px;margin-bottom:8px;display:block;color:#3d4250;"></i>
+                                    Connectez-vous pour donner votre avis sur ce serveur.
+                                </div>
+                                <a href="{{ path('app_login') }}" class="sv-comment-login__link">
+                                    <i class="fas fa-sign-in-alt"></i>&nbsp; Se connecter
+                                </a>
+                            </div>
+                        {% endif %}
+
+                        {# Comments list #}
+                        {% if comments|length > 0 %}
+                            {% for comment in comments %}
+                                <div class="sv-comment">
+                                    {% set av = user_avatar(comment.author) %}
+                                    {% if av %}
+                                        <img src="{{ av starts with 'http' ? av : asset(av) }}" alt="{{ comment.author.username }}" class="sv-comment__avatar">
+                                    {% else %}
+                                        <div class="sv-comment__avatar-placeholder">
+                                            {{ comment.author.username|slice(0, 1)|upper }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="sv-comment__body">
+                                        <div class="sv-comment__header">
+                                            <span class="sv-comment__author">{{ comment.author.username }}</span>
+                                            <span class="sv-comment__date">{{ comment.createdAt|date('d/m/Y H:i') }}</span>
+                                            {% if comment.isFlagged %}
+                                                <span class="sv-comment__flagged-badge"><i class="fas fa-flag"></i> Signale</span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="sv-comment__content">{{ comment.content|e|nl2br }}</div>
+                                        {% if app.user and app.user.id == server.owner.id and not comment.isFlagged %}
+                                            <div class="sv-comment__actions">
+                                                <button type="button" class="sv-comment__flag-btn" onclick="openFlagModal({{ comment.id }})">
+                                                    <i class="fas fa-flag"></i> Signaler
+                                                </button>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="sv-comment-empty">
+                                <div class="sv-comment-empty__icon"><i class="fas fa-comments"></i></div>
+                                <div class="sv-comment-empty__text">Soyez le premier a donner votre avis !</div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {# Tab: Serveur (live status + players) #}
+                {% if server.ip and server.port %}
+                    <div class="sv-pane" id="pane-serveur">
+                        <div id="serverStatusContent">
+                            <div class="sv-status-loading">
+                                <i class="fas fa-circle-notch"></i>
+                                Chargement du statut du serveur...
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+
+                {# Tab: Stream #}
+                {% if server.twitchChannel %}
+                    <div class="sv-pane" id="pane-stream">
+                        <div class="sv-twitch">
+                            <div class="sv-twitch__label">
+                                <div class="live-dot"></div>
+                                <i class="fab fa-twitch"></i> {{ server.twitchChannel }}
+                            </div>
+                            <iframe
+                                src="https://player.twitch.tv/?channel={{ server.twitchChannel }}&parent={{ app.request.host }}&muted=true"
+                                allowfullscreen>
+                            </iframe>
+                        </div>
+                    </div>
+                {% endif %}
+
+                {# Tab: Infos #}
+                <div class="sv-pane" id="pane-infos">
+                    <div class="row g-4">
+                        {% if server.ip %}
+                            <div class="col-md-6">
+                                <div class="sv-connect">
+                                    <div class="sv-connect__title">Adresse du serveur</div>
+                                    <div class="sv-connect__ip">
+                                        <code id="serverIp">{{ server.ip }}{% if server.port %}:{{ server.port }}{% endif %}</code>
+                                        <button type="button" class="sv-connect__copy" onclick="copyIp()" title="Copier">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                    {% if server.connectUrl %}
+                                        <a href="{{ server.connectUrl }}" target="_blank" rel="noopener" class="sv-connect__url">
+                                            <i class="fas fa-external-link-alt"></i> Rejoindre le serveur
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endif %}
+                        <div class="col-md-6">
+                            <div class="sv-connect">
+                                <div class="sv-connect__title">Informations</div>
+                                <div style="font-size:13px;color:#8b949e;">
+                                    {% if server.category %}
+                                        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgb(var(--sv-border-rgb));">
+                                            <span>Categorie</span>
+                                            <span style="color:#fff;">{{ server.category.name }}</span>
+                                        </div>
+                                    {% endif %}
+                                    {% if server.gameCategory %}
+                                        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgb(var(--sv-border-rgb));">
+                                            <span>Jeu</span>
+                                            <span style="color:#fff;">{{ server.gameCategory.name }}</span>
+                                        </div>
+                                    {% endif %}
+                                    {% if server.serverType %}
+                                        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgb(var(--sv-border-rgb));">
+                                            <span>Type</span>
+                                            <span style="color:#fff;">{{ server.serverType.name }}</span>
+                                        </div>
+                                    {% endif %}
+                                    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgb(var(--sv-border-rgb));">
+                                        <span>Slots</span>
+                                        <span style="color:#fff;">{{ server.slots > 0 ? server.slots : 'Illimite' }}</span>
+                                    </div>
+                                    <div style="display:flex;justify-content:space-between;padding:8px 0;">
+                                        <span>Acces</span>
+                                        <span style="color:#fff;">{{ server.isPrivate ? 'Prive' : 'Public' }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# ===== SIDEBAR ===== #}
+            <div class="col-lg-4">
+                <div class="sv-sidebar">
+
+                    {# Vote widget #}
+                    <div class="sv-vote-widget" id="voteCard">
+                        <div class="sv-vote__label">Votes ce mois</div>
+                        <div class="sv-vote__count" id="monthlyVotes">{{ server.monthlyVotes }}</div>
+                        <div class="sv-vote__total" id="totalVotes">{{ server.totalVotes }} au total</div>
+                        <a href="{{ path('vote_initiate_discord', {slug: server.slug}) }}" class="sv-vote__btn sv-vote__btn--discord" id="voteBtnDiscord">
+                            <i class="fab fa-discord"></i> <span>Voter via Discord</span>
+                        </a>
+                        <div class="sv-vote__sep">ou</div>
+                        <a href="{{ path('vote_initiate_steam', {slug: server.slug}) }}" class="sv-vote__btn sv-vote__btn--steam" id="voteBtnSteam">
+                            <i class="fab fa-steam"></i> <span>Voter via Steam</span>
+                        </a>
+                        <div class="sv-vote__timer" id="voteTimer">
+                            <i class="fas fa-clock"></i> <span id="cooldownText">--:--</span>
+                        </div>
+                        <div class="sv-vote__msg" id="voteMessage"></div>
+                    </div>
+
+                    {# Social icons #}
+                    {% set hasSocials = server.website or server.discordUrl or server.twitterUrl or server.youtubeUrl or server.instagramUrl or server.twitchChannel %}
+                    {% if hasSocials %}
+                        <div class="sv-socials">
+                            {% if server.website %}
+                                <a href="{{ server.website }}" target="_blank" rel="noopener" class="sv-social sv-social--website" title="Site web">
+                                    <i class="fas fa-globe"></i>
+                                </a>
+                            {% endif %}
+                            {% if server.discordUrl %}
+                                <a href="{{ server.discordUrl }}" target="_blank" rel="noopener" class="sv-social sv-social--discord" title="Discord">
+                                    <i class="fab fa-discord"></i>
+                                </a>
+                            {% endif %}
+                            {% if server.twitterUrl %}
+                                <a href="{{ server.twitterUrl }}" target="_blank" rel="noopener" class="sv-social sv-social--twitter" title="Twitter / X">
+                                    <i class="fab fa-twitter"></i>
+                                </a>
+                            {% endif %}
+                            {% if server.youtubeUrl %}
+                                <a href="{{ server.youtubeUrl }}" target="_blank" rel="noopener" class="sv-social sv-social--youtube" title="YouTube">
+                                    <i class="fab fa-youtube"></i>
+                                </a>
+                            {% endif %}
+                            {% if server.instagramUrl %}
+                                <a href="{{ server.instagramUrl }}" target="_blank" rel="noopener" class="sv-social sv-social--instagram" title="Instagram">
+                                    <i class="fab fa-instagram"></i>
+                                </a>
+                            {% endif %}
+                            {% if server.twitchChannel %}
+                                <a href="https://twitch.tv/{{ server.twitchChannel }}" target="_blank" rel="noopener" class="sv-social sv-social--twitch" title="Twitch">
+                                    <i class="fab fa-twitch"></i>
+                                </a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
+                    {# Connection quick #}
+                    {% if server.ip %}
+                        <div class="sv-connect">
+                            <div class="sv-connect__title">Rejoindre</div>
+                            <div class="sv-connect__ip">
+                                <code id="serverIpSidebar">{{ server.ip }}{% if server.port %}:{{ server.port }}{% endif %}</code>
+                                <button type="button" class="sv-connect__copy" onclick="copyIp()" title="Copier">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {# Similar servers #}
+                    {% if similarServers|length > 0 %}
+                        <div class="sv-similar">
+                            <div class="sv-similar__title">Serveurs similaires</div>
+                            {% for s in similarServers %}
+                                <a href="{{ path('server_show', {slug: s.slug}) }}" class="sv-similar__item">
+                                    <div class="sv-similar__item-icon">
+                                        <i class="fas fa-server"></i>
+                                    </div>
+                                    <div class="sv-similar__item-name">{{ s.name }}</div>
+                                    <div class="sv-similar__item-votes">{{ s.monthlyVotes }}</div>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{# ===== FLAG MODAL ===== #}
+{% if app.user and app.user.id == server.owner.id %}
+<div class="sv-flag-modal" id="flagModal">
+    <div class="sv-flag-modal__content">
+        <div class="sv-flag-modal__title"><i class="fas fa-flag" style="color:#f6c23e;"></i>&nbsp; Signaler ce commentaire</div>
+        <form id="flagForm" method="post" action="">
+            <input type="hidden" name="_token" id="flagToken" value="">
+            <textarea name="reason" class="sv-flag-modal__textarea" placeholder="Raison du signalement (optionnel)..." maxlength="255"></textarea>
+            <div class="sv-flag-modal__actions">
+                <button type="button" class="sv-flag-modal__cancel" onclick="closeFlagModal()">Annuler</button>
+                <button type="submit" class="sv-flag-modal__submit"><i class="fas fa-flag"></i>&nbsp; Signaler</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+{# ===== MOBILE VOTE BAR ===== #}
+<div class="sv-mobile-vote">
+    <div class="sv-mobile-vote__inner">
+        <div class="sv-mobile-vote__info">
+            <div class="sv-mobile-vote__count" id="monthlyVotesMobile">{{ server.monthlyVotes }}</div>
+            <div class="sv-mobile-vote__label">votes ce mois</div>
+        </div>
+        <div class="sv-mobile-vote__btns">
+            <a href="{{ path('vote_initiate_discord', {slug: server.slug}) }}" class="sv-mobile-vote__btn sv-mobile-vote__btn--discord" id="voteBtnDiscordMobile">
+                <i class="fab fa-discord"></i> Discord
+            </a>
+            <a href="{{ path('vote_initiate_steam', {slug: server.slug}) }}" class="sv-mobile-vote__btn sv-mobile-vote__btn--steam" id="voteBtnSteamMobile">
+                <i class="fab fa-steam"></i> Steam
+            </a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block javascripts %}
+<script>
+(function() {
+    /* === TABS === */
+    var tabs = document.querySelectorAll('.sv-nav__link');
+    tabs.forEach(function(tab) {
+        tab.addEventListener('click', function() {
+            tabs.forEach(function(t) { t.classList.remove('active'); });
+            tab.classList.add('active');
+            document.querySelectorAll('.sv-pane').forEach(function(p) { p.classList.remove('active'); });
+            var pane = document.getElementById('pane-' + tab.getAttribute('data-tab'));
+            if (pane) pane.classList.add('active');
+        });
+    });
+
+    /* Auto-switch to avis tab if #comments in URL */
+    if (window.location.hash === '#comments') {
+        tabs.forEach(function(t) { t.classList.remove('active'); });
+        document.querySelectorAll('.sv-pane').forEach(function(p) { p.classList.remove('active'); });
+        var avisTab = document.querySelector('.sv-nav__link[data-tab="avis"]');
+        var avisPane = document.getElementById('pane-avis');
+        if (avisTab) avisTab.classList.add('active');
+        if (avisPane) avisPane.classList.add('active');
+    }
+
+    /* === VOTE === */
+    var cooldownSeconds = 0;
+    var timerInterval = null;
+    var slug = '{{ server.slug }}';
+
+    function updateTimerDisplay() {
+        var h = Math.floor(cooldownSeconds / 3600);
+        var m = Math.floor((cooldownSeconds % 3600) / 60);
+        var s = cooldownSeconds % 60;
+        var text = '';
+        if (h > 0) text += h + 'h ';
+        text += (m < 10 ? '0' + m : m) + ':' + (s < 10 ? '0' + s : s);
+        document.getElementById('cooldownText').textContent = text;
+    }
+
+    function setVoteDisabled(disabled) {
+        var btns = document.querySelectorAll('#voteBtnDiscord, #voteBtnSteam, #voteBtnDiscordMobile, #voteBtnSteamMobile');
+        btns.forEach(function(btn) {
+            if (disabled) {
+                btn.classList.add('sv-vote__btn--disabled');
+            } else {
+                btn.classList.remove('sv-vote__btn--disabled');
+            }
+        });
+    }
+
+    function startTimer(seconds) {
+        cooldownSeconds = seconds;
+        if (cooldownSeconds <= 0) { stopTimer(); return; }
+        setVoteDisabled(true);
+        document.getElementById('voteTimer').style.display = 'block';
+        updateTimerDisplay();
+        if (timerInterval) clearInterval(timerInterval);
+        timerInterval = setInterval(function() {
+            cooldownSeconds--;
+            if (cooldownSeconds <= 0) stopTimer();
+            else updateTimerDisplay();
+        }, 1000);
+    }
+
+    function stopTimer() {
+        cooldownSeconds = 0;
+        if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+        setVoteDisabled(false);
+        document.getElementById('voteTimer').style.display = 'none';
+    }
+
+    function syncCounters(monthly, total) {
+        document.getElementById('monthlyVotes').textContent = monthly;
+        document.getElementById('totalVotes').textContent = total + ' au total';
+        var mob = document.getElementById('monthlyVotesMobile');
+        if (mob) mob.textContent = monthly;
+    }
+
+    function checkStatus() {
+        fetch('/serveur/' + slug + '/vote-status')
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            syncCounters(d.monthly_votes, d.total_votes);
+            if (!d.can_vote && d.cooldown > 0) startTimer(d.cooldown);
+            else if (d.can_vote) setVoteDisabled(false);
+        });
+    }
+
+    window.copyIp = function() {
+        var ip = document.getElementById('serverIp') || document.getElementById('serverIpSidebar');
+        if (!ip) return;
+        navigator.clipboard.writeText(ip.textContent).then(function() {
+            document.querySelectorAll('.sv-connect__copy').forEach(function(b) {
+                b.innerHTML = '<i class="fas fa-check"></i>';
+                setTimeout(function() { b.innerHTML = '<i class="fas fa-copy"></i>'; }, 2000);
+            });
+        });
+    };
+
+    /* === FLAG MODAL === */
+    var flagTokens = {
+        {% if app.user and app.user.id == server.owner.id %}
+            {% for comment in comments %}
+                {% if not comment.isFlagged %}
+                    {{ comment.id }}: '{{ csrf_token('flag_comment_' ~ comment.id) }}',
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    };
+
+    window.openFlagModal = function(commentId) {
+        var modal = document.getElementById('flagModal');
+        var form = document.getElementById('flagForm');
+        var tokenInput = document.getElementById('flagToken');
+        if (!modal || !form) return;
+        form.action = '/serveur/' + slug + '/comment/' + commentId + '/flag';
+        tokenInput.value = flagTokens[commentId] || '';
+        modal.classList.add('active');
+    };
+
+    window.closeFlagModal = function() {
+        var modal = document.getElementById('flagModal');
+        if (modal) modal.classList.remove('active');
+    };
+
+    /* Close modal on background click */
+    var flagModal = document.getElementById('flagModal');
+    if (flagModal) {
+        flagModal.addEventListener('click', function(e) {
+            if (e.target === flagModal) closeFlagModal();
+        });
+    }
+
+    checkStatus();
+
+    /* === SERVER STATUS (hero badge) === */
+    var statusBadge = document.getElementById('statusBadge');
+    var serverId = {{ server.id }};
+    var hasQueryType = {{ (server.ip and server.port) ? 'true' : 'false' }};
+
+    function loadServerStatus() {
+        fetch('/api/server-status/' + serverId)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            // Update hero badge
+            if (statusBadge) {
+                if (d.online === true) {
+                    statusBadge.className = 'sv-tag sv-tag--status online';
+                    statusBadge.innerHTML = '<span class="sv-status-dot"></span> ' + d.players + '/' + d.maxPlayers + ' En ligne';
+                } else {
+                    statusBadge.className = 'sv-tag sv-tag--status offline';
+                    statusBadge.innerHTML = '<span class="sv-status-dot"></span> Hors ligne';
+                }
+            }
+
+            // Update player count badge in tab
+            var badge = document.getElementById('playerCountBadge');
+            if (badge) {
+                badge.textContent = d.online ? d.players : '0';
+            }
+
+            // Render server status pane
+            var container = document.getElementById('serverStatusContent');
+            if (!container) return;
+
+            if (!d.online) {
+                container.innerHTML = '<div class="sv-status-offline"><i class="fas fa-power-off"></i><div style="font-size:16px;font-weight:600;color:#e74a3b;margin-bottom:6px;">Serveur hors ligne</div><div>Le serveur ne repond pas actuellement.</div></div>';
+                return;
+            }
+
+            var html = '';
+
+            // Header with player count
+            html += '<div class="sv-status-header">';
+            html += '<div><div class="sv-status-header__count">' + d.players + '/' + d.maxPlayers + '</div>';
+            html += '<div class="sv-status-header__label">joueurs connectes</div></div>';
+            if (d.map) {
+                html += '<div class="sv-status-header__map"><i class="fas fa-map-marked-alt"></i>' + escapeHtml(d.map) + '</div>';
+            }
+            html += '</div>';
+
+            if (d.playerList && d.playerList.length > 0) {
+                // Search bar
+                html += '<input type="text" class="sv-player-search" id="playerSearch" placeholder="Rechercher un joueur..." oninput="filterPlayers()">';
+
+                // Player table
+                html += '<div style="background:rgba(var(--sv-bg-card-rgb),0.5);border:1px solid rgb(var(--sv-border-rgb));border-radius:14px;overflow:hidden;">';
+                html += '<table class="sv-player-table">';
+                html += '<thead><tr><th>ID</th><th>Nom</th>';
+                if (d.playerList[0] && d.playerList[0].ping !== null) {
+                    html += '<th>Ping</th>';
+                }
+                html += '</tr></thead><tbody id="playerTableBody">';
+
+                d.playerList.forEach(function(p) {
+                    html += '<tr class="sv-player-row" data-name="' + escapeHtml(p.name).toLowerCase() + '">';
+                    html += '<td>' + p.id + '</td>';
+                    html += '<td class="sv-player-name">' + escapeHtml(p.name) + '</td>';
+                    if (p.ping !== null) {
+                        var pingClass = 'sv-player-ping--good';
+                        if (p.ping > 100) pingClass = 'sv-player-ping--bad';
+                        else if (p.ping > 60) pingClass = 'sv-player-ping--medium';
+                        html += '<td class="sv-player-ping ' + pingClass + '">' + p.ping + ' ms</td>';
+                    }
+                    html += '</tr>';
+                });
+
+                html += '</tbody></table></div>';
+            } else if (d.players > 0) {
+                html += '<div class="sv-status-empty"><i class="fas fa-users"></i><div>' + d.players + ' joueur(s) connecte(s)</div><div style="font-size:12px;margin-top:6px;">La liste detaillee n\'est pas disponible pour ce type de serveur.</div></div>';
+            } else {
+                html += '<div class="sv-status-empty"><i class="fas fa-ghost"></i><div>Aucun joueur connecte</div></div>';
+            }
+
+            container.innerHTML = html;
+        })
+        .catch(function() {
+            if (statusBadge) statusBadge.style.display = 'none';
+            var container = document.getElementById('serverStatusContent');
+            if (container) {
+                container.innerHTML = '<div class="sv-status-offline"><i class="fas fa-exclamation-triangle"></i><div>Impossible de recuperer le statut du serveur.</div></div>';
+            }
+        });
+    }
+
+    function escapeHtml(text) {
+        var div = document.createElement('div');
+        div.appendChild(document.createTextNode(text));
+        return div.innerHTML;
+    }
+
+    window.filterPlayers = function() {
+        var search = document.getElementById('playerSearch');
+        if (!search) return;
+        var val = search.value.toLowerCase();
+        var rows = document.querySelectorAll('.sv-player-row');
+        rows.forEach(function(row) {
+            row.style.display = row.getAttribute('data-name').indexOf(val) !== -1 ? '' : 'none';
+        });
+    };
+
+    if (hasQueryType) {
+        loadServerStatus();
+        // Refresh every 60 seconds
+        setInterval(loadServerStatus, 60000);
+    } else if (statusBadge) {
+        // Fallback: simple online/offline check via existing endpoint
+        fetch('/serveur/' + slug + '/status')
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            if (d.online === true) {
+                statusBadge.className = 'sv-tag sv-tag--status online';
+                statusBadge.innerHTML = '<span class="sv-status-dot"></span> En ligne';
+            } else if (d.online === false) {
+                statusBadge.className = 'sv-tag sv-tag--status offline';
+                statusBadge.innerHTML = '<span class="sv-status-dot"></span> Hors ligne';
+            } else {
+                statusBadge.style.display = 'none';
+            }
+        })
+        .catch(function() {
+            statusBadge.style.display = 'none';
+        });
+    }
+})();
+</script>
+{% endblock %}

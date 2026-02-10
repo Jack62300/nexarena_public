@@ -1,0 +1,119 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block page_title %}{{ partner ? 'Modifier' : 'Ajouter un partenaire' }}{% endblock %}
+{% block title %}Nexarena Admin - {{ partner ? 'Modifier' : 'Nouveau' }} partenaire{% endblock %}
+
+{% block admin_css %}
+    .form-group { margin-bottom: 20px; }
+    .form-group label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .form-control-admin {
+        width: 100%;
+        padding: 10px 14px;
+        background: var(--bg-darker);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        color: var(--text-primary);
+        font-size: 14px;
+        transition: border-color 0.2s;
+    }
+    .form-control-admin:focus {
+        outline: none;
+        border-color: var(--accent);
+    }
+    .form-check-admin {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+    }
+    .form-check-admin input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        accent-color: var(--accent);
+    }
+    .logo-preview {
+        display: inline-block;
+        padding: 8px;
+        background: rgba(255,255,255,0.05);
+        border-radius: 8px;
+        margin-bottom: 10px;
+    }
+    .logo-preview img {
+        height: 48px;
+        width: auto;
+    }
+{% endblock %}
+
+{% block admin_body %}
+    <div style="max-width:800px;">
+        <div class="admin-table">
+            <div class="admin-table__header">
+                <h3>{{ partner ? 'Modifier le partenaire' : 'Ajouter un partenaire / service' }}</h3>
+                <a href="{{ path('admin_partners_list') }}" class="btn-admin btn-admin--outline btn-admin--sm">
+                    <i class="fas fa-arrow-left"></i> Retour
+                </a>
+            </div>
+            <div style="padding:25px;">
+                <form method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="_token" value="{{ csrf_token('partner_form') }}">
+
+                    <div class="form-group">
+                        <label for="name">Nom</label>
+                        <input type="text" id="name" name="name" class="form-control-admin" value="{{ partner ? partner.name : '' }}" required placeholder="Nom du partenaire">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="url">URL</label>
+                        <input type="url" id="url" name="url" class="form-control-admin" value="{{ partner ? partner.url : '' }}" required placeholder="https://exemple.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="type">Type</label>
+                        <select id="type" name="type" class="form-control-admin">
+                            <option value="partner" {{ (partner and partner.type == 'partner') or not partner ? 'selected' : '' }}>Partenaire</option>
+                            <option value="service" {{ partner and partner.type == 'service' ? 'selected' : '' }}>Service suivi</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="logo">Logo</label>
+                        {% if partner and partner.logoFileName %}
+                            <div class="logo-preview">
+                                <img src="{{ asset('uploads/partners/' ~ partner.logoFileName) }}" alt="{{ partner.name }}">
+                            </div>
+                        {% endif %}
+                        <input type="file" id="logo" name="logo" class="form-control-admin" accept="image/*">
+                        <small style="color:var(--text-secondary);font-size:12px;">PNG, JPG, SVG ou WebP. Fond transparent recommande.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="position">Position (ordre d'affichage)</label>
+                        <input type="number" id="position" name="position" class="form-control-admin" value="{{ partner ? partner.position : 0 }}" min="0">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-check-admin">
+                            <input type="checkbox" name="is_active" value="1" {{ (partner is null or partner.isActive) ? 'checked' : '' }}>
+                            Actif
+                        </label>
+                    </div>
+
+                    <div style="display:flex;gap:10px;padding-top:10px;">
+                        <button type="submit" class="btn-admin btn-admin--primary">
+                            <i class="fas fa-save"></i> {{ partner ? 'Enregistrer' : 'Creer' }}
+                        </button>
+                        <a href="{{ path('admin_partners_list') }}" class="btn-admin btn-admin--outline">Annuler</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

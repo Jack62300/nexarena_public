@@ -1,0 +1,207 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block page_title %}Roles & Permissions{% endblock %}
+{% block title %}Nexarena Admin - Roles & Permissions{% endblock %}
+
+{% block admin_css %}
+    .role-card {
+        background: var(--bg-card);
+        border-radius: 10px;
+        border: 1px solid var(--border-color);
+        padding: 18px;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        transition: transform 0.2s;
+    }
+    .role-card:hover {
+        transform: translateX(4px);
+    }
+    .role-card__info {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+    .role-card__color {
+        width: 6px;
+        height: 40px;
+        border-radius: 3px;
+    }
+    .role-card__name {
+        font-weight: 600;
+        font-size: 15px;
+    }
+    .role-card__tech {
+        font-size: 11px;
+        color: var(--text-secondary);
+        font-family: monospace;
+    }
+    .role-card__meta {
+        font-size: 12px;
+        color: var(--text-secondary);
+        margin-top: 2px;
+    }
+    .role-card__actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+    .perm-matrix {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .perm-matrix th,
+    .perm-matrix td {
+        padding: 8px 12px;
+        border-bottom: 1px solid var(--border-color);
+        font-size: 13px;
+    }
+    .perm-matrix thead th {
+        background: rgba(0,0,0,0.15);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-secondary);
+        text-align: center;
+        white-space: nowrap;
+    }
+    .perm-matrix thead th:first-child {
+        text-align: left;
+    }
+    .perm-matrix .category-row td {
+        background: rgba(69,248,130,0.08);
+        font-weight: 700;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--accent);
+        padding: 10px 12px;
+    }
+    .perm-matrix td:not(:first-child) {
+        text-align: center;
+    }
+    .perm-matrix tr:hover td {
+        background: var(--bg-card-hover);
+    }
+    .perm-matrix .category-row:hover td {
+        background: rgba(69,248,130,0.08);
+    }
+    .system-badge {
+        display: inline-block;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 10px;
+        background: var(--border-color);
+        color: var(--text-secondary);
+        margin-left: 6px;
+    }
+    .role-header-badge {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+{% endblock %}
+
+{% block admin_body %}
+    <div class="row g-4">
+        {# ===== ROLE LIST ===== #}
+        <div class="col-xl-4">
+            <div class="admin-table">
+                <div class="admin-table__header">
+                    <h3>Roles</h3>
+                    {% if is_granted('roles.create') %}
+                        <a href="{{ path('admin_roles_new') }}" class="btn-admin btn-admin--primary btn-admin--sm">
+                            <i class="fas fa-plus"></i> Nouveau
+                        </a>
+                    {% endif %}
+                </div>
+                <div style="padding:15px;">
+                    {% for role in roles %}
+                        <div class="role-card">
+                            <div class="role-card__info">
+                                <div class="role-card__color" style="background:{{ role.color }};"></div>
+                                <div>
+                                    <div class="role-card__name">
+                                        {{ role.name }}
+                                        {% if role.isSystem %}<span class="system-badge"><i class="fas fa-lock" style="font-size:9px;"></i> Systeme</span>{% endif %}
+                                    </div>
+                                    <div class="role-card__tech">{{ role.technicalName }}</div>
+                                    <div class="role-card__meta">
+                                        {{ role.permissions|length }} permission(s) &middot; Position {{ role.position }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="role-card__actions">
+                                {% if is_granted('roles.edit') %}
+                                    <a href="{{ path('admin_roles_edit', {id: role.id}) }}" class="btn-admin btn-admin--outline btn-admin--sm">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                {% endif %}
+                                {% if is_granted('roles.delete') and not role.isSystem %}
+                                    <form method="post" action="{{ path('admin_roles_delete', {id: role.id}) }}" onsubmit="return confirm('Supprimer le role {{ role.name }} ?');" style="display:inline;">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete_' ~ role.id) }}">
+                                        <button type="submit" class="btn-admin btn-admin--sm" style="background:var(--danger);color:#fff;border:none;">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        {# ===== PERMISSION MATRIX ===== #}
+        <div class="col-xl-8">
+            <div class="admin-table">
+                <div class="admin-table__header">
+                    <h3>Matrice des permissions</h3>
+                </div>
+                <div style="overflow-x:auto;">
+                    <table class="perm-matrix">
+                        <thead>
+                            <tr>
+                                <th style="min-width:200px;">Permission</th>
+                                {% for role in roles %}
+                                    <th>
+                                        <span class="role-header-badge" style="background:{{ role.color }}22;color:{{ role.color }};border:1px solid {{ role.color }}44;">
+                                            {{ role.name|slice(0, 3)|upper }}
+                                        </span>
+                                    </th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for category, perms in permissions_by_category %}
+                                <tr class="category-row">
+                                    <td colspan="{{ roles|length + 1 }}">{{ category|capitalize }}</td>
+                                </tr>
+                                {% for perm in perms %}
+                                    <tr>
+                                        <td>
+                                            {{ perm.label }}
+                                            <div style="font-size:11px;color:var(--text-secondary);font-family:monospace;">{{ perm.code }}</div>
+                                        </td>
+                                        {% for role in roles %}
+                                            <td>
+                                                {% if role.hasPermission(perm.code) %}
+                                                    <i class="fas fa-check" style="color:var(--success);font-size:13px;"></i>
+                                                {% else %}
+                                                    <i class="fas fa-times" style="color:var(--text-secondary);font-size:13px;opacity:0.2;"></i>
+                                                {% endif %}
+                                            </td>
+                                        {% endfor %}
+                                    </tr>
+                                {% endfor %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

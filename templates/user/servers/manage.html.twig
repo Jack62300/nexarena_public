@@ -1,0 +1,1568 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Gestion - {{ server.name }} - {{ setting('site_name', 'Nexarena') }}{% endblock %}
+
+{% block stylesheets %}
+<style>
+    .server-manage { padding: 120px 0 80px; }
+    .server-manage__title {
+        font-size: 28px;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 8px;
+    }
+    .server-manage__title span { color: #45f882; }
+    .server-manage__subtitle {
+        color: #8b949e;
+        font-size: 14px;
+        margin-bottom: 30px;
+    }
+    .manage-card {
+        background: #162231;
+        border: 1px solid #1e3048;
+        border-radius: 10px;
+        padding: 25px;
+        margin-bottom: 25px;
+    }
+    .manage-card__title {
+        font-size: 16px;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 18px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #1e3048;
+    }
+    .manage-card__title i { margin-right: 8px; color: #45f882; }
+    .token-box {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: #0a1018;
+        border: 1px solid #1e3048;
+        border-radius: 6px;
+        padding: 12px 16px;
+        margin-bottom: 15px;
+    }
+    .token-box code {
+        flex: 1;
+        font-size: 12px;
+        color: #45f882;
+        word-break: break-all;
+    }
+    .token-box .btn-copy {
+        background: #45f882;
+        color: #0a1018;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+        white-space: nowrap;
+    }
+    .token-box .btn-copy:hover { background: #33d96e; }
+    .form-group { margin-bottom: 18px; }
+    .form-group label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #8b949e;
+    }
+    .form-input {
+        width: 100%;
+        padding: 10px 14px;
+        background: #0a1018;
+        border: 1px solid #1e3048;
+        border-radius: 6px;
+        color: #e4e6eb;
+        font-size: 14px;
+    }
+    .form-input:focus { outline: none; border-color: #45f882; }
+    .form-check-custom {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        color: #e4e6eb;
+    }
+    .form-check-custom input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        accent-color: #45f882;
+    }
+    .btn-action {
+        padding: 8px 18px;
+        border-radius: 6px;
+        border: none;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .btn-action--primary { background: #45f882; color: #0a1018; }
+    .btn-action--primary:hover { background: #33d96e; }
+    .btn-action--danger { background: #e74a3b; color: #fff; }
+    .btn-action--danger:hover { background: #c0392b; }
+    .btn-action--outline { background: transparent; color: #8b949e; border: 1px solid #1e3048; text-decoration: none; }
+    .btn-action--outline:hover { color: #fff; border-color: #8b949e; }
+    .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 15px;
+    }
+    .stat-item {
+        background: #0a1018;
+        border: 1px solid #1e3048;
+        border-radius: 8px;
+        padding: 16px;
+        text-align: center;
+    }
+    .stat-item__value {
+        font-size: 28px;
+        font-weight: 700;
+        color: #fff;
+    }
+    .stat-item__label {
+        font-size: 12px;
+        color: #8b949e;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    .banner-preview {
+        max-width: 100%;
+        max-height: 90px;
+        border-radius: 4px;
+        margin-top: 10px;
+    }
+    .form-hint {
+        font-size: 12px;
+        color: #5a5c69;
+        margin-top: 4px;
+    }
+    /* Theme picker */
+    .theme-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+        gap: 12px;
+    }
+    .theme-card {
+        background: #0a1018;
+        border: 2px solid #1e3048;
+        border-radius: 10px;
+        padding: 10px;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-align: center;
+    }
+    .theme-card:hover {
+        border-color: #5a5c69;
+        transform: translateY(-2px);
+    }
+    .theme-card--active {
+        border-color: #45f882;
+        box-shadow: 0 0 15px rgba(69,248,130,0.2);
+    }
+    .theme-card__preview {
+        width: 100%;
+        height: 50px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 8px;
+    }
+    .theme-card__name {
+        font-size: 11px;
+        font-weight: 600;
+        color: #e4e6eb;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .theme-card__dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin: 6px auto 0;
+    }
+    .api-example {
+        background: #0a1018;
+        border: 1px solid #1e3048;
+        border-radius: 6px;
+        padding: 12px 16px;
+        font-family: monospace;
+        font-size: 12px;
+        color: #8b949e;
+        word-break: break-all;
+        margin-top: 10px;
+    }
+    .api-example span { color: #45f882; }
+    /* Comments */
+    .comment-item {
+        display: flex;
+        gap: 12px;
+        padding: 14px 0;
+        border-bottom: 1px solid #1e3048;
+    }
+    .comment-item:last-child { border-bottom: none; }
+    .comment-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: rgba(69,248,130,0.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        font-weight: 700;
+        color: #45f882;
+        flex-shrink: 0;
+    }
+    .comment-avatar img {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    .comment-body { flex: 1; min-width: 0; }
+    .comment-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 4px;
+        flex-wrap: wrap;
+    }
+    .comment-author { font-size: 13px; font-weight: 700; color: #e4e6eb; }
+    .comment-date { font-size: 11px; color: #5a5c69; }
+    .comment-flagged-badge {
+        font-size: 10px;
+        padding: 2px 8px;
+        border-radius: 8px;
+        background: rgba(246,194,62,0.12);
+        color: #f6c23e;
+        border: 1px solid rgba(246,194,62,0.2);
+        font-weight: 600;
+    }
+    .comment-content { font-size: 13px; color: #c4c9d2; line-height: 1.5; word-break: break-word; }
+    .comment-flag-btn {
+        background: none;
+        border: none;
+        color: #5a5c69;
+        font-size: 11px;
+        cursor: pointer;
+        padding: 3px 6px;
+        border-radius: 4px;
+        margin-top: 6px;
+        transition: all 0.2s;
+    }
+    .comment-flag-btn:hover { color: #f6c23e; background: rgba(246,194,62,0.08); }
+    .comment-empty { text-align: center; padding: 30px; color: #5a5c69; font-size: 13px; }
+    /* Flag modal */
+    .flag-modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 1050;
+        background: rgba(0,0,0,0.6);
+        align-items: center;
+        justify-content: center;
+    }
+    .flag-modal.active { display: flex; }
+    .flag-modal__content {
+        background: #162231;
+        border: 1px solid #1e3048;
+        border-radius: 14px;
+        padding: 28px;
+        max-width: 450px;
+        width: 90%;
+    }
+    .flag-modal__title { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 16px; }
+    .flag-modal__textarea {
+        width: 100%;
+        min-height: 80px;
+        background: #0a1018;
+        border: 1px solid #1e3048;
+        border-radius: 8px;
+        padding: 12px;
+        color: #e4e6eb;
+        font-size: 14px;
+        font-family: inherit;
+        resize: vertical;
+        margin-bottom: 16px;
+    }
+    .flag-modal__textarea:focus { outline: none; border-color: #f6c23e; }
+    .flag-modal__actions { display: flex; justify-content: flex-end; gap: 10px; }
+    .flag-modal__cancel {
+        padding: 10px 20px;
+        background: transparent;
+        border: 1px solid #1e3048;
+        border-radius: 8px;
+        color: #8b949e;
+        font-size: 14px;
+        cursor: pointer;
+    }
+    .flag-modal__cancel:hover { border-color: #5a5c69; color: #e4e6eb; }
+    .flag-modal__submit {
+        padding: 10px 20px;
+        background: #f6c23e;
+        border: none;
+        border-radius: 8px;
+        color: #0a1018;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+    .flag-modal__submit:hover { background: #e5b438; }
+    /* Collaborators */
+    .collab-item {
+        background: #0a1018;
+        border: 1px solid #1e3048;
+        border-radius: 10px;
+        padding: 16px;
+        margin-bottom: 12px;
+    }
+    .collab-item__header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+    .collab-item__avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: rgba(54,185,204,0.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        font-weight: 700;
+        color: #36b9cc;
+        flex-shrink: 0;
+    }
+    .collab-item__avatar img {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    .collab-item__info { flex: 1; min-width: 0; }
+    .collab-item__name { font-size: 14px; font-weight: 700; color: #e4e6eb; }
+    .collab-item__date { font-size: 11px; color: #5a5c69; }
+    .collab-perms-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+        margin-bottom: 12px;
+    }
+    .collab-perm-check {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: #8b949e;
+        cursor: pointer;
+    }
+    .collab-perm-check input[type="checkbox"] {
+        width: 14px;
+        height: 14px;
+        accent-color: #36b9cc;
+    }
+    .collab-item__actions {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+    }
+    .collab-empty {
+        text-align: center;
+        padding: 20px;
+        color: #5a5c69;
+        font-size: 13px;
+    }
+    /* Widget configurator */
+    .widget-tab {
+        padding: 8px 16px;
+        border-radius: 8px;
+        border: 1px solid #1e3048;
+        background: transparent;
+        color: #8b949e;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .widget-tab:hover { color: #e4e6eb; border-color: #5a5c69; }
+    .widget-tab--active {
+        background: rgba(69,248,130,0.1);
+        color: #45f882;
+        border-color: rgba(69,248,130,0.3);
+    }
+    .widget-tab i { margin-right: 6px; }
+    .wg-style-btn {
+        flex: 1;
+        padding: 10px 14px;
+        border-radius: 10px;
+        border: 2px solid #1e3048;
+        background: #0d1a26;
+        color: #8b949e;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-align: center;
+    }
+    .wg-style-btn:hover { color: #e4e6eb; border-color: #5a5c69; }
+    .wg-style-btn--active {
+        background: rgba(69,248,130,0.08);
+        color: #45f882;
+        border-color: #45f882;
+        box-shadow: 0 0 12px rgba(69,248,130,0.15);
+    }
+    .wg-style-btn i { margin-right: 6px; }
+    .wg-preview-dark {
+        background-image: repeating-conic-gradient(#1a2538 0% 25%, #0f1923 0% 50%);
+        background-size: 16px 16px;
+        border: 1px solid #1e3048;
+        border-radius: 10px;
+        padding: 16px;
+        text-align: center;
+        min-height: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .wg-preview-light {
+        background: #e5e7eb;
+        border: 1px solid #d1d5db;
+        border-radius: 10px;
+        padding: 16px;
+        text-align: center;
+        min-height: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .wg-preview-colored {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: 1px solid rgba(102,126,234,0.4);
+        border-radius: 10px;
+        padding: 16px;
+        text-align: center;
+        min-height: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    /* Manage tabs */
+    .manage-tabs {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 25px;
+        flex-wrap: wrap;
+    }
+    .manage-tabs__btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 22px;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid #1e3048;
+        border-radius: 8px;
+        color: #8b949e;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .manage-tabs__btn:hover {
+        background: rgba(255,255,255,0.06);
+        color: #e4e6eb;
+        border-color: #2d4a6a;
+    }
+    .manage-tabs__btn.active {
+        background: rgba(69,248,130,0.08);
+        border-color: rgba(69,248,130,0.3);
+        color: #45f882;
+    }
+    .manage-tabs__btn i { font-size: 13px; }
+    .manage-tab-panel { display: none; }
+    .manage-tab-panel.active { display: block; }
+    /* API documentation */
+    .api-route { margin-bottom: 20px; padding: 18px; background: #0d1a26; border: 1px solid #1e3048; border-radius: 10px; }
+    .api-route:last-child { margin-bottom: 0; }
+    .api-route__header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .api-route__method {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 700;
+        font-family: monospace;
+        background: rgba(69,248,130,0.12);
+        color: #45f882;
+        border: 1px solid rgba(69,248,130,0.2);
+    }
+    .api-route__path {
+        font-family: monospace;
+        font-size: 13px;
+        color: #e4e6eb;
+        font-weight: 600;
+    }
+    .api-route__desc { font-size: 13px; color: #8b949e; margin: 0 0 10px; }
+    .api-route__response {
+        margin-top: 8px;
+    }
+    .api-route__response pre {
+        background: #0a1018;
+        border: 1px solid #1e3048;
+        border-radius: 6px;
+        padding: 10px 14px;
+        font-size: 11px;
+        color: #8b949e;
+        white-space: pre-wrap;
+        word-break: break-all;
+        margin: 0;
+    }
+    .api-route__label {
+        font-size: 11px;
+        font-weight: 600;
+        color: #5a5c69;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<section class="server-manage">
+    <div class="container">
+        {% for type, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="alert alert-{{ type }} alert-dismissible fade show" role="alert" style="background:#162231;border:1px solid {{ type == 'success' ? '#1cc88a' : '#e74a3b' }};color:#fff;">
+                    {{ message }}
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endfor %}
+
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:15px;margin-bottom:10px;">
+            <div>
+                <h2 class="server-manage__title">Gestion : <span>{{ server.name }}</span></h2>
+                <p class="server-manage__subtitle">
+                    {% if server.isApproved %}
+                        <span style="color:#1cc88a;"><i class="fas fa-check-circle"></i> Approuve</span>
+                    {% else %}
+                        <span style="color:#f6c23e;"><i class="fas fa-clock"></i> En attente d'approbation</span>
+                    {% endif %}
+                    &nbsp;|&nbsp;
+                    {% if server.isActive %}
+                        <span style="color:#36b9cc;">Actif</span>
+                    {% else %}
+                        <span style="color:#8b949e;">Inactif</span>
+                    {% endif %}
+                    {% if not is_owner %}
+                        &nbsp;|&nbsp;
+                        <span style="color:#36b9cc;"><i class="fas fa-users"></i> Collaborateur</span>
+                    {% endif %}
+                </p>
+            </div>
+            <div style="display:flex;gap:8px;">
+                {% if can_edit_info or can_edit_images or can_edit_social %}
+                    <a href="{{ path('user_servers_edit', {id: server.id}) }}" class="btn-action btn-action--outline">
+                        <i class="fas fa-edit"></i> Modifier
+                    </a>
+                {% endif %}
+                <a href="{{ path('user_servers_list') }}" class="btn-action btn-action--outline">
+                    <i class="fas fa-arrow-left"></i> Retour
+                </a>
+            </div>
+        </div>
+
+        <div class="manage-tabs">
+            <button type="button" class="manage-tabs__btn active" data-tab="gestion" onclick="switchManageTab('gestion')">
+                <i class="fas fa-cogs"></i> Gestion
+            </button>
+            {% if can_manage_theme %}
+            <button type="button" class="manage-tabs__btn" data-tab="theme" onclick="switchManageTab('theme')">
+                <i class="fas fa-palette"></i> Theme
+            </button>
+            {% endif %}
+            {% if can_manage_api %}
+            <button type="button" class="manage-tabs__btn" data-tab="api" onclick="switchManageTab('api')">
+                <i class="fas fa-code"></i> API
+            </button>
+            {% endif %}
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-8">
+                {# ========== TAB: GESTION ========== #}
+                <div id="tabGestion" class="manage-tab-panel active">
+                {# === TOKEN API === #}
+                {% if can_manage_api %}
+                <div class="manage-card">
+                    <h4 class="manage-card__title"><i class="fas fa-key"></i> Token API</h4>
+                    <p style="color:#8b949e;font-size:13px;margin-bottom:15px;">
+                        Ce token permet d'acceder a l'API pour verifier les votes de votre serveur.
+                        Ne le partagez jamais publiquement.
+                    </p>
+                    <div class="token-box">
+                        <code id="apiToken">{{ server.apiToken }}</code>
+                        <button type="button" class="btn-copy" onclick="navigator.clipboard.writeText(document.getElementById('apiToken').textContent); this.textContent='Copie !'; setTimeout(function(){document.querySelector('.btn-copy').textContent='Copier';}, 2000);">
+                            Copier
+                        </button>
+                    </div>
+                    <form method="post" action="{{ path('user_servers_regenerate_token', {id: server.id}) }}" onsubmit="return confirm('Regenerer le token ? L\'ancien token ne fonctionnera plus.');" style="display:inline;">
+                        <input type="hidden" name="_token" value="{{ csrf_token('regenerate_token') }}">
+                        <button type="submit" class="btn-action btn-action--danger" style="font-size:12px;">
+                            <i class="fas fa-sync-alt"></i> Regenerer le token
+                        </button>
+                    </form>
+                    <p style="color:#5a5c69;font-size:12px;margin-top:12px;margin-bottom:0;">
+                        <i class="fas fa-info-circle"></i> Consultez l'onglet <strong style="color:#45f882;cursor:pointer;" onclick="switchManageTab('api')">API</strong> pour la documentation complete.
+                    </p>
+                </div>
+                {% endif %}
+
+                {# === WEBHOOKS === #}
+                {% if can_manage_webhooks %}
+                <div class="manage-card">
+                    <h4 class="manage-card__title"><i class="fas fa-satellite-dish"></i> Webhooks</h4>
+                    <p style="color:#8b949e;font-size:13px;margin-bottom:15px;">
+                        Recevez une notification HTTP a chaque vote sur votre serveur.
+                    </p>
+                    <form method="post">
+                        <input type="hidden" name="_token" value="{{ csrf_token('server_manage') }}">
+                        <input type="hidden" name="_action" value="webhook">
+                        <div class="form-group">
+                            <label class="form-check-custom">
+                                <input type="checkbox" name="webhook_enabled" value="1" {{ server.webhookEnabled ? 'checked' : '' }} onchange="document.getElementById('webhookUrlField').style.display = this.checked ? 'block' : 'none'">
+                                Activer les webhooks
+                            </label>
+                        </div>
+                        <div id="webhookUrlField" style="{{ server.webhookEnabled ? '' : 'display:none;' }}">
+                            <div class="form-group">
+                                <label for="webhook_url">URL du webhook</label>
+                                <input type="url" id="webhook_url" name="webhook_url" class="form-input" value="{{ server.webhookUrl }}" placeholder="https://mon-site.fr/api/vote-callback">
+                                <span class="form-hint">Un POST JSON sera envoye a cette URL a chaque vote. Header X-Webhook-Signature inclus si un secret est configure.</span>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-action btn-action--primary">
+                            <i class="fas fa-save"></i> Enregistrer
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+
+                {# === STATUS SERVEUR === #}
+                {% if can_manage_status %}
+                <div class="manage-card">
+                    <h4 class="manage-card__title"><i class="fas fa-signal"></i> Status du serveur</h4>
+                    <p style="color:#8b949e;font-size:13px;margin-bottom:15px;">
+                        Affiche un indicateur "En ligne / Hors ligne" sur la page publique via un ping TCP sur l'IP:port.
+                    </p>
+                    {% if not server.ip or not server.port %}
+                        <div style="background:rgba(246,194,62,0.08);border:1px solid rgba(246,194,62,0.2);border-radius:8px;padding:12px 16px;color:#f6c23e;font-size:13px;margin-bottom:15px;">
+                            <i class="fas fa-exclamation-triangle"></i> Vous devez renseigner l'IP et le port de votre serveur pour utiliser cette fonctionnalite.
+                        </div>
+                    {% endif %}
+                    <form method="post">
+                        <input type="hidden" name="_token" value="{{ csrf_token('server_manage') }}">
+                        <input type="hidden" name="_action" value="status_check">
+                        <div class="form-group">
+                            <label class="form-check-custom">
+                                <input type="checkbox" {{ server.statusCheckEnabled ? 'checked' : '' }} onchange="this.form.submit()" {{ (not server.ip or not server.port) ? 'disabled' : '' }}>
+                                Activer la verification du status
+                            </label>
+                        </div>
+                    </form>
+                    {% if server.statusCheckEnabled and server.ip and server.port %}
+                        <div style="margin-top:12px;padding:12px 16px;background:#0a1018;border:1px solid #1e3048;border-radius:8px;">
+                            <span style="font-size:13px;color:#8b949e;">Status actuel : </span>
+                            <span id="statusPreview" style="font-size:13px;">
+                                <i class="fas fa-spinner fa-spin" style="color:#5a5c69;"></i> Verification...
+                            </span>
+                        </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                {# === BANNIERE === #}
+                {% if can_edit_images %}
+                <div class="manage-card">
+                    <h4 class="manage-card__title"><i class="fas fa-image"></i> Banniere</h4>
+                    <p style="color:#8b949e;font-size:13px;margin-bottom:15px;">
+                        Banniere affichee en haut de la page publique de votre serveur (taille recommandee : 1920x400 pixels).
+                    </p>
+                    {% if server.banner %}
+                        <img src="{{ asset('uploads/servers/banners/' ~ server.banner) }}" alt="Banniere" class="banner-preview" style="margin-bottom:15px;">
+                    {% endif %}
+                    <form method="post" enctype="multipart/form-data">
+                        <input type="hidden" name="_token" value="{{ csrf_token('server_manage') }}">
+                        <input type="hidden" name="_action" value="banner">
+                        <div class="form-group">
+                            <input type="file" name="banner" class="form-input" accept="image/*">
+                            <span class="form-hint">Taille recommandee : 1920x400 pixels. Les images plus grandes seront redimensionnees.</span>
+                        </div>
+                        <button type="submit" class="btn-action btn-action--primary">
+                            <i class="fas fa-upload"></i> Uploader
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+
+                {# === WIDGETS INTEGRABLES === #}
+                <div class="manage-card">
+                    <h4 class="manage-card__title"><i class="fas fa-code"></i> Widgets integrables</h4>
+                    <p style="color:#8b949e;font-size:13px;margin-bottom:20px;">
+                        Integrez ces widgets sur votre site web pour afficher les informations de votre serveur.
+                    </p>
+
+                    {# Style selector: 5 options #}
+                    <div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;">
+                        <button type="button" class="wg-style-btn wg-style-btn--active" data-style="dark" onclick="switchWidgetStyle('dark')">
+                            <i class="fas fa-moon"></i> Sombre
+                        </button>
+                        <button type="button" class="wg-style-btn" data-style="light" onclick="switchWidgetStyle('light')">
+                            <i class="fas fa-sun"></i> Clair
+                        </button>
+                        <button type="button" class="wg-style-btn" data-style="colored" onclick="switchWidgetStyle('colored')">
+                            <i class="fas fa-fire"></i> Colore
+                        </button>
+                        <button type="button" class="wg-style-btn" data-style="compact" onclick="switchWidgetStyle('compact')">
+                            <i class="fas fa-compress-alt"></i> Compact
+                        </button>
+                        <button type="button" class="wg-style-btn" data-style="custom" onclick="switchWidgetStyle('custom')">
+                            <i class="fas fa-palette"></i> Personnalisable
+                        </button>
+                    </div>
+
+                    {# Style description #}
+                    <div id="wgStyleDesc" style="font-size:12px;color:#5a5c69;margin-bottom:16px;padding:8px 12px;background:#0d1a26;border-radius:8px;">
+                        <i class="fas fa-info-circle" style="margin-right:4px;"></i> Fond transparent, texte blanc, accent vert — ideal pour les sites sombres.
+                    </div>
+
+                    {# Widget type: Card / Voters #}
+                    <div style="display:flex;gap:4px;margin-bottom:20px;">
+                        <button type="button" class="widget-tab widget-tab--active" data-tab="card" onclick="switchWidgetTab('card')">
+                            <i class="fas fa-id-card"></i> Fiche Serveur
+                        </button>
+                        <button type="button" class="widget-tab" data-tab="voters" onclick="switchWidgetTab('voters')">
+                            <i class="fas fa-trophy"></i> Top Votants
+                        </button>
+                    </div>
+
+                    {# Custom controls (hidden by default) #}
+                    <div id="wgCustomControls" style="display:none;margin-bottom:20px;">
+                        <div style="background:#0d1a26;border:1px solid #1e3048;border-radius:10px;padding:18px;">
+                            <div style="font-size:13px;font-weight:700;color:#e4e6eb;margin-bottom:14px;">
+                                <i class="fas fa-sliders-h" style="color:#45f882;margin-right:6px;"></i> Personnalisation
+                            </div>
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                                <div>
+                                    <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:600;color:#8b949e;">Couleur d'accent</label>
+                                    <div style="display:flex;align-items:center;gap:8px;">
+                                        <input type="color" id="wgAccent" value="#45f882" onchange="updateWidgetPreview()" style="width:36px;height:36px;border:none;border-radius:6px;cursor:pointer;background:none;padding:0;">
+                                        <span id="wgAccentHex" style="font-family:monospace;font-size:12px;color:#8b949e;">#45f882</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:600;color:#8b949e;">Fond</label>
+                                    <div style="display:flex;align-items:center;gap:8px;">
+                                        <input type="color" id="wgBg" value="#162231" onchange="updateWidgetPreview()" style="width:36px;height:36px;border:none;border-radius:6px;cursor:pointer;background:none;padding:0;" disabled>
+                                        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#8b949e;cursor:pointer;">
+                                            <input type="checkbox" id="wgBgTransparent" checked onchange="toggleBgTransparent()" style="accent-color:#45f882;width:14px;height:14px;">
+                                            Transparent
+                                        </label>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:600;color:#8b949e;">Texte</label>
+                                    <div style="display:flex;align-items:center;gap:8px;">
+                                        <input type="color" id="wgText" value="#ffffff" onchange="updateWidgetPreview()" style="width:36px;height:36px;border:none;border-radius:6px;cursor:pointer;background:none;padding:0;">
+                                        <span id="wgTextHex" style="font-family:monospace;font-size:12px;color:#8b949e;">#ffffff</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:600;color:#8b949e;">Bord arrondi : <span id="wgRadiusVal">12</span>px</label>
+                                    <input type="range" id="wgRadius" min="0" max="30" value="12" oninput="updateWidgetPreview()" style="width:100%;accent-color:#45f882;">
+                                </div>
+                                <div style="grid-column:1/-1;display:flex;gap:20px;flex-wrap:wrap;">
+                                    <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#e4e6eb;cursor:pointer;">
+                                        <input type="checkbox" id="wgHideFooter" onchange="updateWidgetPreview()" style="accent-color:#45f882;width:16px;height:16px;">
+                                        Masquer le footer
+                                    </label>
+                                    <label id="wgHideDescLabel" style="display:flex;align-items:center;gap:6px;font-size:13px;color:#e4e6eb;cursor:pointer;">
+                                        <input type="checkbox" id="wgHideDesc" onchange="updateWidgetPreview()" style="accent-color:#45f882;width:16px;height:16px;">
+                                        Masquer la description
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {# Preview #}
+                    <div style="margin-bottom:20px;">
+                        <label style="display:block;margin-bottom:8px;font-size:12px;font-weight:600;color:#8b949e;text-transform:uppercase;letter-spacing:0.5px;">Apercu</label>
+                        <div id="wgPreviewContainer" class="wg-preview-dark">
+                            <iframe id="wgPreviewIframe" width="350" height="400" frameborder="0" scrolling="no" style="border:none;border-radius:8px;max-width:100%;"></iframe>
+                        </div>
+                    </div>
+
+                    {# Embed code #}
+                    <div>
+                        <label style="display:block;margin-bottom:8px;font-size:12px;font-weight:600;color:#8b949e;text-transform:uppercase;letter-spacing:0.5px;">Code d'integration</label>
+                        <div style="display:flex;gap:8px;align-items:stretch;">
+                            <textarea readonly class="form-input" id="wgEmbedCode" rows="2" style="font-family:monospace;font-size:11px;resize:none;flex:1;"></textarea>
+                            <button type="button" class="btn-action btn-action--primary" style="white-space:nowrap;align-self:stretch;" onclick="copyWidgetCode('wgEmbedCode', this)">
+                                <i class="fas fa-copy"></i> Copier
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {# === COMMENTAIRES === #}
+                {% if can_moderate_comments %}
+                <div class="manage-card">
+                    <h4 class="manage-card__title"><i class="fas fa-comments"></i> Commentaires ({{ comments|length }})</h4>
+                    {% if comments|length > 0 %}
+                        {% for comment in comments %}
+                            <div class="comment-item">
+                                <div class="comment-avatar">
+                                    {% if comment.author.avatar %}
+                                        <img src="{{ comment.author.avatar }}" alt="{{ comment.author.username }}">
+                                    {% else %}
+                                        {{ comment.author.username|slice(0, 1)|upper }}
+                                    {% endif %}
+                                </div>
+                                <div class="comment-body">
+                                    <div class="comment-header">
+                                        <span class="comment-author">{{ comment.author.username }}</span>
+                                        <span class="comment-date">{{ comment.createdAt|date('d/m/Y H:i') }}</span>
+                                        {% if comment.isFlagged %}
+                                            <span class="comment-flagged-badge"><i class="fas fa-flag"></i> Signale</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="comment-content">{{ comment.content|e|nl2br }}</div>
+                                    {% if not comment.isFlagged %}
+                                        <button type="button" class="comment-flag-btn" onclick="openFlagModal({{ comment.id }})">
+                                            <i class="fas fa-flag"></i> Signaler
+                                        </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="comment-empty">
+                            <i class="fas fa-comments" style="font-size:24px;color:#3d4250;margin-bottom:8px;display:block;"></i>
+                            Aucun commentaire pour le moment.
+                        </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                {# === RECRUTEMENT === #}
+                {% if can_manage_recruitment %}
+                <div class="manage-card">
+                    <h4 class="manage-card__title"><i class="fas fa-bullhorn"></i> Recrutement ({{ recruitment_listings|length }})</h4>
+                    <p style="color:#8b949e;font-size:13px;margin-bottom:15px;">
+                        Gerez vos annonces de recrutement pour ce serveur.
+                    </p>
+                    <a href="{{ path('user_recruitment_new', {serverId: server.id}) }}" class="btn-action btn-action--primary" style="margin-bottom:18px;">
+                        <i class="fas fa-plus"></i> Creer une annonce
+                    </a>
+                    {% if recruitment_listings|length > 0 %}
+                        {% for listing in recruitment_listings %}
+                            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0;border-bottom:1px solid #1e3048;flex-wrap:wrap;">
+                                <div style="flex:1;min-width:0;">
+                                    <div style="font-size:14px;font-weight:600;color:#e4e6eb;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                                        {{ listing.title }}
+                                    </div>
+                                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                                        {% if listing.status == 'draft' %}
+                                            <span style="font-size:11px;padding:2px 8px;border-radius:8px;background:rgba(139,148,158,0.12);color:#8b949e;border:1px solid rgba(139,148,158,0.2);font-weight:600;">Brouillon</span>
+                                        {% elseif listing.status == 'pending' %}
+                                            <span style="font-size:11px;padding:2px 8px;border-radius:8px;background:rgba(246,194,62,0.12);color:#f6c23e;border:1px solid rgba(246,194,62,0.2);font-weight:600;">En attente</span>
+                                        {% elseif listing.status == 'approved' %}
+                                            <span style="font-size:11px;padding:2px 8px;border-radius:8px;background:rgba(28,200,138,0.12);color:#1cc88a;border:1px solid rgba(28,200,138,0.2);font-weight:600;">Approuvee</span>
+                                        {% elseif listing.status == 'revision_requested' %}
+                                            <span style="font-size:11px;padding:2px 8px;border-radius:8px;background:rgba(231,74,59,0.12);color:#e74a3b;border:1px solid rgba(231,74,59,0.2);font-weight:600;">Revision</span>
+                                        {% elseif listing.status == 'rejected' %}
+                                            <span style="font-size:11px;padding:2px 8px;border-radius:8px;background:rgba(231,74,59,0.12);color:#e74a3b;border:1px solid rgba(231,74,59,0.2);font-weight:600;">Refusee</span>
+                                        {% endif %}
+                                        {% if listing.requiresLogin %}
+                                            <span style="font-size:11px;padding:2px 8px;border-radius:8px;background:rgba(54,185,204,0.12);color:#36b9cc;border:1px solid rgba(54,185,204,0.2);font-weight:600;"><i class="fas fa-lock" style="margin-right:2px;"></i> Membres</span>
+                                        {% endif %}
+                                        <span style="font-size:11px;color:#5a5c69;">{{ listing.formFields|length }} champ{{ listing.formFields|length > 1 ? 's' : '' }}</span>
+                                        <span style="font-size:11px;color:#5a5c69;">{{ listing.createdAt|date('d/m/Y') }}</span>
+                                    </div>
+                                </div>
+                                <div style="display:flex;gap:6px;flex-shrink:0;">
+                                    <a href="{{ path('user_recruitment_edit', {id: listing.id}) }}" class="btn-action btn-action--outline" style="padding:5px 10px;font-size:11px;">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{{ path('user_recruitment_form_builder', {id: listing.id}) }}" class="btn-action btn-action--outline" style="padding:5px 10px;font-size:11px;">
+                                        <i class="fas fa-list"></i> Formulaire
+                                    </a>
+                                    <a href="{{ path('user_recruitment_applications', {id: listing.id}) }}" class="btn-action btn-action--outline" style="padding:5px 10px;font-size:11px;">
+                                        <i class="fas fa-inbox"></i> Candidatures
+                                    </a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="comment-empty">
+                            <i class="fas fa-bullhorn" style="font-size:24px;color:#3d4250;margin-bottom:8px;display:block;"></i>
+                            Aucun recrutement pour le moment.
+                        </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+                </div>{# /tabGestion #}
+
+                {# ========== TAB: THEME ========== #}
+                {% if can_manage_theme %}
+                <div id="tabTheme" class="manage-tab-panel">
+                    <div class="manage-card">
+                        <h4 class="manage-card__title"><i class="fas fa-palette"></i> Theme de la page</h4>
+                        <p style="color:#8b949e;font-size:13px;margin-bottom:15px;">
+                            Choisissez un theme visuel pour la page publique de votre serveur.
+                        </p>
+                        <form method="post">
+                            <input type="hidden" name="_token" value="{{ csrf_token('server_manage') }}">
+                            <input type="hidden" name="_action" value="page_template">
+                            <input type="hidden" name="page_template" id="selectedTheme" value="{{ server.pageTemplate }}">
+
+                            <div class="theme-grid">
+                                {% for key, t in themes %}
+                                    <div class="theme-card {{ server.pageTemplate == key ? 'theme-card--active' : '' }}"
+                                         data-theme="{{ key }}"
+                                         onclick="selectTheme('{{ key }}')">
+                                        <div class="theme-card__preview" style="background: linear-gradient(135deg, {{ t.primary }} 0%, {{ t.secondary }} 100%);">
+                                            <i class="{{ t.icon }}" style="color:#fff;font-size:20px;"></i>
+                                        </div>
+                                        <div class="theme-card__name">{{ t.label }}</div>
+                                        <div class="theme-card__dot" style="background:{{ t.primary }};"></div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+                            <button type="submit" class="btn-action btn-action--primary" style="margin-top:20px;">
+                                <i class="fas fa-save"></i> Appliquer le theme
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% endif %}
+
+                {# ========== TAB: API ========== #}
+                {% if can_manage_api %}
+                <div id="tabApi" class="manage-tab-panel">
+                    <div class="manage-card">
+                        <h4 class="manage-card__title"><i class="fas fa-key"></i> Token API</h4>
+                        <p style="color:#8b949e;font-size:13px;margin-bottom:15px;">
+                            Ce token permet d'acceder a l'API pour verifier les votes de votre serveur.
+                            Ne le partagez jamais publiquement.
+                        </p>
+                        <div class="token-box">
+                            <code id="apiTokenApi">{{ server.apiToken }}</code>
+                            <button type="button" class="btn-copy" onclick="navigator.clipboard.writeText(document.getElementById('apiTokenApi').textContent); this.textContent='Copie !'; var b=this; setTimeout(function(){b.textContent='Copier';}, 2000);">
+                                Copier
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="manage-card">
+                        <h4 class="manage-card__title"><i class="fas fa-shield-alt"></i> Restriction par IP</h4>
+                        <p style="color:#8b949e;font-size:13px;margin-bottom:15px;">
+                            Limitez l'acces a votre API aux IPs de vos serveurs uniquement.
+                            Laissez vide pour autoriser toutes les IPs.
+                            Vous pouvez definir jusqu'a <strong style="color:#e4e6eb;">2 adresses IP</strong>.
+                        </p>
+                        <form method="post" action="{{ path('user_servers_update_api_ips', {id: server.id}) }}">
+                            <input type="hidden" name="_token" value="{{ csrf_token('api_ips') }}">
+                            <div class="form-group">
+                                <label>IP Serveur 1</label>
+                                <input type="text" name="allowed_ip_1" class="form-input"
+                                       placeholder="Ex: 51.210.123.45"
+                                       value="{{ server.allowedApiIps[0] ?? '' }}"
+                                       pattern="^[\d.:a-fA-F]+$">
+                            </div>
+                            <div class="form-group">
+                                <label>IP Serveur 2 <span style="color:#8b949e;font-weight:400;">(optionnel)</span></label>
+                                <input type="text" name="allowed_ip_2" class="form-input"
+                                       placeholder="Ex: 162.19.45.67"
+                                       value="{{ server.allowedApiIps[1] ?? '' }}"
+                                       pattern="^[\d.:a-fA-F]+$">
+                            </div>
+                            {% if server.allowedApiIps is not empty %}
+                                <div style="margin-bottom:15px;padding:10px 14px;background:rgba(69,248,130,0.06);border:1px solid rgba(69,248,130,0.15);border-radius:6px;font-size:12px;">
+                                    <i class="fas fa-lock" style="color:#45f882;margin-right:6px;"></i>
+                                    <span style="color:#45f882;font-weight:600;">Protection active</span>
+                                    <span style="color:#8b949e;"> — Seules les IPs {{ server.allowedApiIps|join(', ') }} peuvent acceder a l'API.</span>
+                                </div>
+                            {% else %}
+                                <div style="margin-bottom:15px;padding:10px 14px;background:rgba(255,193,7,0.06);border:1px solid rgba(255,193,7,0.15);border-radius:6px;font-size:12px;">
+                                    <i class="fas fa-unlock" style="color:#ffc107;margin-right:6px;"></i>
+                                    <span style="color:#ffc107;font-weight:600;">Acces ouvert</span>
+                                    <span style="color:#8b949e;"> — Toute IP peut utiliser votre token API.</span>
+                                </div>
+                            {% endif %}
+                            <button type="submit" class="btn-action btn-action--primary">
+                                <i class="fas fa-save"></i> Enregistrer
+                            </button>
+                        </form>
+                    </div>
+
+                    <div class="manage-card">
+                        <h4 class="manage-card__title"><i class="fas fa-book"></i> Documentation API</h4>
+                        <p style="color:#8b949e;font-size:13px;margin-bottom:20px;">
+                            Utilisez ces endpoints pour integrer le systeme de vote Nexarena dans vos plugins et applications.
+                            Tous les endpoints utilisent votre token API.
+                        </p>
+
+                        <div style="margin-bottom:8px;">
+                            <span class="api-route__label">Base URL</span>
+                        </div>
+                        <div class="api-example" style="margin-bottom:25px;margin-top:4px;">
+                            <span>{{ app.request.schemeAndHttpHost }}/api/v1/servers/{token}</span>
+                        </div>
+
+                        {# Route 1: Vote by username #}
+                        <div class="api-route">
+                            <div class="api-route__header">
+                                <span class="api-route__method">GET</span>
+                                <span class="api-route__path">/vote/{username}</span>
+                            </div>
+                            <p class="api-route__desc">Verifie si un joueur a vote recemment par son pseudo Nexarena.</p>
+                            <div class="api-route__label">Exemple</div>
+                            <div class="api-example" style="margin-top:4px;">
+                                GET <span>/api/v1/servers/{{ server.apiToken|slice(0, 8) }}...{{ server.apiToken|slice(-4) }}/vote/Notch</span>
+                            </div>
+                            <div class="api-route__response">
+                                <div class="api-route__label" style="margin-top:8px;">Reponse</div>
+                                <pre>{{ '{"voted": true, "username": "Notch", "voted_at": "2026-01-15T14:30:00+00:00"}' }}</pre>
+                            </div>
+                        </div>
+
+                        {# Route 2: Vote by Discord ID #}
+                        <div class="api-route">
+                            <div class="api-route__header">
+                                <span class="api-route__method">GET</span>
+                                <span class="api-route__path">/vote/discord/{discordId}</span>
+                            </div>
+                            <p class="api-route__desc">Verifie si un utilisateur a vote via son ID Discord.</p>
+                            <div class="api-route__label">Exemple</div>
+                            <div class="api-example" style="margin-top:4px;">
+                                GET <span>/api/v1/servers/{token}/vote/discord/123456789012345678</span>
+                            </div>
+                            <div class="api-route__response">
+                                <div class="api-route__label" style="margin-top:8px;">Reponse</div>
+                                <pre>{{ '{"voted": true, "discord_id": "123456789012345678", "voted_at": "2026-01-15T14:30:00+00:00"}' }}</pre>
+                            </div>
+                        </div>
+
+                        {# Route 3: Vote by IP #}
+                        <div class="api-route">
+                            <div class="api-route__header">
+                                <span class="api-route__method">GET</span>
+                                <span class="api-route__path">/vote/ip/{ip}</span>
+                            </div>
+                            <p class="api-route__desc">Verifie si un vote a ete effectue depuis une adresse IP.</p>
+                            <div class="api-route__label">Exemple</div>
+                            <div class="api-example" style="margin-top:4px;">
+                                GET <span>/api/v1/servers/{token}/vote/ip/192.168.1.1</span>
+                            </div>
+                            <div class="api-route__response">
+                                <div class="api-route__label" style="margin-top:8px;">Reponse</div>
+                                <pre>{{ '{"voted": true, "ip": "192.168.1.1", "voted_at": "2026-01-15T14:30:00+00:00"}' }}</pre>
+                            </div>
+                        </div>
+
+                        {# Route 4: Vote by User ID #}
+                        <div class="api-route">
+                            <div class="api-route__header">
+                                <span class="api-route__method">GET</span>
+                                <span class="api-route__path">/vote/user/{userId}</span>
+                            </div>
+                            <p class="api-route__desc">Verifie si un utilisateur Nexarena a vote via son ID utilisateur.</p>
+                            <div class="api-route__label">Exemple</div>
+                            <div class="api-example" style="margin-top:4px;">
+                                GET <span>/api/v1/servers/{token}/vote/user/42</span>
+                            </div>
+                            <div class="api-route__response">
+                                <div class="api-route__label" style="margin-top:8px;">Reponse</div>
+                                <pre>{{ '{"voted": true, "user_id": 42, "voted_at": "2026-01-15T14:30:00+00:00"}' }}</pre>
+                            </div>
+                        </div>
+
+                        {# Route 5: Stats #}
+                        <div class="api-route">
+                            <div class="api-route__header">
+                                <span class="api-route__method">GET</span>
+                                <span class="api-route__path">/stats</span>
+                            </div>
+                            <p class="api-route__desc">Recupere les statistiques generales de votre serveur.</p>
+                            <div class="api-route__label">Exemple</div>
+                            <div class="api-example" style="margin-top:4px;">
+                                GET <span>/api/v1/servers/{token}/stats</span>
+                            </div>
+                            <div class="api-route__response">
+                                <div class="api-route__label" style="margin-top:8px;">Reponse</div>
+                                <pre>{{ '{"server_id": 1, "name": "Mon Serveur", "slug": "mon-serveur", "monthly_votes": 150, "total_votes": 1200, "category": "Minecraft", "game_category": "Survie", "is_active": true}' }}</pre>
+                            </div>
+                        </div>
+
+                        {# Route 6: Voters #}
+                        <div class="api-route">
+                            <div class="api-route__header">
+                                <span class="api-route__method">GET</span>
+                                <span class="api-route__path">/voters</span>
+                            </div>
+                            <p class="api-route__desc">Liste paginee des votants avec leur nombre de votes. Parametres : <code style="color:#45f882;">page</code> (defaut: 1), <code style="color:#45f882;">limit</code> (defaut: 20, max: 50).</p>
+                            <div class="api-route__label">Exemple</div>
+                            <div class="api-example" style="margin-top:4px;">
+                                GET <span>/api/v1/servers/{token}/voters?page=1&amp;limit=10</span>
+                            </div>
+                            <div class="api-route__response">
+                                <div class="api-route__label" style="margin-top:8px;">Reponse</div>
+                                <pre>{{ '{"server_id": 1, "page": 1, "limit": 10, "total_voters": 45, "voters": [{"username": "Notch", "votes": 12, "last_vote": "2026-01-15T14:30:00+00:00"}]}' }}</pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="manage-card">
+                        <h4 class="manage-card__title"><i class="fas fa-puzzle-piece"></i> Plugins</h4>
+                        <p style="color:#8b949e;font-size:13px;margin-bottom:15px;">
+                            Integrez le systeme de vote sur votre serveur avec nos plugins officiels.
+                        </p>
+                        <a href="{{ path('plugins_index') }}" class="btn-action btn-action--primary">
+                            <i class="fas fa-download"></i> Voir les plugins disponibles
+                        </a>
+                    </div>
+
+                    <div class="manage-card">
+                        <h4 class="manage-card__title"><i class="fas fa-shield-alt"></i> Rate Limiting</h4>
+                        <p style="color:#8b949e;font-size:13px;">
+                            L'API est limitee a <strong style="color:#e4e6eb;">60 requetes par minute</strong> par adresse IP.
+                            Les reponses incluent les headers <code style="color:#45f882;">X-RateLimit-Remaining</code> et <code style="color:#45f882;">X-RateLimit-Limit</code>.
+                        </p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="col-lg-4">
+                {# === STATISTIQUES === #}
+                <div class="manage-card">
+                    <h4 class="manage-card__title"><i class="fas fa-chart-bar"></i> Statistiques</h4>
+                    <div class="stat-grid">
+                        <div class="stat-item">
+                            <div class="stat-item__value">{{ server.monthlyVotes }}</div>
+                            <div class="stat-item__label">Votes / mois</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-item__value">{{ server.totalVotes }}</div>
+                            <div class="stat-item__label">Votes total</div>
+                        </div>
+                    </div>
+                </div>
+
+                {# === INFOS RAPIDES === #}
+                <div class="manage-card">
+                    <h4 class="manage-card__title"><i class="fas fa-info-circle"></i> Infos</h4>
+                    <div style="font-size:13px;">
+                        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #1e3048;">
+                            <span style="color:#8b949e;">Categorie</span>
+                            <span style="color:#fff;">{{ server.category ? server.category.name : '—' }}</span>
+                        </div>
+                        {% if server.gameCategory %}
+                        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #1e3048;">
+                            <span style="color:#8b949e;">Jeu</span>
+                            <span style="color:#fff;">{{ server.gameCategory.name }}</span>
+                        </div>
+                        {% endif %}
+                        {% if server.serverType %}
+                        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #1e3048;">
+                            <span style="color:#8b949e;">Type</span>
+                            <span style="color:#fff;">{{ server.serverType.name }}</span>
+                        </div>
+                        {% endif %}
+                        {% if server.ip %}
+                        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #1e3048;">
+                            <span style="color:#8b949e;">IP</span>
+                            <span style="color:#fff;font-family:monospace;">{{ server.ip }}{% if server.port %}:{{ server.port }}{% endif %}</span>
+                        </div>
+                        {% endif %}
+                        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #1e3048;">
+                            <span style="color:#8b949e;">Cree le</span>
+                            <span style="color:#fff;">{{ server.createdAt|date('d/m/Y') }}</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;padding:6px 0;">
+                            <span style="color:#8b949e;">Slug</span>
+                            <span style="color:#45f882;">/serveur/{{ server.slug }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {# === LIENS RAPIDES === #}
+                <div class="manage-card">
+                    <h4 class="manage-card__title"><i class="fas fa-external-link-alt"></i> Liens rapides</h4>
+                    <div style="display:flex;flex-direction:column;gap:8px;">
+                        {% if server.isApproved and server.isActive %}
+                            <a href="{{ path('server_show', {slug: server.slug}) }}" class="btn-action btn-action--outline" style="justify-content:center;">
+                                <i class="fas fa-eye"></i> Voir la page publique
+                            </a>
+                        {% endif %}
+                        {% if can_edit_info or can_edit_images or can_edit_social %}
+                            <a href="{{ path('user_servers_edit', {id: server.id}) }}" class="btn-action btn-action--outline" style="justify-content:center;">
+                                <i class="fas fa-edit"></i> Modifier le serveur
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {# === COLLABORATEURS (owner only) === #}
+                {% if is_owner %}
+                <div class="manage-card">
+                    <h4 class="manage-card__title"><i class="fas fa-users"></i> Collaborateurs</h4>
+
+                    {# Add form #}
+                    <form method="post" action="{{ path('user_servers_collab_add', {id: server.id}) }}" style="margin-bottom:18px;">
+                        <input type="hidden" name="_token" value="{{ csrf_token('collab_add') }}">
+                        <div style="display:flex;gap:8px;">
+                            <input type="text" name="username" class="form-input" placeholder="Nom d'utilisateur" required style="flex:1;">
+                            <button type="submit" class="btn-action btn-action--primary" style="white-space:nowrap;">
+                                <i class="fas fa-plus"></i> Ajouter
+                            </button>
+                        </div>
+                    </form>
+
+                    {# Collaborator list #}
+                    {% if collaborators|length > 0 %}
+                        {% for collab in collaborators %}
+                            <div class="collab-item">
+                                <div class="collab-item__header">
+                                    <div class="collab-item__avatar">
+                                        {% set collabAvatar = user_avatar(collab.user) %}
+                                        {% if collabAvatar %}
+                                            <img src="{{ collabAvatar starts with 'http' ? collabAvatar : asset(collabAvatar) }}" alt="{{ collab.user.username }}">
+                                        {% else %}
+                                            {{ collab.user.username|slice(0, 1)|upper }}
+                                        {% endif %}
+                                    </div>
+                                    <div class="collab-item__info">
+                                        <div class="collab-item__name">{{ collab.user.username }}</div>
+                                        <div class="collab-item__date">Ajoute le {{ collab.addedAt|date('d/m/Y') }}</div>
+                                    </div>
+                                    <form method="post" action="{{ path('user_servers_collab_remove', {id: server.id, collabId: collab.id}) }}" onsubmit="return confirm('Retirer ce collaborateur ?');" style="margin:0;">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('collab_remove_' ~ collab.id) }}">
+                                        <button type="submit" class="btn-action btn-action--danger" style="padding:5px 10px;font-size:11px;">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </form>
+                                </div>
+
+                                {# Permissions form #}
+                                <form method="post" action="{{ path('user_servers_collab_update', {id: server.id, collabId: collab.id}) }}">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('collab_perms_' ~ collab.id) }}">
+                                    <div class="collab-perms-grid">
+                                        {% for code, label in permissions %}
+                                            <label class="collab-perm-check">
+                                                <input type="checkbox" name="permissions[]" value="{{ code }}" {{ collab.hasPermission(code) ? 'checked' : '' }}>
+                                                {{ label }}
+                                            </label>
+                                        {% endfor %}
+                                    </div>
+                                    <div class="collab-item__actions">
+                                        <button type="submit" class="btn-action btn-action--primary" style="padding:5px 12px;font-size:11px;">
+                                            <i class="fas fa-save"></i> Sauvegarder
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="collab-empty">
+                            <i class="fas fa-user-plus" style="font-size:20px;color:#3d4250;margin-bottom:6px;display:block;"></i>
+                            Aucun collaborateur pour le moment.
+                        </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                {# === SUPPRIMER === #}
+                {% if can_delete_server %}
+                <div class="manage-card" style="border-color:rgba(231,74,59,0.2);">
+                    <h4 class="manage-card__title" style="border-bottom-color:rgba(231,74,59,0.2);">
+                        <i class="fas fa-exclamation-triangle" style="color:#e74a3b;"></i> Zone de danger
+                    </h4>
+                    <p style="color:#8b949e;font-size:13px;margin-bottom:15px;">
+                        La suppression d'un serveur est irreversible. Toutes les donnees associees seront perdues.
+                    </p>
+                    <form method="post" action="{{ path('user_servers_delete', {id: server.id}) }}" onsubmit="return confirm('Supprimer definitivement ce serveur ? Cette action est irreversible.');">
+                        <input type="hidden" name="_token" value="{{ csrf_token('delete_server_' ~ server.id) }}">
+                        <button type="submit" class="btn-action btn-action--danger">
+                            <i class="fas fa-trash-alt"></i> Supprimer le serveur
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+{# === FLAG MODAL === #}
+{% if can_moderate_comments %}
+<div class="flag-modal" id="flagModal">
+    <div class="flag-modal__content">
+        <div class="flag-modal__title"><i class="fas fa-flag" style="color:#f6c23e;"></i>&nbsp; Signaler ce commentaire</div>
+        <form id="flagForm" method="post" action="">
+            <input type="hidden" name="_token" id="flagToken" value="">
+            <textarea name="reason" class="flag-modal__textarea" placeholder="Raison du signalement (optionnel)..." maxlength="255"></textarea>
+            <div class="flag-modal__actions">
+                <button type="button" class="flag-modal__cancel" onclick="closeFlagModal()">Annuler</button>
+                <button type="submit" class="flag-modal__submit"><i class="fas fa-flag"></i>&nbsp; Signaler</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block javascripts %}
+<script>
+/* === Manage tabs === */
+window.switchManageTab = function(tab) {
+    document.querySelectorAll('.manage-tabs__btn').forEach(function(btn) {
+        btn.classList.toggle('active', btn.getAttribute('data-tab') === tab);
+    });
+    document.querySelectorAll('.manage-tab-panel').forEach(function(panel) {
+        panel.classList.remove('active');
+    });
+    var target = document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1));
+    if (target) target.classList.add('active');
+};
+
+window.copyWidgetCode = function(textareaId, btn) {
+    var textarea = document.getElementById(textareaId);
+    if (!textarea) return;
+    navigator.clipboard.writeText(textarea.value).then(function() {
+        var orig = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check"></i> Copie !';
+        setTimeout(function() { btn.innerHTML = orig; }, 2000);
+    });
+};
+
+window.selectTheme = function(key) {
+    document.getElementById('selectedTheme').value = key;
+    document.querySelectorAll('.theme-card').forEach(function(card) {
+        card.classList.toggle('theme-card--active', card.getAttribute('data-theme') === key);
+    });
+};
+
+/* === Widget configurator === */
+(function() {
+    var baseCardUrl = '{{ url("widget_card", {slug: server.slug}) }}';
+    var baseVotersUrl = '{{ url("widget_voters", {slug: server.slug}) }}';
+    var currentTab = 'card';
+    var currentStyle = 'dark';
+
+    // Heights: card with full desc (255 chars = ~5-6 lines) | voters = 500
+    var CARD_FULL = 400;
+    var CARD_NO_DESC = 240;
+    var CARD_NO_FOOTER = 360;
+    var CARD_COMPACT = 205;
+    var VOTERS_H = 500;
+
+    // Preset configs: { url params, card height, voters height, previewClass, description }
+    var presets = {
+        dark: {
+            params: 'mode=dark&bg=1a1a2e',
+            cardH: CARD_FULL, votersH: VOTERS_H,
+            preview: 'wg-preview-dark',
+            desc: '<i class="fas fa-info-circle" style="margin-right:4px;"></i> Fond sombre, texte blanc, accent vert — ideal pour tous les sites.'
+        },
+        light: {
+            params: 'mode=light',
+            cardH: CARD_FULL, votersH: VOTERS_H,
+            preview: 'wg-preview-light',
+            desc: '<i class="fas fa-info-circle" style="margin-right:4px;"></i> Fond blanc, texte sombre, accent vert — ideal pour les sites clairs.'
+        },
+        colored: {
+            params: 'mode=dark&accent=ff4655&bg=1a1a2e&radius=20',
+            cardH: CARD_FULL, votersH: VOTERS_H,
+            preview: 'wg-preview-colored',
+            desc: '<i class="fas fa-info-circle" style="margin-right:4px;"></i> Accent rouge, fond sombre, bords arrondis — style gaming.'
+        },
+        compact: {
+            params: 'mode=dark&bg=1a1a2e&hideFooter=1&hideDesc=1',
+            cardH: CARD_COMPACT, votersH: VOTERS_H,
+            preview: 'wg-preview-dark',
+            desc: '<i class="fas fa-info-circle" style="margin-right:4px;"></i> Version compacte sans description ni footer — gain de place.'
+        }
+    };
+
+    function buildPresetUrl(style) {
+        var base = currentTab === 'card' ? baseCardUrl : baseVotersUrl;
+        return base + '?' + presets[style].params;
+    }
+
+    function buildCustomUrl() {
+        var base = currentTab === 'card' ? baseCardUrl : baseVotersUrl;
+        var bgTransparent = document.getElementById('wgBgTransparent').checked;
+        var accent = document.getElementById('wgAccent').value;
+        var bg = bgTransparent ? 'transparent' : document.getElementById('wgBg').value;
+        var text = document.getElementById('wgText').value;
+        var radius = document.getElementById('wgRadius').value;
+        var hideFooter = document.getElementById('wgHideFooter').checked;
+        var hideDesc = document.getElementById('wgHideDesc').checked;
+
+        var params = ['mode=dark'];
+        if (accent !== '#45f882') params.push('accent=' + accent.replace('#', ''));
+        if (bg !== 'transparent') params.push('bg=' + bg.replace('#', ''));
+        if (text !== '#ffffff') params.push('text=' + text.replace('#', ''));
+        if (radius !== '12') params.push('radius=' + radius);
+        if (hideFooter) params.push('hideFooter=1');
+        if (hideDesc && currentTab === 'card') params.push('hideDesc=1');
+        return base + '?' + params.join('&');
+    }
+
+    function getCustomHeight() {
+        if (currentTab === 'voters') return VOTERS_H;
+        var hideDesc = document.getElementById('wgHideDesc').checked;
+        var hideFooter = document.getElementById('wgHideFooter').checked;
+        if (hideDesc && hideFooter) return CARD_COMPACT;
+        if (hideDesc) return CARD_NO_DESC;
+        if (hideFooter) return CARD_NO_FOOTER;
+        return CARD_FULL;
+    }
+
+    window.updateWidgetPreview = function() {
+        var url, height, previewClass;
+
+        if (currentStyle === 'custom') {
+            url = buildCustomUrl();
+            height = getCustomHeight();
+            previewClass = 'wg-preview-dark';
+            document.getElementById('wgAccentHex').textContent = document.getElementById('wgAccent').value;
+            document.getElementById('wgTextHex').textContent = document.getElementById('wgText').value;
+            document.getElementById('wgRadiusVal').textContent = document.getElementById('wgRadius').value;
+        } else {
+            var p = presets[currentStyle];
+            url = buildPresetUrl(currentStyle);
+            height = currentTab === 'card' ? p.cardH : p.votersH;
+            previewClass = p.preview;
+        }
+
+        document.getElementById('wgPreviewContainer').className = previewClass;
+        var iframe = document.getElementById('wgPreviewIframe');
+        iframe.src = url;
+        iframe.height = height;
+        document.getElementById('wgEmbedCode').value = '<iframe src="' + url + '" width="350" height="' + height + '" frameborder="0" scrolling="no" style="border:none;"></iframe>';
+    };
+
+    window.switchWidgetStyle = function(style) {
+        currentStyle = style;
+        document.querySelectorAll('.wg-style-btn').forEach(function(el) {
+            el.classList.toggle('wg-style-btn--active', el.getAttribute('data-style') === style);
+        });
+        document.getElementById('wgCustomControls').style.display = style === 'custom' ? 'block' : 'none';
+
+        // Update description
+        var descEl = document.getElementById('wgStyleDesc');
+        if (style === 'custom') {
+            descEl.innerHTML = '<i class="fas fa-info-circle" style="margin-right:4px;"></i> Basé sur le mode sombre — personnalisez chaque aspect du widget.';
+        } else {
+            descEl.innerHTML = presets[style].desc;
+        }
+
+        // Show/hide desc checkbox (only for custom + card)
+        var descLabel = document.getElementById('wgHideDescLabel');
+        if (descLabel) descLabel.style.display = (style === 'custom' && currentTab === 'card') ? 'flex' : 'none';
+
+        updateWidgetPreview();
+    };
+
+    window.switchWidgetTab = function(tab) {
+        currentTab = tab;
+        document.querySelectorAll('.widget-tab').forEach(function(el) {
+            el.classList.toggle('widget-tab--active', el.getAttribute('data-tab') === tab);
+        });
+        var descLabel = document.getElementById('wgHideDescLabel');
+        if (descLabel) descLabel.style.display = (currentStyle === 'custom' && tab === 'card') ? 'flex' : 'none';
+        updateWidgetPreview();
+    };
+
+    window.toggleBgTransparent = function() {
+        document.getElementById('wgBg').disabled = document.getElementById('wgBgTransparent').checked;
+        updateWidgetPreview();
+    };
+
+    updateWidgetPreview();
+})();
+</script>
+{% if server.statusCheckEnabled and server.ip and server.port %}
+<script>
+(function() {
+    fetch('/serveur/{{ server.slug }}/status')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+        var el = document.getElementById('statusPreview');
+        if (!el) return;
+        if (d.online === true) {
+            el.innerHTML = '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#1cc88a;margin-right:6px;"></span><span style="color:#1cc88a;font-weight:600;">En ligne</span>';
+        } else if (d.online === false) {
+            el.innerHTML = '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#e74a3b;margin-right:6px;"></span><span style="color:#e74a3b;font-weight:600;">Hors ligne</span>';
+        } else {
+            el.innerHTML = '<span style="color:#5a5c69;">Indisponible</span>';
+        }
+    })
+    .catch(function() {
+        var el = document.getElementById('statusPreview');
+        if (el) el.innerHTML = '<span style="color:#5a5c69;">Erreur</span>';
+    });
+})();
+</script>
+{% endif %}
+
+{% if can_moderate_comments %}
+<script>
+(function() {
+    var flagTokens = {
+        {% for comment in comments %}
+            {% if not comment.isFlagged %}
+                {{ comment.id }}: '{{ csrf_token('flag_comment_' ~ comment.id) }}',
+            {% endif %}
+        {% endfor %}
+    };
+
+    window.openFlagModal = function(commentId) {
+        var modal = document.getElementById('flagModal');
+        var form = document.getElementById('flagForm');
+        var tokenInput = document.getElementById('flagToken');
+        if (!modal || !form) return;
+        form.action = '{{ path('user_servers_manage', {id: server.id}) }}/comment/' + commentId + '/flag';
+        tokenInput.value = flagTokens[commentId] || '';
+        modal.classList.add('active');
+    };
+
+    window.closeFlagModal = function() {
+        var modal = document.getElementById('flagModal');
+        if (modal) modal.classList.remove('active');
+    };
+
+    var flagModal = document.getElementById('flagModal');
+    if (flagModal) {
+        flagModal.addEventListener('click', function(e) {
+            if (e.target === flagModal) closeFlagModal();
+        });
+    }
+})();
+</script>
+{% endif %}
+{% endblock %}

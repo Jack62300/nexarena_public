@@ -1,0 +1,115 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Recrutement - Admin{% endblock %}
+{% block page_title %}Recrutement{% endblock %}
+
+{% block admin_body %}
+
+{# ===== STATUS FILTER ===== #}
+<div style="display:flex;gap:0;margin-bottom:25px;border-bottom:1px solid var(--border-color);flex-wrap:wrap;">
+    <a href="{{ path('admin_recruitment_list') }}"
+       style="padding:12px 22px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid {{ currentStatus is null ? 'var(--accent)' : 'transparent' }};color:{{ currentStatus is null ? 'var(--text-primary)' : 'var(--text-secondary)' }};text-decoration:none;transition:all 0.2s;">
+        <i class="fas fa-list"></i> Toutes
+    </a>
+    <a href="{{ path('admin_recruitment_list', {status: 'pending'}) }}"
+       style="padding:12px 22px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid {{ currentStatus == 'pending' ? 'var(--warning)' : 'transparent' }};color:{{ currentStatus == 'pending' ? 'var(--text-primary)' : 'var(--text-secondary)' }};text-decoration:none;transition:all 0.2s;">
+        <i class="fas fa-clock"></i> En attente
+        {% set pendingCount = pending_recruitments_count() %}
+        {% if pendingCount > 0 %}
+            <span class="badge bg-warning text-dark" style="font-size:10px;padding:3px 8px;border-radius:10px;margin-left:5px;">{{ pendingCount }}</span>
+        {% endif %}
+    </a>
+    <a href="{{ path('admin_recruitment_list', {status: 'approved'}) }}"
+       style="padding:12px 22px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid {{ currentStatus == 'approved' ? 'var(--success)' : 'transparent' }};color:{{ currentStatus == 'approved' ? 'var(--text-primary)' : 'var(--text-secondary)' }};text-decoration:none;transition:all 0.2s;">
+        <i class="fas fa-check"></i> Approuvees
+    </a>
+    <a href="{{ path('admin_recruitment_list', {status: 'revision_requested'}) }}"
+       style="padding:12px 22px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid {{ currentStatus == 'revision_requested' ? 'var(--info)' : 'transparent' }};color:{{ currentStatus == 'revision_requested' ? 'var(--text-primary)' : 'var(--text-secondary)' }};text-decoration:none;transition:all 0.2s;">
+        <i class="fas fa-edit"></i> Revision
+    </a>
+    <a href="{{ path('admin_recruitment_list', {status: 'rejected'}) }}"
+       style="padding:12px 22px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid {{ currentStatus == 'rejected' ? 'var(--danger)' : 'transparent' }};color:{{ currentStatus == 'rejected' ? 'var(--text-primary)' : 'var(--text-secondary)' }};text-decoration:none;transition:all 0.2s;">
+        <i class="fas fa-times"></i> Rejetees
+    </a>
+</div>
+
+{# ===== LISTINGS TABLE ===== #}
+<div class="admin-table">
+    <div class="admin-table__header">
+        <h3><i class="fas fa-bullhorn" style="color:var(--accent);margin-right:8px;"></i> Annonces de recrutement</h3>
+        <span style="color:var(--text-secondary);font-size:13px;">{{ listings|length }} annonce{{ listings|length > 1 ? 's' : '' }}</span>
+    </div>
+    {% if listings|length > 0 %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Titre</th>
+                    <th>Serveur</th>
+                    <th>Auteur</th>
+                    <th>Statut</th>
+                    <th>Formulaire</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for listing in listings %}
+                    <tr>
+                        <td>
+                            <a href="{{ path('admin_recruitment_show', {id: listing.id}) }}" style="font-weight:600;">
+                                {{ listing.title }}
+                            </a>
+                        </td>
+                        <td>
+                            <a href="{{ path('server_show', {slug: listing.server.slug}) }}" target="_blank">
+                                {{ listing.server.name }}
+                            </a>
+                        </td>
+                        <td>
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                {% set av = user_avatar(listing.author) %}
+                                {% if av %}
+                                    <img src="{{ av starts with 'http' ? av : asset(av) }}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">
+                                {% endif %}
+                                {{ listing.author.username }}
+                            </div>
+                        </td>
+                        <td>
+                            {% if listing.status == 'draft' %}
+                                <span class="role-badge" style="background:#5a5c6922;color:#8b949e;border:1px solid #5a5c6944;">Brouillon</span>
+                            {% elseif listing.status == 'pending' %}
+                                <span class="role-badge" style="background:#f6c23e22;color:#f6c23e;border:1px solid #f6c23e44;">En attente</span>
+                            {% elseif listing.status == 'approved' %}
+                                <span class="role-badge" style="background:#1cc88a22;color:#1cc88a;border:1px solid #1cc88a44;">Approuvee</span>
+                            {% elseif listing.status == 'revision_requested' %}
+                                <span class="role-badge" style="background:#36b9cc22;color:#36b9cc;border:1px solid #36b9cc44;">Revision</span>
+                            {% elseif listing.status == 'rejected' %}
+                                <span class="role-badge" style="background:#e74a3b22;color:#e74a3b;border:1px solid #e74a3b44;">Rejetee</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if listing.formFields|length > 0 %}
+                                <span style="color:var(--success);"><i class="fas fa-check-circle"></i> {{ listing.formFields|length }} champ{{ listing.formFields|length > 1 ? 's' : '' }}</span>
+                            {% else %}
+                                <span style="color:var(--text-secondary);"><i class="fas fa-minus-circle"></i> Non configure</span>
+                            {% endif %}
+                        </td>
+                        <td style="white-space:nowrap;">{{ listing.createdAt|date('d/m/Y H:i') }}</td>
+                        <td>
+                            <a href="{{ path('admin_recruitment_show', {id: listing.id}) }}" class="btn-admin btn-admin--outline btn-admin--sm">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div style="padding:40px;text-align:center;color:var(--text-secondary);">
+            <i class="fas fa-bullhorn" style="font-size:32px;margin-bottom:10px;display:block;"></i>
+            Aucune annonce de recrutement{{ currentStatus ? ' avec ce statut' : '' }}.
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}

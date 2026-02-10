@@ -1,0 +1,100 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block page_title %}{{ article ? 'Modifier l\'article' : 'Nouvel article' }}{% endblock %}
+{% block title %}Nexarena Admin - {{ article ? 'Modifier' : 'Nouvel' }} article{% endblock %}
+
+{% block admin_css %}
+    .form-group { margin-bottom: 20px; }
+    .form-group label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .form-control-admin {
+        width: 100%;
+        padding: 10px 14px;
+        background: var(--bg-darker);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        color: var(--text-primary);
+        font-size: 14px;
+        transition: border-color 0.2s;
+    }
+    .form-control-admin:focus {
+        outline: none;
+        border-color: var(--accent);
+    }
+    textarea.form-control-admin { min-height: 200px; resize: vertical; }
+    .form-check-admin {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+    }
+    .form-check-admin input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        accent-color: var(--accent);
+    }
+    .image-preview {
+        max-width: 200px;
+        max-height: 150px;
+        border-radius: 6px;
+        margin-top: 10px;
+        object-fit: cover;
+    }
+{% endblock %}
+
+{% block admin_body %}
+    <div style="max-width:800px;">
+        <div class="admin-table">
+            <div class="admin-table__header">
+                <h3>{{ article ? 'Modifier l\'article' : 'Creer un article' }}</h3>
+                <a href="{{ path('admin_articles_list') }}" class="btn-admin btn-admin--outline btn-admin--sm">
+                    <i class="fas fa-arrow-left"></i> Retour
+                </a>
+            </div>
+            <div style="padding:25px;">
+                <form method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="_token" value="{{ csrf_token('article_form') }}">
+
+                    <div class="form-group">
+                        <label for="title">Titre</label>
+                        <input type="text" id="title" name="title" class="form-control-admin" value="{{ article ? article.title : '' }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="content">Contenu</label>
+                        <textarea id="content" name="content" class="form-control-admin" required>{{ article ? article.content : '' }}</textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="image">Image</label>
+                        <input type="file" id="image" name="image" class="form-control-admin" accept="image/*">
+                        {% if article and article.image %}
+                            <img src="{{ asset('uploads/articles/' ~ article.image) }}" alt="" class="image-preview">
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-check-admin">
+                            <input type="checkbox" name="is_published" value="1" {{ (article and article.isPublished) ? 'checked' : '' }}>
+                            Publier l'article
+                        </label>
+                    </div>
+
+                    <div style="display:flex;gap:10px;padding-top:10px;">
+                        <button type="submit" class="btn-admin btn-admin--primary">
+                            <i class="fas fa-save"></i> {{ article ? 'Enregistrer' : 'Creer' }}
+                        </button>
+                        <a href="{{ path('admin_articles_list') }}" class="btn-admin btn-admin--outline">Annuler</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

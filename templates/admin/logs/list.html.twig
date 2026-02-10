@@ -1,0 +1,20 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block page_title %}Logs{% endblock %}
+{% block title %}Nexarena Admin - Logs{% endblock %}
+
+{% block admin_body %}
+    <div class="admin-table">
+        <div class="admin-table__header">
+            <h3>Logs systeme</h3>
+        </div>
+        <div style="padding:60px 25px;text-align:center;">
+            <i class="fas fa-terminal" style="font-size:48px;color:var(--text-secondary);margin-bottom:15px;display:block;"></i>
+            <h4 style="color:var(--text-primary);margin-bottom:8px;">Journal d'activite</h4>
+            <p style="color:var(--text-secondary);font-size:14px;">
+                Les logs d'activite du site seront affiches ici.<br>
+                Connexions, modifications, erreurs et evenements systeme.
+            </p>
+        </div>
+    </div>
+{% endblock %}

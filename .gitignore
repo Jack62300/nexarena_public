@@ -18,3 +18,38 @@
 /public/assets/
 /assets/vendor/
 ###< symfony/asset-mapper ###
+
+# Uploads (user-generated content)
+/public/uploads/articles/*
+/public/uploads/avatars/*
+/public/uploads/categories/*
+/public/uploads/partners/*
+/public/uploads/recruitment/*
+/public/uploads/servers/*
+/public/uploads/settings/*
+/public/uploads/themes/*
+/public/uploads/plugins/*
+!/public/uploads/.htaccess
+!/public/uploads/*/.gitkeep
+
+# IDE & OS
+/.idea/
+/.vscode/
+*.swp
+*.swo
+*~
+Thumbs.db
+.DS_Store
+
+# Claude Code
+/.claude/
+
+# Windows
+nul
+desktop.ini
+
+# Node (if any)
+/node_modules/
+
+# Test files
+test_widget.html

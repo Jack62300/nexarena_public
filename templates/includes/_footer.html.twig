@@ -1,0 +1,198 @@
+{# footer-area #}
+<footer class="nx-footer">
+    <div class="container">
+
+        {# ── Top: Logo + Nav + Social ── #}
+        <div class="nx-footer__top">
+            <div class="row align-items-center">
+                <div class="col-lg-3 col-md-4">
+                    <div class="nx-footer__brand">
+                        <a href="{{ path('app_home') }}">
+                            <img src="{{ asset(setting('site_logo', 'assets/img/logo/logo.svg')) }}" alt="{{ setting('site_name', 'Nexarena') }}">
+                        </a>
+                    </div>
+                </div>
+                <div class="col-lg-6 col-md-8">
+                    <nav class="nx-footer__nav">
+                        <a href="{{ path('app_home') }}">Accueil</a>
+                        <a href="{{ path('articles_list') }}">Actualites</a>
+                        {% if app.user %}
+                            <a href="{{ path('user_servers_new') }}">Ajouter un serveur</a>
+                        {% endif %}
+                        <a href="{{ path('page_cgu') }}">CGU</a>
+                        <a href="{{ path('page_cgv') }}">CGV</a>
+                    </nav>
+                </div>
+                <div class="col-lg-3">
+                    {% if setting_bool('footer_show_social', true) %}
+                        <div class="nx-footer__social">
+                            {% if setting('social_discord') %}
+                                <a href="{{ setting('social_discord') }}" target="_blank" rel="noopener" title="Discord"><i class="fab fa-discord"></i></a>
+                            {% endif %}
+                            {% if setting('social_twitter') %}
+                                <a href="{{ setting('social_twitter') }}" target="_blank" rel="noopener" title="Twitter / X"><i class="fab fa-twitter"></i></a>
+                            {% endif %}
+                            {% if setting('social_youtube') %}
+                                <a href="{{ setting('social_youtube') }}" target="_blank" rel="noopener" title="YouTube"><i class="fab fa-youtube"></i></a>
+                            {% endif %}
+                            {% if setting('social_twitch') %}
+                                <a href="{{ setting('social_twitch') }}" target="_blank" rel="noopener" title="Twitch"><i class="fab fa-twitch"></i></a>
+                            {% endif %}
+                            {% if setting('social_instagram') %}
+                                <a href="{{ setting('social_instagram') }}" target="_blank" rel="noopener" title="Instagram"><i class="fab fa-instagram"></i></a>
+                            {% endif %}
+                            {% if setting('social_tiktok') %}
+                                <a href="{{ setting('social_tiktok') }}" target="_blank" rel="noopener" title="TikTok"><i class="fab fa-tiktok"></i></a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {# ── Separator ── #}
+        <div class="nx-footer__sep"></div>
+
+        {# ── Bottom: Copyright + Legal ── #}
+        <div class="nx-footer__bottom">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <p class="nx-footer__copy">
+                        {{ setting('footer_copyright', '© {year} Nexarena. Tous droits reserves.')|replace({'{year}': "now"|date("Y") }) }}
+                    </p>
+                </div>
+                <div class="col-lg-6">
+                    <div class="nx-footer__legal">
+                        <a href="{{ path('page_cgu') }}">Conditions Generales d'Utilisation</a>
+                        <a href="{{ path('page_cgv') }}">Conditions Generales de Vente</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</footer>
+{# footer-area-end #}
+
+<style>
+/* ================================================
+   FOOTER - Nexarena
+   ================================================ */
+.nx-footer {
+    background: #0a0e13;
+    border-top: 1px solid rgba(255,255,255,0.04);
+    padding: 0;
+}
+
+/* ─── Top ─── */
+.nx-footer__top {
+    padding: 40px 0;
+}
+.nx-footer__brand img {
+    max-height: 40px;
+    width: auto;
+}
+
+/* Nav */
+.nx-footer__nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px 28px;
+}
+.nx-footer__nav a {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.45);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-family: var(--tg-heading-font-family);
+    transition: color 0.2s;
+}
+.nx-footer__nav a:hover {
+    color: var(--tg-theme-primary);
+}
+
+/* Social */
+.nx-footer__social {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+}
+.nx-footer__social a {
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.04);
+    color: rgba(255,255,255,0.4);
+    font-size: 14px;
+    transition: all 0.2s;
+}
+.nx-footer__social a:hover {
+    background: rgba(69,248,130,0.1);
+    color: var(--tg-theme-primary);
+}
+
+/* ─── Separator ─── */
+.nx-footer__sep {
+    height: 1px;
+    background: rgba(255,255,255,0.05);
+}
+
+/* ─── Bottom ─── */
+.nx-footer__bottom {
+    padding: 20px 0;
+}
+.nx-footer__copy {
+    font-size: 13px;
+    color: rgba(255,255,255,0.25);
+    margin: 0;
+}
+.nx-footer__legal {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 6px 20px;
+}
+.nx-footer__legal a {
+    font-size: 12px;
+    color: rgba(255,255,255,0.25);
+    transition: color 0.2s;
+}
+.nx-footer__legal a:hover {
+    color: rgba(255,255,255,0.6);
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 991.98px) {
+    .nx-footer__brand {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .nx-footer__social {
+        justify-content: center;
+        margin-top: 20px;
+    }
+    .nx-footer__legal {
+        justify-content: center;
+        margin-top: 8px;
+    }
+    .nx-footer__copy {
+        text-align: center;
+    }
+}
+@media (max-width: 767.98px) {
+    .nx-footer__nav {
+        gap: 6px 18px;
+    }
+    .nx-footer__nav a {
+        font-size: 12px;
+    }
+}
+</style>

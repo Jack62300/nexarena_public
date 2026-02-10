@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ server.name }} - Nexarena</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: transparent;
+            margin: 0;
+            padding: 0;
+        }
+        .widget-card {
+            background: {{ params.bg }};
+            {% if params.bg != 'transparent' %}
+            border: 1px solid rgba({{ params.borderRgb }}, 0.5);
+            {% endif %}
+            border-radius: {{ params.radius }}px;
+            padding: 18px;
+            max-width: 350px;
+            margin: 0 auto;
+            overflow: hidden;
+        }
+        .widget-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+        .widget-logo {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+        .widget-logo-fallback {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            background: rgba({{ params.accentRgb }}, 0.12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .widget-logo-fallback i {
+            font-size: 18px;
+            color: {{ params.accent }};
+        }
+        .widget-info { min-width: 0; flex: 1; }
+        .widget-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: {{ params.text }};
+            line-height: 1.3;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .widget-badge {
+            display: inline-block;
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 6px;
+            background: rgba({{ params.accentRgb }}, 0.12);
+            color: {{ params.accent }};
+            font-weight: 700;
+            margin-top: 2px;
+            letter-spacing: 0.3px;
+        }
+        .widget-votes {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 14px;
+            padding: 10px 12px;
+            border-radius: {{ (params.radius * 0.6)|round }}px;
+            background: rgba({{ params.accentRgb }}, 0.06);
+        }
+        .widget-votes__icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            background: rgba({{ params.accentRgb }}, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .widget-votes__icon i {
+            font-size: 14px;
+            color: {{ params.accent }};
+        }
+        .widget-votes__count {
+            font-size: 24px;
+            font-weight: 800;
+            color: {{ params.accent }};
+            line-height: 1;
+        }
+        .widget-votes__label {
+            font-size: 11px;
+            color: {{ params.textSec }};
+            line-height: 1.3;
+        }
+        .widget-desc {
+            font-size: 13px;
+            color: {{ params.text }};
+            opacity: 0.75;
+            line-height: 1.5;
+            margin-bottom: 14px;
+        }
+        .widget-btn {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background: {{ params.accent }};
+            color: {% if params.mode == 'light' %}#ffffff{% else %}#0a1018{% endif %};
+            border: none;
+            border-radius: {{ (params.radius * 0.65)|round }}px;
+            font-size: 13px;
+            font-weight: 700;
+            text-align: center;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            letter-spacing: 0.3px;
+        }
+        .widget-btn:hover {
+            opacity: 0.88;
+            transform: translateY(-1px);
+        }
+        .widget-btn i { margin-right: 6px; }
+        .widget-footer {
+            text-align: center;
+            margin-top: 14px;
+            padding-top: 12px;
+            border-top: 1px solid rgba({{ params.borderRgb }}, 0.3);
+        }
+        .widget-footer a {
+            font-size: 11px;
+            font-weight: 600;
+            color: {{ params.accent }};
+            text-decoration: none;
+            opacity: 0.85;
+            transition: all 0.2s;
+            letter-spacing: 0.2px;
+        }
+        .widget-footer a:hover { opacity: 1; }
+        .widget-footer i { margin-right: 4px; font-size: 10px; }
+    </style>
+</head>
+<body>
+    <div class="widget-card">
+        <div class="widget-header">
+            {% if server.gameCategory and server.gameCategory.image %}
+                <img src="{{ app.request.schemeAndHttpHost }}/uploads/categories/{{ server.gameCategory.image }}" alt="{{ server.gameCategory.name }}" class="widget-logo">
+            {% elseif server.category.image %}
+                <img src="{{ app.request.schemeAndHttpHost }}/uploads/categories/{{ server.category.image }}" alt="{{ server.category.name }}" class="widget-logo">
+            {% else %}
+                <div class="widget-logo-fallback">
+                    <i class="{{ server.category.icon ?: 'fas fa-gamepad' }}"></i>
+                </div>
+            {% endif %}
+            <div class="widget-info">
+                <div class="widget-name">{{ server.name }}</div>
+                {% if server.gameCategory %}
+                    <span class="widget-badge">{{ server.gameCategory.name }}</span>
+                {% else %}
+                    <span class="widget-badge">{{ server.category.name }}</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="widget-votes">
+            <div class="widget-votes__icon">
+                <i class="fas fa-arrow-up"></i>
+            </div>
+            <div>
+                <div class="widget-votes__count">{{ server.monthlyVotes }}</div>
+                <div class="widget-votes__label">votes ce mois</div>
+            </div>
+        </div>
+
+        {% if not params.hideDesc %}
+            <div class="widget-desc">{{ server.shortDescription }}</div>
+        {% endif %}
+
+        <a href="{{ url('server_show', {slug: server.slug}) }}" target="_blank" rel="noopener" class="widget-btn">
+            <i class="fas fa-vote-yea"></i> Voter sur Nexarena
+        </a>
+
+        {% if not params.hideFooter %}
+            <div class="widget-footer">
+                <a href="{{ url('app_home') }}" target="_blank" rel="noopener"><i class="fas fa-bolt"></i> Propulse par Nexarena</a>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>

@@ -1,0 +1,191 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Commentaires - Admin{% endblock %}
+{% block page_title %}Commentaires{% endblock %}
+
+{% block admin_body %}
+
+{# ===== TABS ===== #}
+<div style="display:flex;gap:0;margin-bottom:25px;border-bottom:1px solid var(--border-color);">
+    <a href="{{ path('admin_comments_flagged') }}"
+       style="padding:12px 22px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid {{ tab == 'flagged' ? 'var(--accent)' : 'transparent' }};color:{{ tab == 'flagged' ? 'var(--text-primary)' : 'var(--text-secondary)' }};text-decoration:none;transition:all 0.2s;">
+        <i class="fas fa-flag"></i> Signales
+        {% set flagCount = flagged_comments_count() %}
+        {% if flagCount > 0 %}
+            <span class="badge bg-danger" style="font-size:10px;padding:3px 8px;border-radius:10px;margin-left:5px;">{{ flagCount }}</span>
+        {% endif %}
+    </a>
+    <a href="{{ path('admin_comments_list') }}"
+       style="padding:12px 22px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid {{ tab == 'all' ? 'var(--accent)' : 'transparent' }};color:{{ tab == 'all' ? 'var(--text-primary)' : 'var(--text-secondary)' }};text-decoration:none;transition:all 0.2s;">
+        <i class="fas fa-comments"></i> Tous les commentaires
+    </a>
+</div>
+
+{% if tab == 'flagged' %}
+{# ===== FLAGGED COMMENTS ===== #}
+<div class="admin-table">
+    <div class="admin-table__header">
+        <h3><i class="fas fa-flag" style="color:var(--warning);margin-right:8px;"></i> Commentaires signales</h3>
+    </div>
+    {% if flaggedComments|length > 0 %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Serveur</th>
+                    <th>Auteur</th>
+                    <th>Contenu</th>
+                    <th>Signale par</th>
+                    <th>Raison</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for comment in flaggedComments %}
+                    <tr>
+                        <td>
+                            <a href="{{ path('server_show', {slug: comment.server.slug}) }}" target="_blank">
+                                {{ comment.server.name }}
+                            </a>
+                        </td>
+                        <td>
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                {% set av = user_avatar(comment.author) %}
+                                {% if av %}
+                                    <img src="{{ av starts with 'http' ? av : asset(av) }}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">
+                                {% endif %}
+                                {{ comment.author.username }}
+                            </div>
+                        </td>
+                        <td style="max-width:250px;">
+                            <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                                {{ comment.content|length > 100 ? comment.content[:100] ~ '...' : comment.content }}
+                            </div>
+                        </td>
+                        <td>{{ comment.flaggedBy ? comment.flaggedBy.username : '-' }}</td>
+                        <td style="max-width:150px;">
+                            <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                                {{ comment.flagReason ?? '-' }}
+                            </div>
+                        </td>
+                        <td style="white-space:nowrap;">{{ comment.flaggedAt ? comment.flaggedAt|date('d/m/Y H:i') : '-' }}</td>
+                        <td style="white-space:nowrap;">
+                            <div style="display:flex;gap:6px;">
+                                <form method="post" action="{{ path('admin_comments_approve_delete', {id: comment.id}) }}" style="display:inline;" onsubmit="return confirm('Supprimer ce commentaire ?');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('comment_action_' ~ comment.id) }}">
+                                    <button type="submit" class="btn-admin btn-admin--sm" style="background:var(--danger);color:#fff;" title="Valider la suppression">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                                <form method="post" action="{{ path('admin_comments_dismiss_flag', {id: comment.id}) }}" style="display:inline;">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('comment_action_' ~ comment.id) }}">
+                                    <button type="submit" class="btn-admin btn-admin--sm" style="background:var(--success);color:#fff;" title="Rejeter le signalement">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div style="padding:40px;text-align:center;color:var(--text-secondary);">
+            <i class="fas fa-check-circle" style="font-size:32px;margin-bottom:10px;color:var(--success);display:block;"></i>
+            Aucun commentaire signale.
+        </div>
+    {% endif %}
+</div>
+
+{% else %}
+{# ===== ALL COMMENTS ===== #}
+
+{# Filter #}
+<div style="margin-bottom:20px;">
+    <form method="get" action="{{ path('admin_comments_list') }}" style="display:flex;gap:10px;align-items:center;">
+        <select name="server" style="background:var(--bg-card);border:1px solid var(--border-color);color:var(--text-primary);padding:8px 14px;border-radius:6px;font-size:13px;">
+            <option value="">Tous les serveurs</option>
+            {% for server in servers %}
+                <option value="{{ server.id }}" {{ filters.server == server.id ? 'selected' : '' }}>{{ server.name }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn-admin btn-admin--primary btn-admin--sm">
+            <i class="fas fa-filter"></i> Filtrer
+        </button>
+    </form>
+</div>
+
+<div class="admin-table">
+    <div class="admin-table__header">
+        <h3><i class="fas fa-comments" style="color:var(--accent);margin-right:8px;"></i> Tous les commentaires</h3>
+    </div>
+    {% if allComments|length > 0 %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Serveur</th>
+                    <th>Auteur</th>
+                    <th>Contenu</th>
+                    <th>Statut</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for comment in allComments %}
+                    <tr>
+                        <td>
+                            <a href="{{ path('server_show', {slug: comment.server.slug}) }}" target="_blank">
+                                {{ comment.server.name }}
+                            </a>
+                        </td>
+                        <td>
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                {% set av = user_avatar(comment.author) %}
+                                {% if av %}
+                                    <img src="{{ av starts with 'http' ? av : asset(av) }}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">
+                                {% endif %}
+                                {{ comment.author.username }}
+                            </div>
+                        </td>
+                        <td style="max-width:300px;">
+                            <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                                {{ comment.content|length > 120 ? comment.content[:120] ~ '...' : comment.content }}
+                            </div>
+                        </td>
+                        <td>
+                            {% if comment.isDeleted %}
+                                <span class="role-badge" style="background:#e74a3b22;color:#e74a3b;border:1px solid #e74a3b44;">Supprime</span>
+                            {% elseif comment.isFlagged %}
+                                <span class="role-badge" style="background:#f6c23e22;color:#f6c23e;border:1px solid #f6c23e44;">Signale</span>
+                            {% else %}
+                                <span class="role-badge" style="background:#1cc88a22;color:#1cc88a;border:1px solid #1cc88a44;">Visible</span>
+                            {% endif %}
+                        </td>
+                        <td style="white-space:nowrap;">{{ comment.createdAt|date('d/m/Y H:i') }}</td>
+                        <td>
+                            {% if not comment.isDeleted %}
+                                <form method="post" action="{{ path('admin_comments_delete', {id: comment.id}) }}" style="display:inline;" onsubmit="return confirm('Supprimer definitivement ce commentaire ?');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('comment_delete_' ~ comment.id) }}">
+                                    <button type="submit" class="btn-admin btn-admin--sm" style="background:var(--danger);color:#fff;" title="Supprimer">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            {% else %}
+                                <span style="color:var(--text-secondary);font-size:12px;">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div style="padding:40px;text-align:center;color:var(--text-secondary);">
+            <i class="fas fa-comments" style="font-size:32px;margin-bottom:10px;display:block;"></i>
+            Aucun commentaire.
+        </div>
+    {% endif %}
+</div>
+{% endif %}
+
+{% endblock %}

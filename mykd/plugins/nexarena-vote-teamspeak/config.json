@@ -1,0 +1,16 @@
+{
+  "ts_host": "127.0.0.1",
+  "ts_port": 10011,
+  "ts_user": "serveradmin",
+  "ts_password": "YOUR_SERVERQUERY_PASSWORD",
+  "ts_virtual_server_id": 1,
+  "nexarena_api_url": "https://nexarena.fr",
+  "nexarena_server_token": "YOUR_SERVER_TOKEN",
+  "vote_url": "https://nexarena.fr/serveur/your-server-slug",
+  "reward_group_id": 0,
+  "bot_nickname": "NexarenaBot",
+  "command_prefix": "!",
+  "cooldown_seconds": 30,
+  "reconnect_delay": 10,
+  "api_timeout": 10
+}

@@ -1,0 +1,89 @@
+{# Quill.js Rich Text Editor Partial #}
+{# Usage: {% include 'includes/_quill_editor.html.twig' with {editor_id: 'editor', textarea_id: 'full_description', content: server.fullDescription|default('')} %} #}
+
+<link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
+<style>
+    .ql-toolbar.ql-snow {
+        background: #0a1018;
+        border-color: #1e3048 !important;
+        border-radius: 6px 6px 0 0;
+    }
+    .ql-toolbar.ql-snow .ql-stroke { stroke: #8b949e; }
+    .ql-toolbar.ql-snow .ql-fill { fill: #8b949e; }
+    .ql-toolbar.ql-snow .ql-picker-label { color: #8b949e; }
+    .ql-toolbar.ql-snow button:hover .ql-stroke,
+    .ql-toolbar.ql-snow .ql-picker-label:hover { stroke: #45f882; color: #45f882; }
+    .ql-toolbar.ql-snow button:hover .ql-fill { fill: #45f882; }
+    .ql-toolbar.ql-snow button.ql-active .ql-stroke { stroke: #45f882; }
+    .ql-toolbar.ql-snow button.ql-active .ql-fill { fill: #45f882; }
+    .ql-container.ql-snow {
+        background: #0a1018;
+        border-color: #1e3048 !important;
+        border-radius: 0 0 6px 6px;
+        min-height: 250px;
+        font-size: 14px;
+    }
+    .ql-editor {
+        color: #e4e6eb;
+        min-height: 250px;
+    }
+    .ql-editor.ql-blank::before {
+        color: #5a5c69;
+        font-style: normal;
+    }
+    .ql-snow .ql-picker-options {
+        background: #162231;
+        border-color: #1e3048;
+    }
+    .ql-snow .ql-picker-item { color: #8b949e; }
+    .ql-snow .ql-picker-item:hover { color: #e4e6eb; }
+    .ql-editor a { color: #45f882; }
+    .ql-editor h1, .ql-editor h2, .ql-editor h3 { color: #e4e6eb; }
+    .ql-editor blockquote { border-left-color: #45f882; color: #8b949e; }
+    .ql-editor pre.ql-syntax {
+        background: #0f1923;
+        color: #e4e6eb;
+        border: 1px solid #1e3048;
+        border-radius: 4px;
+    }
+</style>
+
+<div id="{{ editor_id }}"></div>
+<textarea id="{{ textarea_id }}" name="{{ textarea_id }}" style="display:none;">{{ content|raw }}</textarea>
+
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
+<script>
+(function() {
+    var quill = new Quill('#{{ editor_id }}', {
+        theme: 'snow',
+        placeholder: 'Redigez votre description...',
+        modules: {
+            toolbar: [
+                [{ 'header': [1, 2, 3, false] }],
+                ['bold', 'italic', 'underline', 'strike'],
+                [{ 'color': [] }, { 'background': [] }],
+                [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                ['blockquote', 'code-block'],
+                ['link', 'image'],
+                ['clean']
+            ]
+        }
+    });
+
+    var textarea = document.getElementById('{{ textarea_id }}');
+    if (textarea.value) {
+        quill.root.innerHTML = textarea.value;
+    }
+
+    var form = textarea.closest('form');
+    if (form) {
+        form.addEventListener('submit', function() {
+            textarea.value = quill.root.innerHTML;
+        });
+    }
+
+    quill.on('text-change', function() {
+        textarea.value = quill.root.innerHTML;
+    });
+})();
+</script>

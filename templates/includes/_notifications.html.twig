@@ -1,0 +1,311 @@
+{# Notification bell + dropdown - included in _header.html.twig #}
+<li class="nx-notif" id="nxNotifWrap">
+    <a href="javascript:void(0)" class="nx-notif__toggle" id="nxNotifToggle">
+        <i class="fas fa-bell"></i>
+        <span class="nx-notif__badge" id="nxNotifBadge" style="display:none;">0</span>
+    </a>
+    <div class="nx-notif-dropdown" id="nxNotifDropdown">
+        <div class="nx-notif-dropdown__header">
+            <span>Notifications</span>
+            <button id="nxNotifReadAll" class="nx-notif-dropdown__readall" title="Tout marquer comme lu">
+                <i class="fas fa-check-double"></i>
+            </button>
+        </div>
+        <div class="nx-notif-dropdown__list" id="nxNotifList">
+            <div class="nx-notif-dropdown__empty" id="nxNotifEmpty">
+                <i class="fas fa-bell-slash"></i>
+                <span>Aucune notification</span>
+            </div>
+        </div>
+    </div>
+</li>
+
+<style>
+.nx-notif {
+    position: relative;
+    margin-left: 14px;
+}
+.nx-notif__toggle {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    color: rgba(255,255,255,0.6);
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+.nx-notif__toggle:hover {
+    color: #45f882;
+    background: rgba(69,248,130,0.06);
+}
+.nx-notif__toggle i { font-size: 16px; }
+.nx-notif__badge {
+    position: absolute;
+    top: 2px; right: 0;
+    min-width: 18px; height: 18px;
+    background: #dc3545;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    line-height: 1;
+    border: 2px solid #0c1219;
+}
+
+.nx-notif-dropdown {
+    position: absolute;
+    top: calc(100% + 12px);
+    right: -60px;
+    width: 360px;
+    background: #0c1219;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    z-index: 999;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px) scale(0.98);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 25px 60px rgba(0,0,0,0.5), 0 0 1px rgba(69,248,130,0.1);
+    overflow: hidden;
+}
+.nx-notif-dropdown.open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+}
+.nx-notif-dropdown__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(255,255,255,0.6);
+}
+.nx-notif-dropdown__readall {
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.3);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+.nx-notif-dropdown__readall:hover {
+    color: #45f882;
+    background: rgba(69,248,130,0.06);
+}
+.nx-notif-dropdown__list {
+    max-height: 360px;
+    overflow-y: auto;
+}
+.nx-notif-dropdown__list::-webkit-scrollbar { width: 4px; }
+.nx-notif-dropdown__list::-webkit-scrollbar-track { background: transparent; }
+.nx-notif-dropdown__list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+
+.nx-notif-item {
+    display: flex;
+    gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid rgba(255,255,255,0.02);
+    transition: background 0.2s;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+}
+.nx-notif-item:hover { background: rgba(255,255,255,0.02); }
+.nx-notif-item--unread { background: rgba(69,248,130,0.03); }
+.nx-notif-item--unread:hover { background: rgba(69,248,130,0.06); }
+
+.nx-notif-item__icon {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-size: 14px;
+}
+.nx-notif-item__icon--application { background: rgba(69,248,130,0.1); color: #45f882; }
+.nx-notif-item__icon--status { background: rgba(255,193,7,0.1); color: #ffc107; }
+.nx-notif-item__icon--message { background: rgba(59,130,246,0.1); color: #3b82f6; }
+
+.nx-notif-item__body { flex: 1; min-width: 0; }
+.nx-notif-item__title {
+    font-size: 13px; font-weight: 600; color: #e4e6eb;
+    margin-bottom: 2px;
+}
+.nx-notif-item__message {
+    font-size: 12px; color: rgba(255,255,255,0.4);
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.nx-notif-item__time {
+    font-size: 11px; color: rgba(255,255,255,0.25); margin-top: 3px;
+}
+.nx-notif-item__dot {
+    width: 8px; height: 8px;
+    background: #45f882;
+    border-radius: 50%;
+    flex-shrink: 0;
+    align-self: center;
+}
+
+.nx-notif-dropdown__empty {
+    text-align: center;
+    padding: 30px 20px;
+    color: rgba(255,255,255,0.2);
+    font-size: 13px;
+}
+.nx-notif-dropdown__empty i {
+    display: block;
+    font-size: 24px;
+    margin-bottom: 8px;
+}
+
+@media (max-width: 480px) {
+    .nx-notif-dropdown {
+        width: 300px;
+        right: -30px;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var wrap = document.getElementById('nxNotifWrap');
+    var toggle = document.getElementById('nxNotifToggle');
+    var dropdown = document.getElementById('nxNotifDropdown');
+    var badge = document.getElementById('nxNotifBadge');
+    var list = document.getElementById('nxNotifList');
+    var empty = document.getElementById('nxNotifEmpty');
+    var readAllBtn = document.getElementById('nxNotifReadAll');
+
+    if (!toggle || !dropdown || !wrap) return;
+
+    // Toggle dropdown
+    toggle.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        dropdown.classList.toggle('open');
+        if (dropdown.classList.contains('open')) {
+            loadNotifications();
+        }
+    });
+
+    document.addEventListener('click', function(e) {
+        if (!wrap.contains(e.target)) {
+            dropdown.classList.remove('open');
+        }
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            dropdown.classList.remove('open');
+        }
+    });
+
+    // Icons by type
+    function getIconClass(type) {
+        if (type === 'new_application') return 'nx-notif-item__icon--application';
+        if (type === 'application_status') return 'nx-notif-item__icon--status';
+        return 'nx-notif-item__icon--message';
+    }
+
+    function getIconName(type) {
+        if (type === 'new_application') return 'fa-file-alt';
+        if (type === 'application_status') return 'fa-info-circle';
+        return 'fa-comment-dots';
+    }
+
+    function escapeHtml(text) {
+        var d = document.createElement('div');
+        d.textContent = text;
+        return d.innerHTML;
+    }
+
+    function renderNotification(n) {
+        var link = n.link || 'javascript:void(0)';
+        return '<a href="' + escapeHtml(link) + '" class="nx-notif-item ' + (n.isRead ? '' : 'nx-notif-item--unread') + '" data-id="' + n.id + '" onclick="markNotifRead(' + n.id + ')">' +
+            '<div class="nx-notif-item__icon ' + getIconClass(n.type) + '"><i class="fas ' + getIconName(n.type) + '"></i></div>' +
+            '<div class="nx-notif-item__body">' +
+                '<div class="nx-notif-item__title">' + escapeHtml(n.title) + '</div>' +
+                '<div class="nx-notif-item__message">' + escapeHtml(n.message) + '</div>' +
+                '<div class="nx-notif-item__time">' + escapeHtml(n.createdAt) + '</div>' +
+            '</div>' +
+            (n.isRead ? '' : '<div class="nx-notif-item__dot"></div>') +
+        '</a>';
+    }
+
+    function loadNotifications() {
+        fetch('/api/notifications')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                updateBadge(data.unreadCount);
+                if (data.notifications.length > 0) {
+                    list.innerHTML = data.notifications.map(renderNotification).join('');
+                } else {
+                    list.innerHTML = '<div class="nx-notif-dropdown__empty"><i class="fas fa-bell-slash"></i><span>Aucune notification</span></div>';
+                }
+            })
+            .catch(function() {});
+    }
+
+    function updateBadge(count) {
+        if (count > 0) {
+            badge.textContent = count > 99 ? '99+' : count;
+            badge.style.display = 'flex';
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+
+    function pollBadge() {
+        fetch('/api/notifications?count_only=1')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                updateBadge(data.unreadCount);
+            })
+            .catch(function() {});
+    }
+
+    // Mark notification as read
+    window.markNotifRead = function(id) {
+        fetch('/api/notifications/' + id + '/read', { method: 'POST' })
+            .then(function() { pollBadge(); })
+            .catch(function() {});
+    };
+
+    // Mark all as read
+    readAllBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        fetch('/api/notifications/read-all', { method: 'POST' })
+            .then(function() {
+                updateBadge(0);
+                // Update visual state
+                var items = list.querySelectorAll('.nx-notif-item--unread');
+                items.forEach(function(item) {
+                    item.classList.remove('nx-notif-item--unread');
+                    var dot = item.querySelector('.nx-notif-item__dot');
+                    if (dot) dot.remove();
+                });
+            })
+            .catch(function() {});
+    });
+
+    // Initial badge load + polling every 30s
+    pollBadge();
+    setInterval(pollBadge, 30000);
+});
+</script>

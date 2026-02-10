@@ -1,0 +1,227 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block page_title %}Serveurs{% endblock %}
+{% block title %}Nexarena Admin - Serveurs{% endblock %}
+
+{% block admin_css %}
+    .filters-bar {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    .filter-select {
+        padding: 6px 12px;
+        background: var(--bg-darker);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        color: var(--text-primary);
+        font-size: 13px;
+    }
+    .filter-select:focus {
+        outline: none;
+        border-color: var(--accent);
+    }
+    .server-name-cell {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .server-name-cell .server-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 6px;
+        background: var(--bg-darker);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        color: var(--accent);
+        flex-shrink: 0;
+    }
+    .badge-approved {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+    .badge-approved--yes { background: #1cc88a22; color: #1cc88a; border: 1px solid #1cc88a44; }
+    .badge-approved--no { background: #f6c23e22; color: #f6c23e; border: 1px solid #f6c23e44; }
+{% endblock %}
+
+{% block admin_body %}
+    <div class="admin-table">
+        <div class="admin-table__header">
+            <h3>Gestion des serveurs ({{ servers|length }})</h3>
+            <form method="get" class="filters-bar">
+                <select name="category" class="filter-select" onchange="this.form.submit()">
+                    <option value="">Toutes categories</option>
+                    {% for cat in categories %}
+                        <option value="{{ cat.id }}" {{ filters.category == cat.id ? 'selected' : '' }}>{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+                <select name="approved" class="filter-select" onchange="this.form.submit()">
+                    <option value="">Approbation</option>
+                    <option value="1" {{ filters.approved == '1' ? 'selected' : '' }}>Approuves</option>
+                    <option value="0" {{ filters.approved == '0' ? 'selected' : '' }}>En attente</option>
+                </select>
+                <select name="active" class="filter-select" onchange="this.form.submit()">
+                    <option value="">Statut</option>
+                    <option value="1" {{ filters.active == '1' ? 'selected' : '' }}>Actifs</option>
+                    <option value="0" {{ filters.active == '0' ? 'selected' : '' }}>Inactifs</option>
+                </select>
+                {% if filters.category or filters.approved is not null or filters.active is not null %}
+                    <a href="{{ path('admin_servers_list') }}" class="btn-admin btn-admin--outline btn-admin--sm">
+                        <i class="fas fa-times"></i> Reset
+                    </a>
+                {% endif %}
+            </form>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Serveur</th>
+                    <th>Categorie</th>
+                    <th>Proprietaire</th>
+                    <th>Joueurs</th>
+                    <th>Votes (mois)</th>
+                    <th>Approbation</th>
+                    <th>Statut</th>
+                    <th>Cree le</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for server in servers %}
+                    <tr>
+                        <td>
+                            <div class="server-name-cell">
+                                <div class="server-icon">
+                                    {% if server.category and server.category.icon %}
+                                        <i class="{{ server.category.icon }}"></i>
+                                    {% else %}
+                                        <i class="fas fa-server"></i>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <strong>{{ server.name }}</strong>
+                                    {% if server.gameCategory %}
+                                        <br><small style="color:var(--text-secondary);">{{ server.gameCategory.name }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            {% if server.category %}
+                                {{ server.category.name }}
+                            {% else %}
+                                <span style="color:var(--text-secondary);">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if server.owner %}
+                                {{ server.owner.username }}
+                            {% else %}
+                                <span style="color:var(--text-secondary);">—</span>
+                            {% endif %}
+                        </td>
+                        <td id="admin-players-{{ server.id }}">
+                            {% if server.ip and server.port %}
+                                <span style="color:var(--text-secondary);font-size:12px;">...</span>
+                            {% else %}
+                                <span style="color:var(--text-secondary);">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <strong>{{ server.monthlyVotes }}</strong>
+                            <small style="color:var(--text-secondary);">/ {{ server.totalVotes }} total</small>
+                        </td>
+                        <td>
+                            {% if server.isApproved %}
+                                <span class="badge-approved badge-approved--yes">Approuve</span>
+                            {% else %}
+                                <span class="badge-approved badge-approved--no">En attente</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if server.isActive %}
+                                <span class="status-dot status-dot--active"></span>Actif
+                            {% else %}
+                                <span class="status-dot status-dot--inactive"></span>Inactif
+                            {% endif %}
+                        </td>
+                        <td style="color:var(--text-secondary);font-size:13px;">
+                            {{ server.createdAt ? server.createdAt|date('d/m/Y') : '—' }}
+                        </td>
+                        <td>
+                            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                                <a href="{{ path('admin_servers_edit', {id: server.id}) }}" class="btn-admin btn-admin--outline btn-admin--sm" title="Modifier">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form method="post" action="{{ path('admin_servers_approve', {id: server.id}) }}" style="display:inline;">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('approve_' ~ server.id) }}">
+                                    <button type="submit" class="btn-admin btn-admin--sm" style="background:{{ server.isApproved ? 'var(--warning)' : 'var(--success)' }};color:#fff;border:none;" title="{{ server.isApproved ? 'Desapprouver' : 'Approuver' }}">
+                                        <i class="fas {{ server.isApproved ? 'fa-times' : 'fa-check' }}"></i>
+                                    </button>
+                                </form>
+                                <form method="post" action="{{ path('admin_servers_toggle_active', {id: server.id}) }}" style="display:inline;">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('toggle_' ~ server.id) }}">
+                                    <button type="submit" class="btn-admin btn-admin--sm" style="background:{{ server.isActive ? 'var(--text-secondary)' : 'var(--info)' }};color:#fff;border:none;" title="{{ server.isActive ? 'Desactiver' : 'Activer' }}">
+                                        <i class="fas {{ server.isActive ? 'fa-eye-slash' : 'fa-eye' }}"></i>
+                                    </button>
+                                </form>
+                                {% if is_granted('ROLE_MANAGER') %}
+                                    <form method="post" action="{{ path('admin_servers_delete', {id: server.id}) }}" onsubmit="return confirm('Supprimer definitivement ce serveur et toutes ses donnees ?');" style="display:inline;">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete_' ~ server.id) }}">
+                                        <button type="submit" class="btn-admin btn-admin--sm" style="background:var(--danger);color:#fff;border:none;" title="Supprimer">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="9" style="text-align:center;color:var(--text-secondary);padding:40px;">
+                            <i class="fas fa-server" style="font-size:36px;margin-bottom:10px;display:block;"></i>
+                            Aucun serveur trouve.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {# Player count AJAX #}
+    {% set server_ids = [] %}
+    {% for server in servers %}
+        {% if server.ip and server.port %}
+            {% set server_ids = server_ids|merge([server.id]) %}
+        {% endif %}
+    {% endfor %}
+    {% if server_ids|length > 0 %}
+        <script>
+        (function() {
+            var ids = {{ server_ids|json_encode|raw }};
+            ids.forEach(function(id) {
+                fetch('/api/server-status/' + id)
+                .then(function(r) { return r.json(); })
+                .then(function(d) {
+                    var el = document.getElementById('admin-players-' + id);
+                    if (!el) return;
+                    if (d.online && d.queryType) {
+                        el.innerHTML = '<strong style="color:#1cc88a;">' + d.players + '</strong><small style="color:var(--text-secondary);"> / ' + d.maxPlayers + '</small>';
+                    } else if (d.queryType) {
+                        el.innerHTML = '<span style="color:#e74a3b;font-size:12px;">Hors ligne</span>';
+                    } else {
+                        el.innerHTML = '<span style="color:var(--text-secondary);">—</span>';
+                    }
+                })
+                .catch(function() {});
+            });
+        })();
+        </script>
+    {% endif %}
+{% endblock %}

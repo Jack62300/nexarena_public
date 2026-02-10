@@ -1,0 +1,79 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block page_title %}Partenaires & Services{% endblock %}
+{% block title %}Nexarena Admin - Partenaires{% endblock %}
+
+{% block admin_body %}
+    <div class="admin-table">
+        <div class="admin-table__header">
+            <h3>Partenaires & Services suivis</h3>
+            <a href="{{ path('admin_partners_new') }}" class="btn-admin btn-admin--primary">
+                <i class="fas fa-plus"></i> Ajouter
+            </a>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Logo</th>
+                    <th>Nom</th>
+                    <th>Type</th>
+                    <th>URL</th>
+                    <th>Position</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in partners %}
+                    <tr>
+                        <td>
+                            {% if p.logoFileName %}
+                                <img src="{{ asset('uploads/partners/' ~ p.logoFileName) }}" alt="{{ p.name }}" style="height:32px;width:auto;border-radius:4px;background:rgba(255,255,255,0.05);padding:2px;">
+                            {% else %}
+                                <span style="color:var(--text-secondary);font-size:12px;">—</span>
+                            {% endif %}
+                        </td>
+                        <td><strong>{{ p.name }}</strong></td>
+                        <td>
+                            {% if p.type == 'partner' %}
+                                <span style="color:var(--accent);"><i class="fas fa-handshake"></i> Partenaire</span>
+                            {% else %}
+                                <span style="color:var(--info);"><i class="fas fa-satellite-dish"></i> Service suivi</span>
+                            {% endif %}
+                        </td>
+                        <td style="color:var(--text-secondary);font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ p.url }}</td>
+                        <td style="color:var(--text-secondary);">{{ p.position }}</td>
+                        <td>
+                            {% if p.isActive %}
+                                <span class="status-dot status-dot--active"></span>Actif
+                            {% else %}
+                                <span class="status-dot status-dot--inactive"></span>Inactif
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div style="display:flex;gap:8px;">
+                                <a href="{{ path('admin_partners_edit', {id: p.id}) }}" class="btn-admin btn-admin--outline btn-admin--sm">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                {% if is_granted('ROLE_MANAGER') %}
+                                    <form method="post" action="{{ path('admin_partners_delete', {id: p.id}) }}" onsubmit="return confirm('Supprimer ce partenaire ?');" style="display:inline;">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete_' ~ p.id) }}">
+                                        <button type="submit" class="btn-admin btn-admin--sm" style="background:var(--danger);color:#fff;border:none;">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="7" style="text-align:center;color:var(--text-secondary);padding:30px;">
+                            Aucun partenaire pour le moment.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

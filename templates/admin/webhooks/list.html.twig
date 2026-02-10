@@ -1,0 +1,20 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block page_title %}Webhooks{% endblock %}
+{% block title %}Nexarena Admin - Webhooks{% endblock %}
+
+{% block admin_body %}
+    <div class="admin-table">
+        <div class="admin-table__header">
+            <h3>Webhooks</h3>
+        </div>
+        <div style="padding:60px 25px;text-align:center;">
+            <i class="fas fa-plug" style="font-size:48px;color:var(--text-secondary);margin-bottom:15px;display:block;"></i>
+            <h4 style="color:var(--text-primary);margin-bottom:8px;">Gestion des webhooks</h4>
+            <p style="color:var(--text-secondary);font-size:14px;">
+                Configurez les webhooks pour recevoir des notifications lors des votes.<br>
+                Les webhooks enverront le nom, l'email, l'IP et le statut du vote.
+            </p>
+        </div>
+    </div>
+{% endblock %}

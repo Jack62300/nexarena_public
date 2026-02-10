@@ -1,0 +1,234 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block page_title %}Modifier le serveur{% endblock %}
+{% block title %}Nexarena Admin - Modifier {{ server.name }}{% endblock %}
+
+{% block admin_css %}
+    .form-group { margin-bottom: 20px; }
+    .form-group label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .form-control-admin {
+        width: 100%;
+        padding: 10px 14px;
+        background: var(--bg-darker);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        color: var(--text-primary);
+        font-size: 14px;
+        transition: border-color 0.2s;
+    }
+    .form-control-admin:focus {
+        outline: none;
+        border-color: var(--accent);
+    }
+    textarea.form-control-admin { min-height: 80px; resize: vertical; }
+    .form-check-admin {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+    }
+    .form-check-admin input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        accent-color: var(--accent);
+    }
+    .info-card {
+        background: var(--bg-darker);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 20px;
+    }
+    .info-card h5 {
+        font-size: 13px;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 12px;
+    }
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 0;
+        font-size: 13px;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-row span:first-child { color: var(--text-secondary); }
+{% endblock %}
+
+{% block admin_body %}
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="admin-table">
+                <div class="admin-table__header">
+                    <h3>Modifier : {{ server.name }}</h3>
+                    <a href="{{ path('admin_servers_list') }}" class="btn-admin btn-admin--outline btn-admin--sm">
+                        <i class="fas fa-arrow-left"></i> Retour
+                    </a>
+                </div>
+                <div style="padding:25px;">
+                    <form method="post">
+                        <input type="hidden" name="_token" value="{{ csrf_token('admin_server_form') }}">
+
+                        <div class="form-group">
+                            <label for="name">Nom du serveur</label>
+                            <input type="text" id="name" name="name" class="form-control-admin" value="{{ server.name }}" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="short_description">Description courte</label>
+                            <input type="text" id="short_description" name="short_description" class="form-control-admin" value="{{ server.shortDescription }}" maxlength="255">
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="ip">Adresse IP</label>
+                                    <input type="text" id="ip" name="ip" class="form-control-admin" value="{{ server.ip }}">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="port">Port</label>
+                                    <input type="number" id="port" name="port" class="form-control-admin" value="{{ server.port }}">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="slots">Slots</label>
+                                    <input type="number" id="slots" name="slots" class="form-control-admin" value="{{ server.slots }}" min="0">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="website">Site web</label>
+                                    <input type="url" id="website" name="website" class="form-control-admin" value="{{ server.website }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="discord_url">Discord</label>
+                                    <input type="url" id="discord_url" name="discord_url" class="form-control-admin" value="{{ server.discordUrl }}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="twitch_channel">Chaine Twitch</label>
+                            <input type="text" id="twitch_channel" name="twitch_channel" class="form-control-admin" value="{{ server.twitchChannel }}" placeholder="nom_de_la_chaine">
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label class="form-check-admin">
+                                        <input type="checkbox" name="is_active" value="1" {{ server.isActive ? 'checked' : '' }}>
+                                        Serveur actif
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label class="form-check-admin">
+                                        <input type="checkbox" name="is_approved" value="1" {{ server.isApproved ? 'checked' : '' }}>
+                                        Approuve
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label class="form-check-admin">
+                                        <input type="checkbox" name="is_private" value="1" {{ server.isPrivate ? 'checked' : '' }}>
+                                        Serveur prive
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="display:flex;gap:10px;padding-top:10px;">
+                            <button type="submit" class="btn-admin btn-admin--primary">
+                                <i class="fas fa-save"></i> Enregistrer
+                            </button>
+                            <a href="{{ path('admin_servers_list') }}" class="btn-admin btn-admin--outline">Annuler</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="info-card">
+                <h5>Informations</h5>
+                <div class="info-row">
+                    <span>ID</span>
+                    <span>#{{ server.id }}</span>
+                </div>
+                <div class="info-row">
+                    <span>Proprietaire</span>
+                    <span>{{ server.owner ? server.owner.username : '—' }}</span>
+                </div>
+                <div class="info-row">
+                    <span>Categorie</span>
+                    <span>{{ server.category ? server.category.name : '—' }}</span>
+                </div>
+                <div class="info-row">
+                    <span>Sous-categorie</span>
+                    <span>{{ server.gameCategory ? server.gameCategory.name : '—' }}</span>
+                </div>
+                <div class="info-row">
+                    <span>Type</span>
+                    <span>{{ server.serverType ? server.serverType.name : '—' }}</span>
+                </div>
+                <div class="info-row">
+                    <span>Cree le</span>
+                    <span>{{ server.createdAt ? server.createdAt|date('d/m/Y H:i') : '—' }}</span>
+                </div>
+                <div class="info-row">
+                    <span>Modifie le</span>
+                    <span>{{ server.updatedAt ? server.updatedAt|date('d/m/Y H:i') : '—' }}</span>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <h5>Statistiques</h5>
+                <div class="info-row">
+                    <span>Votes ce mois</span>
+                    <span><strong>{{ server.monthlyVotes }}</strong></span>
+                </div>
+                <div class="info-row">
+                    <span>Votes total</span>
+                    <span><strong>{{ server.totalVotes }}</strong></span>
+                </div>
+                <div class="info-row">
+                    <span>Webhook</span>
+                    <span>
+                        {% if server.webhookEnabled %}
+                            <span style="color:var(--success);">Active</span>
+                        {% else %}
+                            <span style="color:var(--text-secondary);">Desactive</span>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <h5>Token API</h5>
+                <div style="font-family:monospace;font-size:11px;word-break:break-all;color:var(--accent);padding:8px;background:var(--bg-dark);border-radius:4px;">
+                    {{ server.apiToken }}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

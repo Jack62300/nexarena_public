@@ -1,0 +1,173 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block page_title %}{{ plugin ? 'Modifier le plugin' : 'Nouveau plugin' }}{% endblock %}
+{% block title %}Nexarena Admin - {{ plugin ? 'Modifier' : 'Nouveau' }} plugin{% endblock %}
+
+{% block admin_css %}
+    .form-group { margin-bottom: 20px; }
+    .form-group label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .form-control-admin {
+        width: 100%;
+        padding: 10px 14px;
+        background: var(--bg-darker);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        color: var(--text-primary);
+        font-size: 14px;
+        transition: border-color 0.2s;
+    }
+    .form-control-admin:focus {
+        outline: none;
+        border-color: var(--accent);
+    }
+    textarea.form-control-admin {
+        min-height: 100px;
+        resize: vertical;
+    }
+    .form-check-admin {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+    }
+    .form-check-admin input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        accent-color: var(--accent);
+    }
+    .form-row { display: flex; gap: 20px; }
+    .form-row .form-group { flex: 1; }
+    .icon-preview {
+        display: inline-block;
+        width: 64px;
+        height: 64px;
+        border-radius: 8px;
+        object-fit: cover;
+        border: 1px solid var(--border-color);
+        margin-bottom: 10px;
+    }
+    .file-info {
+        font-size: 12px;
+        color: var(--text-secondary);
+        margin-top: 4px;
+    }
+{% endblock %}
+
+{% block admin_body %}
+    <div style="max-width:800px;">
+        <div class="admin-table">
+            <div class="admin-table__header">
+                <h3>{{ plugin ? 'Modifier le plugin' : 'Creer un plugin' }}</h3>
+                <a href="{{ path('admin_plugins_list') }}" class="btn-admin btn-admin--outline btn-admin--sm">
+                    <i class="fas fa-arrow-left"></i> Retour
+                </a>
+            </div>
+            <div style="padding:25px;">
+                <form method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="_token" value="{{ csrf_token('plugin_form') }}">
+
+                    <div class="form-group">
+                        <label for="name">Nom du plugin</label>
+                        <input type="text" id="name" name="name" class="form-control-admin" value="{{ plugin ? plugin.name : '' }}" required placeholder="Nexarena Vote Minecraft">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="platform">Plateforme</label>
+                            <select id="platform" name="platform" class="form-control-admin" required>
+                                <option value="">-- Selectionner --</option>
+                                {% set platforms = {
+                                    'minecraft': 'Minecraft',
+                                    'fivem': 'FiveM',
+                                    'gmod': "Garry's Mod",
+                                    'discord': 'Discord Bot',
+                                    'teamspeak': 'TeamSpeak',
+                                    'rust': 'Rust',
+                                    'ark': 'ARK',
+                                    'csgo': 'CS2',
+                                    'unturned': 'Unturned',
+                                    'other': 'Autre'
+                                } %}
+                                {% for key, label in platforms %}
+                                    <option value="{{ key }}" {{ plugin and plugin.platform == key ? 'selected' : '' }}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="category">Categorie</label>
+                            <select id="category" name="category" class="form-control-admin" required>
+                                <option value="">-- Selectionner --</option>
+                                <option value="game" {{ plugin and plugin.category == 'game' ? 'selected' : '' }}>Serveurs de Jeux</option>
+                                <option value="vocal" {{ plugin and plugin.category == 'vocal' ? 'selected' : '' }}>Vocal</option>
+                                <option value="hosting" {{ plugin and plugin.category == 'hosting' ? 'selected' : '' }}>Hebergement</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="version">Version</label>
+                            <input type="text" id="version" name="version" class="form-control-admin" value="{{ plugin ? plugin.version : '1.0.0' }}" required placeholder="1.0.0">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Description courte</label>
+                        <textarea id="description" name="description" class="form-control-admin" required placeholder="Description visible sur la page plugins...">{{ plugin ? plugin.description : '' }}</textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="long_description">Description detaillee (HTML)</label>
+                        <textarea id="long_description" name="long_description" class="form-control-admin" style="min-height:200px;" placeholder="Documentation complete, instructions d'installation...">{{ plugin ? plugin.longDescription : '' }}</textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="zip_file">Fichier ZIP</label>
+                            {% if plugin and plugin.fileName %}
+                                <div class="file-info">
+                                    <i class="fas fa-file-archive" style="color:var(--accent);"></i>
+                                    Fichier actuel : {{ plugin.fileName }}
+                                    {% if plugin.fileSize %}({{ (plugin.fileSize / 1024)|round(1) }} Ko){% endif %}
+                                </div>
+                            {% endif %}
+                            <input type="file" id="zip_file" name="zip_file" class="form-control-admin" accept=".zip" {{ plugin ? '' : 'required' }}>
+                            {% if plugin %}
+                                <div class="file-info">Laissez vide pour conserver le fichier actuel.</div>
+                            {% endif %}
+                        </div>
+                        <div class="form-group">
+                            <label for="icon_file">Icone</label>
+                            {% if plugin and plugin.iconFileName %}
+                                <div>
+                                    <img src="{{ asset('uploads/plugins/icons/' ~ plugin.iconFileName) }}" alt="" class="icon-preview">
+                                </div>
+                            {% endif %}
+                            <input type="file" id="icon_file" name="icon_file" class="form-control-admin" accept="image/*">
+                            <div class="file-info">Image carree recommandee (64x64 ou plus).</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-check-admin">
+                            <input type="checkbox" name="is_active" value="1" {{ (plugin is null or plugin.isActive) ? 'checked' : '' }}>
+                            Plugin actif (visible publiquement)
+                        </label>
+                    </div>
+
+                    <div style="display:flex;gap:10px;padding-top:10px;">
+                        <button type="submit" class="btn-admin btn-admin--primary">
+                            <i class="fas fa-save"></i> {{ plugin ? 'Enregistrer' : 'Creer' }}
+                        </button>
+                        <a href="{{ path('admin_plugins_list') }}" class="btn-admin btn-admin--outline">Annuler</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

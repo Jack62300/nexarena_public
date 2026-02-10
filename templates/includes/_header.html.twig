@@ -1,0 +1,666 @@
+{% set _route = app.request.get('_route') %}
+
+{# ============================================ #}
+{#  HEADER                                      #}
+{# ============================================ #}
+<header>
+    <div id="sticky-header" class="tg-header__area transparent-header">
+        <div class="container custom-container">
+            <div class="row">
+                <div class="col-12">
+                    <div class="mobile-nav-toggler"><i class="fas fa-bars"></i></div>
+                    <div class="tgmenu__wrap">
+                        <nav class="tgmenu__nav">
+
+                            {# ── Logo ── #}
+                            <div class="logo">
+                                <a href="{{ path('app_home') }}">
+                                    <img src="{{ asset(setting('site_logo', 'assets/img/logo/logo.svg')) }}" alt="{{ setting('site_name', 'Nexarena') }}">
+                                </a>
+                            </div>
+
+                            {# ── Navigation ── #}
+                            <div class="tgmenu__navbar-wrap tgmenu__main-menu d-none d-xl-flex">
+                                <ul class="navigation">
+                                    <li class="{{ _route == 'app_home' ? 'active' : '' }}">
+                                        <a href="{{ path('app_home') }}">Accueil</a>
+                                    </li>
+                                    <li class="{{ _route starts with 'articles_' ? 'active' : '' }}">
+                                        <a href="{{ path('articles_list') }}">Actualites</a>
+                                    </li>
+                                    <li class="{{ _route starts with 'plugins_' ? 'active' : '' }}">
+                                        <a href="{{ path('plugins_index') }}">Plugins</a>
+                                    </li>
+                                    <li class="{{ _route starts with 'recruitment_' ? 'active' : '' }}">
+                                        <a href="{{ path('recruitment_index') }}">Recrutement</a>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            {# ── Actions ── #}
+                            <div class="tgmenu__action d-none d-md-block">
+                                <ul class="list-wrap">
+                                    <li class="search">
+                                        <a href="javascript:void(0)"><i class="flaticon-loupe"></i></a>
+                                    </li>
+
+                                    {% if app.user %}
+                                        <li class="header-btn">
+                                            <a href="{{ path('user_servers_new') }}" class="tg-border-btn">
+                                                <svg preserveAspectRatio="none" viewBox="0 0 157 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M131.75 2L155.75 25L131.75 47L148.75 24L131.75 2Z" fill="currentColor"/>
+                                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M25 1L1 24.5111L25 47L8 23.4889L25 1Z" fill="currentColor"/>
+                                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M24.75 1L0.75 25L23.75 47H131.75L155.75 25L131.75 1H24.75Z" stroke="currentColor" stroke-width="1.5"/>
+                                                </svg>
+                                                <i class="fas fa-plus"></i> Ajouter
+                                            </a>
+                                        </li>
+
+                                        {% include 'includes/_notifications.html.twig' %}
+
+                                        <li class="nx-profile" id="nxProfileWrap">
+                                            <a href="javascript:void(0)" class="nx-profile__toggle" id="nxProfileToggle">
+                                                <span class="nx-profile__avatar">
+                                                    {% if app.user.avatar starts with 'http' %}
+                                                        <img src="{{ app.user.avatar }}" alt="">
+                                                    {% elseif app.user.avatar %}
+                                                        <img src="{{ asset('uploads/avatars/' ~ app.user.avatar) }}" alt="">
+                                                    {% else %}
+                                                        <i class="fas fa-user"></i>
+                                                    {% endif %}
+                                                </span>
+                                                <span class="nx-profile__name d-none d-lg-inline">{{ app.user.username }}</span>
+                                                <i class="fas fa-angle-down nx-profile__arrow"></i>
+                                            </a>
+                                            <div class="nx-dropdown" id="nxProfileDropdown">
+                                                <div class="nx-dropdown__header">
+                                                    <span class="nx-dropdown__avatar">
+                                                        {% if app.user.avatar starts with 'http' %}
+                                                            <img src="{{ app.user.avatar }}" alt="">
+                                                        {% elseif app.user.avatar %}
+                                                            <img src="{{ asset('uploads/avatars/' ~ app.user.avatar) }}" alt="">
+                                                        {% else %}
+                                                            <i class="fas fa-user"></i>
+                                                        {% endif %}
+                                                    </span>
+                                                    <div>
+                                                        <span class="nx-dropdown__name">{{ app.user.username }}</span>
+                                                        <span class="nx-dropdown__role">
+                                                            {% if is_granted('ROLE_FONDATEUR') %}Fondateur
+                                                            {% elseif is_granted('ROLE_DEVELOPPEUR') %}Developpeur
+                                                            {% elseif is_granted('ROLE_RESPONSABLE') %}Responsable
+                                                            {% elseif is_granted('ROLE_MANAGER') %}Manager
+                                                            {% elseif is_granted('ROLE_EDITEUR') %}Editeur
+                                                            {% else %}Membre{% endif %}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div class="nx-dropdown__divider"></div>
+                                                <a href="{{ path('user_profile') }}" class="nx-dropdown__item">
+                                                    <i class="fas fa-user-circle"></i> Mon profil
+                                                </a>
+                                                <a href="{{ path('user_servers_list') }}" class="nx-dropdown__item">
+                                                    <i class="fas fa-server"></i> Mes serveurs
+                                                </a>
+                                                <a href="{{ path('user_recruitment_list') }}" class="nx-dropdown__item">
+                                                    <i class="fas fa-bullhorn"></i> Mes recrutements
+                                                </a>
+                                                <a href="{{ path('applicant_list') }}" class="nx-dropdown__item">
+                                                    <i class="fas fa-file-alt"></i> Mes candidatures
+                                                </a>
+                                                {% if is_granted('ROLE_EDITEUR') %}
+                                                    <div class="nx-dropdown__divider"></div>
+                                                    <a href="{{ path('admin_dashboard') }}" class="nx-dropdown__item nx-dropdown__item--admin">
+                                                        <i class="fas fa-shield-alt"></i> Administration
+                                                    </a>
+                                                {% endif %}
+                                                <div class="nx-dropdown__divider"></div>
+                                                <a href="{{ path('app_logout') }}" class="nx-dropdown__item nx-dropdown__item--danger">
+                                                    <i class="fas fa-sign-out-alt"></i> Deconnexion
+                                                </a>
+                                            </div>
+                                        </li>
+
+                                    {% else %}
+                                        <li class="header-btn">
+                                            <a href="{{ path('app_login') }}" class="tg-border-btn">
+                                                <svg preserveAspectRatio="none" viewBox="0 0 157 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M131.75 2L155.75 25L131.75 47L148.75 24L131.75 2Z" fill="currentColor"/>
+                                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M25 1L1 24.5111L25 47L8 23.4889L25 1Z" fill="currentColor"/>
+                                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M24.75 1L0.75 25L23.75 47H131.75L155.75 25L131.75 1H24.75Z" stroke="currentColor" stroke-width="1.5"/>
+                                                </svg>
+                                                <i class="flaticon-edit"></i> Connexion
+                                            </a>
+                                        </li>
+                                    {% endif %}
+
+                                    <li class="side-toggle-icon">
+                                        <span></span>
+                                        <span></span>
+                                        <span></span>
+                                    </li>
+                                </ul>
+                            </div>
+
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ============================================ #}
+    {#  MOBILE MENU                                 #}
+    {# ============================================ #}
+    <div class="tgmobile__menu">
+        <nav class="tgmobile__menu-box">
+            <div class="close-btn"><i class="flaticon-swords-in-cross-arrangement"></i></div>
+            <div class="nav-logo">
+                <a href="{{ path('app_home') }}">
+                    <img src="{{ asset(setting('site_logo', 'assets/img/logo/logo.svg')) }}" alt="{{ setting('site_name', 'Nexarena') }}">
+                </a>
+            </div>
+            <div class="tgmobile__search">
+                <form action="#">
+                    <input type="text" placeholder="Rechercher un serveur...">
+                    <button><i class="flaticon-loupe"></i></button>
+                </form>
+            </div>
+            <div class="tgmobile__menu-outer">
+                {# Auto-populated by JS from .navigation #}
+            </div>
+
+            {# Mobile User Section #}
+            <div class="nx-mobile-user">
+                {% if app.user %}
+                    <div class="nx-mobile-user__header">
+                        <span class="nx-mobile-user__avatar">
+                            {% if app.user.avatar starts with 'http' %}
+                                <img src="{{ app.user.avatar }}" alt="">
+                            {% elseif app.user.avatar %}
+                                <img src="{{ asset('uploads/avatars/' ~ app.user.avatar) }}" alt="">
+                            {% else %}
+                                <i class="fas fa-user"></i>
+                            {% endif %}
+                        </span>
+                        <div>
+                            <span class="nx-mobile-user__name">{{ app.user.username }}</span>
+                            <span class="nx-mobile-user__role">
+                                {% if is_granted('ROLE_FONDATEUR') %}Fondateur
+                                {% elseif is_granted('ROLE_DEVELOPPEUR') %}Developpeur
+                                {% elseif is_granted('ROLE_RESPONSABLE') %}Responsable
+                                {% elseif is_granted('ROLE_MANAGER') %}Manager
+                                {% elseif is_granted('ROLE_EDITEUR') %}Editeur
+                                {% else %}Membre{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="nx-mobile-user__links">
+                        <a href="{{ path('user_servers_new') }}"><i class="fas fa-plus-circle"></i> Ajouter un serveur</a>
+                        <a href="{{ path('user_servers_list') }}"><i class="fas fa-server"></i> Mes serveurs</a>
+                        <a href="{{ path('user_recruitment_list') }}"><i class="fas fa-bullhorn"></i> Mes recrutements</a>
+                        <a href="{{ path('applicant_list') }}"><i class="fas fa-file-alt"></i> Mes candidatures</a>
+                        <a href="{{ path('user_profile') }}"><i class="fas fa-user-circle"></i> Mon profil</a>
+                        {% if is_granted('ROLE_EDITEUR') %}
+                            <a href="{{ path('admin_dashboard') }}" class="nx-mobile-user__admin"><i class="fas fa-shield-alt"></i> Administration</a>
+                        {% endif %}
+                        <a href="{{ path('app_logout') }}" class="nx-mobile-user__logout"><i class="fas fa-sign-out-alt"></i> Deconnexion</a>
+                    </div>
+                {% else %}
+                    <div class="nx-mobile-user__links">
+                        <a href="{{ path('app_login') }}" class="nx-mobile-user__cta"><i class="fas fa-sign-in-alt"></i> Connexion</a>
+                        <a href="{{ path('app_register') }}"><i class="fas fa-user-plus"></i> Inscription</a>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="social-links">
+                <ul class="list-wrap">
+                    <li><a href="{{ setting('social_discord', '#') }}"><i class="fab fa-discord"></i></a></li>
+                    <li><a href="{{ setting('social_twitter', '#') }}"><i class="fab fa-twitter"></i></a></li>
+                    <li><a href="{{ setting('social_instagram', '#') }}"><i class="fab fa-instagram"></i></a></li>
+                    <li><a href="{{ setting('social_youtube', '#') }}"><i class="fab fa-youtube"></i></a></li>
+                </ul>
+            </div>
+        </nav>
+    </div>
+    <div class="tgmobile__menu-backdrop"></div>
+
+    {# ============================================ #}
+    {#  SEARCH POPUP                                #}
+    {# ============================================ #}
+    <div class="search__popup-wrap">
+        <div class="search__layer"></div>
+        <div class="search__close">
+            <span><i class="flaticon-swords-in-cross-arrangement"></i></span>
+        </div>
+        <div class="search__wrap text-center">
+            <div class="container">
+                <div class="row">
+                    <div class="col-12">
+                        <h2 class="title">... <span>Rechercher</span> ...</h2>
+                        <div class="search__form">
+                            <form action="#">
+                                <input type="text" name="search" placeholder="Tapez vos mots-cles ici..." required>
+                                <button class="search-btn"><i class="flaticon-loupe"></i></button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ============================================ #}
+    {#  OFF-CANVAS SIDE PANEL                       #}
+    {# ============================================ #}
+    <div class="offCanvas__wrap">
+        <div class="offCanvas__body">
+            <div class="offCanvas__top">
+                <div class="offCanvas__logo logo">
+                    <a href="{{ path('app_home') }}">
+                        <img src="{{ asset(setting('site_logo', 'assets/img/logo/logo.svg')) }}" alt="{{ setting('site_name', 'Nexarena') }}">
+                    </a>
+                </div>
+                <div class="offCanvas__toggle">
+                    <i class="flaticon-swords-in-cross-arrangement"></i>
+                </div>
+            </div>
+            <div class="offCanvas__content">
+                <h2 class="title">Trouvez les meilleurs <span>serveurs de jeux</span></h2>
+                <p class="nx-offcanvas-desc">{{ setting('site_description', 'La plateforme de reference pour trouver et voter pour les meilleurs serveurs de jeux.') }}</p>
+
+                <div class="offCanvas__contact">
+                    <h4 class="small-title">LIENS RAPIDES</h4>
+                    <ul class="offCanvas__contact-list list-wrap nx-quick-links">
+                        <li><a href="{{ path('app_home') }}"><i class="fas fa-home"></i> Accueil</a></li>
+                        <li><a href="{{ path('articles_list') }}"><i class="fas fa-newspaper"></i> Actualites</a></li>
+                        {% if app.user %}
+                            <li><a href="{{ path('user_servers_new') }}"><i class="fas fa-plus-circle"></i> Ajouter un serveur</a></li>
+                            <li><a href="{{ path('user_servers_list') }}"><i class="fas fa-server"></i> Mes serveurs</a></li>
+                            <li><a href="{{ path('user_recruitment_list') }}"><i class="fas fa-bullhorn"></i> Mes recrutements</a></li>
+                            <li><a href="{{ path('applicant_list') }}"><i class="fas fa-file-alt"></i> Mes candidatures</a></li>
+                        {% else %}
+                            <li><a href="{{ path('app_login') }}"><i class="fas fa-sign-in-alt"></i> Connexion</a></li>
+                            <li><a href="{{ path('app_register') }}"><i class="fas fa-user-plus"></i> Inscription</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+
+                <div class="offCanvas__contact">
+                    <h4 class="small-title">CONTACT</h4>
+                    <ul class="offCanvas__contact-list list-wrap">
+                        <li><a href="mailto:{{ setting('contact_email', 'contact@nexarena.fr') }}">{{ setting('contact_email', 'contact@nexarena.fr') }}</a></li>
+                    </ul>
+                </div>
+
+                <ul class="offCanvas__social list-wrap">
+                    <li><a href="{{ setting('social_discord', '#') }}"><i class="fab fa-discord"></i></a></li>
+                    <li><a href="{{ setting('social_twitter', '#') }}"><i class="fab fa-twitter"></i></a></li>
+                    <li><a href="{{ setting('social_instagram', '#') }}"><i class="fab fa-instagram"></i></a></li>
+                    <li><a href="{{ setting('social_youtube', '#') }}"><i class="fab fa-youtube"></i></a></li>
+                </ul>
+            </div>
+            <div class="offCanvas__copyright">
+                <p>Copyright &copy; {{ "now"|date("Y") }} - <span>{{ setting('site_name', 'Nexarena') }}</span></p>
+            </div>
+        </div>
+    </div>
+    <div class="offCanvas__overlay"></div>
+
+</header>
+
+{# ============================================ #}
+{#  NAVBAR CUSTOM CSS                           #}
+{# ============================================ #}
+<style>
+/* ─── Profile Toggle ─── */
+.nx-profile {
+    position: relative;
+    margin-left: 20px;
+}
+.nx-profile__toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
+    color: var(--tg-heading-color);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+.nx-profile__toggle:hover {
+    color: var(--tg-theme-primary);
+}
+.nx-profile__avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(69,248,130,0.1), rgba(69,248,130,0.03));
+    border: 2px solid rgba(69,248,130,0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+    transition: border-color 0.3s ease;
+}
+.nx-profile__toggle:hover .nx-profile__avatar {
+    border-color: var(--tg-theme-primary);
+}
+.nx-profile__avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.nx-profile__avatar i {
+    font-size: 14px;
+    color: rgba(255,255,255,0.5);
+}
+.nx-profile__name {
+    font-size: 14px;
+    font-weight: 700;
+    font-family: var(--tg-heading-font-family);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+.nx-profile__arrow {
+    font-size: 10px;
+    opacity: 0.4;
+    transition: transform 0.3s ease;
+}
+.nx-profile.open .nx-profile__arrow {
+    transform: rotate(180deg);
+    opacity: 1;
+    color: var(--tg-theme-primary);
+}
+
+/* ─── Profile Dropdown ─── */
+.nx-dropdown {
+    position: absolute;
+    top: calc(100% + 15px);
+    right: 0;
+    width: 270px;
+    background: #0c1219;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    z-index: 999;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px) scale(0.98);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 25px 60px rgba(0,0,0,0.5), 0 0 1px rgba(69,248,130,0.1);
+    overflow: hidden;
+}
+.nx-dropdown.open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+}
+.nx-dropdown__header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 18px 20px;
+    background: linear-gradient(135deg, rgba(69,248,130,0.04), transparent);
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.nx-dropdown__avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(69,248,130,0.12), rgba(69,248,130,0.03));
+    border: 2px solid rgba(69,248,130,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+.nx-dropdown__avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.nx-dropdown__avatar i {
+    font-size: 18px;
+    color: rgba(255,255,255,0.3);
+}
+.nx-dropdown__name {
+    display: block;
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    font-family: var(--tg-heading-font-family);
+    letter-spacing: 0.3px;
+}
+.nx-dropdown__role {
+    display: inline-block;
+    font-size: 10px;
+    color: var(--tg-theme-primary);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-weight: 700;
+    margin-top: 4px;
+    background: rgba(69,248,130,0.08);
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+.nx-dropdown__divider {
+    height: 1px;
+    background: rgba(255,255,255,0.04);
+    margin: 4px 0;
+}
+.nx-dropdown__item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    color: rgba(255,255,255,0.55);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    transition: all 0.2s ease;
+    position: relative;
+}
+.nx-dropdown__item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 0;
+    background: var(--tg-theme-primary);
+    transition: width 0.2s ease;
+}
+.nx-dropdown__item:hover {
+    color: #fff;
+    background: rgba(255,255,255,0.03);
+    padding-left: 24px;
+}
+.nx-dropdown__item:hover::before {
+    width: 3px;
+}
+.nx-dropdown__item i {
+    width: 18px;
+    text-align: center;
+    font-size: 13px;
+    opacity: 0.5;
+    transition: all 0.2s ease;
+}
+.nx-dropdown__item:hover i {
+    opacity: 1;
+    color: var(--tg-theme-primary);
+}
+.nx-dropdown__item--admin:hover i {
+    color: #faa706;
+}
+.nx-dropdown__item--admin:hover::before {
+    background: #faa706;
+}
+.nx-dropdown__item--danger {
+    color: rgba(220,53,69,0.6);
+}
+.nx-dropdown__item--danger:hover {
+    color: #dc3545;
+    background: rgba(220,53,69,0.05);
+}
+.nx-dropdown__item--danger:hover i {
+    color: #dc3545;
+}
+.nx-dropdown__item--danger:hover::before {
+    background: #dc3545;
+}
+
+/* ─── Mobile User Section ─── */
+.nx-mobile-user {
+    padding: 20px 25px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+}
+.nx-mobile-user__header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.nx-mobile-user__avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(69,248,130,0.1), rgba(69,248,130,0.03));
+    border: 2px solid rgba(69,248,130,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+.nx-mobile-user__avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.nx-mobile-user__avatar i {
+    font-size: 16px;
+    color: rgba(255,255,255,0.4);
+}
+.nx-mobile-user__name {
+    display: block;
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    font-family: var(--tg-heading-font-family);
+}
+.nx-mobile-user__role {
+    display: inline-block;
+    font-size: 10px;
+    color: var(--tg-theme-primary);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-weight: 700;
+    margin-top: 3px;
+}
+.nx-mobile-user__links {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+.nx-mobile-user__links a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    color: rgba(255,255,255,0.6);
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+.nx-mobile-user__links a:hover {
+    background: rgba(255,255,255,0.04);
+    color: #fff;
+}
+.nx-mobile-user__links a i {
+    width: 20px;
+    text-align: center;
+    font-size: 14px;
+}
+.nx-mobile-user__cta {
+    color: var(--tg-theme-primary) !important;
+    font-weight: 600 !important;
+}
+.nx-mobile-user__admin {
+    color: #faa706 !important;
+}
+.nx-mobile-user__logout {
+    color: rgba(220,53,69,0.6) !important;
+    margin-top: 4px;
+    border-top: 1px solid rgba(255,255,255,0.04);
+    border-radius: 0 0 8px 8px !important;
+    padding-top: 14px !important;
+}
+.nx-mobile-user__logout:hover {
+    color: #dc3545 !important;
+    background: rgba(220,53,69,0.05) !important;
+}
+
+/* ─── Off-Canvas Tweaks ─── */
+.nx-offcanvas-desc {
+    color: rgba(255,255,255,0.45);
+    margin-top: 15px;
+    font-size: 14px;
+    line-height: 1.7;
+}
+.nx-quick-links li {
+    padding-left: 0 !important;
+}
+.nx-quick-links li::before {
+    display: none !important;
+}
+.nx-quick-links li a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.nx-quick-links li a i {
+    width: 18px;
+    text-align: center;
+    color: var(--tg-theme-primary);
+    font-size: 13px;
+}
+</style>
+
+{# ============================================ #}
+{#  NAVBAR JS                                   #}
+{# ============================================ #}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var wrap = document.getElementById('nxProfileWrap');
+    var toggle = document.getElementById('nxProfileToggle');
+    var dropdown = document.getElementById('nxProfileDropdown');
+
+    if (toggle && dropdown && wrap) {
+        toggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            dropdown.classList.toggle('open');
+            wrap.classList.toggle('open');
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!wrap.contains(e.target)) {
+                dropdown.classList.remove('open');
+                wrap.classList.remove('open');
+            }
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                dropdown.classList.remove('open');
+                wrap.classList.remove('open');
+            }
+        });
+    }
+});
+</script>

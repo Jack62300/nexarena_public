@@ -1,0 +1,71 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block page_title %}Articles{% endblock %}
+{% block title %}Nexarena Admin - Articles{% endblock %}
+
+{% block admin_body %}
+    <div class="admin-table">
+        <div class="admin-table__header">
+            <h3>Liste des articles</h3>
+            <a href="{{ path('admin_articles_new') }}" class="btn-admin btn-admin--primary">
+                <i class="fas fa-plus"></i> Nouvel article
+            </a>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Image</th>
+                    <th>Titre</th>
+                    <th>Statut</th>
+                    <th>Date de creation</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for article in articles %}
+                    <tr>
+                        <td>
+                            {% if article.image %}
+                                <img src="{{ asset('uploads/articles/' ~ article.image) }}" alt="" style="width:60px;height:40px;object-fit:cover;border-radius:4px;">
+                            {% else %}
+                                <div style="width:60px;height:40px;border-radius:4px;background:var(--bg-darker);display:flex;align-items:center;justify-content:center;">
+                                    <i class="fas fa-image" style="color:var(--text-secondary);"></i>
+                                </div>
+                            {% endif %}
+                        </td>
+                        <td>{{ article.title }}</td>
+                        <td>
+                            {% if article.isPublished %}
+                                <span class="status-dot status-dot--active"></span>Publie
+                            {% else %}
+                                <span class="status-dot status-dot--inactive"></span>Brouillon
+                            {% endif %}
+                        </td>
+                        <td style="color:var(--text-secondary);">{{ article.createdAt|date('d/m/Y H:i') }}</td>
+                        <td>
+                            <div style="display:flex;gap:8px;">
+                                <a href="{{ path('admin_articles_edit', {id: article.id}) }}" class="btn-admin btn-admin--outline btn-admin--sm">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                {% if is_granted('ROLE_MANAGER') %}
+                                    <form method="post" action="{{ path('admin_articles_delete', {id: article.id}) }}" onsubmit="return confirm('Supprimer cet article ?');" style="display:inline;">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete_' ~ article.id) }}">
+                                        <button type="submit" class="btn-admin btn-admin--sm" style="background:var(--danger);color:#fff;border:none;">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="5" style="text-align:center;color:var(--text-secondary);padding:30px;">
+                            Aucun article pour le moment.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

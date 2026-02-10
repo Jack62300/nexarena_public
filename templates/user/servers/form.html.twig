@@ -1,0 +1,389 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ server ? 'Modifier' : 'Ajouter' }} un serveur - {{ setting('site_name', 'Nexarena') }}{% endblock %}
+
+{% block stylesheets %}
+<style>
+    .server-form { padding: 120px 0 80px; }
+    .server-form__title {
+        font-size: 28px;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 25px;
+    }
+    .server-form__title span { color: #45f882; }
+    .form-card {
+        background: #162231;
+        border: 1px solid #1e3048;
+        border-radius: 10px;
+        padding: 25px;
+        margin-bottom: 25px;
+    }
+    .form-card__title {
+        font-size: 16px;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 20px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #1e3048;
+    }
+    .form-card__title i { margin-right: 8px; color: #45f882; }
+    .form-group { margin-bottom: 18px; }
+    .form-group label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #8b949e;
+    }
+    .form-input {
+        width: 100%;
+        padding: 10px 14px;
+        background: #0a1018;
+        border: 1px solid #1e3048;
+        border-radius: 6px;
+        color: #e4e6eb;
+        font-size: 14px;
+        transition: border-color 0.2s;
+    }
+    .form-input:focus { outline: none; border-color: #45f882; }
+    .form-input::placeholder { color: #5a5c69; }
+    textarea.form-input { min-height: 80px; resize: vertical; }
+    select.form-input { cursor: pointer; }
+    .form-hint {
+        font-size: 12px;
+        color: #5a5c69;
+        margin-top: 4px;
+    }
+    .form-check-custom {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        color: #e4e6eb;
+    }
+    .form-check-custom input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        accent-color: #45f882;
+    }
+    .toggle-section {
+        display: none;
+        padding-top: 15px;
+    }
+    .toggle-section.active { display: block; }
+    .toggle-link {
+        color: #45f882;
+        cursor: pointer;
+        font-size: 13px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .toggle-link:hover { color: #33d96e; }
+    .btn-submit {
+        padding: 12px 30px;
+        border-radius: 6px;
+        border: none;
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+        background: #45f882;
+        color: #0a1018;
+        transition: background 0.2s;
+    }
+    .btn-submit:hover { background: #33d96e; }
+    .btn-cancel {
+        padding: 12px 30px;
+        border-radius: 6px;
+        border: 1px solid #1e3048;
+        background: transparent;
+        color: #8b949e;
+        font-size: 15px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-block;
+    }
+    .btn-cancel:hover { color: #fff; border-color: #8b949e; }
+    .image-preview {
+        max-width: 200px;
+        max-height: 150px;
+        border-radius: 6px;
+        margin-top: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<section class="server-form">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                {% for type, messages in app.flashes %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ type }} alert-dismissible fade show" role="alert" style="background:#162231;border:1px solid {{ type == 'success' ? '#1cc88a' : '#e74a3b' }};color:#fff;">
+                            {{ message }}
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endfor %}
+
+                <h2 class="server-form__title">
+                    {{ server ? 'Modifier' : 'Ajouter' }} un <span>serveur</span>
+                </h2>
+
+                {% set can_edit_info = can_edit_info|default(true) %}
+                {% set can_edit_images = can_edit_images|default(true) %}
+                {% set can_edit_social = can_edit_social|default(true) %}
+
+                <form method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="_token" value="{{ csrf_token('server_form') }}">
+
+                    {# === CATEGORIE === #}
+                    <div class="form-card" {% if not can_edit_info %}style="opacity:0.6;"{% endif %}>
+                        <h4 class="form-card__title"><i class="fas fa-layer-group"></i> Categorie</h4>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="category_id">Categorie *</label>
+                                    <select id="category_id" name="category_id" class="form-input" required {{ not can_edit_info ? 'disabled' : '' }}>
+                                        <option value="">-- Selectionner --</option>
+                                        {% for cat in categories %}
+                                            <option value="{{ cat.id }}" {{ server and server.category and server.category.id == cat.id ? 'selected' : '' }}>
+                                                {{ cat.name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="game_category_id">Sous-categorie</label>
+                                    <select id="game_category_id" name="game_category_id" class="form-input" {{ not can_edit_info ? 'disabled' : '' }}>
+                                        <option value="">-- Selectionner d'abord une categorie --</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="server_type_id">Type de serveur</label>
+                                    <select id="server_type_id" name="server_type_id" class="form-input" {{ not can_edit_info ? 'disabled' : '' }}>
+                                        <option value="">-- Selectionner d'abord une categorie --</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {# === INFORMATIONS === #}
+                    <div class="form-card" {% if not can_edit_info %}style="opacity:0.6;"{% endif %}>
+                        <h4 class="form-card__title"><i class="fas fa-info-circle"></i> Informations generales</h4>
+                        <div class="form-group">
+                            <label for="name">Nom du serveur *</label>
+                            <input type="text" id="name" name="name" class="form-input" value="{{ server ? server.name : '' }}" required placeholder="Mon Super Serveur" {{ not can_edit_info ? 'disabled' : '' }}>
+                        </div>
+                        <div class="form-group">
+                            <label for="short_description">Description courte *</label>
+                            <input type="text" id="short_description" name="short_description" class="form-input" value="{{ server ? server.shortDescription : '' }}" required maxlength="255" placeholder="Une description courte pour le listing (max 255 caracteres)" {{ not can_edit_info ? 'disabled' : '' }}>
+                            <span class="form-hint">Visible dans les listes et les resultats de recherche.</span>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="slots">Nombre de slots</label>
+                                    <input type="number" id="slots" name="slots" class="form-input" value="{{ server ? server.slots : 0 }}" min="0" {{ not can_edit_info ? 'disabled' : '' }}>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group" style="padding-top:28px;">
+                                    <label class="form-check-custom">
+                                        <input type="checkbox" name="is_private" value="1" {{ server and server.isPrivate ? 'checked' : '' }} {{ not can_edit_info ? 'disabled' : '' }}>
+                                        Serveur prive
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {# === CONNEXION === #}
+                    <div class="form-card" {% if not can_edit_info %}style="opacity:0.6;"{% endif %}>
+                        <h4 class="form-card__title"><i class="fas fa-plug"></i> Connexion</h4>
+                        <div class="row g-3">
+                            <div class="col-md-5">
+                                <div class="form-group">
+                                    <label for="ip">Adresse IP</label>
+                                    <input type="text" id="ip" name="ip" class="form-input" value="{{ server ? server.ip : '' }}" placeholder="play.monserveur.fr" {{ not can_edit_info ? 'disabled' : '' }}>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="port">Port</label>
+                                    <input type="number" id="port" name="port" class="form-input" value="{{ server ? server.port : '' }}" placeholder="25565" {{ not can_edit_info ? 'disabled' : '' }}>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="connect_url">Lien de connexion</label>
+                                    <input type="url" id="connect_url" name="connect_url" class="form-input" value="{{ server ? server.connectUrl : '' }}" placeholder="https://..." {{ not can_edit_info ? 'disabled' : '' }}>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {# === LIENS & RESEAUX === #}
+                    <div class="form-card" {% if not can_edit_social %}style="opacity:0.6;"{% endif %}>
+                        <h4 class="form-card__title"><i class="fas fa-link"></i> Liens & Reseaux sociaux</h4>
+
+                        <div class="form-group">
+                            <span class="toggle-link" onclick="document.getElementById('linksSection').classList.toggle('active'); this.querySelector('i').classList.toggle('fa-chevron-down'); this.querySelector('i').classList.toggle('fa-chevron-up');">
+                                <i class="fas fa-chevron-down"></i> Afficher les champs de liens
+                            </span>
+                        </div>
+
+                        <div id="linksSection" class="toggle-section {{ server and (server.website or server.discordUrl or server.twitterUrl or server.youtubeUrl or server.instagramUrl or server.twitchChannel) ? 'active' : '' }}">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="website"><i class="fas fa-globe" style="margin-right:5px;"></i> Site web</label>
+                                        <input type="url" id="website" name="website" class="form-input" value="{{ server ? server.website : '' }}" placeholder="https://www.monserveur.fr" {{ not can_edit_social ? 'disabled' : '' }}>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="discord_url"><i class="fab fa-discord" style="margin-right:5px;"></i> Discord</label>
+                                        <input type="url" id="discord_url" name="discord_url" class="form-input" value="{{ server ? server.discordUrl : '' }}" placeholder="https://discord.gg/..." {{ not can_edit_social ? 'disabled' : '' }}>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="twitter_url"><i class="fab fa-twitter" style="margin-right:5px;"></i> Twitter / X</label>
+                                        <input type="url" id="twitter_url" name="twitter_url" class="form-input" value="{{ server ? server.twitterUrl : '' }}" placeholder="https://x.com/..." {{ not can_edit_social ? 'disabled' : '' }}>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="youtube_url"><i class="fab fa-youtube" style="margin-right:5px;"></i> YouTube</label>
+                                        <input type="url" id="youtube_url" name="youtube_url" class="form-input" value="{{ server ? server.youtubeUrl : '' }}" placeholder="https://youtube.com/..." {{ not can_edit_social ? 'disabled' : '' }}>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="instagram_url"><i class="fab fa-instagram" style="margin-right:5px;"></i> Instagram</label>
+                                        <input type="url" id="instagram_url" name="instagram_url" class="form-input" value="{{ server ? server.instagramUrl : '' }}" placeholder="https://instagram.com/..." {{ not can_edit_social ? 'disabled' : '' }}>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="twitch_channel"><i class="fab fa-twitch" style="margin-right:5px;"></i> Chaine Twitch</label>
+                                        <input type="text" id="twitch_channel" name="twitch_channel" class="form-input" value="{{ server ? server.twitchChannel : '' }}" placeholder="nom_de_la_chaine" {{ not can_edit_social ? 'disabled' : '' }}>
+                                        <span class="form-hint">Le stream sera affiche sur la page publique de votre serveur.</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {# === DESCRIPTION === #}
+                    <div class="form-card" {% if not can_edit_info %}style="opacity:0.6;"{% endif %}>
+                        <h4 class="form-card__title"><i class="fas fa-align-left"></i> Description complete</h4>
+
+                        {% include 'includes/_quill_editor.html.twig' with {
+                            editor_id: 'quill-editor',
+                            textarea_id: 'full_description',
+                            content: server ? server.fullDescription|default('') : ''
+                        } %}
+                    </div>
+
+                    {# === IMAGE === #}
+                    <div class="form-card" {% if not can_edit_images %}style="opacity:0.6;"{% endif %}>
+                        <h4 class="form-card__title"><i class="fas fa-image"></i> Image de presentation</h4>
+                        <div class="form-group">
+                            <label for="presentation_image">Image</label>
+                            <input type="file" id="presentation_image" name="presentation_image" class="form-input" accept="image/*" {{ not can_edit_images ? 'disabled' : '' }}>
+                            <span class="form-hint">Image affichee sur la page publique de votre serveur.</span>
+                            {% if server and server.presentationImage %}
+                                <img src="{{ asset('uploads/servers/presentations/' ~ server.presentationImage) }}" alt="" class="image-preview">
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {# === SUBMIT === #}
+                    <div style="display:flex;gap:12px;padding-top:10px;">
+                        <button type="submit" class="btn-submit">
+                            <i class="fas fa-save" style="margin-right:6px;"></i> {{ server ? 'Enregistrer' : 'Creer le serveur' }}
+                        </button>
+                        <a href="{{ path('user_servers_list') }}" class="btn-cancel">Annuler</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block javascripts %}
+{% if not can_edit_info %}
+<script>
+(function() {
+    // Disable Quill editor for collaborators without edit_info
+    var checkQuill = setInterval(function() {
+        var editor = document.querySelector('#quill-editor .ql-editor');
+        if (editor) {
+            editor.setAttribute('contenteditable', 'false');
+            editor.style.opacity = '0.6';
+            var toolbar = document.querySelector('#quill-editor .ql-toolbar');
+            if (toolbar) toolbar.style.display = 'none';
+            clearInterval(checkQuill);
+        }
+    }, 100);
+    setTimeout(function() { clearInterval(checkQuill); }, 5000);
+})();
+</script>
+{% endif %}
+<script>
+(function() {
+    var categorySelect = document.getElementById('category_id');
+    var gameCategorySelect = document.getElementById('game_category_id');
+    var serverTypeSelect = document.getElementById('server_type_id');
+
+    var currentGameCatId = {{ server and server.gameCategory ? server.gameCategory.id : 'null' }};
+    var currentServerTypeId = {{ server and server.serverType ? server.serverType.id : 'null' }};
+
+    function loadOptions(url, select, currentId) {
+        fetch(url)
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                select.innerHTML = '<option value="">-- Aucun --</option>';
+                data.forEach(function(item) {
+                    var opt = document.createElement('option');
+                    opt.value = item.id;
+                    opt.textContent = item.name;
+                    if (currentId && item.id == currentId) opt.selected = true;
+                    select.appendChild(opt);
+                });
+            });
+    }
+
+    function onCategoryChange() {
+        var catId = categorySelect.value;
+        if (!catId) {
+            gameCategorySelect.innerHTML = '<option value="">-- Selectionner d\'abord une categorie --</option>';
+            serverTypeSelect.innerHTML = '<option value="">-- Selectionner d\'abord une categorie --</option>';
+            return;
+        }
+        loadOptions('/api/form/game-categories/' + catId, gameCategorySelect, currentGameCatId);
+        loadOptions('/api/form/server-types/' + catId, serverTypeSelect, currentServerTypeId);
+        // Reset after first load so subsequent changes don't re-select old values
+        currentGameCatId = null;
+        currentServerTypeId = null;
+    }
+
+    categorySelect.addEventListener('change', onCategoryChange);
+
+    // Load on page load if editing
+    if (categorySelect.value) {
+        onCategoryChange();
+    }
+})();
+</script>
+{% endblock %}

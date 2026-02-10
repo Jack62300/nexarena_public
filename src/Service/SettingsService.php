@@ -1,0 +1,88 @@
+<?php
+
+namespace App\Service;
+
+use App\Entity\Setting;
+use App\Repository\SettingRepository;
+use Doctrine\ORM\EntityManagerInterface;
+
+class SettingsService
+{
+    /** @var array<string, Setting>|null */
+    private ?array $cache = null;
+
+    public function __construct(
+        private SettingRepository $repository,
+        private EntityManagerInterface $em,
+    ) {
+    }
+
+    public function get(string $key, ?string $default = null): ?string
+    {
+        $this->loadCache();
+
+        $setting = $this->cache[$key] ?? null;
+
+        return $setting?->getValue() ?? $default;
+    }
+
+    public function getBool(string $key, bool $default = false): bool
+    {
+        $value = $this->get($key);
+        if ($value === null) {
+            return $default;
+        }
+
+        return $value === '1' || $value === 'true';
+    }
+
+    public function getInt(string $key, int $default = 0): int
+    {
+        $value = $this->get($key);
+        if ($value === null) {
+            return $default;
+        }
+
+        return (int) $value;
+    }
+
+    public function set(string $key, ?string $value): void
+    {
+        $setting = $this->repository->findByKey($key);
+        if ($setting) {
+            $setting->setValue($value);
+            $this->em->flush();
+            $this->cache = null; // Invalidate cache
+        }
+    }
+
+    public function getSetting(string $key): ?Setting
+    {
+        $this->loadCache();
+
+        return $this->cache[$key] ?? null;
+    }
+
+    /**
+     * @return array<string, Setting>
+     */
+    public function getAll(): array
+    {
+        $this->loadCache();
+
+        return $this->cache;
+    }
+
+    private function loadCache(): void
+    {
+        if ($this->cache !== null) {
+            return;
+        }
+
+        $this->cache = [];
+        $settings = $this->repository->findAll();
+        foreach ($settings as $setting) {
+            $this->cache[$setting->getKey()] = $setting;
+        }
+    }
+}

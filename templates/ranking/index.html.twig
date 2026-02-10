@@ -1,0 +1,887 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Classement {{ title }} - {{ setting('site_name', 'Nexarena') }}{% endblock %}
+
+{% block body %}
+
+    {# ===== PAGE HEADER ===== #}
+    <section class="nx-rk-header">
+        <div class="container">
+            <nav aria-label="breadcrumb" class="nx-rk-breadcrumb">
+                <ol>
+                    <li><a href="{{ path('app_home') }}">Accueil</a></li>
+                    <li><i class="fas fa-chevron-right"></i></li>
+                    {% if parentCategory and gameCategory %}
+                        <li><a href="{{ path('ranking_category', {slug: parentCategory.slug}) }}">{{ parentCategory.name }}</a></li>
+                        <li><i class="fas fa-chevron-right"></i></li>
+                    {% endif %}
+                    <li class="active">{{ title }}</li>
+                </ol>
+            </nav>
+
+            <div class="nx-rk-header__content">
+                <div class="nx-rk-header__left">
+                    <div class="nx-rk-header__icon">
+                        <i class="{{ parentCategory.icon ?? 'fas fa-gamepad' }}"></i>
+                    </div>
+                    <div>
+                        <h1 class="nx-rk-header__title">{{ title }}</h1>
+                        {% if description %}
+                            <p class="nx-rk-header__desc">{{ description }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="nx-rk-header__right">
+                    <div class="nx-rk-header__stat">
+                        <span class="nx-rk-header__stat-value">{{ total_servers }}</span>
+                        <span class="nx-rk-header__stat-label">serveur{{ total_servers > 1 ? 's' : '' }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {# ===== RANKING LIST ===== #}
+    <section class="nx-rk-list">
+        <div class="container">
+            {% if servers|length > 0 %}
+
+                {# Table header - desktop only #}
+                <div class="nx-rk-table-head d-none d-lg-flex">
+                    <span class="nx-rk-table-head__pos">Rang</span>
+                    <span class="nx-rk-table-head__server">Serveur</span>
+                    <span class="nx-rk-table-head__votes">Votes</span>
+                    <span class="nx-rk-table-head__action"></span>
+                </div>
+
+                {# Server rows #}
+                <div class="nx-rk-rows">
+                    {% for server in servers %}
+                        {% set rank = (current_page - 1) * per_page + loop.index %}
+                        <div class="nx-rk-row{% if rank <= 3 %} nx-rk-row--top nx-rk-row--top{{ rank }}{% endif %} wow fadeInUp" data-wow-delay="{{ (loop.index0 * 0.05)|round(2) }}s">
+
+                            {# ── Rank Position ── #}
+                            <div class="nx-rk-row__pos">
+                                {% if rank == 1 %}
+                                    <span class="nx-rk-pos nx-rk-pos--gold"><i class="fas fa-crown"></i></span>
+                                {% elseif rank == 2 %}
+                                    <span class="nx-rk-pos nx-rk-pos--silver"><i class="fas fa-medal"></i></span>
+                                {% elseif rank == 3 %}
+                                    <span class="nx-rk-pos nx-rk-pos--bronze"><i class="fas fa-medal"></i></span>
+                                {% else %}
+                                    <span class="nx-rk-pos">{{ rank }}</span>
+                                {% endif %}
+                            </div>
+
+                            {# ── Server Info ── #}
+                            <div class="nx-rk-row__server">
+                                <a href="{{ path('server_show', {slug: server.slug}) }}" class="nx-rk-row__thumb">
+                                    {% if server.presentationImage %}
+                                        <img src="{{ asset('uploads/servers/presentations/' ~ server.presentationImage) }}" alt="{{ server.name }}">
+                                    {% else %}
+                                        <div class="nx-rk-row__thumb-placeholder">
+                                            <i class="{{ server.category.icon ?? 'fas fa-server' }}"></i>
+                                        </div>
+                                    {% endif %}
+                                </a>
+                                <div class="nx-rk-row__info">
+                                    <h4 class="nx-rk-row__name">
+                                        <a href="{{ path('server_show', {slug: server.slug}) }}">{{ server.name }}</a>
+                                    </h4>
+                                    {% if server.shortDescription %}
+                                        <p class="nx-rk-row__desc">{{ server.shortDescription }}</p>
+                                    {% endif %}
+                                    <div class="nx-rk-row__tags">
+                                        {% if server.gameCategory %}
+                                            <span class="nx-rk-tag"><i class="fas fa-gamepad"></i> {{ server.gameCategory.name }}</span>
+                                        {% elseif server.category %}
+                                            <span class="nx-rk-tag"><i class="{{ server.category.icon ?? 'fas fa-folder' }}"></i> {{ server.category.name }}</span>
+                                        {% endif %}
+                                        {% if server.serverType %}
+                                            <span class="nx-rk-tag nx-rk-tag--type"><i class="fas fa-tag"></i> {{ server.serverType.name }}</span>
+                                        {% endif %}
+                                        {% if server.ip and server.port %}
+                                            <span class="nx-rk-tag nx-rk-tag--players" id="players-{{ server.id }}" style="display:none;">
+                                                <i class="fas fa-users"></i> <span class="nx-player-count">...</span>
+                                            </span>
+                                        {% endif %}
+                                        {% if server.ip %}
+                                            <span class="nx-rk-tag nx-rk-tag--ip d-none d-xl-inline-flex"><i class="fas fa-plug"></i> {{ server.ip }}{% if server.port %}:{{ server.port }}{% endif %}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {# ── Votes ── #}
+                            <div class="nx-rk-row__votes">
+                                <div class="nx-rk-row__votes-main">
+                                    <i class="fas fa-fire"></i>
+                                    <span class="nx-rk-row__votes-count">{{ server.monthlyVotes }}</span>
+                                </div>
+                                <span class="nx-rk-row__votes-label">votes ce mois</span>
+                                <span class="nx-rk-row__votes-total">{{ server.totalVotes }} au total</span>
+                            </div>
+
+                            {# ── Action ── #}
+                            <div class="nx-rk-row__action">
+                                <a href="{{ path('server_show', {slug: server.slug}) }}" class="nx-rk-btn">
+                                    <span>Voir</span>
+                                    <i class="fas fa-arrow-right"></i>
+                                </a>
+                            </div>
+
+                            {# ── Top 3 accent bar ── #}
+                            {% if rank <= 3 %}
+                                <div class="nx-rk-row__accent"></div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                {# ── Pagination ── #}
+                {% if total_pages > 1 %}
+                    <nav class="nx-rk-pagination">
+                        {# Previous #}
+                        {% if current_page > 1 %}
+                            <a href="?page={{ current_page - 1 }}" class="nx-pg-btn nx-pg-arrow">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                        {% else %}
+                            <span class="nx-pg-btn nx-pg-arrow nx-pg-disabled">
+                                <i class="fas fa-chevron-left"></i>
+                            </span>
+                        {% endif %}
+
+                        {# Page numbers #}
+                        {% set start = max(1, current_page - 2) %}
+                        {% set end = min(total_pages, current_page + 2) %}
+
+                        {% if start > 1 %}
+                            <a href="?page=1" class="nx-pg-btn">1</a>
+                            {% if start > 2 %}
+                                <span class="nx-pg-dots">...</span>
+                            {% endif %}
+                        {% endif %}
+
+                        {% for p in start..end %}
+                            {% if p == current_page %}
+                                <span class="nx-pg-btn nx-pg-active">{{ p }}</span>
+                            {% else %}
+                                <a href="?page={{ p }}" class="nx-pg-btn">{{ p }}</a>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if end < total_pages %}
+                            {% if end < total_pages - 1 %}
+                                <span class="nx-pg-dots">...</span>
+                            {% endif %}
+                            <a href="?page={{ total_pages }}" class="nx-pg-btn">{{ total_pages }}</a>
+                        {% endif %}
+
+                        {# Next #}
+                        {% if current_page < total_pages %}
+                            <a href="?page={{ current_page + 1 }}" class="nx-pg-btn nx-pg-arrow">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        {% else %}
+                            <span class="nx-pg-btn nx-pg-arrow nx-pg-disabled">
+                                <i class="fas fa-chevron-right"></i>
+                            </span>
+                        {% endif %}
+
+                        <span class="nx-pg-info">
+                            Page {{ current_page }} / {{ total_pages }}
+                        </span>
+                    </nav>
+                {% endif %}
+
+            {% else %}
+                {# ── Empty State ── #}
+                <div class="nx-rk-empty">
+                    <div class="nx-rk-empty__icon">
+                        <i class="fas fa-server"></i>
+                    </div>
+                    <h3 class="nx-rk-empty__title">Aucun serveur dans cette categorie</h3>
+                    <p class="nx-rk-empty__text">Soyez le premier a ajouter votre serveur et apparaissez en tete du classement !</p>
+                    <a href="{{ path('user_servers_new') }}" class="tg-border-btn">
+                        <svg preserveAspectRatio="none" viewBox="0 0 157 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M131.75 2L155.75 25L131.75 47L148.75 24L131.75 2Z" fill="currentColor"/>
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M25 1L1 24.5111L25 47L8 23.4889L25 1Z" fill="currentColor"/>
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M24.75 1L0.75 25L23.75 47H131.75L155.75 25L131.75 1H24.75Z" stroke="currentColor" stroke-width="1.5"/>
+                        </svg>
+                        <i class="fas fa-plus"></i> Ajouter un serveur
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </section>
+
+    {# Player count AJAX #}
+    {% set server_ids = [] %}
+    {% for server in servers %}
+        {% if server.ip and server.port %}
+            {% set server_ids = server_ids|merge([server.id]) %}
+        {% endif %}
+    {% endfor %}
+    {% if server_ids|length > 0 %}
+        <script>
+        (function() {
+            var ids = {{ server_ids|json_encode|raw }};
+            ids.forEach(function(id) {
+                fetch('/api/server-status/' + id)
+                .then(function(r) { return r.json(); })
+                .then(function(d) {
+                    var el = document.getElementById('players-' + id);
+                    if (!el) return;
+                    var span = el.querySelector('.nx-player-count');
+                    if (d.online && d.queryType) {
+                        span.textContent = d.players + '/' + d.maxPlayers;
+                        el.style.display = '';
+                    } else if (d.queryType) {
+                        span.textContent = 'Hors ligne';
+                        el.classList.add('offline');
+                        el.style.display = '';
+                    }
+                })
+                .catch(function() {});
+            });
+        })();
+        </script>
+    {% endif %}
+
+{% endblock %}
+
+{% block stylesheets %}
+<style>
+/* ================================================
+   RANKING PAGE - Nexarena
+   ================================================ */
+
+/* ─── Header ─── */
+.nx-rk-header {
+    padding: 130px 0 40px;
+}
+.nx-rk-breadcrumb ol {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    list-style: none;
+    padding: 0;
+    margin: 0 0 20px;
+}
+.nx-rk-breadcrumb li {
+    font-size: 13px;
+    color: rgba(255,255,255,0.25);
+    font-weight: 500;
+}
+.nx-rk-breadcrumb li a {
+    color: rgba(255,255,255,0.45);
+    transition: color 0.2s;
+}
+.nx-rk-breadcrumb li a:hover {
+    color: var(--tg-theme-primary);
+}
+.nx-rk-breadcrumb li i {
+    font-size: 8px;
+}
+.nx-rk-header__content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 30px;
+}
+.nx-rk-header__left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+.nx-rk-header__icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(69,248,130,0.12), rgba(69,248,130,0.03));
+    border: 1px solid rgba(69,248,130,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.nx-rk-header__icon i {
+    font-size: 24px;
+    color: var(--tg-theme-primary);
+}
+.nx-rk-header__title {
+    font-size: 32px;
+    font-weight: 800;
+    color: #fff;
+    margin: 0;
+    letter-spacing: 0.5px;
+    font-family: var(--tg-heading-font-family);
+    text-transform: uppercase;
+}
+.nx-rk-header__desc {
+    color: rgba(255,255,255,0.45);
+    font-size: 14px;
+    margin: 6px 0 0;
+}
+.nx-rk-header__stat {
+    text-align: center;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    padding: 14px 28px;
+}
+.nx-rk-header__stat-value {
+    display: block;
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--tg-theme-primary);
+    font-family: var(--tg-heading-font-family);
+    line-height: 1;
+}
+.nx-rk-header__stat-label {
+    display: block;
+    font-size: 12px;
+    color: rgba(255,255,255,0.4);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+    margin-top: 4px;
+}
+
+/* ─── List Section ─── */
+.nx-rk-list {
+    padding: 0 0 120px;
+}
+
+/* ─── Table Header ─── */
+.nx-rk-table-head {
+    display: flex;
+    align-items: center;
+    padding: 0 30px 16px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.nx-rk-table-head span {
+    font-size: 11px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.3);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-family: var(--tg-heading-font-family);
+}
+.nx-rk-table-head__pos { width: 70px; flex-shrink: 0; }
+.nx-rk-table-head__server { flex: 1; }
+.nx-rk-table-head__votes { width: 160px; flex-shrink: 0; text-align: center; }
+.nx-rk-table-head__action { width: 120px; flex-shrink: 0; }
+
+/* ─── Row ─── */
+.nx-rk-row {
+    display: flex;
+    align-items: center;
+    background: #0e151c;
+    border: 1px solid rgba(255,255,255,0.04);
+    border-radius: 12px;
+    padding: 18px 24px;
+    margin-bottom: 8px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+.nx-rk-row:hover {
+    border-color: rgba(69,248,130,0.12);
+    background: #111a22;
+    transform: translateX(4px);
+}
+
+/* ─── Position ─── */
+.nx-rk-row__pos {
+    width: 70px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.nx-rk-pos {
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.04);
+    font-size: 16px;
+    font-weight: 800;
+    color: rgba(255,255,255,0.5);
+    font-family: var(--tg-heading-font-family);
+}
+.nx-rk-pos--gold {
+    background: linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,215,0,0.05));
+    border: 1px solid rgba(255,215,0,0.2);
+    color: #ffd700;
+    font-size: 18px;
+}
+.nx-rk-pos--silver {
+    background: linear-gradient(135deg, rgba(192,192,192,0.12), rgba(192,192,192,0.04));
+    border: 1px solid rgba(192,192,192,0.15);
+    color: #c0c0c0;
+    font-size: 16px;
+}
+.nx-rk-pos--bronze {
+    background: linear-gradient(135deg, rgba(205,127,50,0.12), rgba(205,127,50,0.04));
+    border: 1px solid rgba(205,127,50,0.15);
+    color: #cd7f32;
+    font-size: 16px;
+}
+
+/* ─── Server Column ─── */
+.nx-rk-row__server {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-width: 0;
+}
+.nx-rk-row__thumb {
+    width: 56px;
+    height: 56px;
+    border-radius: 10px;
+    overflow: hidden;
+    flex-shrink: 0;
+    display: block;
+}
+.nx-rk-row__thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.nx-rk-row__thumb-placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(69,248,130,0.08), rgba(69,248,130,0.02));
+    border: 1px solid rgba(69,248,130,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+}
+.nx-rk-row__thumb-placeholder i {
+    font-size: 20px;
+    color: rgba(69,248,130,0.4);
+}
+.nx-rk-row__info {
+    min-width: 0;
+}
+.nx-rk-row__name {
+    font-size: 16px;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.nx-rk-row__name a {
+    color: #fff;
+    transition: color 0.2s;
+}
+.nx-rk-row__name a:hover {
+    color: var(--tg-theme-primary);
+}
+.nx-rk-row__desc {
+    font-size: 13px;
+    color: rgba(255,255,255,0.35);
+    margin: 3px 0 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 400px;
+}
+.nx-rk-row__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+}
+.nx-rk-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.45);
+    background: rgba(255,255,255,0.04);
+    padding: 3px 10px;
+    border-radius: 6px;
+    letter-spacing: 0.3px;
+}
+.nx-rk-tag i {
+    font-size: 10px;
+    color: var(--tg-theme-primary);
+    opacity: 0.7;
+}
+.nx-rk-tag--type i {
+    color: var(--tg-theme-secondary, #ffbe18);
+}
+.nx-rk-tag--ip {
+    font-family: monospace;
+    letter-spacing: 0;
+}
+.nx-rk-tag--players {
+    background: rgba(28,200,138,0.08);
+    color: #1cc88a;
+}
+.nx-rk-tag--players i {
+    color: #1cc88a !important;
+    opacity: 1 !important;
+}
+.nx-rk-tag--players.offline {
+    background: rgba(231,74,59,0.08);
+    color: #e74a3b;
+}
+.nx-rk-tag--players.offline i {
+    color: #e74a3b !important;
+}
+
+/* ─── Votes Column ─── */
+.nx-rk-row__votes {
+    width: 160px;
+    flex-shrink: 0;
+    text-align: center;
+    padding: 0 10px;
+}
+.nx-rk-row__votes-main {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+.nx-rk-row__votes-main i {
+    font-size: 14px;
+    color: var(--tg-theme-primary);
+    opacity: 0.7;
+}
+.nx-rk-row__votes-count {
+    font-size: 22px;
+    font-weight: 800;
+    color: #fff;
+    font-family: var(--tg-heading-font-family);
+    line-height: 1;
+}
+.nx-rk-row__votes-label {
+    display: block;
+    font-size: 11px;
+    color: rgba(255,255,255,0.3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    margin-top: 3px;
+}
+.nx-rk-row__votes-total {
+    display: block;
+    font-size: 11px;
+    color: rgba(255,255,255,0.2);
+    margin-top: 2px;
+}
+
+/* ─── Action Column ─── */
+.nx-rk-row__action {
+    width: 120px;
+    flex-shrink: 0;
+    text-align: right;
+}
+.nx-rk-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 22px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    color: rgba(255,255,255,0.7);
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    font-family: var(--tg-heading-font-family);
+    transition: all 0.3s ease;
+}
+.nx-rk-btn:hover {
+    background: var(--tg-theme-primary);
+    border-color: var(--tg-theme-primary);
+    color: #0e151c;
+}
+.nx-rk-btn i {
+    font-size: 11px;
+    transition: transform 0.2s;
+}
+.nx-rk-btn:hover i {
+    transform: translateX(3px);
+}
+
+/* ─── Top 3 Accent Bar ─── */
+.nx-rk-row__accent {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    border-radius: 3px 0 0 3px;
+}
+.nx-rk-row--top1 .nx-rk-row__accent { background: linear-gradient(180deg, #ffd700, rgba(255,215,0,0.2)); }
+.nx-rk-row--top2 .nx-rk-row__accent { background: linear-gradient(180deg, #c0c0c0, rgba(192,192,192,0.2)); }
+.nx-rk-row--top3 .nx-rk-row__accent { background: linear-gradient(180deg, #cd7f32, rgba(205,127,50,0.2)); }
+
+.nx-rk-row--top1 { border-color: rgba(255,215,0,0.08); }
+.nx-rk-row--top2 { border-color: rgba(192,192,192,0.06); }
+.nx-rk-row--top3 { border-color: rgba(205,127,50,0.06); }
+
+.nx-rk-row--top1:hover { border-color: rgba(255,215,0,0.15); }
+.nx-rk-row--top2:hover { border-color: rgba(192,192,192,0.12); }
+.nx-rk-row--top3:hover { border-color: rgba(205,127,50,0.12); }
+
+.nx-rk-row--top .nx-rk-row__votes-count {
+    font-size: 24px;
+}
+
+/* ─── Empty State ─── */
+.nx-rk-empty {
+    text-align: center;
+    padding: 80px 20px;
+    background: rgba(255,255,255,0.02);
+    border: 1px dashed rgba(255,255,255,0.06);
+    border-radius: 16px;
+}
+.nx-rk-empty__icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.03);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+}
+.nx-rk-empty__icon i {
+    font-size: 32px;
+    color: rgba(255,255,255,0.1);
+}
+.nx-rk-empty__title {
+    font-size: 20px;
+    color: rgba(255,255,255,0.4);
+    margin: 0 0 8px;
+}
+.nx-rk-empty__text {
+    color: rgba(255,255,255,0.25);
+    font-size: 14px;
+    margin: 0 0 30px;
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 991.98px) {
+    .nx-rk-header {
+        padding: 120px 0 30px;
+    }
+    .nx-rk-header__content {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .nx-rk-header__title {
+        font-size: 26px;
+    }
+    .nx-rk-header__icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 12px;
+    }
+    .nx-rk-header__icon i {
+        font-size: 20px;
+    }
+    .nx-rk-row {
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 16px 18px;
+    }
+    .nx-rk-row__pos {
+        width: 44px;
+    }
+    .nx-rk-pos {
+        width: 36px;
+        height: 36px;
+        font-size: 14px;
+    }
+    .nx-rk-row__server {
+        flex: 1;
+        min-width: 0;
+    }
+    .nx-rk-row__thumb {
+        width: 48px;
+        height: 48px;
+    }
+    .nx-rk-row__votes {
+        width: auto;
+        padding: 0;
+    }
+    .nx-rk-row__votes-total {
+        display: none;
+    }
+    .nx-rk-row__action {
+        width: auto;
+    }
+    .nx-rk-row__desc {
+        display: none;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .nx-rk-header__title {
+        font-size: 22px;
+    }
+    .nx-rk-row {
+        padding: 14px;
+    }
+    .nx-rk-row__pos {
+        width: 36px;
+    }
+    .nx-rk-pos {
+        width: 32px;
+        height: 32px;
+        font-size: 13px;
+        border-radius: 8px;
+    }
+    .nx-rk-row__thumb {
+        width: 42px;
+        height: 42px;
+        border-radius: 8px;
+    }
+    .nx-rk-row__name {
+        font-size: 14px;
+    }
+    .nx-rk-row__tags {
+        display: none;
+    }
+    .nx-rk-row__votes-count {
+        font-size: 18px;
+    }
+    .nx-rk-row__votes-label {
+        display: none;
+    }
+    .nx-rk-btn span {
+        display: none;
+    }
+    .nx-rk-btn {
+        padding: 10px 14px;
+    }
+}
+
+/* ─── Pagination Gaming ─── */
+.nx-rk-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 40px;
+    padding: 20px 0;
+    flex-wrap: wrap;
+}
+.nx-pg-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    height: 44px;
+    padding: 0 14px;
+    background: #0e151c;
+    border: 1px solid rgba(69,248,130,0.08);
+    border-radius: 8px;
+    color: rgba(255,255,255,0.6);
+    font-size: 14px;
+    font-weight: 700;
+    font-family: var(--tg-heading-font-family);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+}
+.nx-pg-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(69,248,130,0.06), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+.nx-pg-btn:hover {
+    border-color: rgba(69,248,130,0.3);
+    color: #45f882;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(69,248,130,0.1), 0 0 20px rgba(69,248,130,0.05);
+    text-decoration: none;
+}
+.nx-pg-btn:hover::before {
+    opacity: 1;
+}
+
+/* Active page */
+.nx-pg-active {
+    background: linear-gradient(135deg, #45f882, #2bc866);
+    border-color: #45f882;
+    color: #0a0e14;
+    box-shadow: 0 0 20px rgba(69,248,130,0.25), 0 0 40px rgba(69,248,130,0.08);
+    cursor: default;
+}
+.nx-pg-active::before { display: none; }
+.nx-pg-active:hover {
+    transform: none;
+    color: #0a0e14;
+    box-shadow: 0 0 20px rgba(69,248,130,0.25), 0 0 40px rgba(69,248,130,0.08);
+}
+
+/* Arrows */
+.nx-pg-arrow {
+    font-size: 12px;
+    min-width: 44px;
+    background: rgba(69,248,130,0.04);
+    border-color: rgba(69,248,130,0.12);
+}
+.nx-pg-arrow:hover {
+    background: rgba(69,248,130,0.12);
+    border-color: rgba(69,248,130,0.4);
+}
+
+/* Disabled */
+.nx-pg-disabled {
+    opacity: 0.25;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Dots */
+.nx-pg-dots {
+    color: rgba(255,255,255,0.2);
+    font-size: 16px;
+    letter-spacing: 3px;
+    padding: 0 4px;
+    font-weight: 700;
+    user-select: none;
+}
+
+/* Page info */
+.nx-pg-info {
+    font-size: 12px;
+    color: rgba(255,255,255,0.2);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-left: 12px;
+}
+
+@media (max-width: 575.98px) {
+    .nx-pg-btn { min-width: 38px; height: 38px; font-size: 13px; padding: 0 10px; }
+    .nx-rk-pagination { gap: 4px; margin-top: 30px; }
+    .nx-pg-info { display: none; }
+}
+</style>
+{% endblock %}

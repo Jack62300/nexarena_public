@@ -1,0 +1,456 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Candidature de {{ application.applicantName }} - {{ setting('site_name', 'Nexarena') }}{% endblock %}
+
+{% block stylesheets %}
+<style>
+    .appd-page { padding: 120px 0 80px; min-height: 100vh; }
+    .appd-back {
+        display: inline-flex; align-items: center; gap: 8px;
+        color: rgba(255,255,255,0.5); font-size: 13px; margin-bottom: 20px;
+        text-decoration: none; transition: color 0.2s;
+    }
+    .appd-back:hover { color: #45f882; }
+    .appd-title { font-size: 26px; font-weight: 800; text-transform: uppercase; margin-bottom: 8px; }
+    .appd-title span { color: #45f882; }
+    .appd-subtitle { color: rgba(255,255,255,0.5); font-size: 14px; margin-bottom: 30px; }
+
+    .appd-card {
+        background: rgba(22,34,49,0.6);
+        border: 1px solid rgba(69,248,130,0.08);
+        border-radius: 12px;
+        padding: 30px;
+        margin-bottom: 20px;
+    }
+    .appd-section {
+        font-size: 14px; font-weight: 700; color: #45f882;
+        text-transform: uppercase; letter-spacing: 1px;
+        margin-bottom: 16px; padding-bottom: 10px;
+        border-bottom: 1px solid rgba(69,248,130,0.1);
+    }
+    .appd-info-grid {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;
+    }
+    @media (max-width: 600px) { .appd-info-grid { grid-template-columns: 1fr; } }
+    .appd-info-item label {
+        display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
+        color: rgba(255,255,255,0.4); margin-bottom: 4px;
+    }
+    .appd-info-item span {
+        font-size: 15px; color: #fff; font-weight: 600;
+    }
+
+    .appd-response {
+        margin-bottom: 18px;
+        padding: 16px;
+        background: rgba(10,16,24,0.5);
+        border: 1px solid rgba(255,255,255,0.04);
+        border-radius: 8px;
+    }
+    .appd-response__label {
+        font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+        color: rgba(255,255,255,0.5); margin-bottom: 6px;
+    }
+    .appd-response__value {
+        font-size: 14px; color: #e4e6eb; line-height: 1.6; white-space: pre-wrap;
+    }
+
+    /* Status badge */
+    .appd-status {
+        display: inline-block; padding: 5px 14px; border-radius: 8px;
+        font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .appd-status--pending { background: rgba(255,193,7,0.15); color: #ffc107; }
+    .appd-status--accepted { background: rgba(69,248,130,0.15); color: #45f882; }
+    .appd-status--rejected { background: rgba(220,53,69,0.15); color: #dc3545; }
+
+    /* Actions */
+    .appd-actions {
+        display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px;
+    }
+    .appd-btn {
+        display: inline-flex; align-items: center; gap: 8px;
+        padding: 10px 20px; border-radius: 8px; border: none;
+        font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s;
+        text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .appd-btn--accept { background: rgba(69,248,130,0.15); color: #45f882; border: 1px solid rgba(69,248,130,0.2); }
+    .appd-btn--accept:hover { background: rgba(69,248,130,0.25); }
+    .appd-btn--reject { background: rgba(220,53,69,0.15); color: #dc3545; border: 1px solid rgba(220,53,69,0.2); }
+    .appd-btn--reject:hover { background: rgba(220,53,69,0.25); }
+    .appd-btn--chat { background: rgba(59,130,246,0.15); color: #3b82f6; border: 1px solid rgba(59,130,246,0.2); }
+    .appd-btn--chat:hover { background: rgba(59,130,246,0.25); }
+
+    /* Review modal */
+    .appd-modal-overlay {
+        display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+        z-index: 9999; align-items: center; justify-content: center;
+    }
+    .appd-modal-overlay.active { display: flex; }
+    .appd-modal {
+        background: #0f1923; border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 16px; padding: 30px; width: 90%; max-width: 480px;
+    }
+    .appd-modal h3 { font-size: 18px; font-weight: 800; margin-bottom: 16px; text-transform: uppercase; }
+    .appd-modal textarea {
+        width: 100%; background: rgba(10,16,24,0.8); border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 8px; color: #fff; padding: 12px; font-size: 14px; resize: vertical;
+        min-height: 80px; margin-bottom: 16px;
+    }
+    .appd-modal textarea:focus { outline: none; border-color: rgba(69,248,130,0.3); }
+    .appd-modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+    .appd-modal-cancel {
+        padding: 10px 20px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);
+        background: transparent; color: rgba(255,255,255,0.5); cursor: pointer; font-size: 13px; font-weight: 600;
+    }
+
+    /* Review info */
+    .appd-review-info {
+        margin-top: 16px; padding: 16px; border-radius: 8px;
+        background: rgba(10,16,24,0.5); border: 1px solid rgba(255,255,255,0.04);
+    }
+    .appd-review-info p { font-size: 13px; color: rgba(255,255,255,0.5); margin-bottom: 4px; }
+    .appd-review-info .comment { color: #e4e6eb; font-size: 14px; margin-top: 8px; white-space: pre-wrap; }
+
+    /* Chat */
+    .chat-panel {
+        background: rgba(22,34,49,0.6);
+        border: 1px solid rgba(69,248,130,0.08);
+        border-radius: 12px; overflow: hidden; margin-bottom: 20px;
+    }
+    .chat-header {
+        padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.05);
+        display: flex; align-items: center; justify-content: space-between;
+    }
+    .chat-header h3 {
+        font-size: 14px; font-weight: 700; color: #45f882;
+        text-transform: uppercase; letter-spacing: 1px; margin: 0;
+    }
+    .chat-messages {
+        height: 350px; overflow-y: auto; padding: 20px;
+        display: flex; flex-direction: column; gap: 12px;
+    }
+    .chat-messages::-webkit-scrollbar { width: 4px; }
+    .chat-messages::-webkit-scrollbar-track { background: transparent; }
+    .chat-messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+    .chat-msg {
+        max-width: 75%; padding: 12px 16px; border-radius: 12px;
+        font-size: 14px; line-height: 1.5; word-break: break-word;
+    }
+    .chat-msg--mine {
+        align-self: flex-end;
+        background: rgba(69,248,130,0.12); color: #e4e6eb;
+        border-bottom-right-radius: 4px;
+    }
+    .chat-msg--other {
+        align-self: flex-start;
+        background: rgba(255,255,255,0.06); color: #e4e6eb;
+        border-bottom-left-radius: 4px;
+    }
+    .chat-msg__meta {
+        font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 4px;
+    }
+    .chat-msg__sender { font-weight: 700; color: rgba(255,255,255,0.6); }
+    .chat-input {
+        display: flex; gap: 10px; padding: 16px 20px;
+        border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    .chat-input input {
+        flex: 1; background: rgba(10,16,24,0.8); border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 8px; color: #fff; padding: 10px 14px; font-size: 14px;
+    }
+    .chat-input input:focus { outline: none; border-color: rgba(69,248,130,0.3); }
+    .chat-input button {
+        background: rgba(69,248,130,0.15); color: #45f882; border: 1px solid rgba(69,248,130,0.2);
+        border-radius: 8px; padding: 10px 18px; cursor: pointer; font-weight: 700; font-size: 13px;
+        transition: background 0.2s;
+    }
+    .chat-input button:hover { background: rgba(69,248,130,0.25); }
+    .chat-empty {
+        text-align: center; color: rgba(255,255,255,0.25); padding: 40px;
+        font-size: 14px;
+    }
+    .chat-empty i { font-size: 30px; display: block; margin-bottom: 10px; }
+</style>
+{% endblock %}
+
+{% block body %}
+<section class="appd-page">
+    <div class="container" style="max-width:800px;">
+
+        <a href="{{ path('user_recruitment_applications', {id: listing.id}) }}" class="appd-back">
+            <i class="fas fa-arrow-left"></i> Retour aux candidatures
+        </a>
+
+        <h1 class="appd-title">Candidature de <span>{{ application.applicantName }}</span></h1>
+        <p class="appd-subtitle">{{ listing.title }} &mdash; {{ listing.server.name }}</p>
+
+        {# Status + Actions #}
+        <div class="appd-card">
+            <div class="appd-section"><i class="fas fa-flag"></i> Statut</div>
+            <div>
+                {% if application.status == 'accepted' %}
+                    <span class="appd-status appd-status--accepted"><i class="fas fa-check-circle"></i> Acceptee</span>
+                {% elseif application.status == 'rejected' %}
+                    <span class="appd-status appd-status--rejected"><i class="fas fa-times-circle"></i> Refusee</span>
+                {% else %}
+                    <span class="appd-status appd-status--pending"><i class="fas fa-clock"></i> En attente</span>
+                {% endif %}
+            </div>
+
+            {% if application.reviewedBy %}
+                <div class="appd-review-info">
+                    <p>Traite par <strong style="color:#fff;">{{ application.reviewedBy.username }}</strong> le {{ application.reviewedAt|date('d/m/Y a H:i') }}</p>
+                    {% if application.statusComment %}
+                        <div class="comment">{{ application.statusComment }}</div>
+                    {% endif %}
+                </div>
+            {% endif %}
+
+            {% if application.status == 'pending' %}
+                <div class="appd-actions">
+                    <button class="appd-btn appd-btn--accept" onclick="openReviewModal('accept')">
+                        <i class="fas fa-check"></i> Accepter
+                    </button>
+                    <button class="appd-btn appd-btn--reject" onclick="openReviewModal('reject')">
+                        <i class="fas fa-times"></i> Refuser
+                    </button>
+                    {% if not application.chatEnabled %}
+                        <form method="post" action="{{ path('user_recruitment_application_chat_enable', {id: listing.id, appId: application.id}) }}" style="display:inline;">
+                            <input type="hidden" name="_token" value="{{ csrf_token('app_chat_enable_' ~ application.id) }}">
+                            <button type="submit" class="appd-btn appd-btn--chat">
+                                <i class="fas fa-comments"></i> Activer le chat
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+            {% elseif not application.chatEnabled %}
+                <div class="appd-actions">
+                    <form method="post" action="{{ path('user_recruitment_application_chat_enable', {id: listing.id, appId: application.id}) }}" style="display:inline;">
+                        <input type="hidden" name="_token" value="{{ csrf_token('app_chat_enable_' ~ application.id) }}">
+                        <button type="submit" class="appd-btn appd-btn--chat">
+                            <i class="fas fa-comments"></i> Activer le chat
+                        </button>
+                    </form>
+                </div>
+            {% endif %}
+        </div>
+
+        {# Applicant Info #}
+        <div class="appd-card">
+            <div class="appd-section"><i class="fas fa-user"></i> Informations du candidat</div>
+            <div class="appd-info-grid">
+                <div class="appd-info-item">
+                    <label>Nom</label>
+                    <span>{{ application.applicantName }}</span>
+                </div>
+                <div class="appd-info-item">
+                    <label>Email</label>
+                    <span><a href="mailto:{{ application.applicantEmail }}" style="color:#45f882;">{{ application.applicantEmail }}</a></span>
+                </div>
+                <div class="appd-info-item">
+                    <label>Compte Nexarena</label>
+                    <span>
+                        {% if application.applicantUser %}
+                            <i class="fas fa-check-circle" style="color:#45f882;"></i> {{ application.applicantUser.username }}
+                        {% else %}
+                            <span style="color:rgba(255,255,255,0.35);">Visiteur (non inscrit)</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="appd-info-item">
+                    <label>Date de candidature</label>
+                    <span>{{ application.createdAt|date('d/m/Y a H:i') }}</span>
+                </div>
+            </div>
+        </div>
+
+        {# Responses #}
+        <div class="appd-card">
+            <div class="appd-section"><i class="fas fa-clipboard-check"></i> Reponses au formulaire</div>
+
+            {% set formFields = listing.formFields %}
+            {% for key, value in application.responses %}
+                {% set fieldIndex = key %}
+                {% set field = formFields[fieldIndex] is defined ? formFields[fieldIndex] : null %}
+                <div class="appd-response">
+                    <div class="appd-response__label">
+                        {% if field %}
+                            {{ field.label }}
+                            <span style="font-size:10px;color:rgba(255,255,255,0.25);margin-left:6px;">({{ field.type }})</span>
+                        {% else %}
+                            Champ #{{ key }}
+                        {% endif %}
+                    </div>
+                    <div class="appd-response__value">
+                        {% if value is iterable %}
+                            {{ value|join(', ') }}
+                        {% else %}
+                            {{ value ?: '-' }}
+                        {% endif %}
+                    </div>
+                </div>
+            {% else %}
+                <div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);font-size:14px;">
+                    Aucune reponse enregistree.
+                </div>
+            {% endfor %}
+        </div>
+
+        {# Chat Panel #}
+        {% if application.chatEnabled %}
+            <div class="chat-panel" id="chatPanel">
+                <div class="chat-header">
+                    <h3><i class="fas fa-comments"></i> Chat avec le candidat</h3>
+                </div>
+                <div class="chat-messages" id="chatMessages">
+                    <div class="chat-empty" id="chatEmpty">
+                        <i class="fas fa-comment-dots"></i>
+                        Aucun message pour le moment. Envoyez le premier !
+                    </div>
+                </div>
+                <div class="chat-input">
+                    <input type="text" id="chatInput" placeholder="Votre message..." maxlength="2000" autocomplete="off">
+                    <button onclick="sendMessage()" id="chatSendBtn"><i class="fas fa-paper-plane"></i> Envoyer</button>
+                </div>
+            </div>
+        {% endif %}
+
+    </div>
+</section>
+
+{# Review Modal #}
+<div class="appd-modal-overlay" id="reviewModal">
+    <div class="appd-modal">
+        <h3 id="reviewModalTitle">Accepter la candidature</h3>
+        <form id="reviewForm" method="post">
+            <input type="hidden" name="_token" value="{{ csrf_token('app_review_' ~ application.id) }}">
+            <textarea name="comment" placeholder="Commentaire (facultatif)..." maxlength="2000"></textarea>
+            <div class="appd-modal-actions">
+                <button type="button" class="appd-modal-cancel" onclick="closeReviewModal()">Annuler</button>
+                <button type="submit" class="appd-btn" id="reviewSubmitBtn">Confirmer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Review modal
+function openReviewModal(action) {
+    var modal = document.getElementById('reviewModal');
+    var form = document.getElementById('reviewForm');
+    var title = document.getElementById('reviewModalTitle');
+    var btn = document.getElementById('reviewSubmitBtn');
+
+    if (action === 'accept') {
+        title.textContent = 'Accepter la candidature';
+        btn.className = 'appd-btn appd-btn--accept';
+        btn.innerHTML = '<i class="fas fa-check"></i> Accepter';
+        form.action = '{{ path('user_recruitment_application_accept', {id: listing.id, appId: application.id}) }}';
+    } else {
+        title.textContent = 'Refuser la candidature';
+        btn.className = 'appd-btn appd-btn--reject';
+        btn.innerHTML = '<i class="fas fa-times"></i> Refuser';
+        form.action = '{{ path('user_recruitment_application_reject', {id: listing.id, appId: application.id}) }}';
+    }
+
+    modal.classList.add('active');
+}
+
+function closeReviewModal() {
+    document.getElementById('reviewModal').classList.remove('active');
+}
+
+document.getElementById('reviewModal').addEventListener('click', function(e) {
+    if (e.target === this) closeReviewModal();
+});
+
+{% if application.chatEnabled %}
+// Chat
+var currentUserId = {{ app.user.id }};
+var lastMessageId = 0;
+var chatUrl = '{{ path('api_recruitment_chat_messages', {appId: application.id}) }}';
+var sendUrl = '{{ path('api_recruitment_chat_send', {appId: application.id}) }}';
+
+function escapeHtml(text) {
+    var d = document.createElement('div');
+    d.textContent = text;
+    return d.innerHTML;
+}
+
+function renderMessage(msg) {
+    var isMine = msg.senderId === currentUserId;
+    return '<div class="chat-msg ' + (isMine ? 'chat-msg--mine' : 'chat-msg--other') + '">' +
+        '<div>' + escapeHtml(msg.content) + '</div>' +
+        '<div class="chat-msg__meta">' +
+            '<span class="chat-msg__sender">' + escapeHtml(msg.senderName) + '</span> &middot; ' + escapeHtml(msg.createdAt) +
+        '</div>' +
+    '</div>';
+}
+
+function loadMessages() {
+    fetch(chatUrl + '?after=' + lastMessageId, { credentials: 'same-origin' })
+        .then(function(r) {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.json();
+        })
+        .then(function(messages) {
+            if (Array.isArray(messages) && messages.length > 0) {
+                var container = document.getElementById('chatMessages');
+                var empty = document.getElementById('chatEmpty');
+                if (empty) empty.remove();
+
+                messages.forEach(function(msg) {
+                    container.insertAdjacentHTML('beforeend', renderMessage(msg));
+                    lastMessageId = msg.id;
+                });
+
+                container.scrollTop = container.scrollHeight;
+            }
+        })
+        .catch(function(e) { console.error('Chat load error:', e); });
+}
+
+function sendMessage() {
+    var input = document.getElementById('chatInput');
+    var content = input.value.trim();
+    if (!content) return;
+
+    var btn = document.getElementById('chatSendBtn');
+    btn.disabled = true;
+
+    fetch(sendUrl, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: content })
+    })
+    .then(function(r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+    })
+    .then(function(msg) {
+        if (msg.id) {
+            var container = document.getElementById('chatMessages');
+            var empty = document.getElementById('chatEmpty');
+            if (empty) empty.remove();
+
+            container.insertAdjacentHTML('beforeend', renderMessage(msg));
+            lastMessageId = msg.id;
+            container.scrollTop = container.scrollHeight;
+            input.value = '';
+        }
+        btn.disabled = false;
+    })
+    .catch(function(e) { console.error('Chat send error:', e); btn.disabled = false; });
+}
+
+document.getElementById('chatInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') { e.preventDefault(); sendMessage(); }
+});
+
+loadMessages();
+setInterval(loadMessages, 3000);
+{% endif %}
+</script>
+{% endblock %}

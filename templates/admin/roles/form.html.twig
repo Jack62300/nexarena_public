@@ -1,0 +1,265 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block page_title %}{{ role ? 'Modifier le role' : 'Nouveau role' }}{% endblock %}
+{% block title %}Nexarena Admin - {{ role ? 'Modifier' : 'Nouveau' }} role{% endblock %}
+
+{% block admin_css %}
+    .form-group { margin-bottom: 20px; }
+    .form-group label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .form-control-admin {
+        width: 100%;
+        padding: 10px 14px;
+        background: var(--bg-darker);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        color: var(--text-primary);
+        font-size: 14px;
+        transition: border-color 0.2s;
+    }
+    .form-control-admin:focus {
+        outline: none;
+        border-color: var(--accent);
+    }
+    .form-control-admin:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    .color-input-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .color-input-wrapper input[type="color"] {
+        width: 50px;
+        height: 38px;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        background: var(--bg-darker);
+        cursor: pointer;
+        padding: 2px;
+    }
+    .color-preview {
+        padding: 4px 14px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    .perm-category {
+        margin-bottom: 20px;
+    }
+    .perm-category__title {
+        font-size: 13px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--accent);
+        padding: 10px 0 8px;
+        border-bottom: 1px solid var(--border-color);
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .perm-category__toggle {
+        font-size: 11px;
+        color: var(--text-secondary);
+        cursor: pointer;
+        background: none;
+        border: none;
+        padding: 2px 8px;
+    }
+    .perm-category__toggle:hover {
+        color: var(--accent);
+    }
+    .perm-checkbox {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 12px;
+        background: var(--bg-darker);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        margin-bottom: 6px;
+        cursor: pointer;
+        transition: border-color 0.2s;
+    }
+    .perm-checkbox:hover {
+        border-color: var(--accent);
+    }
+    .perm-checkbox input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        accent-color: var(--accent);
+        flex-shrink: 0;
+    }
+    .perm-checkbox__info {
+        flex: 1;
+    }
+    .perm-checkbox__label {
+        font-size: 13px;
+        font-weight: 500;
+    }
+    .perm-checkbox__code {
+        font-size: 11px;
+        color: var(--text-secondary);
+        font-family: monospace;
+    }
+    .system-warning {
+        background: rgba(246,194,62,0.1);
+        border: 1px solid rgba(246,194,62,0.3);
+        border-radius: 8px;
+        padding: 12px 16px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 13px;
+        color: var(--warning);
+    }
+{% endblock %}
+
+{% block admin_body %}
+    <div style="max-width:900px;">
+        <div class="admin-table">
+            <div class="admin-table__header">
+                <h3>{{ role ? 'Modifier le role : ' ~ role.name : 'Creer un nouveau role' }}</h3>
+                <a href="{{ path('admin_roles_index') }}" class="btn-admin btn-admin--outline btn-admin--sm">
+                    <i class="fas fa-arrow-left"></i> Retour
+                </a>
+            </div>
+            <div style="padding:25px;">
+                {% if role and role.isSystem %}
+                    <div class="system-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Role systeme : le nom et le nom technique ne peuvent pas etre modifies. Vous pouvez modifier les permissions, la couleur et la description.
+                    </div>
+                {% endif %}
+
+                <form method="post">
+                    <input type="hidden" name="_token" value="{{ csrf_token('role_form') }}">
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="name">Nom du role</label>
+                                <input type="text" id="name" name="name" class="form-control-admin"
+                                       value="{{ role ? role.name : '' }}"
+                                       {{ role and role.isSystem ? 'disabled' : '' }}
+                                       required placeholder="Ex: Moderateur">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Nom technique</label>
+                                <input type="text" class="form-control-admin"
+                                       value="{{ role ? role.technicalName : 'ROLE_...' }}"
+                                       disabled style="font-family:monospace;">
+                                {% if not role %}
+                                    <small style="color:var(--text-secondary);font-size:11px;margin-top:4px;display:block;">
+                                        Genere automatiquement a partir du nom (ex: "Moderateur" → ROLE_MODERATEUR)
+                                    </small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="color">Couleur</label>
+                                <div class="color-input-wrapper">
+                                    <input type="color" id="color" name="color"
+                                           value="{{ role ? role.color : '#5a5c69' }}"
+                                           onchange="updatePreview(this.value)">
+                                    <span class="color-preview" id="colorPreview"
+                                          style="background:{{ (role ? role.color : '#5a5c69') }}22;color:{{ role ? role.color : '#5a5c69' }};border:1px solid {{ (role ? role.color : '#5a5c69') }}44;">
+                                        Apercu
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="position">Position (hierarchie)</label>
+                                <input type="number" id="position" name="position" class="form-control-admin"
+                                       value="{{ role ? role.position : 5 }}" min="0" max="100"
+                                       {{ role and role.isSystem ? 'disabled' : '' }}>
+                                <small style="color:var(--text-secondary);font-size:11px;margin-top:4px;display:block;">
+                                    Plus le nombre est eleve, plus le role est haut dans la hierarchie
+                                </small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="description">Description</label>
+                                <input type="text" id="description" name="description" class="form-control-admin"
+                                       value="{{ role ? role.description : '' }}" placeholder="Description courte">
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr style="border-color:var(--border-color);margin:25px 0;">
+
+                    <h4 style="font-size:16px;font-weight:600;margin-bottom:20px;">
+                        <i class="fas fa-shield-alt" style="color:var(--accent);margin-right:8px;"></i>
+                        Permissions
+                    </h4>
+
+                    {% for category, perms in permissions_by_category %}
+                        <div class="perm-category" data-category="{{ category }}">
+                            <div class="perm-category__title">
+                                <span>{{ category|capitalize }} ({{ perms|length }})</span>
+                                <div>
+                                    <button type="button" class="perm-category__toggle" onclick="toggleCategory('{{ category }}', true)">Tout cocher</button>
+                                    <button type="button" class="perm-category__toggle" onclick="toggleCategory('{{ category }}', false)">Tout decocher</button>
+                                </div>
+                            </div>
+                            {% for perm in perms %}
+                                <label class="perm-checkbox">
+                                    <input type="checkbox" name="permissions[]" value="{{ perm.code }}"
+                                           data-category="{{ category }}"
+                                           {{ role and role.hasPermission(perm.code) ? 'checked' : '' }}>
+                                    <div class="perm-checkbox__info">
+                                        <div class="perm-checkbox__label">{{ perm.label }}</div>
+                                        <div class="perm-checkbox__code">{{ perm.code }}</div>
+                                    </div>
+                                </label>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+
+                    <div style="display:flex;gap:10px;padding-top:15px;border-top:1px solid var(--border-color);margin-top:10px;">
+                        <button type="submit" class="btn-admin btn-admin--primary">
+                            <i class="fas fa-save"></i> {{ role ? 'Enregistrer' : 'Creer le role' }}
+                        </button>
+                        <a href="{{ path('admin_roles_index') }}" class="btn-admin btn-admin--outline">Annuler</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block admin_js %}
+    <script>
+        function updatePreview(color) {
+            var el = document.getElementById('colorPreview');
+            el.style.background = color + '22';
+            el.style.color = color;
+            el.style.borderColor = color + '44';
+        }
+
+        function toggleCategory(category, state) {
+            var checkboxes = document.querySelectorAll('input[data-category="' + category + '"]');
+            checkboxes.forEach(function(cb) { cb.checked = state; });
+        }
+    </script>
+{% endblock %}

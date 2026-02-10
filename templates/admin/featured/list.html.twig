@@ -1,0 +1,209 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block page_title %}Serveurs mis en avant{% endblock %}
+{% block title %}Nexarena Admin - Serveurs mis en avant{% endblock %}
+
+{% block admin_css %}
+    .search-box { position: relative; margin-bottom: 25px; }
+    .search-box input {
+        width: 100%;
+        padding: 12px 16px;
+        background: var(--bg-darker);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        color: var(--text-primary);
+        font-size: 14px;
+    }
+    .search-box input:focus {
+        outline: none;
+        border-color: var(--accent);
+    }
+    .search-results {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 0 0 8px 8px;
+        max-height: 300px;
+        overflow-y: auto;
+        z-index: 50;
+        display: none;
+    }
+    .search-results.active { display: block; }
+    .search-result-item {
+        padding: 10px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid var(--border-color);
+        cursor: pointer;
+        transition: background 0.15s;
+    }
+    .search-result-item:hover { background: var(--bg-card-hover); }
+    .search-result-item:last-child { border-bottom: none; }
+    .search-result-item .sr-info { flex: 1; }
+    .search-result-item .sr-name { font-weight: 600; color: var(--text-primary); }
+    .search-result-item .sr-meta { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+    .search-result-item .sr-badge {
+        font-size: 11px;
+        padding: 3px 8px;
+        border-radius: 10px;
+        background: var(--accent);
+        color: #000;
+        font-weight: 600;
+    }
+    .search-result-item .sr-badge--already {
+        background: var(--text-secondary);
+        color: #fff;
+    }
+    .pos-input {
+        width: 60px;
+        padding: 4px 8px;
+        background: var(--bg-darker);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        color: var(--text-primary);
+        font-size: 13px;
+        text-align: center;
+    }
+    .pos-input:focus { outline: none; border-color: var(--accent); }
+{% endblock %}
+
+{% block admin_body %}
+    <div style="max-width:900px;">
+        <div class="admin-table">
+            <div class="admin-table__header">
+                <h3><i class="fas fa-star" style="color:var(--warning);margin-right:8px;"></i>Serveurs mis en avant</h3>
+            </div>
+            <div style="padding:20px 25px;">
+                {# Search + Add #}
+                <div class="search-box">
+                    <input type="text" id="serverSearch" placeholder="Rechercher un serveur a mettre en avant..." autocomplete="off">
+                    <div class="search-results" id="searchResults"></div>
+                </div>
+
+                <form id="addForm" method="post" action="{{ path('admin_featured_add') }}" style="display:none;">
+                    <input type="hidden" name="_token" value="{{ csrf_token('featured_manage') }}">
+                    <input type="hidden" name="server_id" id="addServerId">
+                </form>
+            </div>
+
+            {# Featured list #}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Position</th>
+                        <th>Serveur</th>
+                        <th>Categorie</th>
+                        <th>Proprietaire</th>
+                        <th>Votes</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for server in featured %}
+                        <tr>
+                            <td>
+                                <form method="post" action="{{ path('admin_featured_position', {id: server.id}) }}" style="display:inline-flex;align-items:center;gap:6px;">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('featured_' ~ server.id) }}">
+                                    <input type="number" name="position" value="{{ server.featuredPosition }}" class="pos-input" min="0">
+                                    <button type="submit" class="btn-admin btn-admin--outline btn-admin--sm" title="Mettre a jour">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                </form>
+                            </td>
+                            <td>
+                                <strong>{{ server.name }}</strong>
+                                {% if not server.isActive %}
+                                    <span style="color:var(--danger);font-size:11px;margin-left:6px;"><i class="fas fa-eye-slash"></i> Inactif</span>
+                                {% endif %}
+                                {% if not server.isApproved %}
+                                    <span style="color:var(--warning);font-size:11px;margin-left:6px;"><i class="fas fa-clock"></i> Non approuve</span>
+                                {% endif %}
+                            </td>
+                            <td style="color:var(--text-secondary);">
+                                {{ server.category.name }}
+                                {% if server.gameCategory %} / {{ server.gameCategory.name }}{% endif %}
+                            </td>
+                            <td style="color:var(--text-secondary);">{{ server.owner.username }}</td>
+                            <td>{{ server.monthlyVotes }}</td>
+                            <td>
+                                <div style="display:flex;gap:8px;">
+                                    <a href="{{ path('admin_servers_edit', {id: server.id}) }}" class="btn-admin btn-admin--outline btn-admin--sm" title="Modifier">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <form method="post" action="{{ path('admin_featured_remove', {id: server.id}) }}" onsubmit="return confirm('Retirer ce serveur de la mise en avant ?');" style="display:inline;">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('featured_' ~ server.id) }}">
+                                        <button type="submit" class="btn-admin btn-admin--sm" style="background:var(--danger);color:#fff;border:none;" title="Retirer">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6" style="text-align:center;color:var(--text-secondary);padding:30px;">
+                                Aucun serveur mis en avant. Utilisez la recherche ci-dessus pour en ajouter.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}
+
+{% block admin_js %}
+<script>
+(function() {
+    const input = document.getElementById('serverSearch');
+    const results = document.getElementById('searchResults');
+    const addForm = document.getElementById('addForm');
+    const addServerId = document.getElementById('addServerId');
+    let timer = null;
+
+    input.addEventListener('input', function() {
+        clearTimeout(timer);
+        const q = this.value.trim();
+        if (q.length < 2) { results.classList.remove('active'); return; }
+
+        timer = setTimeout(function() {
+            fetch('{{ path("admin_featured_search") }}?q=' + encodeURIComponent(q))
+                .then(r => r.json())
+                .then(data => {
+                    if (data.length === 0) {
+                        results.innerHTML = '<div style="padding:12px 16px;color:var(--text-secondary);font-size:13px;">Aucun serveur trouve.</div>';
+                    } else {
+                        results.innerHTML = data.map(s =>
+                            '<div class="search-result-item" data-id="' + s.id + '" data-featured="' + s.isFeatured + '">' +
+                                '<div class="sr-info">' +
+                                    '<div class="sr-name">' + s.name + '</div>' +
+                                    '<div class="sr-meta">' + (s.category || '') + ' &bull; ' + (s.owner || '') + '</div>' +
+                                '</div>' +
+                                (s.isFeatured
+                                    ? '<span class="sr-badge sr-badge--already">Deja en avant</span>'
+                                    : '<span class="sr-badge">+ Ajouter</span>') +
+                            '</div>'
+                        ).join('');
+                    }
+                    results.classList.add('active');
+                });
+        }, 300);
+    });
+
+    results.addEventListener('click', function(e) {
+        const item = e.target.closest('.search-result-item');
+        if (!item || item.dataset.featured === 'true') return;
+        addServerId.value = item.dataset.id;
+        addForm.submit();
+    });
+
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.search-box')) results.classList.remove('active');
+    });
+})();
+</script>
+{% endblock %}

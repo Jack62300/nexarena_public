@@ -1,0 +1,36 @@
+knpu_oauth2_client:
+    clients:
+        google:
+            type: google
+            client_id: '%env(setting:GOOGLE_CLIENT_ID)%'
+            client_secret: '%env(setting:GOOGLE_CLIENT_SECRET)%'
+            redirect_route: app_oauth_callback
+            redirect_params:
+                provider: google
+            access_type: offline
+            hosted_domain: ~
+            use_oidc_mode: false
+
+        discord:
+            type: discord
+            client_id: '%env(setting:DISCORD_CLIENT_ID)%'
+            client_secret: '%env(setting:DISCORD_CLIENT_SECRET)%'
+            redirect_route: app_oauth_callback
+            redirect_params:
+                provider: discord
+
+        discord_vote:
+            type: discord
+            client_id: '%env(setting:DISCORD_CLIENT_ID)%'
+            client_secret: '%env(setting:DISCORD_CLIENT_SECRET)%'
+            redirect_route: vote_callback_discord
+            redirect_params: {}
+
+        twitch:
+            type: generic
+            provider_class: Vertisan\OAuth2\Client\Provider\TwitchHelix
+            client_id: '%env(setting:TWITCH_CLIENT_ID)%'
+            client_secret: '%env(setting:TWITCH_CLIENT_SECRET)%'
+            redirect_route: app_oauth_callback
+            redirect_params:
+                provider: twitch

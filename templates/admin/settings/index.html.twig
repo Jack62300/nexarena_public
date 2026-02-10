@@ -1,0 +1,366 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block page_title %}Parametres{% endblock %}
+{% block title %}Nexarena Admin - Parametres{% endblock %}
+
+{% block admin_css %}
+    .settings-tabs {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    .settings-tab {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 16px;
+        border-radius: 8px;
+        color: var(--text-secondary);
+        transition: all 0.2s;
+        font-size: 14px;
+        cursor: pointer;
+        text-decoration: none;
+        border: none;
+        background: none;
+        width: 100%;
+        text-align: left;
+    }
+    .settings-tab:hover {
+        background: var(--bg-card-hover);
+        color: var(--text-primary);
+    }
+    .settings-tab.active {
+        background: var(--accent);
+        color: #fff;
+    }
+    .settings-tab i {
+        width: 20px;
+        text-align: center;
+        font-size: 13px;
+    }
+    .settings-tab__count {
+        margin-left: auto;
+        font-size: 11px;
+        opacity: 0.6;
+    }
+    .setting-group { margin-bottom: 22px; }
+    .setting-group__label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+    .setting-group__desc {
+        font-size: 12px;
+        color: var(--text-secondary);
+        margin-bottom: 8px;
+    }
+    .setting-input {
+        width: 100%;
+        padding: 10px 14px;
+        background: var(--bg-darker);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        color: var(--text-primary);
+        font-size: 14px;
+        transition: border-color 0.2s;
+    }
+    .setting-input:focus {
+        outline: none;
+        border-color: var(--accent);
+    }
+    textarea.setting-input {
+        min-height: 80px;
+        resize: vertical;
+    }
+    .setting-toggle {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        background: var(--bg-darker);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        cursor: pointer;
+    }
+    .setting-toggle:hover {
+        border-color: var(--accent);
+    }
+    .setting-toggle input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        accent-color: var(--accent);
+        flex-shrink: 0;
+    }
+    .setting-toggle__text {
+        flex: 1;
+    }
+    .setting-image-preview {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 8px;
+    }
+    .setting-image-preview img {
+        max-width: 200px;
+        max-height: 80px;
+        border-radius: 6px;
+        border: 1px solid var(--border-color);
+        object-fit: contain;
+        background: var(--bg-darker);
+        padding: 5px;
+    }
+    .setting-image-preview .no-image {
+        width: 100px;
+        height: 60px;
+        border-radius: 6px;
+        background: var(--bg-darker);
+        border: 1px dashed var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-secondary);
+        font-size: 20px;
+    }
+    .setting-color-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .setting-color-wrapper input[type="color"] {
+        width: 50px;
+        height: 38px;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        background: var(--bg-darker);
+        cursor: pointer;
+        padding: 2px;
+    }
+    .setting-color-wrapper .color-hex {
+        font-family: monospace;
+        font-size: 14px;
+        color: var(--text-secondary);
+    }
+    .remove-image-check {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: var(--danger);
+        margin-top: 6px;
+        cursor: pointer;
+    }
+    .remove-image-check input { accent-color: var(--danger); }
+
+    /* Quill Editor */
+    .quill-editor-wrap { margin-bottom: 4px; }
+    .quill-editor {
+        background: var(--bg-darker);
+        border: 1px solid var(--border-color);
+        border-radius: 0 0 6px 6px;
+        color: var(--text-primary);
+        min-height: 250px;
+        font-size: 14px;
+    }
+    .quill-editor .ql-editor { min-height: 250px; }
+    .ql-toolbar.ql-snow {
+        border: 1px solid var(--border-color) !important;
+        border-radius: 6px 6px 0 0 !important;
+        background: var(--bg-card) !important;
+    }
+    .ql-container.ql-snow {
+        border: 1px solid var(--border-color) !important;
+        border-top: none !important;
+        border-radius: 0 0 6px 6px !important;
+    }
+    .ql-toolbar .ql-stroke { stroke: var(--text-secondary) !important; }
+    .ql-toolbar .ql-fill { fill: var(--text-secondary) !important; }
+    .ql-toolbar .ql-picker-label { color: var(--text-secondary) !important; }
+    .ql-toolbar button:hover .ql-stroke,
+    .ql-toolbar .ql-active .ql-stroke { stroke: var(--accent) !important; }
+    .ql-toolbar button:hover .ql-fill,
+    .ql-toolbar .ql-active .ql-fill { fill: var(--accent) !important; }
+    .ql-snow .ql-picker-options {
+        background: var(--bg-card) !important;
+        border-color: var(--border-color) !important;
+    }
+    .ql-snow .ql-picker-item { color: var(--text-primary) !important; }
+{% endblock %}
+
+{% block admin_body %}
+    <div class="row g-4">
+        {# ===== SIDEBAR TABS ===== #}
+        <div class="col-xl-3 col-lg-4">
+            <div class="admin-table">
+                <div class="admin-table__header">
+                    <h3>Configuration</h3>
+                </div>
+                <div style="padding:12px;">
+                    <div class="settings-tabs">
+                        {% for cat_key, cat_label in category_labels %}
+                            <a href="{{ path('admin_settings_index', {tab: cat_key}) }}"
+                               class="settings-tab {{ active_tab == cat_key ? 'active' : '' }}">
+                                <i class="{{ category_icons[cat_key] ?? 'fas fa-cog' }}"></i>
+                                {{ cat_label }}
+                                {% if settings_by_category[cat_key] is defined %}
+                                    <span class="settings-tab__count">{{ settings_by_category[cat_key]|length }}</span>
+                                {% endif %}
+                            </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# ===== SETTINGS FORM ===== #}
+        <div class="col-xl-9 col-lg-8">
+            <div class="admin-table">
+                <div class="admin-table__header">
+                    <h3>
+                        <i class="{{ category_icons[active_tab] ?? 'fas fa-cog' }}" style="color:var(--accent);margin-right:8px;"></i>
+                        {{ category_labels[active_tab] ?? active_tab|capitalize }}
+                    </h3>
+                </div>
+                <div style="padding:25px;">
+                    {% if settings_by_category[active_tab] is defined and settings_by_category[active_tab]|length > 0 %}
+                        <form method="post" action="{{ path('admin_settings_save') }}" enctype="multipart/form-data">
+                            <input type="hidden" name="_token" value="{{ csrf_token('settings_save') }}">
+                            <input type="hidden" name="_category" value="{{ active_tab }}">
+
+                            {% for setting in settings_by_category[active_tab] %}
+                                <div class="setting-group">
+                                    <label class="setting-group__label" for="setting_{{ setting.key }}">
+                                        {{ setting.label }}
+                                    </label>
+                                    {% if setting.description %}
+                                        <div class="setting-group__desc">{{ setting.description }}</div>
+                                    {% endif %}
+
+                                    {% if setting.type == 'text' %}
+                                        <input type="text" id="setting_{{ setting.key }}" name="setting_{{ setting.key }}"
+                                               class="setting-input" value="{{ setting.value }}">
+
+                                    {% elseif setting.type == 'textarea' %}
+                                        <textarea id="setting_{{ setting.key }}" name="setting_{{ setting.key }}"
+                                                  class="setting-input">{{ setting.value }}</textarea>
+
+                                    {% elseif setting.type == 'html' %}
+                                        <div class="quill-editor-wrap">
+                                            <div id="quill_{{ setting.key }}" class="quill-editor">{# content injected by JS #}</div>
+                                            <textarea id="setting_{{ setting.key }}" name="setting_{{ setting.key }}"
+                                                      class="setting-input" style="display:none;">{{ setting.value }}</textarea>
+                                        </div>
+
+                                    {% elseif setting.type == 'number' %}
+                                        <input type="number" id="setting_{{ setting.key }}" name="setting_{{ setting.key }}"
+                                               class="setting-input" value="{{ setting.value }}" min="0" style="max-width:200px;">
+
+                                    {% elseif setting.type == 'url' %}
+                                        <input type="url" id="setting_{{ setting.key }}" name="setting_{{ setting.key }}"
+                                               class="setting-input" value="{{ setting.value }}" placeholder="https://">
+
+                                    {% elseif setting.type == 'color' %}
+                                        <div class="setting-color-wrapper">
+                                            <input type="color" id="setting_{{ setting.key }}" name="setting_{{ setting.key }}"
+                                                   value="{{ setting.value ?: '#45f882' }}"
+                                                   onchange="this.nextElementSibling.textContent=this.value">
+                                            <span class="color-hex">{{ setting.value ?: '#45f882' }}</span>
+                                        </div>
+
+                                    {% elseif setting.type == 'boolean' %}
+                                        <label class="setting-toggle">
+                                            <input type="checkbox" id="setting_{{ setting.key }}" name="setting_{{ setting.key }}"
+                                                   value="1" {{ setting.boolValue ? 'checked' : '' }}>
+                                            <div class="setting-toggle__text">
+                                                <div style="font-size:13px;font-weight:500;">{{ setting.label }}</div>
+                                            </div>
+                                        </label>
+
+                                    {% elseif setting.type == 'image' %}
+                                        <div class="setting-image-preview">
+                                            {% if setting.value %}
+                                                <img src="{{ asset(setting.value) }}" alt="">
+                                            {% else %}
+                                                <div class="no-image"><i class="fas fa-image"></i></div>
+                                            {% endif %}
+                                        </div>
+                                        <input type="file" id="setting_{{ setting.key }}" name="setting_{{ setting.key }}"
+                                               class="setting-input" accept="image/*">
+                                        {% if setting.value %}
+                                            <label class="remove-image-check">
+                                                <input type="checkbox" name="remove_{{ setting.key }}" value="1">
+                                                Supprimer l'image actuelle
+                                            </label>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+
+                            <div style="padding-top:15px;border-top:1px solid var(--border-color);display:flex;gap:10px;">
+                                <button type="submit" class="btn-admin btn-admin--primary">
+                                    <i class="fas fa-save"></i> Enregistrer
+                                </button>
+                            </div>
+                        </form>
+                    {% else %}
+                        <div style="text-align:center;padding:40px;color:var(--text-secondary);">
+                            <i class="fas fa-cog" style="font-size:36px;margin-bottom:10px;display:block;"></i>
+                            <p>Aucun parametre dans cette categorie.<br>
+                            Executez <code>php bin/console app:init-settings</code> pour initialiser les parametres.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Quill.js for HTML fields #}
+    {% set hasHtmlFields = false %}
+    {% if settings_by_category[active_tab] is defined %}
+        {% for s in settings_by_category[active_tab] %}
+            {% if s.type == 'html' %}{% set hasHtmlFields = true %}{% endif %}
+        {% endfor %}
+    {% endif %}
+
+    {% if hasHtmlFields %}
+        <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
+        <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var editors = [];
+            document.querySelectorAll('.quill-editor').forEach(function(el) {
+                var textareaId = el.id.replace('quill_', 'setting_');
+                var textarea = document.getElementById(textareaId);
+                if (!textarea) return;
+
+                var quill = new Quill(el, {
+                    theme: 'snow',
+                    modules: {
+                        toolbar: [
+                            [{ header: [2, 3, 4, false] }],
+                            ['bold', 'italic', 'underline'],
+                            [{ list: 'ordered' }, { list: 'bullet' }],
+                            ['link'],
+                            ['blockquote'],
+                            ['clean']
+                        ]
+                    }
+                });
+
+                quill.root.innerHTML = textarea.value;
+                editors.push({ quill: quill, textarea: textarea });
+            });
+
+            var form = document.querySelector('form[action*="settings/save"]');
+            if (form) {
+                form.addEventListener('submit', function() {
+                    editors.forEach(function(ed) {
+                        ed.textarea.value = ed.quill.root.innerHTML;
+                    });
+                });
+            }
+        });
+        </script>
+    {% endif %}
+{% endblock %}

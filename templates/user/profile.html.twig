@@ -1,0 +1,513 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mon profil - {{ setting('site_name', 'Nexarena') }}{% endblock %}
+
+{% block stylesheets %}
+<style>
+    .profile-page { padding: 120px 0 80px; }
+    .profile-page__title {
+        font-size: 28px;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 8px;
+    }
+    .profile-page__title span { color: #45f882; }
+    .profile-page__subtitle {
+        color: #8b949e;
+        font-size: 14px;
+        margin-bottom: 30px;
+    }
+    .form-card {
+        background: #162231;
+        border: 1px solid #1e3048;
+        border-radius: 10px;
+        padding: 25px;
+        margin-bottom: 25px;
+    }
+    .form-card__title {
+        font-size: 16px;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 20px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #1e3048;
+    }
+    .form-card__title i { margin-right: 8px; color: #45f882; }
+    .form-group { margin-bottom: 18px; }
+    .form-group label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #8b949e;
+    }
+    .form-input {
+        width: 100%;
+        padding: 10px 14px;
+        background: #0a1018;
+        border: 1px solid #1e3048;
+        border-radius: 6px;
+        color: #e4e6eb;
+        font-size: 14px;
+        transition: border-color 0.2s;
+    }
+    .form-input:focus { outline: none; border-color: #45f882; }
+    .form-input::placeholder { color: #5a5c69; }
+    .form-hint {
+        font-size: 12px;
+        color: #5a5c69;
+        margin-top: 4px;
+    }
+    .btn-action {
+        padding: 8px 18px;
+        border-radius: 6px;
+        border: none;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s;
+    }
+    .btn-action--primary {
+        background: #45f882;
+        color: #0a1018;
+    }
+    .btn-action--primary:hover { background: #3de074; }
+    .btn-action--danger {
+        background: rgba(220,53,69,0.15);
+        color: #dc3545;
+        border: 1px solid rgba(220,53,69,0.3);
+    }
+    .btn-action--danger:hover { background: rgba(220,53,69,0.25); }
+
+    /* Avatar */
+    .avatar-preview {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, rgba(69,248,130,0.1), rgba(69,248,130,0.03));
+        border: 3px solid rgba(69,248,130,0.25);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        margin-bottom: 15px;
+    }
+    .avatar-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .avatar-preview i {
+        font-size: 36px;
+        color: rgba(255,255,255,0.3);
+    }
+    .avatar-upload {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    .avatar-upload__input {
+        display: none;
+    }
+    .avatar-upload__label {
+        padding: 8px 16px;
+        background: rgba(69,248,130,0.1);
+        border: 1px solid rgba(69,248,130,0.25);
+        border-radius: 6px;
+        color: #45f882;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .avatar-upload__label:hover {
+        background: rgba(69,248,130,0.2);
+    }
+    .avatar-upload__name {
+        font-size: 12px;
+        color: #8b949e;
+    }
+
+    /* 2FA */
+    .twofa-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 15px;
+    }
+    .twofa-status--active {
+        background: rgba(69,248,130,0.1);
+        color: #45f882;
+        border: 1px solid rgba(69,248,130,0.25);
+    }
+    .twofa-status--inactive {
+        background: rgba(255,255,255,0.05);
+        color: #8b949e;
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+    .twofa-setup {
+        display: none;
+        margin-top: 20px;
+        padding: 20px;
+        background: #0a1018;
+        border: 1px solid #1e3048;
+        border-radius: 8px;
+    }
+    .twofa-setup.active { display: block; }
+    .twofa-qr {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .twofa-qr img {
+        border-radius: 8px;
+        border: 2px solid #1e3048;
+    }
+    .twofa-secret {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .twofa-secret code {
+        display: inline-block;
+        padding: 8px 16px;
+        background: #162231;
+        border: 1px solid #1e3048;
+        border-radius: 6px;
+        color: #45f882;
+        font-size: 14px;
+        letter-spacing: 2px;
+        word-break: break-all;
+    }
+    .twofa-secret small {
+        display: block;
+        margin-top: 6px;
+        color: #5a5c69;
+        font-size: 12px;
+    }
+    .twofa-confirm {
+        display: flex;
+        gap: 10px;
+        max-width: 300px;
+        margin: 0 auto;
+    }
+    .twofa-confirm input {
+        flex: 1;
+        text-align: center;
+        font-size: 18px;
+        letter-spacing: 4px;
+        font-weight: 700;
+    }
+    .twofa-msg {
+        text-align: center;
+        margin-top: 12px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+    .twofa-msg--success { color: #45f882; }
+    .twofa-msg--error { color: #dc3545; }
+
+    /* Flash messages */
+    .profile-flash {
+        padding: 12px 18px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-size: 14px;
+        font-weight: 500;
+    }
+    .profile-flash--success {
+        background: rgba(69,248,130,0.1);
+        border: 1px solid rgba(69,248,130,0.2);
+        color: #45f882;
+    }
+    .profile-flash--error {
+        background: rgba(220,53,69,0.1);
+        border: 1px solid rgba(220,53,69,0.2);
+        color: #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+
+    {# breadcrumb-area #}
+    <section class="breadcrumb-area" data-background="{{ asset('assets/img/bg/breadcrumb_bg01.jpg') }}">
+        <div class="container">
+            <div class="breadcrumb__wrapper">
+                <div class="row">
+                    <div class="col-xl-6 col-lg-7">
+                        <div class="breadcrumb__content">
+                            <h2 class="title">Mon profil</h2>
+                            <nav aria-label="breadcrumb">
+                                <ol class="breadcrumb">
+                                    <li class="breadcrumb-item"><a href="{{ path('app_home') }}">Accueil</a></li>
+                                    <li class="breadcrumb-item active" aria-current="page">Mon profil</li>
+                                </ol>
+                            </nav>
+                        </div>
+                    </div>
+                    <div class="col-xl-6 col-lg-5 position-relative d-none d-lg-block">
+                        <div class="breadcrumb__img">
+                            <img src="{{ asset('assets/img/others/breadcrumb_img02.png') }}" alt="img">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="profile-page" data-background="{{ asset('assets/img/bg/team_bg.jpg') }}">
+        <div class="container">
+            <h2 class="profile-page__title"><span>Mon</span> profil</h2>
+            <p class="profile-page__subtitle">Gerez votre compte, votre avatar et votre securite.</p>
+
+            {# Flash messages #}
+            {% for message in app.flashes('success') %}
+                <div class="profile-flash profile-flash--success"><i class="fas fa-check-circle"></i> {{ message }}</div>
+            {% endfor %}
+            {% for message in app.flashes('error') %}
+                <div class="profile-flash profile-flash--error"><i class="fas fa-exclamation-circle"></i> {{ message }}</div>
+            {% endfor %}
+
+            <div class="row">
+                <div class="col-lg-6">
+
+                    {# ── Avatar Card ── #}
+                    <div class="form-card">
+                        <h3 class="form-card__title"><i class="fas fa-camera"></i> Avatar</h3>
+                        <div class="avatar-upload">
+                            <div class="avatar-preview" id="avatarPreview">
+                                {% if app.user.avatar starts with 'http' %}
+                                    <img src="{{ app.user.avatar }}" alt="Avatar">
+                                {% elseif app.user.avatar %}
+                                    <img src="{{ asset('uploads/avatars/' ~ app.user.avatar) }}" alt="Avatar">
+                                {% else %}
+                                    <i class="fas fa-user"></i>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <form action="{{ path('user_profile_avatar') }}" method="post" enctype="multipart/form-data" id="avatarForm">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('profile_avatar') }}">
+                                    <input type="file" name="avatar" id="avatarInput" class="avatar-upload__input" accept="image/jpeg,image/png,image/gif,image/webp">
+                                    <label for="avatarInput" class="avatar-upload__label"><i class="fas fa-upload"></i> Choisir une image</label>
+                                    <span class="avatar-upload__name" id="avatarFileName">JPG, PNG, GIF ou WebP - 2 Mo max</span>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    {# ── Email Card ── #}
+                    <div class="form-card">
+                        <h3 class="form-card__title"><i class="fas fa-envelope"></i> Adresse email</h3>
+                        <form action="{{ path('user_profile_email') }}" method="post">
+                            <input type="hidden" name="_token" value="{{ csrf_token('profile_email') }}">
+                            <div class="form-group">
+                                <label for="email">Email</label>
+                                <input type="email" id="email" name="email" class="form-input" value="{{ app.user.email }}" required>
+                            </div>
+                            <button type="submit" class="btn-action btn-action--primary"><i class="fas fa-save"></i> Enregistrer</button>
+                        </form>
+                    </div>
+
+                </div>
+                <div class="col-lg-6">
+
+                    {# ── Password Card ── #}
+                    <div class="form-card">
+                        <h3 class="form-card__title"><i class="fas fa-lock"></i> Mot de passe</h3>
+                        <form action="{{ path('user_profile_password') }}" method="post">
+                            <input type="hidden" name="_token" value="{{ csrf_token('profile_password') }}">
+                            {% if app.user.password %}
+                                <div class="form-group">
+                                    <label for="currentPassword">Mot de passe actuel</label>
+                                    <input type="password" id="currentPassword" name="current_password" class="form-input" required>
+                                </div>
+                            {% endif %}
+                            <div class="form-group">
+                                <label for="newPassword">Nouveau mot de passe</label>
+                                <input type="password" id="newPassword" name="new_password" class="form-input" required minlength="8">
+                                <div class="form-hint">Minimum 8 caracteres</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="confirmPassword">Confirmer le mot de passe</label>
+                                <input type="password" id="confirmPassword" name="confirm_password" class="form-input" required minlength="8">
+                            </div>
+                            <button type="submit" class="btn-action btn-action--primary"><i class="fas fa-save"></i> Modifier</button>
+                        </form>
+                    </div>
+
+                    {# ── 2FA Card ── #}
+                    <div class="form-card">
+                        <h3 class="form-card__title"><i class="fas fa-shield-alt"></i> Authentification a deux facteurs (2FA)</h3>
+
+                        {% if app.user.isTwoFactorEnabled %}
+                            <div class="twofa-status twofa-status--active">
+                                <i class="fas fa-check-circle"></i> 2FA active
+                            </div>
+                            <p style="color:#8b949e;font-size:13px;margin-bottom:15px;">
+                                Votre compte est protege par l'authentification a deux facteurs via une application TOTP.
+                            </p>
+                            <form action="{{ path('user_profile_2fa_disable') }}" method="post" onsubmit="return confirm('Etes-vous sur de vouloir desactiver le 2FA ?');">
+                                <input type="hidden" name="_token" value="{{ csrf_token('profile_2fa') }}">
+                                <button type="submit" class="btn-action btn-action--danger"><i class="fas fa-times"></i> Desactiver le 2FA</button>
+                            </form>
+                        {% else %}
+                            <div class="twofa-status twofa-status--inactive">
+                                <i class="fas fa-times-circle"></i> 2FA desactive
+                            </div>
+                            <p style="color:#8b949e;font-size:13px;margin-bottom:15px;">
+                                Protegez votre compte en activant l'authentification a deux facteurs avec une application comme Google Authenticator ou Authy.
+                            </p>
+                            <button type="button" class="btn-action btn-action--primary" id="btn2faEnable">
+                                <i class="fas fa-qrcode"></i> Activer le 2FA
+                            </button>
+
+                            <div class="twofa-setup" id="twofaSetup">
+                                <div class="twofa-qr" id="twofaQr"></div>
+                                <div class="twofa-secret" id="twofaSecret"></div>
+                                <p style="color:#8b949e;font-size:13px;text-align:center;margin-bottom:15px;">
+                                    Scannez le QR code avec votre application, puis entrez le code a 6 chiffres pour confirmer.
+                                </p>
+                                <div class="twofa-confirm">
+                                    <input type="text" id="twofaCode" class="form-input" placeholder="000000" maxlength="6" pattern="[0-9]{6}" inputmode="numeric">
+                                    <button type="button" class="btn-action btn-action--primary" id="btn2faConfirm"><i class="fas fa-check"></i></button>
+                                </div>
+                                <div class="twofa-msg" id="twofaMsg"></div>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+{% endblock %}
+
+{% block javascripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Avatar file input - auto-submit on change
+    var avatarInput = document.getElementById('avatarInput');
+    var avatarForm = document.getElementById('avatarForm');
+    var avatarFileName = document.getElementById('avatarFileName');
+    var avatarPreview = document.getElementById('avatarPreview');
+
+    if (avatarInput) {
+        avatarInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                avatarFileName.textContent = this.files[0].name;
+                // Preview
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    avatarPreview.innerHTML = '<img src="' + e.target.result + '" alt="Preview">';
+                };
+                reader.readAsDataURL(this.files[0]);
+                // Auto-submit
+                avatarForm.submit();
+            }
+        });
+    }
+
+    // 2FA Enable
+    var btn2faEnable = document.getElementById('btn2faEnable');
+    var twofaSetup = document.getElementById('twofaSetup');
+    var twofaQr = document.getElementById('twofaQr');
+    var twofaSecret = document.getElementById('twofaSecret');
+    var twofaMsg = document.getElementById('twofaMsg');
+    var btn2faConfirm = document.getElementById('btn2faConfirm');
+    var twofaCode = document.getElementById('twofaCode');
+    var csrfToken = '{{ csrf_token('profile_2fa') }}';
+
+    if (btn2faEnable) {
+        btn2faEnable.addEventListener('click', function() {
+            btn2faEnable.disabled = true;
+            btn2faEnable.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Chargement...';
+
+            var formData = new FormData();
+            formData.append('_token', csrfToken);
+
+            fetch('{{ path('user_profile_2fa_enable') }}', {
+                method: 'POST',
+                body: formData
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.error) {
+                    twofaMsg.className = 'twofa-msg twofa-msg--error';
+                    twofaMsg.textContent = data.error;
+                    btn2faEnable.disabled = false;
+                    btn2faEnable.innerHTML = '<i class="fas fa-qrcode"></i> Activer le 2FA';
+                    return;
+                }
+                twofaQr.innerHTML = '<img src="' + data.qr + '" alt="QR Code">';
+                twofaSecret.innerHTML = '<code>' + data.secret + '</code><small>Cle secrete manuelle (si le QR code ne fonctionne pas)</small>';
+                twofaSetup.classList.add('active');
+                btn2faEnable.style.display = 'none';
+                twofaCode.focus();
+            })
+            .catch(function() {
+                twofaMsg.className = 'twofa-msg twofa-msg--error';
+                twofaMsg.textContent = 'Une erreur est survenue.';
+                btn2faEnable.disabled = false;
+                btn2faEnable.innerHTML = '<i class="fas fa-qrcode"></i> Activer le 2FA';
+            });
+        });
+    }
+
+    if (btn2faConfirm) {
+        btn2faConfirm.addEventListener('click', function() {
+            var code = twofaCode.value.trim();
+            if (code.length !== 6) {
+                twofaMsg.className = 'twofa-msg twofa-msg--error';
+                twofaMsg.textContent = 'Entrez un code a 6 chiffres.';
+                return;
+            }
+
+            btn2faConfirm.disabled = true;
+
+            var formData = new FormData();
+            formData.append('_token', csrfToken);
+            formData.append('code', code);
+
+            fetch('{{ path('user_profile_2fa_confirm') }}', {
+                method: 'POST',
+                body: formData
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.error) {
+                    twofaMsg.className = 'twofa-msg twofa-msg--error';
+                    twofaMsg.textContent = data.error;
+                    btn2faConfirm.disabled = false;
+                    return;
+                }
+                twofaMsg.className = 'twofa-msg twofa-msg--success';
+                twofaMsg.textContent = data.message;
+                setTimeout(function() { location.reload(); }, 1500);
+            })
+            .catch(function() {
+                twofaMsg.className = 'twofa-msg twofa-msg--error';
+                twofaMsg.textContent = 'Une erreur est survenue.';
+                btn2faConfirm.disabled = false;
+            });
+        });
+
+        // Allow Enter key on code input
+        if (twofaCode) {
+            twofaCode.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    btn2faConfirm.click();
+                }
+            });
+        }
+    }
+});
+</script>
+{% endblock %}

@@ -19,5 +19,37 @@ services:
     App\:
         resource: '../src/'
 
+    App\Service\ServerService:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+
+    App\Controller\ProfileController:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+
+    App\Twig\ThemeExtension:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+
+    App\Controller\Admin\ThemeController:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+
+    App\Controller\Admin\PluginController:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+
+    App\Controller\PluginController:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+
+    App\Controller\Admin\PartnerController:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+
+    App\Service\RecruitmentService:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

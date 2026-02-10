@@ -1,0 +1,28 @@
+name: NexarenaVote
+version: 1.0.0
+main: fr.nexarena.vote.NexarenaVote
+api-version: '1.13'
+description: Nexarena vote integration plugin - reward players who vote for your server on Nexarena.
+author: Nexarena
+website: https://nexarena.fr
+
+commands:
+  vote:
+    description: Get the vote link to vote for the server on Nexarena.
+    usage: /vote
+    permission: nexarena.vote
+  checkvote:
+    description: Check your vote status and claim your reward.
+    usage: /checkvote
+    permission: nexarena.checkvote
+
+permissions:
+  nexarena.vote:
+    description: Allows player to use /vote command.
+    default: true
+  nexarena.checkvote:
+    description: Allows player to use /checkvote command.
+    default: true
+  nexarena.admin:
+    description: Allows reloading plugin configuration.
+    default: op

@@ -1,0 +1,23 @@
+{
+  "name": "nexarena-vote-discord",
+  "version": "1.0.0",
+  "description": "Bot Discord pour le systeme de vote Nexarena",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [
+    "nexarena",
+    "discord",
+    "vote",
+    "game-server"
+  ],
+  "author": "Nexarena",
+  "license": "MIT",
+  "dependencies": {
+    "discord.js": "^14.16.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

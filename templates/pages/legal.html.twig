@@ -1,0 +1,161 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ title }} - {{ setting('site_name', 'Nexarena') }}{% endblock %}
+
+{% block body %}
+
+    {# ===== HEADER ===== #}
+    <section class="nx-legal-header">
+        <div class="container">
+            <nav class="nx-legal-breadcrumb">
+                <a href="{{ path('app_home') }}">Accueil</a>
+                <i class="fas fa-chevron-right"></i>
+                <span>{{ title }}</span>
+            </nav>
+            <h1 class="nx-legal-title">{{ title }}</h1>
+        </div>
+    </section>
+
+    {# ===== CONTENT ===== #}
+    <section class="nx-legal-body">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-xl-8 col-lg-10">
+                    <div class="nx-legal-content">
+                        {% if content %}
+                            {{ content|raw }}
+                        {% else %}
+                            <div class="nx-legal-empty">
+                                <i class="fas fa-file-alt"></i>
+                                <p>Cette page n'a pas encore ete redigee.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+{% endblock %}
+
+{% block stylesheets %}
+<style>
+/* ================================================
+   LEGAL PAGES - Nexarena
+   ================================================ */
+.nx-legal-header {
+    padding: 130px 0 0;
+}
+.nx-legal-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.3);
+    margin-bottom: 16px;
+}
+.nx-legal-breadcrumb a {
+    color: rgba(255,255,255,0.4);
+    transition: color 0.2s;
+}
+.nx-legal-breadcrumb a:hover {
+    color: var(--tg-theme-primary);
+}
+.nx-legal-breadcrumb i {
+    font-size: 8px;
+    color: rgba(255,255,255,0.15);
+}
+.nx-legal-title {
+    font-size: 30px;
+    font-weight: 800;
+    color: #fff;
+    margin: 0;
+    font-family: var(--tg-heading-font-family);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* ─── Body ─── */
+.nx-legal-body {
+    padding: 36px 0 100px;
+}
+.nx-legal-content {
+    color: rgba(255,255,255,0.65);
+    font-size: 15px;
+    line-height: 1.85;
+}
+.nx-legal-content h2 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #fff;
+    margin: 36px 0 14px;
+    font-family: var(--tg-heading-font-family);
+}
+.nx-legal-content h2:first-child {
+    margin-top: 0;
+}
+.nx-legal-content h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.85);
+    margin: 28px 0 10px;
+    font-family: var(--tg-heading-font-family);
+}
+.nx-legal-content h4 {
+    font-size: 16px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.8);
+    margin: 22px 0 8px;
+}
+.nx-legal-content p {
+    margin: 0 0 16px;
+}
+.nx-legal-content a {
+    color: var(--tg-theme-primary);
+    text-decoration: underline;
+    text-decoration-color: rgba(69,248,130,0.25);
+    text-underline-offset: 3px;
+}
+.nx-legal-content a:hover {
+    text-decoration-color: var(--tg-theme-primary);
+}
+.nx-legal-content ul,
+.nx-legal-content ol {
+    padding-left: 24px;
+    margin: 12px 0;
+}
+.nx-legal-content li {
+    margin-bottom: 6px;
+}
+.nx-legal-content blockquote {
+    border-left: 3px solid var(--tg-theme-primary);
+    padding: 12px 20px;
+    margin: 20px 0;
+    background: rgba(69,248,130,0.03);
+    border-radius: 0 8px 8px 0;
+    color: rgba(255,255,255,0.5);
+}
+
+/* Empty */
+.nx-legal-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: rgba(255,255,255,0.2);
+}
+.nx-legal-empty i {
+    font-size: 40px;
+    margin-bottom: 16px;
+    display: block;
+}
+.nx-legal-empty p {
+    margin: 0;
+    font-size: 15px;
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 991.98px) {
+    .nx-legal-header { padding: 120px 0 0; }
+    .nx-legal-title { font-size: 24px; }
+}
+</style>
+{% endblock %}
