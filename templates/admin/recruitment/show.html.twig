@@ -53,14 +53,7 @@
             <div class="recruit-desc" style="color:var(--text-primary);line-height:1.7;font-size:14px;overflow:hidden;word-break:break-word;overflow-wrap:break-word;">
                 {{ listing.description|raw }}
             </div>
-            <style>
-                .recruit-desc img { max-width: 100%; height: auto; border-radius: 8px; }
-                .recruit-desc pre { overflow-x: auto; max-width: 100%; white-space: pre-wrap; }
-                .recruit-desc table { max-width: 100%; overflow-x: auto; display: block; }
-                .recruit-desc iframe, .recruit-desc video, .recruit-desc embed { max-width: 100%; }
-                .recruit-desc p { margin: 0 0 10px; }
-                .recruit-desc * { max-width: 100%; }
-            </style>
+            <link rel="stylesheet" href="{{ asset('assets/css/admin/recruitment-show.css') }}">
         </div>
 
         {# Form Fields Preview #}
@@ -90,9 +83,6 @@
 
     {# ===== RIGHT: ACTIONS ===== #}
     <div class="recruit-sidebar" style="width:320px;flex-shrink:0;">
-        <style>
-            @media (max-width: 991px) { .recruit-sidebar { width: 100% !important; } }
-        </style>
         {# Info Card #}
         <div style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:10px;padding:20px;margin-bottom:20px;">
             <h4 style="font-size:14px;font-weight:600;margin:0 0 15px;text-transform:uppercase;letter-spacing:1px;color:var(--text-secondary);">Informations</h4>

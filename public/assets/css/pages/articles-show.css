@@ -1,0 +1,196 @@
+/* ================================================
+   ARTICLE DETAIL - Nexarena
+   ================================================ */
+
+/* ─── Header ─── */
+.nx-art-header {
+    padding: 130px 0 0;
+}
+.nx-art-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.3);
+}
+.nx-art-breadcrumb a {
+    color: rgba(255,255,255,0.4);
+    transition: color 0.2s;
+}
+.nx-art-breadcrumb a:hover {
+    color: var(--tg-theme-primary);
+}
+.nx-art-breadcrumb i {
+    font-size: 8px;
+    color: rgba(255,255,255,0.15);
+}
+
+/* ─── Content ─── */
+.nx-art-content {
+    padding: 30px 0 100px;
+}
+
+/* Meta */
+.nx-art-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    margin-bottom: 16px;
+}
+.nx-art-meta__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.35);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+.nx-art-meta__item i {
+    color: var(--tg-theme-primary);
+    font-size: 12px;
+}
+
+/* Title */
+.nx-art-title {
+    font-size: 34px;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.3;
+    margin: 0 0 32px;
+    font-family: var(--tg-heading-font-family);
+}
+
+/* Hero Image */
+.nx-art-hero {
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 36px;
+    border: 1px solid rgba(255,255,255,0.06);
+}
+.nx-art-hero img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* Body Typography */
+.nx-art-body {
+    color: rgba(255,255,255,0.7);
+    font-size: 16px;
+    line-height: 1.85;
+}
+.nx-art-body h1,
+.nx-art-body h2,
+.nx-art-body h3,
+.nx-art-body h4,
+.nx-art-body h5,
+.nx-art-body h6 {
+    color: #fff;
+    margin: 32px 0 14px;
+    font-family: var(--tg-heading-font-family);
+}
+.nx-art-body h2 { font-size: 24px; }
+.nx-art-body h3 { font-size: 20px; }
+.nx-art-body h4 { font-size: 17px; }
+.nx-art-body p {
+    margin: 0 0 18px;
+}
+.nx-art-body a {
+    color: var(--tg-theme-primary);
+    text-decoration: underline;
+    text-decoration-color: rgba(69,248,130,0.25);
+    text-underline-offset: 3px;
+    transition: text-decoration-color 0.2s;
+}
+.nx-art-body a:hover {
+    text-decoration-color: var(--tg-theme-primary);
+}
+.nx-art-body img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 10px;
+    margin: 20px 0;
+}
+.nx-art-body blockquote {
+    border-left: 3px solid var(--tg-theme-primary);
+    padding: 14px 22px;
+    margin: 24px 0;
+    background: rgba(69,248,130,0.03);
+    border-radius: 0 8px 8px 0;
+    font-style: italic;
+    color: rgba(255,255,255,0.55);
+}
+.nx-art-body ul,
+.nx-art-body ol {
+    padding-left: 24px;
+    margin: 14px 0;
+}
+.nx-art-body li {
+    margin-bottom: 8px;
+}
+.nx-art-body pre,
+.nx-art-body code {
+    background: rgba(0,0,0,0.3);
+    border-radius: 6px;
+    font-size: 14px;
+}
+.nx-art-body pre {
+    padding: 18px 22px;
+    margin: 20px 0;
+    overflow-x: auto;
+    border: 1px solid rgba(255,255,255,0.06);
+}
+.nx-art-body code {
+    padding: 2px 7px;
+}
+.nx-art-body pre code {
+    padding: 0;
+    background: none;
+}
+.nx-art-body hr {
+    border: none;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    margin: 32px 0;
+}
+
+/* Footer */
+.nx-art-footer {
+    margin-top: 48px;
+    padding-top: 28px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+}
+.nx-art-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: rgba(255,255,255,0.4);
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-family: var(--tg-heading-font-family);
+    transition: all 0.25s ease;
+}
+.nx-art-back:hover {
+    color: var(--tg-theme-primary);
+}
+.nx-art-back i {
+    font-size: 11px;
+    transition: transform 0.2s;
+}
+.nx-art-back:hover i {
+    transform: translateX(-4px);
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 991.98px) {
+    .nx-art-header { padding: 120px 0 0; }
+    .nx-art-title { font-size: 28px; }
+}
+@media (max-width: 575.98px) {
+    .nx-art-title { font-size: 24px; }
+    .nx-art-body { font-size: 15px; }
+}

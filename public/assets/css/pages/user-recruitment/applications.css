@@ -1,0 +1,51 @@
+    .apps-page { padding: 120px 0 80px; min-height: 100vh; }
+    .apps-back {
+        display: inline-flex; align-items: center; gap: 8px;
+        color: rgba(255,255,255,0.5); font-size: 13px; margin-bottom: 20px;
+        text-decoration: none; transition: color 0.2s;
+    }
+    .apps-back:hover { color: #45f882; }
+    .apps-title { font-size: 26px; font-weight: 800; text-transform: uppercase; margin-bottom: 8px; }
+    .apps-title span { color: #45f882; }
+    .apps-subtitle { color: rgba(255,255,255,0.5); font-size: 14px; margin-bottom: 30px; }
+
+    .apps-card {
+        background: rgba(22,34,49,0.6);
+        border: 1px solid rgba(69,248,130,0.08);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    .apps-card table { width: 100%; border-collapse: collapse; }
+    .apps-card th {
+        padding: 12px 20px; text-align: left;
+        font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+        color: rgba(255,255,255,0.4); border-bottom: 1px solid rgba(255,255,255,0.05);
+        background: rgba(0,0,0,0.15);
+    }
+    .apps-card td {
+        padding: 14px 20px; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 14px;
+    }
+    .apps-card tr:last-child td { border-bottom: none; }
+    .apps-card tr:hover td { background: rgba(255,255,255,0.02); }
+
+    .apps-unread {
+        display: inline-block; width: 8px; height: 8px;
+        background: #45f882; border-radius: 50%; margin-right: 8px;
+    }
+    .apps-link {
+        color: #45f882; text-decoration: none; font-weight: 600; transition: color 0.2s;
+    }
+    .apps-link:hover { color: #2bc866; }
+
+    .apps-empty {
+        text-align: center; padding: 50px; color: rgba(255,255,255,0.35);
+    }
+    .apps-empty i { font-size: 40px; display: block; margin-bottom: 12px; color: rgba(255,255,255,0.15); }
+
+    .apps-badge {
+        display: inline-block; padding: 3px 10px; border-radius: 6px;
+        font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .apps-badge--pending { background: rgba(255,193,7,0.15); color: #ffc107; }
+    .apps-badge--accepted { background: rgba(69,248,130,0.15); color: #45f882; }
+    .apps-badge--rejected { background: rgba(220,53,69,0.15); color: #dc3545; }

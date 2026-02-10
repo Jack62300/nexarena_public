@@ -1,0 +1,7 @@
+                .recruit-desc img { max-width: 100%; height: auto; border-radius: 8px; }
+                .recruit-desc pre { overflow-x: auto; max-width: 100%; white-space: pre-wrap; }
+                .recruit-desc table { max-width: 100%; overflow-x: auto; display: block; }
+                .recruit-desc iframe, .recruit-desc video, .recruit-desc embed { max-width: 100%; }
+                .recruit-desc p { margin: 0 0 10px; }
+                .recruit-desc * { max-width: 100%; }
+            @media (max-width: 991px) { .recruit-sidebar { width: 100% !important; } }

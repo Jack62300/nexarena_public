@@ -1,0 +1,43 @@
+    .ql-toolbar.ql-snow {
+        background: #0a1018;
+        border-color: #1e3048 !important;
+        border-radius: 6px 6px 0 0;
+    }
+    .ql-toolbar.ql-snow .ql-stroke { stroke: #8b949e; }
+    .ql-toolbar.ql-snow .ql-fill { fill: #8b949e; }
+    .ql-toolbar.ql-snow .ql-picker-label { color: #8b949e; }
+    .ql-toolbar.ql-snow button:hover .ql-stroke,
+    .ql-toolbar.ql-snow .ql-picker-label:hover { stroke: #45f882; color: #45f882; }
+    .ql-toolbar.ql-snow button:hover .ql-fill { fill: #45f882; }
+    .ql-toolbar.ql-snow button.ql-active .ql-stroke { stroke: #45f882; }
+    .ql-toolbar.ql-snow button.ql-active .ql-fill { fill: #45f882; }
+    .ql-container.ql-snow {
+        background: #0a1018;
+        border-color: #1e3048 !important;
+        border-radius: 0 0 6px 6px;
+        min-height: 250px;
+        font-size: 14px;
+    }
+    .ql-editor {
+        color: #e4e6eb;
+        min-height: 250px;
+    }
+    .ql-editor.ql-blank::before {
+        color: #5a5c69;
+        font-style: normal;
+    }
+    .ql-snow .ql-picker-options {
+        background: #162231;
+        border-color: #1e3048;
+    }
+    .ql-snow .ql-picker-item { color: #8b949e; }
+    .ql-snow .ql-picker-item:hover { color: #e4e6eb; }
+    .ql-editor a { color: #45f882; }
+    .ql-editor h1, .ql-editor h2, .ql-editor h3 { color: #e4e6eb; }
+    .ql-editor blockquote { border-left-color: #45f882; color: #8b949e; }
+    .ql-editor pre.ql-syntax {
+        background: #0f1923;
+        color: #e4e6eb;
+        border: 1px solid #1e3048;
+        border-radius: 4px;
+    }

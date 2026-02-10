@@ -1,0 +1,166 @@
+    .recruit-page { padding: 120px 0 80px; min-height: 100vh; position: relative; }
+    .recruit-page::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 50%;
+        transform: translateX(-50%);
+        width: 600px; height: 600px;
+        background: radial-gradient(circle, rgba(69,248,130,0.06) 0%, transparent 70%);
+        pointer-events: none;
+    }
+
+    .recruit-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+    .recruit-header h1 {
+        font-size: 28px;
+        font-weight: 800;
+        text-transform: uppercase;
+    }
+    .recruit-header h1 span { color: #45f882; }
+
+    .recruit-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 22px;
+        background: linear-gradient(135deg, #45f882, #2bc866);
+        color: #0a1018;
+        font-weight: 700;
+        font-size: 13px;
+        border-radius: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        transition: all 0.3s;
+        border: none;
+        cursor: pointer;
+        text-decoration: none;
+    }
+    .recruit-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(69,248,130,0.25); color: #0a1018; }
+
+    .recruit-card {
+        background: rgba(22,34,49,0.6);
+        border: 1px solid rgba(69,248,130,0.08);
+        border-radius: 12px;
+        padding: 22px;
+        margin-bottom: 16px;
+        transition: all 0.3s;
+    }
+    .recruit-card:hover { border-color: rgba(69,248,130,0.2); transform: translateY(-1px); }
+
+    .recruit-card__top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 15px;
+        margin-bottom: 12px;
+    }
+    .recruit-card__title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #fff;
+        margin: 0;
+    }
+    .recruit-card__server {
+        font-size: 13px;
+        color: rgba(255,255,255,0.5);
+        margin-top: 4px;
+    }
+    .recruit-card__server i { color: #45f882; }
+
+    .recruit-status {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        white-space: nowrap;
+    }
+    .recruit-status--draft { background: rgba(90,92,105,0.2); color: #8b949e; border: 1px solid rgba(90,92,105,0.3); }
+    .recruit-status--pending { background: rgba(246,194,62,0.12); color: #f6c23e; border: 1px solid rgba(246,194,62,0.3); }
+    .recruit-status--approved { background: rgba(28,200,138,0.12); color: #1cc88a; border: 1px solid rgba(28,200,138,0.3); }
+    .recruit-status--revision_requested { background: rgba(54,185,204,0.12); color: #36b9cc; border: 1px solid rgba(54,185,204,0.3); }
+    .recruit-status--rejected { background: rgba(231,74,59,0.12); color: #e74a3b; border: 1px solid rgba(231,74,59,0.3); }
+
+    .recruit-card__meta {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+        font-size: 13px;
+        color: rgba(255,255,255,0.45);
+    }
+    .recruit-card__meta i { width: 16px; text-align: center; margin-right: 4px; }
+
+    .recruit-card__actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    .recruit-card__btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 14px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        border: 1px solid rgba(255,255,255,0.08);
+        background: rgba(255,255,255,0.03);
+        color: rgba(255,255,255,0.6);
+        text-decoration: none;
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+    .recruit-card__btn:hover { background: rgba(255,255,255,0.08); color: #fff; }
+    .recruit-card__btn--primary { background: rgba(69,248,130,0.1); color: #45f882; border-color: rgba(69,248,130,0.2); }
+    .recruit-card__btn--primary:hover { background: rgba(69,248,130,0.2); color: #45f882; }
+    .recruit-card__btn--danger { color: rgba(231,74,59,0.7); border-color: rgba(231,74,59,0.15); }
+    .recruit-card__btn--danger:hover { color: #e74a3b; background: rgba(231,74,59,0.08); }
+
+    .recruit-alert {
+        padding: 14px 18px;
+        border-radius: 8px;
+        font-size: 13px;
+        margin-bottom: 10px;
+    }
+    .recruit-alert--info { background: rgba(54,185,204,0.08); border: 1px solid rgba(54,185,204,0.2); color: #36b9cc; }
+    .recruit-alert--danger { background: rgba(231,74,59,0.08); border: 1px solid rgba(231,74,59,0.2); color: #e74a3b; }
+
+    .recruit-empty {
+        text-align: center;
+        padding: 60px 20px;
+        color: rgba(255,255,255,0.4);
+    }
+    .recruit-empty i { font-size: 48px; margin-bottom: 15px; display: block; color: rgba(255,255,255,0.15); }
+    .recruit-empty p { font-size: 15px; margin-bottom: 20px; }
+
+    .recruit-server-select {
+        margin-bottom: 30px;
+    }
+    .recruit-server-select label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: rgba(255,255,255,0.6);
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    .recruit-server-select select {
+        background: rgba(10,16,24,0.8);
+        border: 1px solid rgba(69,248,130,0.1);
+        color: #fff;
+        padding: 10px 16px;
+        border-radius: 8px;
+        font-size: 14px;
+        min-width: 300px;
+    }
+    .recruit-server-select select:focus { border-color: #45f882; outline: none; }
