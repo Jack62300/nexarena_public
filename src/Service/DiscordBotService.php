@@ -11,7 +11,7 @@ class DiscordBotService
 
     private function getBotUrl(): string
     {
-        return rtrim($this->settings->get('discord_bot_url', 'http://localhost:3001'), '/');
+        return rtrim($this->settings->get('discord_bot_url', 'http://nexarena.fr:3001'), '/');
     }
 
     private function getApiKey(): string

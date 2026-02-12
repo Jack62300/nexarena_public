@@ -155,7 +155,7 @@ class InitSettingsCommand extends Command
         ['key' => 'premium_game_pos5_cost', 'value' => '1', 'type' => 'number', 'label' => 'Cout position #5 jeu (NexBoost/12h)', 'description' => 'NexBoost par creneau de 12h pour la position #5 sur une page de jeu', 'category' => 'premium', 'position' => 25],
 
         // ========== DISCORD ==========
-        ['key' => 'discord_bot_url', 'value' => 'http://localhost:3001', 'type' => 'text', 'label' => 'URL de l\'API du bot Discord', 'description' => 'URL de l\'API Express du bot Discord (ex: http://localhost:3001)', 'category' => 'discord', 'position' => 0],
+        ['key' => 'discord_bot_url', 'value' => 'http://nexarena.fr:3001', 'type' => 'text', 'label' => 'URL de l\'API du bot Discord', 'description' => 'URL de l\'API Express du bot Discord (ex: http://nexarena.fr:3001)', 'category' => 'discord', 'position' => 0],
         ['key' => 'discord_bot_api_key', 'value' => '', 'type' => 'text', 'label' => 'Cle API partagee', 'description' => 'Cle API partagee entre le site et le bot Discord (doit etre identique dans le .env du bot)', 'category' => 'discord', 'position' => 1],
         // Automod sanctions
         ['key' => 'discord_automod_warn_to_mute', 'value' => '3', 'type' => 'number', 'label' => 'Warns avant mute auto', 'description' => 'Nombre d\'avertissements actifs avant mute automatique', 'category' => 'discord', 'position' => 2],

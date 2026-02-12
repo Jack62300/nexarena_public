@@ -1,0 +1,37 @@
+[Unit]
+Description=Nexarena Discord Bot (Node.js)
+Documentation=https://nexarena.fr
+After=network.target mariadb.service nginx.service
+
+[Service]
+Type=simple
+User=jack
+Group=jack
+WorkingDirectory=/home/jack/NEXAREA - BOT
+ExecStart=/usr/bin/node index.js
+Restart=always
+RestartSec=10
+
+# Le bot ecoute en interne sur le port 3050
+# Nginx reverse-proxy le port public 3001 (HTTPS) vers localhost:3050
+Environment=NODE_ENV=production
+Environment=PORT=3050
+
+# Logs
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=nexarena-bot
+
+# Securite
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/jack/NEXAREA - BOT
+PrivateTmp=true
+
+# Limites
+MemoryMax=512M
+TasksMax=100
+
+[Install]
+WantedBy=multi-user.target
