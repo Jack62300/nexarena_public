@@ -45,6 +45,10 @@ class ServerApiController extends AbstractController
     #[Route('/vote/{username}', name: 'api_server_check_vote_username', methods: ['GET'])]
     public function checkVoteByUsername(string $token, string $username, Request $request): JsonResponse
     {
+        if (!preg_match('/^[a-zA-Z0-9_\-\.]{1,64}$/', $username)) {
+            return $this->json(['error' => 'Invalid username format.'], 400);
+        }
+
         $result = $this->resolveServer($token, $request);
         if ($result instanceof JsonResponse) {
             return $result;

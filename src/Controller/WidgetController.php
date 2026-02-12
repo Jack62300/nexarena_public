@@ -31,8 +31,8 @@ class WidgetController extends AbstractController
             'params' => $params,
         ]);
 
-        $response->headers->set('X-Frame-Options', 'ALLOWALL');
         $response->headers->remove('X-Frame-Options');
+        $response->headers->set('Content-Security-Policy', 'frame-ancestors *');
 
         return $response;
     }
@@ -54,8 +54,8 @@ class WidgetController extends AbstractController
             'voters' => $voters,
         ]);
 
-        $response->headers->set('X-Frame-Options', 'ALLOWALL');
         $response->headers->remove('X-Frame-Options');
+        $response->headers->set('Content-Security-Policy', 'frame-ancestors *');
 
         return $response;
     }

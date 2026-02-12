@@ -34,6 +34,7 @@ class PartnerController extends AbstractController
     }
 
     #[Route('/new', name: 'new')]
+    #[IsGranted('ROLE_MANAGER')]
     public function new(Request $request): Response
     {
         if ($request->isMethod('POST')) {
@@ -58,6 +59,7 @@ class PartnerController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'edit')]
+    #[IsGranted('ROLE_MANAGER')]
     public function edit(Partner $partner, Request $request): Response
     {
         if ($request->isMethod('POST')) {

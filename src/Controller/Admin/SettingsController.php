@@ -4,6 +4,7 @@ namespace App\Controller\Admin;
 
 use App\Entity\Setting;
 use App\Repository\SettingRepository;
+use App\Service\EncryptionService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -61,6 +62,7 @@ class SettingsController extends AbstractController
     public function __construct(
         private EntityManagerInterface $em,
         private SettingRepository $settingRepo,
+        private EncryptionService $encryptionService,
     ) {
     }
 
@@ -186,6 +188,15 @@ class SettingsController extends AbstractController
 
             // Skip banner_slides — managed by dedicated routes
             if ($key === 'banner_slides') {
+                continue;
+            }
+
+            if ($setting->getType() === Setting::TYPE_SECRET) {
+                $value = $request->request->get('setting_' . $key);
+                // Don't save masked placeholder
+                if ($value !== null && $value !== '' && $value !== '********') {
+                    $setting->setValue($this->encryptionService->encrypt($value));
+                }
                 continue;
             }
 

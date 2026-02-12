@@ -163,7 +163,12 @@ class FeaturedBookingController extends AbstractController
             }
         }
 
-        $startsAt = new \DateTime($startsAtStr);
+        try {
+            $startsAt = new \DateTime($startsAtStr);
+        } catch (\Exception) {
+            $this->addFlash('danger', 'Format de date invalide.');
+            return $this->redirectToRoute('featured_booking', ['id' => $server->getId()]);
+        }
         $user = $this->getUser();
 
         $cost = $this->premiumService->calculatePositionBookingCost($scope, $position, $duration);

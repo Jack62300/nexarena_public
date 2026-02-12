@@ -19,6 +19,7 @@ class GameServerQueryService
 
     public function __construct(
         private LoggerInterface $logger,
+        private NetworkValidationService $networkValidator,
     ) {
     }
 
@@ -75,6 +76,12 @@ class GameServerQueryService
             'serverName' => null,
             'map' => null,
         ];
+
+        // SSRF protection: block private/reserved IP ranges
+        if (!$this->networkValidator->resolveAndValidateHost($ip, $port)) {
+            $this->logger->warning('Game server query blocked: private/reserved IP', ['ip' => $ip, 'port' => $port]);
+            return $empty;
+        }
 
         try {
             return match ($type) {
@@ -497,8 +504,7 @@ class GameServerQueryService
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT => $timeout,
             CURLOPT_CONNECTTIMEOUT => $timeout,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_MAXREDIRS => 5,
+            CURLOPT_FOLLOWLOCATION => false,
             CURLOPT_SSL_VERIFYPEER => true,
             CURLOPT_SSL_VERIFYHOST => 2,
             CURLOPT_USERAGENT => 'Nexarena/1.0',

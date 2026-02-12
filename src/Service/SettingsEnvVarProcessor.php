@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Entity\Setting;
 use App\Repository\SettingRepository;
 use Symfony\Component\DependencyInjection\EnvVarProcessorInterface;
 
@@ -20,6 +21,7 @@ class SettingsEnvVarProcessor implements EnvVarProcessorInterface
 
     public function __construct(
         private SettingRepository $settingRepo,
+        private EncryptionService $encryptionService,
     ) {
     }
 
@@ -31,7 +33,12 @@ class SettingsEnvVarProcessor implements EnvVarProcessorInterface
             try {
                 $setting = $this->settingRepo->findByKey($settingKey);
                 if ($setting && $setting->getValue() !== '') {
-                    return $setting->getValue();
+                    $value = $setting->getValue();
+                    // Decrypt if encrypted
+                    if ($setting->getType() === Setting::TYPE_SECRET && $this->encryptionService->isEncrypted($value)) {
+                        return $this->encryptionService->decrypt($value);
+                    }
+                    return $value;
                 }
             } catch (\Throwable) {
                 // DB not available yet (first boot, migrations not run) — fall through to env

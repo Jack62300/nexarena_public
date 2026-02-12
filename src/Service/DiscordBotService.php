@@ -19,55 +19,82 @@ class DiscordBotService
         return $this->settings->get('discord_bot_api_key', '');
     }
 
+    private function isValidBotUrl(string $url): bool
+    {
+        $parsed = parse_url($url);
+        if (!$parsed || !isset($parsed['scheme'], $parsed['host'])) {
+            return false;
+        }
+
+        return in_array($parsed['scheme'], ['http', 'https'], true);
+    }
+
     private function request(string $method, string $path, ?array $body = null): ?array
     {
         $apiKey = $this->getApiKey();
-        $url = $this->getBotUrl() . '/api' . $path;
+        $baseUrl = $this->getBotUrl();
 
-        $opts = [
-            'http' => [
-                'method' => $method,
-                'header' => "X-Api-Key: {$apiKey}\r\nContent-Type: application/json\r\nAccept: application/json\r\n",
-                'timeout' => 10,
-                'ignore_errors' => true,
-            ],
-        ];
-
-        if ($body !== null) {
-            $opts['http']['content'] = json_encode($body);
-        }
-
-        $context = stream_context_create($opts);
-        $response = @file_get_contents($url, false, $context);
-
-        if ($response === false) {
+        if (!$this->isValidBotUrl($baseUrl)) {
             return null;
         }
 
-        $statusCode = 200;
-        if (isset($http_response_header[0])) {
-            preg_match('/\d{3}/', $http_response_header[0], $matches);
-            $statusCode = (int) ($matches[0] ?? 200);
+        $url = $baseUrl . '/api' . $path;
+
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 10,
+            CURLOPT_CONNECTTIMEOUT => 5,
+            CURLOPT_FOLLOWLOCATION => false,
+            CURLOPT_CUSTOMREQUEST => $method,
+            CURLOPT_HTTPHEADER => [
+                'X-Api-Key: ' . $apiKey,
+                'Content-Type: application/json',
+                'Accept: application/json',
+            ],
+        ]);
+
+        if ($body !== null) {
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($body));
+        }
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($response === false || $httpCode >= 400) {
+            return null;
         }
 
         $data = json_decode($response, true);
 
-        if (!is_array($data) || $statusCode >= 400) {
-            return null;
-        }
-
-        return $data;
+        return is_array($data) ? $data : null;
     }
 
     public function isAvailable(): bool
     {
-        $url = $this->getBotUrl() . '/health';
-        $response = @file_get_contents($url, false, stream_context_create([
-            'http' => ['timeout' => 3, 'ignore_errors' => true],
-        ]));
+        $baseUrl = $this->getBotUrl();
+        if (!$this->isValidBotUrl($baseUrl)) {
+            return false;
+        }
+
+        $url = $baseUrl . '/health';
+
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 3,
+            CURLOPT_CONNECTTIMEOUT => 3,
+            CURLOPT_FOLLOWLOCATION => false,
+        ]);
+
+        $response = curl_exec($ch);
+        curl_close($ch);
+
         if ($response === false) {
             return false;
         }
+
         $data = json_decode($response, true);
         return isset($data['status']) && $data['status'] === 'ok';
     }
@@ -81,23 +108,11 @@ class DiscordBotService
 
     public function isGuildMember(string $discordId): bool
     {
-        $apiKey = $this->getApiKey();
-        $url = $this->getBotUrl() . '/api/guild/members/' . $discordId;
-
-        $response = @file_get_contents($url, false, stream_context_create([
-            'http' => [
-                'method' => 'GET',
-                'header' => "X-Api-Key: {$apiKey}\r\nAccept: application/json\r\n",
-                'timeout' => 5,
-                'ignore_errors' => true,
-            ],
-        ]));
-
-        if ($response === false) {
+        if (!preg_match('/^\d{1,20}$/', $discordId)) {
             return false;
         }
 
-        $data = json_decode($response, true);
+        $data = $this->request('GET', '/guild/members/' . $discordId);
         return $data['isMember'] ?? false;
     }
 

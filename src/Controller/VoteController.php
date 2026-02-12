@@ -7,6 +7,7 @@ use App\Service\AntiBotService;
 use App\Service\SettingsService;
 use App\Service\VoteRewardService;
 use App\Service\VoteService;
+use App\Util\CurlHelper;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -15,7 +16,6 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class VoteController extends AbstractController
 {
-    private const CA_BUNDLE = 'C:\\wamp64\\bin\\php\\php8.3.6\\extras\\ssl\\cacert.pem';
 
     public function __construct(
         private VoteService $voteService,
@@ -334,14 +334,7 @@ class VoteController extends AbstractController
 
     private function curlRequest(string $url, ?array $postFields = null, array $headers = []): ?string
     {
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
-
-        if (file_exists(self::CA_BUNDLE)) {
-            curl_setopt($ch, CURLOPT_CAINFO, self::CA_BUNDLE);
-        }
+        $ch = CurlHelper::createSecure($url);
 
         if ($postFields !== null) {
             curl_setopt($ch, CURLOPT_POST, true);

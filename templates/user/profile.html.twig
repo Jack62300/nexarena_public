@@ -127,6 +127,12 @@
                             </p>
                             <form action="{{ path('user_profile_2fa_disable') }}" method="post" onsubmit="return confirm('Etes-vous sur de vouloir desactiver le 2FA ?');">
                                 <input type="hidden" name="_token" value="{{ csrf_token('profile_2fa') }}">
+                                {% if app.user.password %}
+                                <div style="margin-bottom:12px;">
+                                    <label style="display:block;font-size:13px;color:#8b949e;margin-bottom:4px;">Mot de passe actuel</label>
+                                    <input type="password" name="password" required class="profile-input" placeholder="Confirmez votre mot de passe" style="max-width:300px;">
+                                </div>
+                                {% endif %}
                                 <button type="submit" class="btn-action btn-action--danger"><i class="fas fa-times"></i> Desactiver le 2FA</button>
                             </form>
                         {% else %}

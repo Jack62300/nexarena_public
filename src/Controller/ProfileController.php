@@ -7,6 +7,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\Encoding\Encoding;
 use Endroid\QrCode\Writer\PngWriter;
+use Psr\Cache\CacheItemPoolInterface;
 use Scheb\TwoFactorBundle\Security\TwoFactor\Provider\Totp\TotpAuthenticatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -144,8 +145,8 @@ class ProfileController extends AbstractController
             }
         }
 
-        if (strlen($newPassword) < 8) {
-            $this->addFlash('error', 'Le nouveau mot de passe doit contenir au moins 8 caracteres.');
+        if (strlen($newPassword) < 10) {
+            $this->addFlash('error', 'Le nouveau mot de passe doit contenir au moins 10 caracteres.');
             return $this->redirectToRoute('user_profile');
         }
 
@@ -194,10 +195,18 @@ class ProfileController extends AbstractController
     }
 
     #[Route('/profil/2fa/confirm', name: 'user_profile_2fa_confirm', methods: ['POST'])]
-    public function confirm2fa(Request $request, TotpAuthenticatorInterface $totpAuth): JsonResponse
+    public function confirm2fa(Request $request, TotpAuthenticatorInterface $totpAuth, CacheItemPoolInterface $cache): JsonResponse
     {
         if (!$this->isCsrfTokenValid('profile_2fa', $request->request->get('_token'))) {
             return new JsonResponse(['error' => 'Token CSRF invalide.'], 400);
+        }
+
+        // Rate limit: 5 attempts / 5 min
+        $cacheKey = '2fa_confirm_' . $this->getUser()->getId();
+        $cacheItem = $cache->getItem($cacheKey);
+        $attempts = $cacheItem->isHit() ? (int) $cacheItem->get() : 0;
+        if ($attempts >= 5) {
+            return new JsonResponse(['error' => 'Trop de tentatives. Reessayez dans 5 minutes.'], 429);
         }
 
         $user = $this->getUser();
@@ -208,17 +217,23 @@ class ProfileController extends AbstractController
         }
 
         if (!$totpAuth->checkCode($user, $code)) {
+            $cacheItem->set($attempts + 1);
+            $cacheItem->expiresAfter(300);
+            $cache->save($cacheItem);
             return new JsonResponse(['error' => 'Code invalide. Veuillez reessayer.'], 400);
         }
 
         $user->setIsTwoFactorEnabled(true);
         $this->em->flush();
 
+        // Reset attempts on success
+        $cache->deleteItem($cacheKey);
+
         return new JsonResponse(['success' => true, 'message' => 'Authentification 2FA activee avec succes.']);
     }
 
     #[Route('/profil/2fa/disable', name: 'user_profile_2fa_disable', methods: ['POST'])]
-    public function disable2fa(Request $request): Response
+    public function disable2fa(Request $request, UserPasswordHasherInterface $hasher): Response
     {
         if (!$this->isCsrfTokenValid('profile_2fa', $request->request->get('_token'))) {
             $this->addFlash('error', 'Token CSRF invalide.');
@@ -226,6 +241,14 @@ class ProfileController extends AbstractController
         }
 
         $user = $this->getUser();
+
+        // Require password to disable 2FA
+        $password = $request->request->get('password', '');
+        if ($user->getPassword() && !$hasher->isPasswordValid($user, $password)) {
+            $this->addFlash('error', 'Mot de passe incorrect. Impossible de desactiver la 2FA.');
+            return $this->redirectToRoute('user_profile');
+        }
+
         $user->setIsTwoFactorEnabled(false);
         $user->setTotpSecret(null);
         $this->em->flush();

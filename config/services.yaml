@@ -19,6 +19,10 @@ services:
     App\:
         resource: '../src/'
 
+    App\Service\EncryptionService:
+        arguments:
+            $appSecret: '%env(APP_SECRET)%'
+
     App\Service\ServerService:
         arguments:
             $projectDir: '%kernel.project_dir%'

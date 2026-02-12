@@ -95,6 +95,9 @@ class WebhookController extends AbstractController
             }
 
             $url = trim($url);
+            if ($url !== '' && !filter_var($url, FILTER_VALIDATE_URL)) {
+                continue;
+            }
             $webhook->setWebhookUrl($url !== '' ? $url : null);
             $webhook->setIsEnabled(isset($enabled[$id]));
         }

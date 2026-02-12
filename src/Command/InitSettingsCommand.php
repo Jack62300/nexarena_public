@@ -83,15 +83,15 @@ class InitSettingsCommand extends Command
         ['key' => 'api_allow_ip_in_response', 'value' => '0', 'type' => 'boolean', 'label' => 'Inclure IP dans les reponses', 'description' => 'Inclure l\'adresse IP des votants dans les reponses de l\'API', 'category' => 'api', 'position' => 2],
 
         // ========== CLES API ==========
-        ['key' => 'google_client_id', 'value' => '', 'type' => 'text', 'label' => 'Google Client ID', 'description' => 'Client ID de l\'application Google OAuth (console.cloud.google.com)', 'category' => 'api_keys', 'position' => 0],
-        ['key' => 'google_client_secret', 'value' => '', 'type' => 'text', 'label' => 'Google Client Secret', 'description' => 'Client Secret de l\'application Google OAuth', 'category' => 'api_keys', 'position' => 1],
-        ['key' => 'discord_client_id', 'value' => '', 'type' => 'text', 'label' => 'Discord Client ID', 'description' => 'Client ID de l\'application Discord OAuth (discord.com/developers)', 'category' => 'api_keys', 'position' => 2],
-        ['key' => 'discord_client_secret', 'value' => '', 'type' => 'text', 'label' => 'Discord Client Secret', 'description' => 'Client Secret de l\'application Discord OAuth', 'category' => 'api_keys', 'position' => 3],
-        ['key' => 'twitch_client_id', 'value' => '', 'type' => 'text', 'label' => 'Twitch Client ID', 'description' => 'Client ID de l\'application Twitch OAuth (dev.twitch.tv)', 'category' => 'api_keys', 'position' => 4],
-        ['key' => 'twitch_client_secret', 'value' => '', 'type' => 'text', 'label' => 'Twitch Client Secret', 'description' => 'Client Secret de l\'application Twitch OAuth', 'category' => 'api_keys', 'position' => 5],
-        ['key' => 'steam_api_key', 'value' => '', 'type' => 'text', 'label' => 'Steam API Key', 'description' => 'Cle API Steam (steamcommunity.com/dev/apikey)', 'category' => 'api_keys', 'position' => 6],
-        ['key' => 'ipgeolocation_api_key', 'value' => '', 'type' => 'text', 'label' => 'IPGeolocation API Key', 'description' => 'Cle API ipgeolocation.io pour la detection VPN/Proxy', 'category' => 'api_keys', 'position' => 7],
-        ['key' => 'virustotal_api_key', 'value' => '', 'type' => 'text', 'label' => 'VirusTotal API Key', 'description' => 'Cle API VirusTotal pour scanner les fichiers uploades (virustotal.com)', 'category' => 'api_keys', 'position' => 8],
+        ['key' => 'google_client_id', 'value' => '', 'type' => 'secret', 'label' => 'Google Client ID', 'description' => 'Client ID de l\'application Google OAuth (console.cloud.google.com)', 'category' => 'api_keys', 'position' => 0],
+        ['key' => 'google_client_secret', 'value' => '', 'type' => 'secret', 'label' => 'Google Client Secret', 'description' => 'Client Secret de l\'application Google OAuth', 'category' => 'api_keys', 'position' => 1],
+        ['key' => 'discord_client_id', 'value' => '', 'type' => 'secret', 'label' => 'Discord Client ID', 'description' => 'Client ID de l\'application Discord OAuth (discord.com/developers)', 'category' => 'api_keys', 'position' => 2],
+        ['key' => 'discord_client_secret', 'value' => '', 'type' => 'secret', 'label' => 'Discord Client Secret', 'description' => 'Client Secret de l\'application Discord OAuth', 'category' => 'api_keys', 'position' => 3],
+        ['key' => 'twitch_client_id', 'value' => '', 'type' => 'secret', 'label' => 'Twitch Client ID', 'description' => 'Client ID de l\'application Twitch OAuth (dev.twitch.tv)', 'category' => 'api_keys', 'position' => 4],
+        ['key' => 'twitch_client_secret', 'value' => '', 'type' => 'secret', 'label' => 'Twitch Client Secret', 'description' => 'Client Secret de l\'application Twitch OAuth', 'category' => 'api_keys', 'position' => 5],
+        ['key' => 'steam_api_key', 'value' => '', 'type' => 'secret', 'label' => 'Steam API Key', 'description' => 'Cle API Steam (steamcommunity.com/dev/apikey)', 'category' => 'api_keys', 'position' => 6],
+        ['key' => 'ipgeolocation_api_key', 'value' => '', 'type' => 'secret', 'label' => 'IPGeolocation API Key', 'description' => 'Cle API ipgeolocation.io pour la detection VPN/Proxy', 'category' => 'api_keys', 'position' => 7],
+        ['key' => 'virustotal_api_key', 'value' => '', 'type' => 'secret', 'label' => 'VirusTotal API Key', 'description' => 'Cle API VirusTotal pour scanner les fichiers uploades (virustotal.com)', 'category' => 'api_keys', 'position' => 8],
 
         // ========== VOTES ==========
         ['key' => 'vote_interval', 'value' => '120', 'type' => 'number', 'label' => 'Intervalle de vote (minutes)', 'description' => 'Temps minimum entre deux votes du meme utilisateur sur le meme serveur (en minutes). 120 = 2 heures.', 'category' => 'votes', 'position' => 0],
@@ -111,7 +111,7 @@ class InitSettingsCommand extends Command
         // ========== WEBHOOKS ==========
         ['key' => 'webhook_vote_enabled', 'value' => '0', 'type' => 'boolean', 'label' => 'Webhook vote actif', 'description' => 'Envoyer un webhook lors de chaque vote', 'category' => 'webhooks', 'position' => 0],
         ['key' => 'webhook_vote_url', 'value' => '', 'type' => 'url', 'label' => 'URL webhook vote', 'description' => 'URL par defaut ou envoyer les notifications de vote (le proprietaire du serveur peut overrider)', 'category' => 'webhooks', 'position' => 1],
-        ['key' => 'webhook_secret', 'value' => '', 'type' => 'text', 'label' => 'Secret webhook', 'description' => 'Cle secrete pour signer les webhooks (HMAC-SHA256)', 'category' => 'webhooks', 'position' => 2],
+        ['key' => 'webhook_secret', 'value' => '', 'type' => 'secret', 'label' => 'Secret webhook', 'description' => 'Cle secrete pour signer les webhooks (HMAC-SHA256)', 'category' => 'webhooks', 'position' => 2],
         ['key' => 'webhook_send_ip', 'value' => '1', 'type' => 'boolean', 'label' => 'Envoyer l\'IP du votant', 'description' => 'Inclure l\'adresse IP du votant dans le webhook', 'category' => 'webhooks', 'position' => 3],
         ['key' => 'webhook_send_email', 'value' => '0', 'type' => 'boolean', 'label' => 'Envoyer l\'email du votant', 'description' => 'Inclure l\'email du votant dans le webhook', 'category' => 'webhooks', 'position' => 4],
 
@@ -120,10 +120,10 @@ class InitSettingsCommand extends Command
         ['key' => 'security_allowed_origins', 'value' => '', 'type' => 'textarea', 'label' => 'Origines autorisees (CORS)', 'description' => 'Domaines autorises pour les requetes cross-origin (un par ligne). Laissez vide pour tout autoriser.', 'category' => 'securite', 'position' => 1],
 
         // ========== PAIEMENT ==========
-        ['key' => 'paypal_client_id', 'value' => '', 'type' => 'text', 'label' => 'PayPal Client ID', 'description' => 'Client ID de l\'application PayPal (developer.paypal.com)', 'category' => 'paiement', 'position' => 0],
-        ['key' => 'paypal_client_secret', 'value' => '', 'type' => 'text', 'label' => 'PayPal Client Secret', 'description' => 'Client Secret de l\'application PayPal', 'category' => 'paiement', 'position' => 1],
+        ['key' => 'paypal_client_id', 'value' => '', 'type' => 'secret', 'label' => 'PayPal Client ID', 'description' => 'Client ID de l\'application PayPal (developer.paypal.com)', 'category' => 'paiement', 'position' => 0],
+        ['key' => 'paypal_client_secret', 'value' => '', 'type' => 'secret', 'label' => 'PayPal Client Secret', 'description' => 'Client Secret de l\'application PayPal', 'category' => 'paiement', 'position' => 1],
         ['key' => 'paypal_sandbox_mode', 'value' => '1', 'type' => 'boolean', 'label' => 'Mode Sandbox', 'description' => 'Utiliser l\'environnement sandbox PayPal pour les tests (desactiver en production)', 'category' => 'paiement', 'position' => 2],
-        ['key' => 'paypal_webhook_id', 'value' => '', 'type' => 'text', 'label' => 'PayPal Webhook ID', 'description' => 'ID du webhook configure dans le dashboard PayPal (pour verification signature)', 'category' => 'paiement', 'position' => 3],
+        ['key' => 'paypal_webhook_id', 'value' => '', 'type' => 'secret', 'label' => 'PayPal Webhook ID', 'description' => 'ID du webhook configure dans le dashboard PayPal (pour verification signature)', 'category' => 'paiement', 'position' => 3],
         ['key' => 'payment_currency', 'value' => 'EUR', 'type' => 'text', 'label' => 'Devise', 'description' => 'Code devise ISO pour les paiements (EUR, USD, etc.)', 'category' => 'paiement', 'position' => 4],
 
         // ========== PREMIUM ==========
@@ -156,7 +156,7 @@ class InitSettingsCommand extends Command
 
         // ========== DISCORD ==========
         ['key' => 'discord_bot_url', 'value' => 'http://localhost:3050', 'type' => 'text', 'label' => 'URL de l\'API du bot Discord', 'description' => 'URL de l\'API Express du bot Discord (ex: http://localhost:3050)', 'category' => 'discord', 'position' => 0],
-        ['key' => 'discord_bot_api_key', 'value' => '', 'type' => 'text', 'label' => 'Cle API partagee', 'description' => 'Cle API partagee entre le site et le bot Discord (doit etre identique dans le .env du bot)', 'category' => 'discord', 'position' => 1],
+        ['key' => 'discord_bot_api_key', 'value' => '', 'type' => 'secret', 'label' => 'Cle API partagee', 'description' => 'Cle API partagee entre le site et le bot Discord (doit etre identique dans le .env du bot)', 'category' => 'discord', 'position' => 1],
         // Automod sanctions
         ['key' => 'discord_automod_warn_to_mute', 'value' => '3', 'type' => 'number', 'label' => 'Warns avant mute auto', 'description' => 'Nombre d\'avertissements actifs avant mute automatique', 'category' => 'discord', 'position' => 2],
         ['key' => 'discord_automod_warn_to_kick', 'value' => '5', 'type' => 'number', 'label' => 'Warns avant kick auto', 'description' => 'Nombre d\'avertissements actifs avant kick automatique', 'category' => 'discord', 'position' => 3],
@@ -258,9 +258,19 @@ class InitSettingsCommand extends Command
             }
         }
 
+        // Upgrade existing settings to new type if changed (e.g. text → secret)
+        $upgraded = 0;
+        foreach (self::DEFAULT_SETTINGS as $data) {
+            $existing = $this->settingRepo->findByKey($data['key']);
+            if ($existing && $existing->getType() !== $data['type']) {
+                $existing->setType($data['type']);
+                $upgraded++;
+            }
+        }
+
         $this->em->flush();
 
-        $io->success("$created parametre(s) cree(s), " . (count(self::DEFAULT_SETTINGS) - $created) . " deja existant(s).");
+        $io->success("$created parametre(s) cree(s), $upgraded type(s) mis a jour, " . (count(self::DEFAULT_SETTINGS) - $created) . " deja existant(s).");
 
         // ========== SEED DEFAULT PREMIUM PLANS ==========
         $existingPlans = $this->planRepo->count([]);

@@ -46,15 +46,6 @@ class OAuthController extends AbstractController
 
         try {
             $client = $clientRegistry->getClient($provider);
-
-            // Fix SSL on Windows/WAMP: configure Guzzle with CA bundle
-            $caBundle = 'C:\\wamp64\\bin\\php\\php8.3.6\\extras\\ssl\\cacert.pem';
-            if (PHP_OS_FAMILY === 'Windows' && file_exists($caBundle)) {
-                $client->getOAuth2Provider()->setHttpClient(
-                    new \GuzzleHttp\Client(['verify' => $caBundle])
-                );
-            }
-
             $accessToken = $client->getAccessToken();
             $resourceOwner = $client->fetchUserFromToken($accessToken);
 
@@ -63,6 +54,7 @@ class OAuthController extends AbstractController
             // Utilisateur existant avec cet OAuth ID → login direct
             $existingUser = $userRepository->findByOAuthId($provider, $oauthId);
             if ($existingUser) {
+                $request->getSession()->migrate(true);
                 $security->login($existingUser, 'form_login', 'main');
                 return $this->redirectToRoute('app_home');
             }
@@ -81,6 +73,7 @@ class OAuthController extends AbstractController
             // Email disponible → flux normal
             $user = $oauthService->findOrCreateFromOAuth($provider, $oauthId, $email, $username, $avatar);
 
+            $request->getSession()->migrate(true);
             $security->login($user, 'form_login', 'main');
 
             return $this->redirectToRoute('app_home');
@@ -130,6 +123,7 @@ class OAuthController extends AbstractController
             );
 
             $session->remove('_oauth_pending');
+            $session->migrate(true);
             $security->login($user, 'form_login', 'main');
 
             return $this->redirectToRoute('app_home');

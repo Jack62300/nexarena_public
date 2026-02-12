@@ -14,6 +14,7 @@ class SettingsService
     public function __construct(
         private SettingRepository $repository,
         private EntityManagerInterface $em,
+        private EncryptionService $encryptionService,
     ) {
     }
 
@@ -22,8 +23,21 @@ class SettingsService
         $this->loadCache();
 
         $setting = $this->cache[$key] ?? null;
+        if (!$setting) {
+            return $default;
+        }
 
-        return $setting?->getValue() ?? $default;
+        $value = $setting->getValue();
+        if ($value === null) {
+            return $default;
+        }
+
+        // Auto-decrypt secrets
+        if ($setting->getType() === Setting::TYPE_SECRET && $this->encryptionService->isEncrypted($value)) {
+            return $this->encryptionService->decrypt($value);
+        }
+
+        return $value;
     }
 
     public function getBool(string $key, bool $default = false): bool
@@ -50,6 +64,10 @@ class SettingsService
     {
         $setting = $this->repository->findByKey($key);
         if ($setting) {
+            // Auto-encrypt secrets
+            if ($setting->getType() === Setting::TYPE_SECRET && $value !== null && $value !== '') {
+                $value = $this->encryptionService->encrypt($value);
+            }
             $setting->setValue($value);
             $this->em->flush();
             $this->cache = null; // Invalidate cache

@@ -31,10 +31,10 @@ class ApiRateLimiterListener
             return;
         }
 
-        // Rate limit by API token (from URL) or by client IP
-        $pathParts = explode('/', trim($request->getPathInfo(), '/'));
-        $rawKey = $pathParts[3] ?? $request->getClientIp() ?? 'unknown';
-        $key = 'api_rl_' . md5($rawKey);
+        // Rate limit by IP + endpoint path
+        $ip = $request->getClientIp() ?? 'unknown';
+        $endpoint = $request->getPathInfo();
+        $key = 'api_rl_' . hash('sha256', $ip . '|' . $endpoint);
 
         $item = $this->cache->getItem($key);
         $data = $item->isHit() ? $item->get() : null;

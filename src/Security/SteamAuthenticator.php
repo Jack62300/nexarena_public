@@ -6,6 +6,7 @@ use App\Repository\UserRepository;
 use App\Security\Exception\OAuthEmailRequiredException;
 use App\Service\OAuthRegistrationService;
 use App\Service\SettingsService;
+use App\Util\CurlHelper;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -21,7 +22,6 @@ class SteamAuthenticator extends AbstractAuthenticator
 {
     private const STEAM_OPENID_URL = 'https://steamcommunity.com/openid/login';
     private const STEAM_API_URL = 'https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/';
-    private const CA_BUNDLE = 'C:\\wamp64\\bin\\php\\php8.3.6\\extras\\ssl\\cacert.pem';
 
     public function __construct(
         private UrlGeneratorInterface $urlGenerator,
@@ -127,14 +127,9 @@ class SteamAuthenticator extends AbstractAuthenticator
             $params['openid.' . $item] = $request->query->get($key);
         }
 
-        $ch = curl_init(self::STEAM_OPENID_URL);
+        $ch = CurlHelper::createSecure(self::STEAM_OPENID_URL);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($params));
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-        if (file_exists(self::CA_BUNDLE)) {
-            curl_setopt($ch, CURLOPT_CAINFO, self::CA_BUNDLE);
-        }
         $response = curl_exec($ch);
         curl_close($ch);
 
@@ -148,12 +143,7 @@ class SteamAuthenticator extends AbstractAuthenticator
             'steamids' => $steamId,
         ]);
 
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-        if (file_exists(self::CA_BUNDLE)) {
-            curl_setopt($ch, CURLOPT_CAINFO, self::CA_BUNDLE);
-        }
+        $ch = CurlHelper::createSecure($url);
         $response = curl_exec($ch);
         curl_close($ch);
 

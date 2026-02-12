@@ -290,7 +290,17 @@
                                         <div class="setting-group__desc">{{ setting.description }}</div>
                                     {% endif %}
 
-                                    {% if setting.type == 'text' %}
+                                    {% if setting.type == 'secret' %}
+                                        <div style="position:relative;">
+                                            <i class="fas fa-lock" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--accent);font-size:13px;"></i>
+                                            <input type="password" id="setting_{{ setting.key }}" name="setting_{{ setting.key }}"
+                                                   class="setting-input" style="padding-left:36px;"
+                                                   value="{{ setting.value ? '********' : '' }}"
+                                                   placeholder="Entrez la valeur secrete"
+                                                   autocomplete="off">
+                                        </div>
+
+                                    {% elseif setting.type == 'text' %}
                                         <input type="text" id="setting_{{ setting.key }}" name="setting_{{ setting.key }}"
                                                class="setting-input" value="{{ setting.value }}">
 

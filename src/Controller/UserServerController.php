@@ -20,6 +20,7 @@ use App\Repository\ServerRepository;
 use App\Repository\TagRepository;
 use App\Repository\TransactionRepository;
 use App\Repository\UserRepository;
+use App\Service\NetworkValidationService;
 use App\Service\PremiumService;
 use App\Service\ServerService;
 use App\Service\SlugService;
@@ -59,6 +60,7 @@ class UserServerController extends AbstractController
         private UserRepository $userRepo,
         private WebhookService $webhookService,
         private TagRepository $tagRepo,
+        private NetworkValidationService $networkValidator,
     ) {
     }
 
@@ -234,8 +236,13 @@ class UserServerController extends AbstractController
 
             if ($action === 'webhook') {
                 $this->requireAccess($server, 'manage_webhooks');
+                $webhookUrl = $request->request->get('webhook_url') ?: null;
+                if ($webhookUrl && !$this->networkValidator->isValidWebhookUrl($webhookUrl)) {
+                    $this->addFlash('error', 'URL de webhook invalide. Utilisez une URL HTTPS publique.');
+                    return $this->redirectToRoute('user_servers_manage', ['id' => $server->getId()]);
+                }
                 $server->setWebhookEnabled($request->request->getBoolean('webhook_enabled'));
-                $server->setWebhookUrl($request->request->get('webhook_url') ?: null);
+                $server->setWebhookUrl($webhookUrl);
                 $this->em->flush();
                 $this->addFlash('success', 'Webhooks mis a jour.');
             }

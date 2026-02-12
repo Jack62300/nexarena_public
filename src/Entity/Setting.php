@@ -18,6 +18,7 @@ class Setting
     public const TYPE_COLOR = 'color';
     public const TYPE_URL = 'url';
     public const TYPE_HTML = 'html';
+    public const TYPE_SECRET = 'secret';
 
     #[ORM\Id]
     #[ORM\GeneratedValue]

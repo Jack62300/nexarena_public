@@ -20,6 +20,7 @@ use App\Repository\UserRepository;
 use App\Service\SettingsService;
 use App\Service\StatsService;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Cache\CacheItemPoolInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -28,10 +29,20 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/api/discord', name: 'api_discord_')]
 class DiscordBotApiController extends AbstractController
 {
+    private const DISCORD_ID_SETTINGS_WHITELIST = [
+        'discord_automod_warn_to_mute', 'discord_automod_warn_to_kick', 'discord_automod_warn_to_ban',
+        'discord_automod_kick_enabled', 'discord_automod_ban_enabled', 'discord_automod_mute_duration',
+        'discord_cmd_role_add_min_role', 'discord_cmd_role_remove_min_role',
+        'discord_welcome_enabled', 'discord_welcome_channel_id', 'discord_welcome_message', 'discord_welcome_banner_url',
+        'discord_antispam_enabled', 'discord_antispam_max_messages', 'discord_antispam_interval', 'discord_antispam_max_links',
+        'discord_live_promo_enabled', 'discord_live_promo_channel_id', 'discord_live_promo_cost_per_day', 'discord_live_promo_max_days',
+    ];
+
     public function __construct(
         private EntityManagerInterface $em,
         private SettingsService $settings,
         private UserRepository $userRepo,
+        private CacheItemPoolInterface $cache,
     ) {
     }
 
@@ -41,6 +52,19 @@ class DiscordBotApiController extends AbstractController
         $expected = $this->settings->get('discord_bot_api_key', '');
 
         if (!$key || !$expected || !hash_equals($expected, $key)) {
+            // Rate limit auth failures: 10 per 5 min per IP
+            $ip = $request->getClientIp();
+            $cacheKey = 'discord_api_auth_fail_' . hash('sha256', $ip);
+            $cacheItem = $this->cache->getItem($cacheKey);
+            $failures = $cacheItem->isHit() ? (int) $cacheItem->get() : 0;
+            $cacheItem->set($failures + 1);
+            $cacheItem->expiresAfter(300);
+            $this->cache->save($cacheItem);
+
+            if ($failures >= 10) {
+                return $this->json(['error' => 'Too many failed attempts'], 429);
+            }
+
             return $this->json(['error' => 'Unauthorized'], 401);
         }
 
@@ -72,12 +96,17 @@ class DiscordBotApiController extends AbstractController
             return $this->json(['error' => 'Invalid JSON'], 400);
         }
 
+        $discordUserId = $data['discordUserId'] ?? '';
+        if (!preg_match('/^\d{1,20}$/', $discordUserId)) {
+            return $this->json(['error' => 'Invalid discordUserId'], 400);
+        }
+
         $ticket = new DiscordTicket();
-        $ticket->setDiscordUserId($data['discordUserId'] ?? '');
-        $ticket->setDiscordUsername($data['discordUsername'] ?? '');
-        $ticket->setCategory($data['category'] ?? 'autre');
-        $ticket->setSubject($data['subject'] ?? 'Sans sujet');
-        $ticket->setDescription($data['description'] ?? null);
+        $ticket->setDiscordUserId($discordUserId);
+        $ticket->setDiscordUsername(mb_substr($data['discordUsername'] ?? '', 0, 100));
+        $ticket->setCategory(mb_substr($data['category'] ?? 'autre', 0, 50));
+        $ticket->setSubject(mb_substr($data['subject'] ?? 'Sans sujet', 0, 255));
+        $ticket->setDescription(!empty($data['description']) ? mb_substr($data['description'], 0, 5000) : null);
 
         // Try to link site user by Discord ID
         $siteUser = $this->userRepo->findOneBy(['discordId' => $data['discordUserId'] ?? '']);
@@ -112,10 +141,10 @@ class DiscordBotApiController extends AbstractController
 
         $message = new DiscordTicketMessage();
         $message->setTicket($ticket);
-        $message->setAuthorDiscordId($data['authorDiscordId'] ?? '');
-        $message->setAuthorUsername($data['authorUsername'] ?? '');
-        $message->setAuthorIsStaff($data['authorIsStaff'] ?? false);
-        $message->setContent($data['content'] ?? '');
+        $message->setAuthorDiscordId(mb_substr($data['authorDiscordId'] ?? '', 0, 20));
+        $message->setAuthorUsername(mb_substr($data['authorUsername'] ?? '', 0, 100));
+        $message->setAuthorIsStaff((bool) ($data['authorIsStaff'] ?? false));
+        $message->setContent(mb_substr($data['content'] ?? '', 0, 5000));
 
         $this->em->persist($message);
         $this->em->flush();
@@ -174,6 +203,10 @@ class DiscordBotApiController extends AbstractController
         $authError = $this->checkApiKey($request);
         if ($authError) return $authError;
 
+        if (!preg_match('/^\d{1,20}$/', $discordId)) {
+            return $this->json(['error' => 'Invalid Discord ID format'], 400);
+        }
+
         $user = $this->userRepo->findOneBy(['discordId' => $discordId]);
         if (!$user) {
             return $this->json(['found' => false]);
@@ -221,7 +254,11 @@ class DiscordBotApiController extends AbstractController
         $log->setMessageContent(!empty($data['messageContent']) ? mb_substr($data['messageContent'], 0, 5000) : null);
         $log->setReason(!empty($data['reason']) ? mb_substr($data['reason'], 0, 255) : null);
         $log->setTriggeredWord(!empty($data['triggeredWord']) ? mb_substr($data['triggeredWord'], 0, 100) : null);
-        $log->setMetadata(!empty($data['metadata']) && is_array($data['metadata']) ? $data['metadata'] : null);
+        $metadata = !empty($data['metadata']) && is_array($data['metadata']) ? $data['metadata'] : null;
+        if ($metadata && strlen(json_encode($metadata)) > 10000) {
+            $metadata = null;
+        }
+        $log->setMetadata($metadata);
 
         $this->em->persist($log);
         $this->em->flush();
@@ -242,16 +279,25 @@ class DiscordBotApiController extends AbstractController
             return $this->json(['error' => 'Invalid JSON'], 400);
         }
 
+        $discordUserId = $data['discordUserId'] ?? '';
+        if (!preg_match('/^\d{1,20}$/', $discordUserId)) {
+            return $this->json(['error' => 'Invalid discordUserId'], 400);
+        }
+
         $sanction = new DiscordSanction();
-        $sanction->setDiscordUserId($data['discordUserId'] ?? '');
-        $sanction->setDiscordUsername($data['discordUsername'] ?? '');
+        $sanction->setDiscordUserId($discordUserId);
+        $sanction->setDiscordUsername(mb_substr($data['discordUsername'] ?? '', 0, 100));
         $sanction->setType($data['type'] ?? DiscordSanction::TYPE_WARN);
-        $sanction->setReason($data['reason'] ?? null);
-        $sanction->setIssuedBy($data['issuedBy'] ?? '');
-        $sanction->setIssuedByDiscordId($data['issuedByDiscordId'] ?? '');
+        $sanction->setReason(!empty($data['reason']) ? mb_substr($data['reason'], 0, 500) : null);
+        $sanction->setIssuedBy(mb_substr($data['issuedBy'] ?? '', 0, 100));
+        $sanction->setIssuedByDiscordId(mb_substr($data['issuedByDiscordId'] ?? '', 0, 20));
 
         if (!empty($data['expiresAt'])) {
-            $sanction->setExpiresAt(new \DateTimeImmutable($data['expiresAt']));
+            try {
+                $sanction->setExpiresAt(new \DateTimeImmutable($data['expiresAt']));
+            } catch (\Exception) {
+                return $this->json(['error' => 'Invalid expiresAt date format'], 400);
+            }
         }
 
         // Link site user if possible
@@ -274,6 +320,10 @@ class DiscordBotApiController extends AbstractController
     {
         $authError = $this->checkApiKey($request);
         if ($authError) return $authError;
+
+        if (!preg_match('/^\d{1,20}$/', $discordUserId)) {
+            return $this->json(['error' => 'Invalid Discord ID format'], 400);
+        }
 
         $sanctions = $sanctionRepo->findByDiscordUserId($discordUserId);
         $result = [];
@@ -330,9 +380,17 @@ class DiscordBotApiController extends AbstractController
             return $this->json(['error' => 'keys parameter required'], 400);
         }
 
+        // Whitelist: only discord-related settings
         $result = [];
         foreach ($keyList as $key) {
+            if (!in_array($key, self::DISCORD_ID_SETTINGS_WHITELIST, true)) {
+                continue;
+            }
             $result[$key] = $this->settings->get($key, '');
+        }
+
+        if (empty($result)) {
+            return $this->json(['error' => 'No valid keys requested'], 400);
         }
 
         return $this->json(['settings' => $result]);
@@ -374,11 +432,11 @@ class DiscordBotApiController extends AbstractController
         }
 
         $rr = new DiscordReactionRole();
-        $rr->setMessageId($data['messageId'] ?? '');
-        $rr->setChannelId($data['channelId'] ?? '');
-        $rr->setEmoji($data['emoji'] ?? '');
-        $rr->setRoleId($data['roleId'] ?? '');
-        $rr->setLabel($data['label'] ?? null);
+        $rr->setMessageId(mb_substr($data['messageId'] ?? '', 0, 20));
+        $rr->setChannelId(mb_substr($data['channelId'] ?? '', 0, 20));
+        $rr->setEmoji(mb_substr($data['emoji'] ?? '', 0, 100));
+        $rr->setRoleId(mb_substr($data['roleId'] ?? '', 0, 20));
+        $rr->setLabel(!empty($data['label']) ? mb_substr($data['label'], 0, 100) : null);
 
         $this->em->persist($rr);
         $this->em->flush();
@@ -444,11 +502,11 @@ class DiscordBotApiController extends AbstractController
         }
 
         $invite = new DiscordInvite();
-        $invite->setInviterDiscordId($data['inviterDiscordId'] ?? '');
-        $invite->setInviterUsername($data['inviterUsername'] ?? '');
-        $invite->setInvitedDiscordId($data['invitedDiscordId'] ?? '');
-        $invite->setInvitedUsername($data['invitedUsername'] ?? '');
-        $invite->setInviteCode($data['inviteCode'] ?? null);
+        $invite->setInviterDiscordId(mb_substr($data['inviterDiscordId'] ?? '', 0, 20));
+        $invite->setInviterUsername(mb_substr($data['inviterUsername'] ?? '', 0, 100));
+        $invite->setInvitedDiscordId(mb_substr($data['invitedDiscordId'] ?? '', 0, 20));
+        $invite->setInvitedUsername(mb_substr($data['invitedUsername'] ?? '', 0, 100));
+        $invite->setInviteCode(!empty($data['inviteCode']) ? mb_substr($data['inviteCode'], 0, 50) : null);
 
         $this->em->persist($invite);
         $this->em->flush();
