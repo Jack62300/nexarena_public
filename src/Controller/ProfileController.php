@@ -4,8 +4,7 @@ namespace App\Controller;
 
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use Endroid\QrCode\Builder\Builder;
-use Endroid\QrCode\Encoding\Encoding;
+use Endroid\QrCode\QrCode;
 use Endroid\QrCode\Writer\PngWriter;
 use Psr\Cache\CacheItemPoolInterface;
 use Scheb\TwoFactorBundle\Security\TwoFactor\Provider\Totp\TotpAuthenticatorInterface;
@@ -177,19 +176,14 @@ class ProfileController extends AbstractController
         $this->em->flush();
 
         // Generate QR code content (otpauth URI)
-        $totpConfig = $user->getTotpAuthenticationConfiguration();
         $qrContent = $totpAuth->getQRContent($user);
 
-        $qrCode = Builder::create()
-            ->writer(new PngWriter())
-            ->data($qrContent)
-            ->encoding(new Encoding('UTF-8'))
-            ->size(250)
-            ->margin(10)
-            ->build();
+        $qrCode = new QrCode($qrContent);
+        $writer = new PngWriter();
+        $result = $writer->write($qrCode);
 
         return new JsonResponse([
-            'qr' => 'data:image/png;base64,' . base64_encode($qrCode->getString()),
+            'qr' => 'data:image/png;base64,' . base64_encode($result->getString()),
             'secret' => $secret,
         ]);
     }
