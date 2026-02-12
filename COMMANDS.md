@@ -2,7 +2,9 @@
 
 ## Vue d'ensemble
 
-Nexarena dispose de 10 commandes Symfony personnalisees. 5 d'entre elles sont executees automatiquement par le **Symfony Scheduler** (plus besoin de crontab). Les 5 autres sont des commandes manuelles d'administration.
+Nexarena dispose de 10 commandes Symfony personnalisees. 4 d'entre elles sont executees automatiquement par le **Symfony Scheduler** (plus besoin de crontab). Les 6 autres sont des commandes manuelles d'administration.
+
+Les votes ne sont jamais remis a zero : ils sont conserves et cumules de mois en mois.
 
 ---
 
@@ -72,11 +74,11 @@ php bin/console app:process-twitch-subscriptions
 
 **Criteres d'eligibilite** :
 1. Le serveur doit etre actif et approuve
-2. Le serveur doit avoir ete cree il y a moins de 48 heures
+2. Le serveur doit exister depuis au moins 48 heures (date de creation >= 48h)
 3. Le proprietaire doit s'etre connecte il y a moins de 48 heures
 4. Le serveur doit avoir au minimum 15 votes mensuels
 
-Parmi les serveurs eligibles, les 10 plus recents sont retenus comme candidats. Un seul est tire au sort. Le proprietaire recoit 1 jeton NexBoost et une notification systeme.
+Parmi les serveurs eligibles, les 10 avec le plus de votes sont retenus comme candidats. Un seul est tire au sort. Le proprietaire recoit 1 jeton NexBoost et une notification systeme.
 
 ```bash
 # Execution manuelle (hors 1er du mois)
@@ -95,54 +97,37 @@ php bin/console app:monthly-random-boost
 | `--dry-run` | Simule le tirage sans attribuer de jeton |
 | `--force` | Force l'execution meme si on n'est pas le 1er du mois |
 
-**Ordre d'execution** : Cette commande DOIT s'executer AVANT `app:monthly-battle` car elle a besoin des votes mensuels (qui sont remis a zero par le battle).
-
 ---
 
 ### `app:monthly-battle`
 
 **Frequence** : Le 1er du mois a 00:30
-**Role** : Archive le top 10 des serveurs du mois precedent, designe le gagnant, et remet tous les votes mensuels a zero.
+**Role** : Archive le top 10 des serveurs du mois precedent et designe le gagnant.
 
 Cree un enregistrement `MonthlyBattle` avec :
 - Le mois et l'annee du mois precedent
 - Les donnees JSON des 10 meilleurs serveurs (id, nom, votes, rang)
 - Le serveur gagnant (celui avec le plus de votes)
 
-Puis remet a zero les votes mensuels de tous les serveurs.
+Les votes ne sont pas remis a zero. Ils sont conserves et cumules de mois en mois.
 
 ```bash
 # Execution manuelle
 php bin/console app:monthly-battle
 ```
 
-**Securite** : Si un MonthlyBattle existe deja pour le mois precedent, la commande ne fait rien (idempotente). Les votes sont quand meme remis a zero meme s'il n'y a aucun serveur.
-
----
-
-### `app:reset-monthly-votes`
-
-**Frequence** : Le 1er du mois a 01:00
-**Role** : Remet a zero les votes mensuels de tous les serveurs.
-
-Cette commande est un filet de securite. Normalement, `app:monthly-battle` effectue deja ce reset. Si le battle echoue pour une raison quelconque, cette commande garantit que les votes sont remis a zero.
-
-```bash
-# Execution manuelle
-php bin/console app:reset-monthly-votes
-```
+**Securite** : Si un MonthlyBattle existe deja pour le mois precedent, la commande ne fait rien (idempotente).
 
 ---
 
 ## Planning mensuel du 1er du mois
 
-Les commandes du 1er du mois s'executent dans cet ordre precis :
+Les commandes du 1er du mois s'executent dans cet ordre :
 
 | Heure | Commande | Description |
 |-------|----------|-------------|
-| 00:05 | `app:monthly-random-boost` | Tirage NexBoost (a besoin des votes) |
-| 00:30 | `app:monthly-battle` | Archive top 10 + reset votes |
-| 01:00 | `app:reset-monthly-votes` | Reset votes (filet de securite) |
+| 00:05 | `app:monthly-random-boost` | Tirage NexBoost parmi les serveurs eligibles |
+| 00:30 | `app:monthly-battle` | Archive le top 10 et designe le gagnant |
 
 ---
 
@@ -214,6 +199,20 @@ php bin/console app:promote-user editeur@example.com ROLE_EDITEUR
 | `ROLE_MANAGER` | Manager - gestion des serveurs et du contenu |
 | `ROLE_EDITEUR` | Editeur - edition du contenu |
 | `ROLE_USER` | Utilisateur standard (attribue automatiquement) |
+
+---
+
+### `app:reset-monthly-votes`
+
+**Role** : Remet a zero les votes mensuels de tous les serveurs. Commande d'urgence uniquement.
+
+Cette commande n'est PAS planifiee. Les votes sont conserves de mois en mois. Elle n'est la qu'en cas de besoin exceptionnel (ex: remise a zero manuelle apres un bug).
+
+```bash
+php bin/console app:reset-monthly-votes
+```
+
+**Attention** : Cette action est irreversible. N'utiliser qu'en cas de necessite absolue.
 
 ---
 

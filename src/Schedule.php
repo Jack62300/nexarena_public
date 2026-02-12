@@ -38,20 +38,15 @@ class Schedule implements ScheduleProviderInterface
             ))
 
             // --- 1er du mois ---
-            // 00:05 - Tirage mensuel NexBoost (AVANT le battle qui reset les votes)
+            // 00:05 - Tirage mensuel NexBoost
             ->add(RecurringMessage::cron(
                 '5 0 1 * *',
                 new RunCommandMessage('app:monthly-random-boost --force')
             ))
-            // 00:30 - Archive le top 10, designe le gagnant, reset les votes
+            // 00:30 - Archive le top 10 et designe le gagnant
             ->add(RecurringMessage::cron(
                 '30 0 1 * *',
                 new RunCommandMessage('app:monthly-battle')
-            ))
-            // 01:00 - Reset votes (filet de securite si monthly-battle echoue)
-            ->add(RecurringMessage::cron(
-                '0 1 1 * *',
-                new RunCommandMessage('app:reset-monthly-votes')
             ))
         ;
     }

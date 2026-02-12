@@ -78,8 +78,8 @@ class MonthlyRandomBoostCommand extends Command
                 continue;
             }
 
-            // Server created less than 48h ago (recent server)
-            if ($server->getCreatedAt() === null || $server->getCreatedAt() < $cutoff) {
+            // Server must exist for at least 48h (established server)
+            if ($server->getCreatedAt() === null || $server->getCreatedAt() > $cutoff) {
                 continue;
             }
 
@@ -91,15 +91,15 @@ class MonthlyRandomBoostCommand extends Command
             $eligible[] = $server;
         }
 
-        $io->writeln(sprintf('Serveurs eligibles (>=%d votes, cree <48h, owner connecte <48h) : <info>%d</info>', $minVotes, count($eligible)));
+        $io->writeln(sprintf('Serveurs eligibles (>=%d votes, cree >=48h, owner connecte <48h) : <info>%d</info>', $minVotes, count($eligible)));
 
         if (empty($eligible)) {
             $io->warning('Aucun serveur ne remplit les criteres. Pas de tirage ce mois.');
             return Command::SUCCESS;
         }
 
-        // Step 3: Take the last 10 (most recent by creation)
-        usort($eligible, fn($a, $b) => $b->getCreatedAt() <=> $a->getCreatedAt());
+        // Step 3: Take the last 10 (most recent by monthly votes)
+        usort($eligible, fn($a, $b) => $b->getMonthlyVotes() <=> $a->getMonthlyVotes());
         $candidates = array_slice($eligible, 0, self::MAX_CANDIDATES);
 
         $io->section(sprintf('Candidats (max %d plus recents)', self::MAX_CANDIDATES));

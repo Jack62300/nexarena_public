@@ -14,7 +14,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 #[AsCommand(
     name: 'app:monthly-battle',
-    description: 'Archive le top 10 du mois, designe le gagnant et remet les votes mensuels a zero',
+    description: 'Archive le top 10 du mois et designe le gagnant (les votes sont conserves)',
 )]
 class MonthlyBattleCommand extends Command
 {
@@ -48,9 +48,6 @@ class MonthlyBattleCommand extends Command
 
         if (empty($topServers)) {
             $io->warning('Aucun serveur trouve. Pas de Monthly Battle cree.');
-            // Still reset votes
-            $count = $this->serverRepo->resetAllMonthlyVotes();
-            $io->info(sprintf('Votes mensuels remis a zero pour %d serveur(s).', $count));
             return Command::SUCCESS;
         }
 
@@ -84,10 +81,6 @@ class MonthlyBattleCommand extends Command
             $topServers[0]->getName(),
             $topServers[0]->getMonthlyVotes(),
         ));
-
-        // Reset monthly votes
-        $count = $this->serverRepo->resetAllMonthlyVotes();
-        $io->info(sprintf('Votes mensuels remis a zero pour %d serveur(s).', $count));
 
         return Command::SUCCESS;
     }
