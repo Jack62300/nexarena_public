@@ -1,0 +1,160 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block page_title %}{{ command is defined and command ? 'Modifier la commande' : 'Nouvelle commande' }}{% endblock %}
+{% block title %}Nexarena Admin - {{ command is defined and command ? 'Modifier' : 'Nouvelle' }} commande Discord{% endblock %}
+
+{% block admin_css %}
+    .form-group { margin-bottom: 20px; }
+    .form-group label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .form-control-admin {
+        width: 100%;
+        padding: 10px 14px;
+        background: var(--bg-darker);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        color: var(--text-primary);
+        font-size: 14px;
+        transition: border-color 0.2s;
+    }
+    .form-control-admin:focus {
+        outline: none;
+        border-color: var(--accent);
+    }
+    textarea.form-control-admin {
+        min-height: 100px;
+        resize: vertical;
+    }
+    .form-check-admin {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+    }
+    .form-check-admin input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        accent-color: var(--accent);
+    }
+    .form-row { display: flex; gap: 20px; }
+    .form-row .form-group { flex: 1; }
+    .form-section-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 16px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+{% endblock %}
+
+{% block admin_body %}
+    <div style="max-width:800px;">
+        <div class="admin-table">
+            <div class="admin-table__header">
+                <h3>{{ command is defined and command ? 'Modifier la commande' : 'Nouvelle commande' }}</h3>
+                <a href="{{ path('admin_discord_commands') }}" class="btn-admin btn-admin--outline btn-admin--sm">
+                    <i class="fas fa-arrow-left"></i> Retour
+                </a>
+            </div>
+            <div style="padding:25px;">
+                <form method="post" action="{{ command is defined and command ? path('admin_discord_command_edit', {id: command.id}) : path('admin_discord_command_new') }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('discord_command') }}">
+
+                    {# Base fields #}
+                    <div class="form-section-title">
+                        <i class="fas fa-terminal" style="color:var(--accent);font-size:12px;"></i> Informations de base
+                    </div>
+
+                    <div class="form-group">
+                        <label for="name">Nom de la commande</label>
+                        <input type="text" id="name" name="name" class="form-control-admin" value="{{ command is defined and command ? command.name : '' }}" required placeholder="ma-commande" pattern="[a-z0-9\-]+" maxlength="32" style="font-family:monospace;">
+                        <div style="font-size:11px;color:var(--text-secondary);margin-top:4px;">Minuscules, chiffres et tirets uniquement. Sera utilise comme /nom.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <input type="text" id="description" name="description" class="form-control-admin" value="{{ command is defined and command ? command.description : '' }}" required placeholder="Description affichee dans Discord" maxlength="100">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="response">Reponse texte</label>
+                        <textarea id="response" name="response" class="form-control-admin" placeholder="Texte de la reponse...">{{ command is defined and command ? command.response : '' }}</textarea>
+                    </div>
+
+                    {# Embed fields #}
+                    <div class="form-section-title" style="margin-top:30px;">
+                        <i class="fas fa-window-maximize" style="color:#7289da;font-size:12px;"></i> Embed (optionnel)
+                    </div>
+
+                    <div class="form-group">
+                        <label for="embed_title">Titre de l'embed</label>
+                        <input type="text" id="embed_title" name="embed_title" class="form-control-admin" value="{{ command is defined and command ? command.embedTitle : '' }}" placeholder="Titre de l'embed Discord" maxlength="256">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="embed_description">Description de l'embed</label>
+                        <textarea id="embed_description" name="embed_description" class="form-control-admin" placeholder="Contenu de l'embed...">{{ command is defined and command ? command.embedDescription : '' }}</textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="embed_color">Couleur de l'embed</label>
+                            <input type="color" id="embed_color" name="embed_color" value="{{ command is defined and command and command.embedColor ? command.embedColor : '#45f882' }}" style="width:60px;height:40px;border:1px solid var(--border-color);border-radius:6px;background:var(--bg-darker);cursor:pointer;">
+                        </div>
+                        <div class="form-group">
+                            <label for="embed_image">Image de l'embed (URL)</label>
+                            <input type="url" id="embed_image" name="embed_image" class="form-control-admin" value="{{ command is defined and command ? command.embedImage : '' }}" placeholder="https://example.com/image.png">
+                        </div>
+                    </div>
+
+                    {# Settings #}
+                    <div class="form-section-title" style="margin-top:30px;">
+                        <i class="fas fa-cog" style="color:var(--text-secondary);font-size:12px;"></i> Parametres
+                    </div>
+
+                    <div class="form-group">
+                        <label for="required_role">Role requis (ID Discord)</label>
+                        <input type="text" id="required_role" name="required_role" class="form-control-admin" value="{{ command is defined and command ? command.requiredRole : '' }}" placeholder="Laisser vide pour aucune restriction" style="font-family:monospace;">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-check-admin">
+                            <input type="checkbox" name="is_active" value="1" {{ (command is not defined or command is null or command.isActive) ? 'checked' : '' }}>
+                            Commande active
+                        </label>
+                    </div>
+
+                    {# Note #}
+                    <div style="padding:12px 16px;font-size:12px;color:var(--text-secondary);background:rgba(246,194,62,0.06);border:1px solid rgba(246,194,62,0.15);border-radius:6px;display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+                        <i class="fas fa-exclamation-triangle" style="color:#f6c23e;"></i>
+                        Noms reserves : <code style="background:var(--bg-darker);padding:1px 5px;border-radius:3px;font-size:11px;">setup</code>,
+                        <code style="background:var(--bg-darker);padding:1px 5px;border-radius:3px;font-size:11px;">warn</code>,
+                        <code style="background:var(--bg-darker);padding:1px 5px;border-radius:3px;font-size:11px;">mute</code>,
+                        <code style="background:var(--bg-darker);padding:1px 5px;border-radius:3px;font-size:11px;">kick</code>,
+                        <code style="background:var(--bg-darker);padding:1px 5px;border-radius:3px;font-size:11px;">ban</code>,
+                        <code style="background:var(--bg-darker);padding:1px 5px;border-radius:3px;font-size:11px;">warnings</code>,
+                        <code style="background:var(--bg-darker);padding:1px 5px;border-radius:3px;font-size:11px;">role</code>
+                    </div>
+
+                    <div style="display:flex;gap:10px;padding-top:10px;">
+                        <button type="submit" class="btn-admin btn-admin--primary">
+                            <i class="fas fa-save"></i> {{ command is defined and command ? 'Enregistrer' : 'Creer' }}
+                        </button>
+                        <a href="{{ path('admin_discord_commands') }}" class="btn-admin btn-admin--outline">Annuler</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

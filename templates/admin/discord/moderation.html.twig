@@ -1,0 +1,50 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block page_title %}Moderation Discord{% endblock %}
+{% block title %}Nexarena Admin - Moderation Discord{% endblock %}
+
+{% block admin_body %}
+<div class="admin-table">
+    <div class="admin-table__header">
+        <h3><i class="fas fa-ban" style="color:var(--danger);margin-right:8px;"></i> Mots interdits</h3>
+        <div style="display:flex;gap:8px;align-items:center;">
+            <a href="{{ path('admin_discord_moderation_log') }}" class="btn-admin btn-admin--primary btn-admin--sm"><i class="fas fa-scroll"></i> Journal des actions</a>
+            <a href="{{ path('admin_discord_index') }}" class="btn-admin btn-admin--outline btn-admin--sm"><i class="fas fa-arrow-left"></i> Retour</a>
+        </div>
+    </div>
+
+    <div style="padding:16px 22px;font-size:13px;color:var(--text-secondary);background:rgba(69,248,130,0.04);border-bottom:1px solid var(--border-color);display:flex;align-items:center;gap:10px;">
+        <i class="fas fa-info-circle" style="color:var(--accent);"></i>
+        Les messages contenant ces mots seront automatiquement supprimes par le bot. Les changements sont appliques en temps reel.
+    </div>
+
+    <div style="padding:22px;">
+        {# Add form #}
+        <form action="{{ path('admin_discord_moderation_add') }}" method="post" class="dc-word-form">
+            <input type="hidden" name="_token" value="{{ csrf_token('banned_word_add') }}">
+            <input type="text" name="word" placeholder="Ajouter un mot interdit..." required maxlength="100">
+            <button type="submit" class="btn-admin btn-admin--primary btn-admin--sm"><i class="fas fa-plus"></i> Ajouter</button>
+        </form>
+
+        {# Word tags #}
+        {% if words|length > 0 %}
+        <div style="margin-top:8px;font-size:12px;color:var(--text-secondary);">{{ words|length }} mot(s) configure(s)</div>
+        {% endif %}
+        <div class="dc-word-list">
+            {% for word in words %}
+                <span class="dc-word-tag">
+                    {{ word.word }}
+                    <form action="{{ path('admin_discord_moderation_delete', {id: word.id}) }}" method="post" onsubmit="return confirm('Supprimer ce mot ?')">
+                        <input type="hidden" name="_token" value="{{ csrf_token('banned_word_delete_' ~ word.id) }}">
+                        <button type="submit" title="Supprimer"><i class="fas fa-times"></i></button>
+                    </form>
+                </span>
+            {% else %}
+                <div style="color:var(--text-secondary);font-size:13px;padding:20px 0;">Aucun mot interdit configure.</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+<link rel="stylesheet" href="{{ asset('assets/css/admin/dashboard.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/css/admin/discord.css') }}">
+{% endblock %}

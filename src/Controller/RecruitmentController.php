@@ -9,6 +9,7 @@ use App\Repository\CategoryRepository;
 use App\Repository\RecruitmentListingRepository;
 use App\Repository\ServerCollaboratorRepository;
 use App\Service\NotificationService;
+use App\Service\WebhookService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -21,6 +22,7 @@ class RecruitmentController extends AbstractController
         private EntityManagerInterface $em,
         private NotificationService $notificationService,
         private ServerCollaboratorRepository $collabRepo,
+        private WebhookService $webhookService,
     ) {
     }
 
@@ -132,6 +134,15 @@ class RecruitmentController extends AbstractController
 
         $this->em->persist($application);
         $this->em->flush();
+
+        $this->webhookService->dispatch('recruitment.application', [
+            'title' => 'Nouvelle candidature',
+            'fields' => [
+                ['name' => 'Annonce', 'value' => $listing->getTitle(), 'inline' => true],
+                ['name' => 'Candidat', 'value' => $name, 'inline' => true],
+                ['name' => 'Serveur', 'value' => $listing->getServer()->getName(), 'inline' => true],
+            ],
+        ]);
 
         // Notify server owner + collabs with manage_recruitment
         $server = $listing->getServer();

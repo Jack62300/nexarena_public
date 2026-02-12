@@ -1,0 +1,624 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block page_title %}Nouvelle annonce{% endblock %}
+{% block title %}Nexarena Admin - Nouvelle annonce Discord{% endblock %}
+
+{% block admin_css %}
+    /* Layout 2 colonnes */
+    .ann-layout {
+        display: grid;
+        grid-template-columns: 1fr 420px;
+        gap: 24px;
+        align-items: start;
+    }
+    @media (max-width: 1200px) {
+        .ann-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Blocks / Cards */
+    .form-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+    .form-card__header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 14px 20px;
+        background: var(--bg-darker);
+        border-bottom: 1px solid var(--border-color);
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--accent);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .form-card__header i { font-size: 14px; opacity: 0.8; }
+    .form-card__body { padding: 20px; }
+
+    /* Form elements */
+    .form-group { margin-bottom: 16px; }
+    .form-group:last-child { margin-bottom: 0; }
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+    }
+    .fc {
+        width: 100%;
+        padding: 9px 12px;
+        background: var(--bg-darker);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        color: var(--text-primary);
+        font-size: 13px;
+        transition: border-color 0.2s;
+    }
+    .fc:focus { outline: none; border-color: var(--accent); }
+    textarea.fc { min-height: 80px; resize: vertical; font-family: inherit; }
+    select.fc { cursor: pointer; }
+    .form-row { display: flex; gap: 14px; }
+    .form-row > .form-group { flex: 1; min-width: 0; }
+    .form-hint { font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
+
+    /* Patchnote sections toggle */
+    .pn-only { display: none; }
+    .pn-only.visible { display: block; }
+
+    /* Section cards */
+    .pn-sec {
+        background: var(--bg-darker);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        margin-bottom: 12px;
+        transition: opacity 0.2s;
+    }
+    .pn-sec.disabled { opacity: 0.4; pointer-events: none; }
+    .pn-sec.disabled .pn-sec__toggle { pointer-events: auto; opacity: 1; }
+    .pn-sec__top {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .pn-sec__toggle {
+        width: 18px; height: 18px;
+        accent-color: var(--accent);
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+    .pn-sec__emoji-input {
+        width: 44px;
+        padding: 5px 4px;
+        text-align: center;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        color: var(--text-primary);
+        font-size: 16px;
+        flex-shrink: 0;
+    }
+    .pn-sec__emoji-input:focus { outline: none; border-color: var(--accent); }
+    .pn-sec__label-input {
+        flex: 1;
+        padding: 5px 10px;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        color: var(--text-primary);
+        font-size: 13px;
+        font-weight: 600;
+        min-width: 0;
+    }
+    .pn-sec__label-input:focus { outline: none; border-color: var(--accent); }
+    .pn-sec__remove {
+        background: none;
+        border: none;
+        color: var(--danger);
+        cursor: pointer;
+        font-size: 13px;
+        padding: 4px 8px;
+        border-radius: 4px;
+        flex-shrink: 0;
+        opacity: 0.7;
+        transition: opacity 0.2s, background 0.2s;
+    }
+    .pn-sec__remove:hover { opacity: 1; background: rgba(231,74,59,0.12); }
+    .pn-sec__body { padding: 12px 14px; }
+    .pn-sec__items {
+        width: 100%;
+        min-height: 65px;
+        padding: 8px 10px;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        color: var(--text-primary);
+        font-size: 13px;
+        font-family: inherit;
+        resize: vertical;
+        line-height: 1.6;
+    }
+    .pn-sec__items:focus { outline: none; border-color: var(--accent); }
+    .pn-sec__items::placeholder { color: var(--text-secondary); opacity: 0.5; }
+
+    .btn-add-sec {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 10px 16px;
+        background: transparent;
+        border: 2px dashed var(--border-color);
+        border-radius: 8px;
+        color: var(--text-secondary);
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        width: 100%;
+        justify-content: center;
+    }
+    .btn-add-sec:hover { border-color: var(--accent); color: var(--accent); }
+    .sec-count { font-size: 11px; color: var(--text-secondary); margin-top: 8px; text-align: center; }
+
+    /* ===== Discord Preview ===== */
+    .preview-sticky { position: sticky; top: 80px; }
+    .discord-preview-wrap {
+        background: #313338;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    .discord-preview-wrap__header {
+        padding: 12px 16px;
+        background: #2b2d31;
+        border-bottom: 1px solid #3f4147;
+        font-size: 12px;
+        font-weight: 700;
+        color: #b5bac1;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .discord-preview-wrap__header i { color: #5865F2; }
+    .discord-preview-wrap__body { padding: 16px; }
+
+    /* Embed */
+    .emb { display: flex; max-width: 100%; border-radius: 4px; overflow: hidden; }
+    .emb__bar { width: 4px; flex-shrink: 0; border-radius: 4px 0 0 4px; }
+    .emb__inner { flex: 1; background: #2b2d31; padding: 12px 16px 12px 12px; min-width: 0; }
+    .emb__author { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .emb__author-icon { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; }
+    .emb__author-name { font-size: 13px; font-weight: 600; color: #f2f3f5; }
+    .emb__title { font-size: 15px; font-weight: 700; margin-bottom: 8px; line-height: 1.3; }
+    .emb__desc { font-size: 14px; color: #dbdee1; margin-bottom: 10px; line-height: 1.45; word-wrap: break-word; }
+    .emb__sec-header { font-weight: 700; color: #f2f3f5; margin-top: 14px; margin-bottom: 4px; font-size: 14px; }
+    .emb__sec-items { padding-left: 4px; border-left: 3px solid #3f4147; margin-left: 2px; padding-top: 2px; padding-bottom: 2px; }
+    .emb__sec-item { font-size: 13px; color: #dbdee1; line-height: 1.6; padding-left: 6px; }
+    .emb__thumb { float: right; width: 80px; height: 80px; border-radius: 4px; object-fit: cover; margin-left: 16px; margin-bottom: 8px; }
+    .emb__image { width: 100%; border-radius: 4px; margin-top: 8px; max-height: 200px; object-fit: cover; }
+    .emb__footer { display: flex; align-items: center; gap: 8px; margin-top: 10px; padding-top: 8px; }
+    .emb__footer-icon { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; }
+    .emb__footer-text { font-size: 12px; color: #949ba4; }
+    .emb__footer-sep { color: #949ba4; font-size: 12px; }
+    .emb__empty { text-align: center; padding: 40px 16px; color: #949ba4; font-size: 13px; }
+{% endblock %}
+
+{% block admin_body %}
+    <div class="admin-table" style="margin-bottom:20px;">
+        <div class="admin-table__header">
+            <h3>Nouvelle annonce</h3>
+            <a href="{{ path('admin_discord_announcements') }}" class="btn-admin btn-admin--outline btn-admin--sm">
+                <i class="fas fa-arrow-left"></i> Retour
+            </a>
+        </div>
+    </div>
+
+    <form method="post" action="{{ path('admin_discord_announcement_new') }}" id="annForm" enctype="multipart/form-data">
+        <input type="hidden" name="_token" value="{{ csrf_token('discord_announcement') }}">
+        <input type="hidden" name="embed_data" id="hdnEmbedData" value="">
+
+        <div class="ann-layout">
+            {# ========== COLONNE GAUCHE: FORMULAIRE ========== #}
+            <div>
+
+                {# BLOC 1: Base #}
+                <div class="form-card">
+                    <div class="form-card__header"><i class="fas fa-pen-fancy"></i> Base</div>
+                    <div class="form-card__body">
+                        <div class="form-row">
+                            <div class="form-group" style="flex:2;">
+                                <label for="title">Titre</label>
+                                <input type="text" id="title" name="title" class="fc" required placeholder="Titre de l'annonce" maxlength="256">
+                            </div>
+                            <div class="form-group" style="flex:1;">
+                                <label for="type">Type</label>
+                                <select id="type" name="type" class="fc">
+                                    <option value="announcement">Annonce</option>
+                                    <option value="patchnote">Patch Note</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="content">Description</label>
+                            <textarea id="content" name="content" class="fc" required placeholder="Description / intro du patch note..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                {# BLOC 2: Sections Patch Note #}
+                <div class="form-card pn-only" id="pnSectionsCard">
+                    <div class="form-card__header"><i class="fas fa-layer-group"></i> Sections du Patch Note</div>
+                    <div class="form-card__body">
+                        <div id="secContainer"></div>
+                        <button type="button" class="btn-add-sec" id="btnAddSec">
+                            <i class="fas fa-plus"></i> Ajouter une section personnalisee
+                        </button>
+                        <div class="sec-count" id="secCount"></div>
+                    </div>
+                </div>
+
+                {# BLOC 3: Metadonnees #}
+                <div class="form-card pn-only" id="pnMetaCard">
+                    <div class="form-card__header"><i class="fas fa-info-circle"></i> Metadonnees de l'embed</div>
+                    <div class="form-card__body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Version</label>
+                                <input type="text" id="meta_version" class="fc pn-field" placeholder="v2.1.0" maxlength="30">
+                            </div>
+                            <div class="form-group">
+                                <label>Auteur</label>
+                                <input type="text" id="meta_author" class="fc pn-field" value="Nexarena Team" maxlength="100">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Auteur icon URL</label>
+                                <input type="url" id="meta_author_icon" class="fc pn-field" placeholder="https://...">
+                            </div>
+                            <div class="form-group">
+                                <label>Thumbnail (petite image droite)</label>
+                                <input type="file" id="thumbnail_file" name="thumbnail_file" accept="image/jpeg,image/png,image/gif,image/webp" class="fc" style="padding:6px 10px;">
+                                <div class="form-hint">Ou collez une URL :</div>
+                                <input type="url" id="meta_thumbnail" class="fc pn-field" placeholder="https://..." style="margin-top:4px;">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Footer texte</label>
+                                <input type="text" id="meta_footer" class="fc pn-field" value="Patch Notes - Nexarena" maxlength="200">
+                            </div>
+                            <div class="form-group">
+                                <label>Footer icon URL</label>
+                                <input type="url" id="meta_footer_icon" class="fc pn-field" placeholder="https://...">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {# BLOC 4: Apparence & Envoi #}
+                <div class="form-card">
+                    <div class="form-card__header"><i class="fas fa-palette"></i> Apparence & Envoi</div>
+                    <div class="form-card__body">
+                        <div class="form-row">
+                            <div class="form-group" style="flex:0 0 70px;">
+                                <label>Couleur</label>
+                                <input type="color" id="embed_color" name="embed_color" value="#45f882" style="width:100%;height:38px;border:1px solid var(--border-color);border-radius:6px;background:var(--bg-darker);cursor:pointer;padding:2px;">
+                            </div>
+                            <div class="form-group">
+                                <label>Image (grande, bas de l'embed)</label>
+                                <input type="file" id="image_file" name="image_file" accept="image/jpeg,image/png,image/gif,image/webp" class="fc" style="padding:6px 10px;">
+                                <div class="form-hint">Ou collez une URL directe :</div>
+                                <input type="url" id="image_url" name="image_url" class="fc" placeholder="https://example.com/image.png" style="margin-top:4px;">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Canal Discord (ID)</label>
+                                <input type="text" id="channel_id" name="channel_id" class="fc" required placeholder="ID du canal" style="font-family:monospace;">
+                            </div>
+                            <div class="form-group">
+                                <label>Envoi programme</label>
+                                <input type="datetime-local" id="scheduled_at" name="scheduled_at" class="fc">
+                                <div class="form-hint">Vide = envoi immediat</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display:flex;gap:10px;">
+                    <button type="submit" class="btn-admin btn-admin--primary" id="btnSubmit">
+                        <i class="fas fa-paper-plane"></i> Creer l'annonce
+                    </button>
+                    <a href="{{ path('admin_discord_announcements') }}" class="btn-admin btn-admin--outline">Annuler</a>
+                </div>
+            </div>
+
+            {# ========== COLONNE DROITE: PREVIEW ========== #}
+            <div class="preview-sticky">
+                <div class="discord-preview-wrap">
+                    <div class="discord-preview-wrap__header">
+                        <i class="fab fa-discord"></i> Apercu Discord
+                    </div>
+                    <div class="discord-preview-wrap__body" id="previewArea">
+                        <div class="emb__empty">Remplissez le formulaire pour voir l'apercu...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+{% endblock %}
+
+{% block admin_js %}
+<script>
+(function() {
+    // DOM
+    var typeEl = document.getElementById('type');
+    var titleEl = document.getElementById('title');
+    var contentEl = document.getElementById('content');
+    var colorEl = document.getElementById('embed_color');
+    var imageEl = document.getElementById('image_url');
+    var imageFileEl = document.getElementById('image_file');
+    var thumbFileEl = document.getElementById('thumbnail_file');
+    var secContainer = document.getElementById('secContainer');
+    var btnAddSec = document.getElementById('btnAddSec');
+    var secCountEl = document.getElementById('secCount');
+
+    // Local file preview URLs
+    var imageFilePreview = '';
+    var thumbFilePreview = '';
+    var hdnEmbed = document.getElementById('hdnEmbedData');
+    var previewArea = document.getElementById('previewArea');
+    var form = document.getElementById('annForm');
+    var pnCards = document.querySelectorAll('.pn-only');
+
+    var MAX_SEC = 10;
+    var secIdCounter = 0;
+
+    var DEFAULTS = [
+        { type:'features',     emoji:'\uD83C\uDF89', label:'Nouveautes',         on:true },
+        { type:'fixes',        emoji:'\uD83D\uDC1B', label:'Corrections',        on:true },
+        { type:'improvements', emoji:'\u26A1',       label:'Ameliorations',      on:false },
+        { type:'removals',     emoji:'\uD83D\uDDD1\uFE0F', label:'Suppressions', on:false },
+        { type:'notes',        emoji:'\u26A0\uFE0F', label:'Notes importantes',  on:false },
+        { type:'security',     emoji:'\uD83D\uDD12', label:'Securite',           on:false }
+    ];
+
+    // === Helpers ===
+    function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+    function escA(s) { return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    // === Toggle patchnote blocks ===
+    function togglePn() {
+        var show = typeEl.value === 'patchnote';
+        for (var i = 0; i < pnCards.length; i++) {
+            pnCards[i].classList.toggle('visible', show);
+        }
+        syncAll();
+    }
+    typeEl.addEventListener('change', togglePn);
+
+    // === Section management ===
+    function makeSec(data) {
+        var id = secIdCounter++;
+        var div = document.createElement('div');
+        div.className = 'pn-sec' + (data.on ? '' : ' disabled');
+        div.setAttribute('data-sid', id);
+
+        var topHtml = '<div class="pn-sec__top">'
+            + '<input type="checkbox" class="pn-sec__toggle"' + (data.on ? ' checked' : '') + '>'
+            + '<input type="text" class="pn-sec__emoji-input" value="' + escA(data.emoji || '') + '" maxlength="10" placeholder="\uD83D\uDCDD">'
+            + '<input type="text" class="pn-sec__label-input" value="' + escA(data.label || '') + '" placeholder="Titre de la section" maxlength="100">'
+            + '<button type="button" class="pn-sec__remove" title="Supprimer"><i class="fas fa-trash-alt"></i></button>'
+            + '</div>';
+
+        var bodyHtml = '<div class="pn-sec__body">'
+            + '<textarea class="pn-sec__items" placeholder="Un element par ligne...\nCorrection du bug X\nAjout de la fonctionnalite Y">' + esc(data.items || '') + '</textarea>'
+            + '</div>';
+
+        div.innerHTML = topHtml + bodyHtml;
+
+        var toggle = div.querySelector('.pn-sec__toggle');
+        toggle.addEventListener('change', function() {
+            div.classList.toggle('disabled', !this.checked);
+            syncAll();
+        });
+        div.querySelector('.pn-sec__remove').addEventListener('click', function() {
+            div.remove();
+            updateCount();
+            syncAll();
+        });
+        div.querySelector('.pn-sec__emoji-input').addEventListener('input', syncAll);
+        div.querySelector('.pn-sec__label-input').addEventListener('input', syncAll);
+        div.querySelector('.pn-sec__items').addEventListener('input', syncAll);
+
+        return div;
+    }
+
+    function addSec(data) {
+        if (secContainer.children.length >= MAX_SEC) return;
+        secContainer.appendChild(makeSec(data));
+        updateCount();
+    }
+
+    function updateCount() {
+        var n = secContainer.children.length;
+        secCountEl.textContent = n + ' / ' + MAX_SEC + ' sections';
+        btnAddSec.style.display = (n >= MAX_SEC) ? 'none' : '';
+    }
+
+    btnAddSec.addEventListener('click', function() {
+        addSec({ type:'custom', emoji:'\uD83D\uDCDD', label:'', on:true, items:'' });
+        syncAll();
+    });
+
+    // Init default sections
+    DEFAULTS.forEach(function(s) { addSec(s); });
+    updateCount();
+
+    // === Collect JSON ===
+    function collectSections() {
+        var out = [];
+        var els = secContainer.querySelectorAll('.pn-sec');
+        for (var i = 0; i < els.length; i++) {
+            var el = els[i];
+            if (!el.querySelector('.pn-sec__toggle').checked) continue;
+            var emoji = el.querySelector('.pn-sec__emoji-input').value.trim();
+            var label = el.querySelector('.pn-sec__label-input').value.trim();
+            var raw = el.querySelector('.pn-sec__items').value.trim();
+            if (!label || !raw) continue;
+            var items = raw.split('\n').map(function(l){ return l.trim(); }).filter(Boolean);
+            if (items.length === 0) continue;
+            out.push({ type:'custom', emoji:emoji, label:label, items:items });
+        }
+        return out;
+    }
+
+    function collectEmbed() {
+        return {
+            version:       document.getElementById('meta_version').value.trim(),
+            authorName:    document.getElementById('meta_author').value.trim(),
+            authorIconUrl: document.getElementById('meta_author_icon').value.trim(),
+            thumbnailUrl:  document.getElementById('meta_thumbnail').value.trim(),
+            footerText:    document.getElementById('meta_footer').value.trim(),
+            footerIconUrl: document.getElementById('meta_footer_icon').value.trim(),
+            sections:      collectSections()
+        };
+    }
+
+    // === Sync hidden field + preview ===
+    function syncAll() {
+        // Always update hidden field so it's ready for submit
+        if (typeEl.value === 'patchnote') {
+            var data = collectEmbed();
+            hdnEmbed.value = JSON.stringify(data);
+        } else {
+            hdnEmbed.value = '';
+        }
+        renderPreview();
+    }
+
+    // === Preview ===
+    function renderPreview() {
+        var title = titleEl.value.trim();
+        var desc = contentEl.value.trim();
+        var color = colorEl.value || '#45f882';
+        var imgUrl = imageFilePreview || imageEl.value.trim();
+        var thumbUrl = thumbFilePreview || document.getElementById('meta_thumbnail').value.trim();
+        var isPn = typeEl.value === 'patchnote';
+
+        if (!title && !desc) {
+            previewArea.innerHTML = '<div class="emb__empty">Remplissez le formulaire pour voir l\'apercu...</div>';
+            return;
+        }
+
+        var h = '<div class="emb"><div class="emb__bar" style="background:' + escA(color) + ';"></div><div class="emb__inner">';
+
+        if (isPn) {
+            var ed = collectEmbed();
+
+            // Thumbnail (file preview takes priority over URL)
+            if (thumbUrl) {
+                h += '<img class="emb__thumb" src="' + escA(thumbUrl) + '" onerror="this.style.display=\'none\'">';
+            }
+            // Author
+            if (ed.authorName) {
+                h += '<div class="emb__author">';
+                if (ed.authorIconUrl) h += '<img class="emb__author-icon" src="' + escA(ed.authorIconUrl) + '" onerror="this.style.display=\'none\'">';
+                h += '<span class="emb__author-name">' + esc(ed.authorName) + '</span></div>';
+            }
+            // Title with version
+            var titleText = '\uD83D\uDCCB ' + title;
+            if (ed.version) titleText += '  \u2014  ' + ed.version;
+            h += '<div class="emb__title" style="color:' + escA(color) + ';">' + esc(titleText) + '</div>';
+
+            // Unified description: intro + sections in one flowing block
+            h += '<div class="emb__desc">';
+            if (desc) h += esc(desc);
+
+            if (ed.sections.length > 0) {
+                ed.sections.forEach(function(s) {
+                    var header = (s.emoji ? s.emoji + ' ' : '') + s.label;
+                    h += '<div class="emb__sec-header">' + esc(header) + '</div>';
+                    h += '<div class="emb__sec-items">';
+                    s.items.forEach(function(it) {
+                        h += '<div class="emb__sec-item">\u2022 ' + esc(it) + '</div>';
+                    });
+                    h += '</div>';
+                });
+            }
+            h += '</div>';
+
+            // Image (file preview takes priority over URL)
+            if (imgUrl) h += '<img class="emb__image" src="' + escA(imgUrl) + '" onerror="this.style.display=\'none\'">';
+            // Footer
+            var ft = ed.footerText || 'Patch Notes - Nexarena';
+            h += '<div class="emb__footer">';
+            if (ed.footerIconUrl) h += '<img class="emb__footer-icon" src="' + escA(ed.footerIconUrl) + '" onerror="this.style.display=\'none\'">';
+            h += '<span class="emb__footer-text">' + esc(ft) + '</span>';
+            h += '<span class="emb__footer-sep"> \u2022 </span>';
+            h += '<span class="emb__footer-text">Aujourd\'hui</span></div>';
+
+        } else {
+            // Simple announcement
+            h += '<div class="emb__title" style="color:' + escA(color) + ';">' + esc('\uD83D\uDCE2 ' + title) + '</div>';
+            if (desc) h += '<div class="emb__desc">' + esc(desc) + '</div>';
+            if (imgUrl) h += '<img class="emb__image" src="' + escA(imgUrl) + '" onerror="this.style.display=\'none\'">';
+            h += '<div class="emb__footer"><span class="emb__footer-text">Annonce - Nexarena</span>';
+            h += '<span class="emb__footer-sep"> \u2022 </span>';
+            h += '<span class="emb__footer-text">Aujourd\'hui</span></div>';
+        }
+
+        h += '</div></div>';
+        previewArea.innerHTML = h;
+    }
+
+    // Bind all base inputs to syncAll
+    [titleEl, contentEl, colorEl, imageEl].forEach(function(el) {
+        el.addEventListener('input', syncAll);
+    });
+    document.querySelectorAll('.pn-field').forEach(function(el) {
+        el.addEventListener('input', syncAll);
+    });
+
+    // File input previews
+    imageFileEl.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            imageFilePreview = URL.createObjectURL(this.files[0]);
+        } else {
+            imageFilePreview = '';
+        }
+        syncAll();
+    });
+    thumbFileEl.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            thumbFilePreview = URL.createObjectURL(this.files[0]);
+        } else {
+            thumbFilePreview = '';
+        }
+        syncAll();
+    });
+
+    // SAFETY: also set on submit in case something was missed
+    form.addEventListener('submit', function(e) {
+        if (typeEl.value === 'patchnote') {
+            hdnEmbed.value = JSON.stringify(collectEmbed());
+        }
+    });
+
+    // Init
+    togglePn();
+})();
+</script>
+{% endblock %}

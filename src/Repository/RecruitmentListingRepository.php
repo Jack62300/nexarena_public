@@ -93,6 +93,16 @@ class RecruitmentListingRepository extends ServiceEntityRepository
         return $qb->getQuery()->getResult();
     }
 
+    public function countByServer(Server $server): int
+    {
+        return (int) $this->createQueryBuilder('r')
+            ->select('COUNT(r.id)')
+            ->where('r.server = :server')
+            ->setParameter('server', $server)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
     public function countPending(): int
     {
         return (int) $this->createQueryBuilder('r')

@@ -8,15 +8,23 @@ use App\Entity\GameCategory;
 use App\Entity\Server;
 use App\Entity\ServerCollaborator;
 use App\Entity\ServerType;
+use App\Entity\FeaturedBooking;
+use App\Entity\Transaction;
+use App\Entity\Tag;
 use App\Repository\CategoryRepository;
 use App\Repository\CommentRepository;
+use App\Repository\FeaturedBookingRepository;
 use App\Repository\RecruitmentListingRepository;
 use App\Repository\ServerCollaboratorRepository;
 use App\Repository\ServerRepository;
+use App\Repository\TagRepository;
+use App\Repository\TransactionRepository;
 use App\Repository\UserRepository;
+use App\Service\PremiumService;
 use App\Service\ServerService;
 use App\Service\SlugService;
 use App\Service\ThemeService;
+use App\Service\WebhookService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -34,7 +42,7 @@ class UserServerController extends AbstractController
         'edit_social' => 'Modifier les reseaux sociaux',
         'manage_webhooks' => 'Configurer les webhooks',
         'manage_theme' => 'Changer le theme',
-        'manage_api' => 'Gerer le token API',
+        'manage_api' => 'Gerer la cle API',
         'manage_status' => 'Gerer le status serveur',
         'moderate_comments' => 'Moderer les commentaires',
         'manage_recruitment' => 'Gerer le recrutement',
@@ -46,8 +54,11 @@ class UserServerController extends AbstractController
         private SlugService $slugService,
         private ServerService $serverService,
         private ThemeService $themeService,
+        private PremiumService $premiumService,
         private ServerCollaboratorRepository $collabRepo,
         private UserRepository $userRepo,
+        private WebhookService $webhookService,
+        private TagRepository $tagRepo,
     ) {
     }
 
@@ -153,6 +164,15 @@ class UserServerController extends AbstractController
             $this->em->persist($server);
             $this->em->flush();
 
+            $this->webhookService->dispatch('server.created', [
+                'title' => 'Nouveau serveur cree',
+                'fields' => [
+                    ['name' => 'Serveur', 'value' => $server->getName(), 'inline' => true],
+                    ['name' => 'Proprietaire', 'value' => $this->getUser()->getUsername(), 'inline' => true],
+                    ['name' => 'Categorie', 'value' => $server->getCategory() ? $server->getCategory()->getName() : '-', 'inline' => true],
+                ],
+            ]);
+
             $this->addFlash('success', 'Serveur cree avec succes ! Il sera visible apres approbation par un administrateur.');
             return $this->redirectToRoute('user_servers_manage', ['id' => $server->getId()]);
         }
@@ -160,6 +180,7 @@ class UserServerController extends AbstractController
         return $this->render('user/servers/form.html.twig', [
             'server' => null,
             'categories' => $categoryRepo->findBy(['isActive' => true], ['position' => 'ASC']),
+            'tags' => $this->tagRepo->findAllActive(),
         ]);
     }
 
@@ -191,11 +212,12 @@ class UserServerController extends AbstractController
             'can_edit_info' => $canEditInfo,
             'can_edit_images' => $canEditImages,
             'can_edit_social' => $canEditSocial,
+            'tags' => $this->tagRepo->findAllActive(),
         ]);
     }
 
     #[Route('/serveur/{id}/gestion', name: 'user_servers_manage')]
-    public function manage(Server $server, Request $request, CommentRepository $commentRepo, RecruitmentListingRepository $recruitmentRepo): Response
+    public function manage(Server $server, Request $request, CommentRepository $commentRepo, RecruitmentListingRepository $recruitmentRepo, FeaturedBookingRepository $bookingRepo, TransactionRepository $transactionRepo): Response
     {
         $allPerms = array_keys(self::PERMISSIONS);
         $this->requireAccessAny($server, $allPerms);
@@ -266,6 +288,13 @@ class UserServerController extends AbstractController
         $canManageRecruitment = $this->hasPermission($server, 'manage_recruitment');
         $recruitmentListings = $canManageRecruitment ? $recruitmentRepo->findByServer($server) : [];
 
+        $premiumEnabled = $this->premiumService->isPremiumEnabled();
+        $serverBookings = $isOwner && $premiumEnabled ? $bookingRepo->findByServer($server) : [];
+        $userTransactions = $isOwner && $premiumEnabled ? $transactionRepo->findByUser($this->getUser()) : [];
+
+        $twitchSub = $this->premiumService->getTwitchSubscription($server);
+        $twitchLiveGated = $this->premiumService->isFeatureGated('twitch_live');
+
         return $this->render('user/servers/manage.html.twig', [
             'server' => $server,
             'comments' => $comments,
@@ -284,6 +313,17 @@ class UserServerController extends AbstractController
             'collaborators' => $collaborators,
             'permissions' => self::PERMISSIONS,
             'recruitment_listings' => $recruitmentListings,
+            'server_bookings' => $serverBookings,
+            'user_transactions' => $userTransactions,
+            'premium_enabled' => $premiumEnabled,
+            'has_premium_theme' => !$premiumEnabled || $this->premiumService->hasServerFeature($server, 'theme'),
+            'has_premium_widget' => !$premiumEnabled || $this->premiumService->hasServerFeature($server, 'widget'),
+            'theme_cost' => $this->premiumService->getFeatureCost('theme'),
+            'widget_cost' => $this->premiumService->getFeatureCost('widget'),
+            'twitch_sub' => $twitchSub,
+            'twitch_live_gated' => $twitchLiveGated,
+            'twitch_live_cost_tokens' => $this->premiumService->getTwitchLiveMonthlyTokenCost(),
+            'twitch_live_cost_eur' => $this->premiumService->getTwitchLiveMonthlyEurPrice(),
         ]);
     }
 
@@ -295,7 +335,7 @@ class UserServerController extends AbstractController
         if ($this->isCsrfTokenValid('regenerate_token', $request->request->get('_token'))) {
             $server->setApiToken(ServerService::generateToken());
             $this->em->flush();
-            $this->addFlash('success', 'Token API regenere.');
+            $this->addFlash('success', 'Cle API regeneree.');
         }
 
         return $this->redirectToRoute('user_servers_manage', ['id' => $server->getId()]);
@@ -379,6 +419,112 @@ class UserServerController extends AbstractController
         $this->em->flush();
 
         $this->addFlash('success', 'Le commentaire a ete signale aux moderateurs.');
+        return $this->redirectToRoute('user_servers_manage', ['id' => $server->getId()]);
+    }
+
+    #[Route('/serveur/{id}/unlock-feature', name: 'user_servers_unlock_feature', methods: ['POST'])]
+    public function unlockFeature(Server $server, Request $request): Response
+    {
+        $this->requireAccess($server);
+
+        if (!$this->isCsrfTokenValid('unlock_feature', $request->request->get('_token'))) {
+            $this->addFlash('error', 'Token CSRF invalide.');
+            return $this->redirectToRoute('user_servers_manage', ['id' => $server->getId()]);
+        }
+
+        $feature = $request->request->get('feature', '');
+        $validFeatures = ['theme', 'widget'];
+        if (!in_array($feature, $validFeatures, true)) {
+            $this->addFlash('error', 'Fonctionnalite invalide.');
+            return $this->redirectToRoute('user_servers_manage', ['id' => $server->getId()]);
+        }
+
+        $user = $this->getUser();
+        $result = $this->premiumService->unlockFeature($server, $user, $feature);
+
+        if ($result) {
+            $label = $feature === 'theme' ? 'Theme personnalise' : 'Widget personnalise';
+            $this->addFlash('success', $label . ' debloque avec succes !');
+        } else {
+            $this->addFlash('error', 'NexBits insuffisants. Achetez des NexBits sur la page Premium.');
+        }
+
+        return $this->redirectToRoute('user_servers_manage', ['id' => $server->getId()]);
+    }
+
+    #[Route('/serveur/{id}/twitch-subscribe', name: 'user_servers_twitch_subscribe', methods: ['POST'])]
+    public function twitchSubscribe(Server $server, Request $request): Response
+    {
+        $this->requireAccess($server);
+
+        if (!$this->isCsrfTokenValid('twitch_subscribe', $request->request->get('_token'))) {
+            $this->addFlash('error', 'Token CSRF invalide.');
+            return $this->redirectToRoute('user_servers_manage', ['id' => $server->getId()]);
+        }
+
+        if (!$server->getTwitchChannel()) {
+            $this->addFlash('error', 'Vous devez d\'abord renseigner votre chaine Twitch dans les informations du serveur.');
+            return $this->redirectToRoute('user_servers_manage', ['id' => $server->getId()]);
+        }
+
+        $method = $request->request->get('payment_method', 'nexbits');
+        $autoRenew = $request->request->getBoolean('auto_renew');
+        $user = $this->getUser();
+
+        if ($method === 'nexbits') {
+            $result = $this->premiumService->subscribeTwitchLiveWithTokens($server, $user);
+            if ($result) {
+                $sub = $this->premiumService->getTwitchSubscription($server);
+                if ($sub) {
+                    $sub->setAutoRenew($autoRenew);
+                    $this->em->flush();
+                }
+                $this->addFlash('success', 'Abonnement Twitch Live active pour 30 jours !');
+            } else {
+                $this->addFlash('error', 'NexBits insuffisants. Il vous faut ' . $this->premiumService->getTwitchLiveMonthlyTokenCost() . ' NexBits.');
+            }
+        }
+        // PayPal flow is handled via AJAX in a separate route
+
+        return $this->redirectToRoute('user_servers_manage', ['id' => $server->getId()]);
+    }
+
+    #[Route('/serveur/{id}/twitch-subscribe/paypal', name: 'user_servers_twitch_subscribe_paypal', methods: ['POST'])]
+    public function twitchSubscribePaypal(Server $server, Request $request): Response
+    {
+        $this->requireAccess($server);
+
+        $data = json_decode($request->getContent(), true);
+        $paypalOrderId = $data['orderID'] ?? '';
+
+        if (!$paypalOrderId || !$server->getTwitchChannel()) {
+            return $this->json(['error' => 'Donnees invalides'], 400);
+        }
+
+        // Verify the PayPal order was captured
+        if ($this->premiumService->isOrderAlreadyCaptured($paypalOrderId)) {
+            return $this->json(['error' => 'Commande deja traitee'], 400);
+        }
+
+        $user = $this->getUser();
+        $this->premiumService->subscribeTwitchLiveWithPaypal($server, $user, $paypalOrderId);
+
+        return $this->json(['success' => true]);
+    }
+
+    #[Route('/serveur/{id}/twitch-cancel', name: 'user_servers_twitch_cancel', methods: ['POST'])]
+    public function twitchCancel(Server $server, Request $request): Response
+    {
+        $this->requireAccess($server);
+
+        if (!$this->isCsrfTokenValid('twitch_cancel', $request->request->get('_token'))) {
+            $this->addFlash('error', 'Token CSRF invalide.');
+            return $this->redirectToRoute('user_servers_manage', ['id' => $server->getId()]);
+        }
+
+        $this->premiumService->cancelTwitchLive($server);
+        $this->addFlash('success', 'Abonnement Twitch Live annule. L\'acces reste actif jusqu\'a la date d\'expiration.');
+
         return $this->redirectToRoute('user_servers_manage', ['id' => $server->getId()]);
     }
 
@@ -493,6 +639,49 @@ class UserServerController extends AbstractController
         return $this->redirectToRoute('user_servers_manage', ['id' => $server->getId()]);
     }
 
+    #[Route('/serveur/{id}/boost/{bookingId}/cancel', name: 'user_servers_cancel_boost', methods: ['POST'])]
+    public function cancelBoost(Server $server, int $bookingId, Request $request, FeaturedBookingRepository $bookingRepo): Response
+    {
+        if (!$this->isOwner($server)) {
+            throw $this->createAccessDeniedException();
+        }
+
+        if (!$this->isCsrfTokenValid('cancel_boost_' . $bookingId, $request->request->get('_token'))) {
+            $this->addFlash('danger', 'Token CSRF invalide.');
+            return $this->redirectToRoute('user_servers_manage', ['id' => $server->getId()]);
+        }
+
+        $booking = $bookingRepo->find($bookingId);
+        if (!$booking || $booking->getServer() !== $server) {
+            $this->addFlash('danger', 'Reservation introuvable.');
+            return $this->redirectToRoute('user_servers_manage', ['id' => $server->getId()]);
+        }
+
+        $now = new \DateTimeImmutable();
+        if ($booking->getStartsAt() <= $now) {
+            $this->addFlash('danger', 'Impossible d\'annuler une reservation deja commencee ou passee.');
+            return $this->redirectToRoute('user_servers_manage', ['id' => $server->getId()]);
+        }
+
+        $refundAmount = $booking->getBoostTokensUsed();
+        $user = $this->getUser();
+        $user->addBoostTokens($refundAmount);
+
+        $tx = new Transaction();
+        $tx->setUser($user);
+        $tx->setType(Transaction::TYPE_REFUND);
+        $tx->setBoostTokensAmount($refundAmount);
+        $tx->setTokensAmount(0);
+        $tx->setDescription('Annulation boost ' . $server->getName() . ' (' . $booking->getStartsAt()->format('d/m/Y H:i') . ')');
+        $this->em->persist($tx);
+
+        $this->em->remove($booking);
+        $this->em->flush();
+
+        $this->addFlash('success', 'Reservation annulee. ' . $refundAmount . ' NexBoost recredites.');
+        return $this->redirectToRoute('user_servers_manage', ['id' => $server->getId()]);
+    }
+
     // ──────────────────────────────────────────────
     // Form handler
     // ──────────────────────────────────────────────
@@ -536,6 +725,16 @@ class UserServerController extends AbstractController
                 $server->setServerType($st);
             } else {
                 $server->setServerType(null);
+            }
+
+            // Tags
+            $server->clearTags();
+            $tagIds = $request->request->all('tags');
+            foreach ($tagIds as $tagId) {
+                $tag = $this->em->getRepository(Tag::class)->find((int) $tagId);
+                if ($tag && $tag->isActive()) {
+                    $server->addTag($tag);
+                }
             }
         }
 

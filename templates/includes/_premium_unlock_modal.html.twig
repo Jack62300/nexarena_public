@@ -1,0 +1,52 @@
+{# Premium unlock confirmation modal #}
+{# Expects: server, feature, feature_label, cost, user_balance #}
+
+<div class="modal fade" id="premiumUnlockModal_{{ feature }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background:#0d1b2a;border:1px solid rgba(255,255,255,0.1);border-radius:16px;color:#fff;">
+            <div class="modal-header" style="border-bottom:1px solid rgba(255,255,255,0.08);padding:20px 24px;">
+                <h5 class="modal-title" style="font-weight:700;">
+                    <i class="fas fa-crown" style="color:#ffd700;"></i> Debloquer {{ feature_label }}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="padding:24px;">
+                <p style="color:#c9d1d9;margin-bottom:16px;">
+                    Debloquer <strong>{{ feature_label }}</strong> pour <strong>{{ server.name }}</strong> ?
+                </p>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:16px;background:rgba(255,255,255,0.04);border-radius:10px;margin-bottom:16px;">
+                    <div>
+                        <div style="color:#8b949e;font-size:12px;text-transform:uppercase;">Cout</div>
+                        <div style="font-size:20px;font-weight:700;color:#ffd700;">
+                            <i class="fas fa-coins"></i> {{ cost }} NexBits
+                        </div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="color:#8b949e;font-size:12px;text-transform:uppercase;">Votre solde</div>
+                        <div style="font-size:20px;font-weight:700;color:{{ user_balance >= cost ? '#1cc88a' : '#e74a3b' }};">
+                            <i class="fas fa-coins"></i> {{ user_balance }}
+                        </div>
+                    </div>
+                </div>
+                {% if user_balance < cost %}
+                    <div style="background:rgba(231,74,59,0.1);border:1px solid rgba(231,74,59,0.3);border-radius:8px;padding:12px;color:#e74a3b;font-size:13px;">
+                        <i class="fas fa-exclamation-triangle"></i> NexBits insuffisants.
+                        <a href="{{ path('premium_index') }}" style="color:#ffd700;text-decoration:underline;">Acheter des NexBits</a>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer" style="border-top:1px solid rgba(255,255,255,0.08);padding:16px 24px;">
+                <button type="button" class="btn btn-sm" style="background:rgba(255,255,255,0.08);color:#fff;border:none;padding:8px 20px;border-radius:8px;" data-bs-dismiss="modal">Annuler</button>
+                {% if user_balance >= cost %}
+                    <form method="post" action="{{ path('user_servers_unlock_feature', {id: server.id}) }}" style="display:inline;">
+                        <input type="hidden" name="_token" value="{{ csrf_token('unlock_feature') }}">
+                        <input type="hidden" name="feature" value="{{ feature }}">
+                        <button type="submit" style="background:linear-gradient(135deg,#ffd700,#ff6b35);color:#000;border:none;padding:8px 20px;border-radius:8px;font-weight:700;cursor:pointer;">
+                            <i class="fas fa-unlock"></i> Debloquer
+                        </button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>

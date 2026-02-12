@@ -1,0 +1,112 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block page_title %}Sanctions Discord{% endblock %}
+{% block title %}Nexarena Admin - Sanctions Discord{% endblock %}
+
+{% block admin_body %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 style="margin:0;font-weight:600;"><i class="fas fa-gavel" style="color:var(--accent);margin-right:6px;"></i> Sanctions Discord</h4>
+    <a href="{{ path('admin_discord_index') }}" class="btn-admin btn-admin--outline btn-admin--sm"><i class="fas fa-arrow-left"></i> Retour</a>
+</div>
+
+{# Type tabs #}
+<div class="dc-tabs">
+    <a href="{{ path('admin_discord_sanctions', {status: current_status}) }}" class="dc-tab {{ current_type is null ? 'dc-tab--active' : '' }}">
+        Tous
+    </a>
+    <a href="{{ path('admin_discord_sanctions', {type: 'warn', status: current_status}) }}" class="dc-tab {{ current_type == 'warn' ? 'dc-tab--active' : '' }}">
+        <i class="fas fa-exclamation-triangle"></i> Warns
+    </a>
+    <a href="{{ path('admin_discord_sanctions', {type: 'mute', status: current_status}) }}" class="dc-tab {{ current_type == 'mute' ? 'dc-tab--active' : '' }}">
+        <i class="fas fa-volume-mute"></i> Mutes
+    </a>
+    <a href="{{ path('admin_discord_sanctions', {type: 'kick', status: current_status}) }}" class="dc-tab {{ current_type == 'kick' ? 'dc-tab--active' : '' }}">
+        <i class="fas fa-sign-out-alt"></i> Kicks
+    </a>
+    <a href="{{ path('admin_discord_sanctions', {type: 'ban', status: current_status}) }}" class="dc-tab {{ current_type == 'ban' ? 'dc-tab--active' : '' }}">
+        <i class="fas fa-ban"></i> Bans
+    </a>
+</div>
+
+{# Status sub-tabs #}
+<div class="dc-tabs" style="margin-bottom:24px;">
+    <a href="{{ path('admin_discord_sanctions', {type: current_type, status: 'active'}) }}" class="dc-tab {{ current_status == 'active' ? 'dc-tab--active' : '' }}">
+        Actives
+    </a>
+    <a href="{{ path('admin_discord_sanctions', {type: current_type, status: 'revoked'}) }}" class="dc-tab {{ current_status == 'revoked' ? 'dc-tab--active' : '' }}">
+        Revoquees
+    </a>
+</div>
+
+{# Table #}
+<div class="admin-table">
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Utilisateur</th>
+                <th>Type</th>
+                <th>Raison</th>
+                <th>Par</th>
+                <th>Statut</th>
+                <th>Date</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for sanction in sanctions %}
+            <tr>
+                <td style="font-weight:600;">{{ sanction.id }}</td>
+                <td>
+                    <div class="dash-user">
+                        <div class="dash-user__avatar dash-user__avatar--placeholder" style="background:#5865f2;">
+                            {{ sanction.discordUsername|slice(0, 1)|upper }}
+                        </div>
+                        <div>
+                            <div class="dash-user__name">{{ sanction.discordUsername }}</div>
+                            {% if sanction.siteUser %}
+                                <div class="dash-user__email">Site: {{ sanction.siteUser.username }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    {% if sanction.type == 'warn' %}
+                        <span class="dc-ticket-status" style="background:rgba(246,194,62,0.12);color:#f6c23e;">Warn</span>
+                    {% elseif sanction.type == 'mute' %}
+                        <span class="dc-ticket-status" style="background:rgba(54,185,204,0.12);color:#36b9cc;">Mute</span>
+                    {% elseif sanction.type == 'kick' %}
+                        <span class="dc-ticket-status" style="background:rgba(255,165,0,0.12);color:#ffa500;">Kick</span>
+                    {% elseif sanction.type == 'ban' %}
+                        <span class="dc-ticket-status" style="background:rgba(231,74,59,0.12);color:var(--danger);">Ban</span>
+                    {% else %}
+                        <span class="dc-ticket-status" style="background:rgba(255,255,255,0.06);color:var(--text-secondary);">{{ sanction.type }}</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <span style="color:var(--text-primary);font-size:13px;">
+                        {{ sanction.reason|length > 50 ? sanction.reason[:50] ~ '...' : sanction.reason }}
+                    </span>
+                </td>
+                <td style="color:var(--text-secondary);font-size:13px;">{{ sanction.issuedBy }}</td>
+                <td>
+                    {% if sanction.isRevoked %}
+                        <span class="dc-ticket-status dc-ticket-status--closed">Revoquee</span>
+                    {% else %}
+                        <span class="dc-ticket-status dc-ticket-status--open">Active</span>
+                    {% endif %}
+                </td>
+                <td style="color:var(--text-secondary);font-size:12px;">{{ sanction.createdAt|date('d/m/Y H:i') }}</td>
+                <td>
+                    <a href="{{ path('admin_discord_sanction_show', {id: sanction.id}) }}" class="btn-admin btn-admin--outline btn-admin--sm"><i class="fas fa-eye"></i></a>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text-secondary);font-size:13px;">Aucune sanction{{ current_type ? ' de type ' ~ current_type : '' }}{{ current_status == 'revoked' ? ' revoquee' : (current_status == 'active' ? ' active' : '') }}.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<link rel="stylesheet" href="{{ asset('assets/css/admin/dashboard.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/css/admin/discord.css') }}">
+{% endblock %}

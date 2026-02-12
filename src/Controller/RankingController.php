@@ -2,7 +2,9 @@
 
 namespace App\Controller;
 
+use App\Entity\FeaturedBooking;
 use App\Repository\CategoryRepository;
+use App\Repository\FeaturedBookingRepository;
 use App\Repository\GameCategoryRepository;
 use App\Repository\ServerRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -15,7 +17,7 @@ class RankingController extends AbstractController
     private const PER_PAGE = 10;
 
     #[Route('/classement/{slug}', name: 'ranking_game_category', requirements: ['slug' => '[a-z0-9]+(?:-[a-z0-9]+)*'])]
-    public function gameCategory(string $slug, Request $request, GameCategoryRepository $gcRepo, ServerRepository $serverRepo): Response
+    public function gameCategory(string $slug, Request $request, GameCategoryRepository $gcRepo, ServerRepository $serverRepo, FeaturedBookingRepository $bookingRepo): Response
     {
         $gameCategory = $gcRepo->findOneBy(['slug' => $slug, 'isActive' => true]);
         if (!$gameCategory) {
@@ -24,6 +26,9 @@ class RankingController extends AbstractController
 
         $page = max(1, $request->query->getInt('page', 1));
         $result = $serverRepo->findByGameCategoryPaginated($gameCategory, $page, self::PER_PAGE);
+
+        $now = new \DateTime('now');
+        $premiumPositions = $bookingRepo->findActivePositions(FeaturedBooking::SCOPE_GAME, $now, $gameCategory);
 
         return $this->render('ranking/index.html.twig', [
             'title' => $gameCategory->getName(),
@@ -36,6 +41,7 @@ class RankingController extends AbstractController
             'per_page' => self::PER_PAGE,
             'gameCategory' => $gameCategory,
             'parentCategory' => $gameCategory->getCategory(),
+            'premiumPositions' => $premiumPositions,
         ]);
     }
 
@@ -61,6 +67,7 @@ class RankingController extends AbstractController
             'per_page' => self::PER_PAGE,
             'parentCategory' => $category,
             'gameCategory' => null,
+            'premiumPositions' => [],
         ]);
     }
 }

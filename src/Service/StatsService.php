@@ -6,6 +6,7 @@ use App\Repository\ArticleRepository;
 use App\Repository\CategoryRepository;
 use App\Repository\GameCategoryRepository;
 use App\Repository\ServerRepository;
+use App\Repository\TransactionRepository;
 use App\Repository\UserRepository;
 use App\Repository\VoteRepository;
 
@@ -21,6 +22,7 @@ class StatsService
         private CategoryRepository $categoryRepository,
         private ServerRepository $serverRepository,
         private VoteRepository $voteRepository,
+        private TransactionRepository $transactionRepository,
     ) {
         $this->registerDefaultStats();
     }
@@ -87,42 +89,10 @@ class StatsService
         );
 
         $this->registerStat(
-            'total_articles',
-            'Articles',
-            'fas fa-newspaper',
-            '#1cc88a',
-            fn () => $this->articleRepository->count([]),
-        );
-
-        $this->registerStat(
-            'published_articles',
-            'Articles publies',
-            'fas fa-check-circle',
-            '#36b9cc',
-            fn () => $this->articleRepository->count(['isPublished' => true]),
-        );
-
-        $this->registerStat(
-            'total_categories',
-            'Categories de jeux',
-            'fas fa-gamepad',
-            '#f6c23e',
-            fn () => $this->gameCategoryRepository->count([]),
-        );
-
-        $this->registerStat(
-            'active_categories',
-            'Categories actives',
-            'fas fa-fire',
-            '#e74a3b',
-            fn () => $this->gameCategoryRepository->count(['isActive' => true]),
-        );
-
-        $this->registerStat(
             'new_users_today',
             'Nouveaux aujourd\'hui',
             'fas fa-user-plus',
-            '#5a5c69',
+            '#36b9cc',
             function () {
                 $today = new \DateTimeImmutable('today');
                 return $this->userRepository->createQueryBuilder('u')
@@ -135,28 +105,52 @@ class StatsService
         );
 
         $this->registerStat(
-            'total_servers',
-            'Serveurs',
+            'approved_servers',
+            'Serveurs actifs',
             'fas fa-server',
             '#45f882',
-            fn () => $this->serverRepository->count([]),
-        );
-
-        $this->registerStat(
-            'approved_servers',
-            'Serveurs approuves',
-            'fas fa-check-double',
-            '#1cc88a',
             fn () => $this->serverRepository->count(['isApproved' => true, 'isActive' => true]),
         );
 
         $this->registerStat(
-            'total_votes',
-            'Votes total',
+            'votes_this_month',
+            'Votes ce mois',
             'fas fa-vote-yea',
-            '#e74a3b',
-            fn () => $this->voteRepository->count([]),
+            '#fd7e14',
+            function () {
+                $start = new \DateTimeImmutable('first day of this month midnight');
+                return $this->voteRepository->createQueryBuilder('v')
+                    ->select('COUNT(v.id)')
+                    ->where('v.votedAt >= :start')
+                    ->setParameter('start', $start)
+                    ->getQuery()
+                    ->getSingleScalarResult();
+            },
         );
+
+        $this->registerStat(
+            'total_revenue',
+            'Revenus total',
+            'fas fa-coins',
+            '#f6c23e',
+            fn () => number_format($this->transactionRepository->getTotalRevenue(), 2, ',', ' ') . ' €',
+        );
+
+        $this->registerStat(
+            'sales_this_month',
+            'Ventes ce mois',
+            'fas fa-shopping-cart',
+            '#6f42c1',
+            fn () => $this->transactionRepository->getMonthlyPurchaseCount(),
+        );
+    }
+
+    /**
+     * @return array<int, array{month: string, total: float}>
+     */
+    public function getRevenueByMonth(int $months = 12): array
+    {
+        return $this->transactionRepository->getRevenueByMonth($months);
     }
 
     /**

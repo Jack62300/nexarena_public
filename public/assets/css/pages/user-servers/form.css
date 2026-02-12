@@ -105,3 +105,48 @@
         border-radius: 6px;
         margin-top: 10px;
     }
+
+    /* Tag checkboxes */
+    .tag-checkbox-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .tag-checkbox {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .tag-checkbox:hover {
+        border-color: rgba(255,255,255,0.15);
+        background: rgba(255,255,255,0.06);
+    }
+    .tag-checkbox input[type="checkbox"] {
+        display: none;
+    }
+    .tag-checkbox--checked,
+    .tag-checkbox:has(input:checked) {
+        background: rgba(69,248,130,0.08);
+        border-color: rgba(69,248,130,0.3);
+    }
+    .tag-checkbox__dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+    .tag-checkbox__name {
+        font-size: 13px;
+        font-weight: 600;
+        color: rgba(255,255,255,0.7);
+    }
+    .tag-checkbox--checked .tag-checkbox__name,
+    .tag-checkbox:has(input:checked) .tag-checkbox__name {
+        color: #45f882;
+    }

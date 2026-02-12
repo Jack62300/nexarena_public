@@ -67,6 +67,25 @@
                         </div>
                     </div>
 
+                    {# === TAGS === #}
+                    {% if tags|default([])|length > 0 %}
+                    <div class="form-card" {% if not can_edit_info %}style="opacity:0.6;"{% endif %}>
+                        <h4 class="form-card__title"><i class="fas fa-hashtag"></i> Tags</h4>
+                        <p style="font-size:13px;color:rgba(255,255,255,0.4);margin:0 0 16px;">Selectionnez les tags qui correspondent a votre serveur.</p>
+                        <div class="tag-checkbox-grid">
+                            {% for tag in tags %}
+                                <label class="tag-checkbox{% if server and tag in server.tags %} tag-checkbox--checked{% endif %}">
+                                    <input type="checkbox" name="tags[]" value="{{ tag.id }}" {{ server and tag in server.tags ? 'checked' : '' }} {{ not can_edit_info ? 'disabled' : '' }}>
+                                    {% if tag.color %}
+                                        <span class="tag-checkbox__dot" style="background:{{ tag.color }};"></span>
+                                    {% endif %}
+                                    <span class="tag-checkbox__name">{{ tag.name }}</span>
+                                </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
                     {# === INFORMATIONS === #}
                     <div class="form-card" {% if not can_edit_info %}style="opacity:0.6;"{% endif %}>
                         <h4 class="form-card__title"><i class="fas fa-info-circle"></i> Informations generales</h4>
@@ -214,6 +233,7 @@
 {% endblock %}
 
 {% block javascripts %}
+{% set can_edit_info = can_edit_info|default(true) %}
 {% if not can_edit_info %}
 <script>
 (function() {
@@ -276,6 +296,18 @@
     if (categorySelect.value) {
         onCategoryChange();
     }
+
+    // Tag checkbox visual toggle
+    document.querySelectorAll('.tag-checkbox input[type="checkbox"]').forEach(function(cb) {
+        cb.addEventListener('change', function() {
+            var label = cb.closest('.tag-checkbox');
+            if (cb.checked) {
+                label.classList.add('tag-checkbox--checked');
+            } else {
+                label.classList.remove('tag-checkbox--checked');
+            }
+        });
+    });
 })();
 </script>
 {% endblock %}

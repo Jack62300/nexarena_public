@@ -5,6 +5,7 @@ namespace App\Controller\Admin;
 use App\Entity\RecruitmentListing;
 use App\Repository\RecruitmentListingRepository;
 use App\Service\RecruitmentService;
+use App\Service\WebhookService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -19,6 +20,7 @@ class RecruitmentController extends AbstractController
     public function __construct(
         private EntityManagerInterface $em,
         private RecruitmentService $recruitmentService,
+        private WebhookService $webhookService,
     ) {
     }
 
@@ -67,6 +69,15 @@ class RecruitmentController extends AbstractController
         $listing->setRevisionReason(null);
         $listing->setRejectionReason(null);
         $this->em->flush();
+
+        $this->webhookService->dispatch('recruitment.approved', [
+            'title' => 'Annonce approuvee',
+            'fields' => [
+                ['name' => 'Annonce', 'value' => $listing->getTitle(), 'inline' => true],
+                ['name' => 'Serveur', 'value' => $listing->getServer()->getName(), 'inline' => true],
+                ['name' => 'Approuvee par', 'value' => $this->getUser()->getUsername(), 'inline' => true],
+            ],
+        ]);
 
         $this->addFlash('success', 'L\'annonce a ete approuvee.');
         return $this->redirectToRoute('admin_recruitment_show', ['id' => $listing->getId()]);

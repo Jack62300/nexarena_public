@@ -7,6 +7,7 @@ use App\Repository\CategoryRepository;
 use App\Repository\ServerRepository;
 use App\Service\ServerService;
 use App\Service\SlugService;
+use App\Service\WebhookService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -22,6 +23,7 @@ class ServerController extends AbstractController
         private EntityManagerInterface $em,
         private SlugService $slugService,
         private ServerService $serverService,
+        private WebhookService $webhookService,
     ) {
     }
 
@@ -78,6 +80,17 @@ class ServerController extends AbstractController
             $server->setIsApproved(!$server->isApproved());
             $this->em->flush();
             $status = $server->isApproved() ? 'approuve' : 'desapprouve';
+
+            if ($server->isApproved()) {
+                $this->webhookService->dispatch('server.approved', [
+                    'title' => 'Serveur approuve',
+                    'fields' => [
+                        ['name' => 'Serveur', 'value' => $server->getName(), 'inline' => true],
+                        ['name' => 'Approuve par', 'value' => $this->getUser()->getUsername(), 'inline' => true],
+                    ],
+                ]);
+            }
+
             $this->addFlash('success', "Serveur {$status}.");
         }
 
@@ -110,8 +123,21 @@ class ServerController extends AbstractController
                 $this->serverService->deleteFile('servers/presentations', $server->getPresentationImage());
             }
 
+            $serverName = $server->getName();
+            $ownerName = $server->getOwner() ? $server->getOwner()->getUsername() : 'Inconnu';
+
             $this->em->remove($server);
             $this->em->flush();
+
+            $this->webhookService->dispatch('server.deleted', [
+                'title' => 'Serveur supprime',
+                'fields' => [
+                    ['name' => 'Serveur', 'value' => $serverName, 'inline' => true],
+                    ['name' => 'Proprietaire', 'value' => $ownerName, 'inline' => true],
+                    ['name' => 'Supprime par', 'value' => $this->getUser()->getUsername(), 'inline' => true],
+                ],
+            ]);
+
             $this->addFlash('success', 'Serveur supprime.');
         }
 

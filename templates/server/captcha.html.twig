@@ -1,0 +1,50 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Verification - {{ server.name }} - {{ setting('site_name', 'Nexarena') }}{% endblock %}
+
+{% block body %}
+<section style="padding:80px 0;">
+    <div class="container" style="max-width:500px;">
+        {% for type, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="alert alert-{{ type }} alert-dismissible fade show" role="alert" style="background:#162231;border:1px solid {{ type == 'success' ? '#1cc88a' : '#e74a3b' }};color:#fff;">
+                    {{ message }}
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endfor %}
+
+        <div style="background:#162231;border:1px solid #1e3048;border-radius:12px;padding:40px 30px;text-align:center;">
+            <i class="fas fa-shield-alt" style="font-size:48px;color:#45f882;margin-bottom:16px;display:block;"></i>
+            <h3 style="color:#fff;margin-bottom:8px;">Verification anti-bot</h3>
+            <p style="color:#8b949e;font-size:14px;margin-bottom:24px;">
+                Resolvez ce calcul pour confirmer que vous etes humain.
+            </p>
+
+            <div style="background:#0d1a26;border:1px solid #1e3048;border-radius:10px;padding:20px;margin-bottom:24px;">
+                <div style="font-size:28px;font-weight:700;color:#45f882;font-family:monospace;">
+                    {{ question }}
+                </div>
+            </div>
+
+            <form method="post">
+                <input type="hidden" name="_token" value="{{ csrf_token('vote_captcha') }}">
+                <div style="margin-bottom:20px;">
+                    <input type="number" name="captcha_answer" class="form-control"
+                           style="background:#0d1a26;border:1px solid #1e3048;color:#fff;text-align:center;font-size:20px;padding:12px;border-radius:8px;width:100%;max-width:200px;margin:0 auto;"
+                           placeholder="?" autofocus required>
+                </div>
+                <button type="submit" style="background:linear-gradient(135deg,#45f882,#36d67a);color:#000;border:none;padding:12px 32px;border-radius:10px;font-weight:700;font-size:15px;cursor:pointer;">
+                    <i class="fas fa-check"></i> Verifier et voter
+                </button>
+            </form>
+
+            <div style="margin-top:16px;">
+                <a href="{{ path('server_show', {slug: server.slug}) }}" style="color:#8b949e;font-size:13px;">
+                    <i class="fas fa-arrow-left"></i> Retour au serveur
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

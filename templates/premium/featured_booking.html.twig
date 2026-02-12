@@ -1,0 +1,441 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Selection premium - {{ server.name }} - {{ setting('site_name', 'Nexarena') }}{% endblock %}
+
+{% block stylesheets %}
+<link rel="stylesheet" href="{{ asset('assets/css/pages/featured-booking.css') }}">
+{% endblock %}
+
+{% block body %}
+<section class="booking-section">
+    <div class="container">
+        {% for type, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="alert alert-{{ type }} alert-dismissible fade show" role="alert" style="background:#162231;border:1px solid {{ type == 'success' ? '#1cc88a' : '#e74a3b' }};color:#fff;">
+                    {{ message }}
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endfor %}
+
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
+            <div class="booking-header">
+                <h1 class="booking-header__title"><i class="fas fa-crown" style="color:#ffd700;"></i> Selection premium : <span>{{ server.name }}</span></h1>
+                <p class="booking-header__subtitle">Reservez une position pour apparaitre en haut de la page d'accueil{% if has_game_scope %} ou de la page {{ server_gc_name }}{% endif %}</p>
+            </div>
+            <a href="{{ path('user_servers_manage', {id: server.id}) }}" style="color:#8b949e;text-decoration:none;font-size:14px;">
+                <i class="fas fa-arrow-left"></i> Retour a la gestion
+            </a>
+        </div>
+
+        <div class="booking-balance">
+            <i class="fas fa-bolt booking-balance__icon"></i>
+            <div>
+                <div class="booking-balance__label">NexBoost disponibles</div>
+                <div class="booking-balance__value">{{ user_boost_balance }}</div>
+            </div>
+            <a href="{{ path('premium_index') }}" style="margin-left:auto;color:#ff6b35;font-size:13px;text-decoration:underline;">Acheter</a>
+        </div>
+
+        {# === SCOPE TABS === #}
+        <div class="booking-scope-tabs" id="scopeTabs">
+            <button type="button" class="booking-scope-tab booking-scope-tab--active" data-scope="homepage" onclick="selectScope('homepage', this)">
+                <i class="fas fa-home"></i> Page d'accueil
+            </button>
+            {% if has_game_scope %}
+                <button type="button" class="booking-scope-tab" data-scope="game" onclick="selectScope('game', this)">
+                    <i class="fas fa-gamepad"></i> {{ server_gc_name }}
+                </button>
+            {% endif %}
+        </div>
+
+        {# === POSITION CARDS === #}
+        <div class="booking-positions" id="positionCards">
+            {% for pos in 1..5 %}
+                <button type="button" class="booking-pos-card{{ pos == 1 ? ' booking-pos-card--active' : '' }}" data-pos="{{ pos }}" onclick="selectPosition({{ pos }}, this)">
+                    <div class="booking-pos-card__rank">#{{ pos }}</div>
+                    <div class="booking-pos-card__cost">
+                        <span class="booking-pos-card__cost-val" id="posCost{{ pos }}">{{ homepage_costs[pos] }}</span>
+                        <span class="booking-pos-card__cost-unit">NexBoost/12h</span>
+                    </div>
+                </button>
+            {% endfor %}
+        </div>
+
+        {# === CALENDAR === #}
+        <div class="booking-calendar" id="bookingCalendar">
+            <div class="booking-calendar__nav">
+                <button type="button" class="booking-calendar__nav-btn" onclick="navigateMonth(-1)"><i class="fas fa-chevron-left"></i></button>
+                <span class="booking-calendar__month" id="calendarMonth"></span>
+                <button type="button" class="booking-calendar__nav-btn" onclick="navigateMonth(1)"><i class="fas fa-chevron-right"></i></button>
+            </div>
+            <div class="booking-calendar__grid" id="calendarGrid"></div>
+            <div class="booking-legend">
+                <div class="booking-legend__item"><span class="booking-legend__dot booking-legend__dot--available"></span> Disponible</div>
+                <div class="booking-legend__item"><span class="booking-legend__dot booking-legend__dot--booked"></span> Deja reserve (votre serveur)</div>
+                <div class="booking-legend__item"><span class="booking-legend__dot booking-legend__dot--full"></span> Position prise</div>
+            </div>
+        </div>
+
+        {# === CONFIRM === #}
+        <div class="booking-confirm" id="bookingConfirm">
+            <div class="booking-confirm__summary" id="confirmSummary"></div>
+
+            <div style="margin:16px 0;">
+                <label style="display:block;margin-bottom:8px;font-size:13px;font-weight:600;color:#e4e6eb;">Creneau horaire</label>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;" id="slotBtnsWrap">
+                    <button type="button" class="slot-btn slot-btn--active" data-slot="00:00" onclick="selectSlot('00:00', this)">
+                        <i class="fas fa-moon"></i> 00:00 - 12:00
+                    </button>
+                    <button type="button" class="slot-btn" data-slot="12:00" onclick="selectSlot('12:00', this)">
+                        <i class="fas fa-sun"></i> 12:00 - 00:00
+                    </button>
+                </div>
+            </div>
+
+            <div style="margin:16px 0;">
+                <label style="display:block;margin-bottom:8px;font-size:13px;font-weight:600;color:#e4e6eb;">Duree</label>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;" id="durBtnsWrap"></div>
+            </div>
+
+            <div class="booking-confirm__cost" id="confirmCost"></div>
+            <form method="post" action="{{ path('featured_booking_book', {id: server.id}) }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('featured_booking') }}">
+                <input type="hidden" name="scope" id="confirmScope" value="homepage">
+                <input type="hidden" name="position" id="confirmPosition" value="1">
+                <input type="hidden" name="startsAt" id="confirmStartsAt" value="">
+                <input type="hidden" name="duration" id="confirmDuration" value="12">
+                <button type="submit" class="booking-confirm__btn" id="confirmBtn">
+                    <i class="fas fa-check"></i> Confirmer la reservation
+                </button>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block javascripts %}
+<style>
+.slot-btn, .dur-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid #1e3048;
+    background: #0d1a26;
+    color: #8b949e;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.slot-btn:hover:not(.slot-btn--booked), .dur-btn:hover { border-color: #ff6b35; color: #e4e6eb; }
+.slot-btn--active, .dur-btn--active { border-color: #ff6b35; background: rgba(255,107,53,0.12); color: #ff6b35; font-weight: 600; }
+.slot-btn--booked { border-color: rgba(28,200,138,0.3); background: rgba(28,200,138,0.1); color: #1cc88a; cursor: not-allowed; opacity: 0.7; }
+.slot-btn--full { border-color: rgba(231,74,59,0.3); background: rgba(231,74,59,0.1); color: #e74a3b; cursor: not-allowed; opacity: 0.7; }
+</style>
+<script>
+(function() {
+    var homepageCosts = {{ homepage_costs|json_encode|raw }};
+    var gameCosts = {{ game_costs|json_encode|raw }};
+    var homepageAvailability = {{ homepage_availability|json_encode|raw }};
+    var serverId = {{ server.id }};
+    var serverGcName = {{ server_gc_name|json_encode|raw }};
+
+    var currentScope = 'homepage';
+    var currentPosition = 1;
+    var currentCosts = homepageCosts;
+
+    var slotTaken = {};
+    var serverBookedSlots = [];
+    var costPer12h = homepageCosts['1'] || 10;
+
+    function buildSlotTakenFromAvailability(availability, pos) {
+        var result = {};
+        for (var key in availability) {
+            result[key] = !!(availability[key] && availability[key][pos]);
+        }
+        return result;
+    }
+
+    slotTaken = buildSlotTakenFromAvailability(homepageAvailability, 1);
+
+    var today = new Date();
+    today.setHours(0, 0, 0, 0);
+    var currentYear = today.getFullYear();
+    var currentMonth = today.getMonth();
+    var selectedDate = null;
+    var selectedSlot = '00:00';
+    var selectedDuration = 12;
+
+    var monthNames = ['Janvier','Fevrier','Mars','Avril','Mai','Juin','Juillet','Aout','Septembre','Octobre','Novembre','Decembre'];
+    var dayLabels = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+
+    function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+
+    function updateCostDisplay() {
+        currentCosts = currentScope === 'homepage' ? homepageCosts : gameCosts;
+        for (var i = 1; i <= 5; i++) {
+            var el = document.getElementById('posCost' + i);
+            if (el) el.textContent = currentCosts[i] || '?';
+        }
+        costPer12h = currentCosts[currentPosition] || 1;
+    }
+
+    function loadAvailability() {
+        var url = '/serveur/' + serverId + '/boost/availability?scope=' + currentScope + '&position=' + currentPosition;
+
+        fetch(url)
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                slotTaken = data.slot_taken || {};
+                serverBookedSlots = data.server_booked_slots || [];
+                costPer12h = data.cost_per_12h || 1;
+                renderCalendar();
+                selectedDate = null;
+                document.getElementById('bookingConfirm').classList.remove('active');
+            })
+            .catch(function() {});
+    }
+
+    window.selectScope = function(scope, btn) {
+        currentScope = scope;
+        document.querySelectorAll('.booking-scope-tab').forEach(function(el) { el.classList.remove('booking-scope-tab--active'); });
+        btn.classList.add('booking-scope-tab--active');
+
+        document.getElementById('confirmScope').value = scope;
+        updateCostDisplay();
+        loadAvailability();
+    };
+
+    window.selectPosition = function(pos, btn) {
+        currentPosition = pos;
+        document.querySelectorAll('.booking-pos-card').forEach(function(el) { el.classList.remove('booking-pos-card--active'); });
+        btn.classList.add('booking-pos-card--active');
+        document.getElementById('confirmPosition').value = pos;
+        costPer12h = currentCosts[pos] || 1;
+
+        if (currentScope === 'homepage') {
+            slotTaken = buildSlotTakenFromAvailability(homepageAvailability, pos);
+            renderCalendar();
+            selectedDate = null;
+            document.getElementById('bookingConfirm').classList.remove('active');
+        } else {
+            loadAvailability();
+        }
+    };
+
+    function renderCalendar() {
+        var grid = document.getElementById('calendarGrid');
+        var monthEl = document.getElementById('calendarMonth');
+        grid.innerHTML = '';
+
+        monthEl.textContent = monthNames[currentMonth] + ' ' + currentYear;
+
+        dayLabels.forEach(function(d) {
+            var label = document.createElement('div');
+            label.className = 'booking-calendar__day-label';
+            label.textContent = d;
+            grid.appendChild(label);
+        });
+
+        var firstDay = new Date(currentYear, currentMonth, 1);
+        var lastDay = new Date(currentYear, currentMonth + 1, 0);
+        var startDow = (firstDay.getDay() + 6) % 7;
+
+        for (var i = 0; i < startDow; i++) {
+            var empty = document.createElement('div');
+            empty.className = 'booking-calendar__day booking-calendar__day--empty';
+            grid.appendChild(empty);
+        }
+
+        for (var d = 1; d <= lastDay.getDate(); d++) {
+            var date = new Date(currentYear, currentMonth, d);
+            var dateStr = date.getFullYear() + '-' + pad2(date.getMonth()+1) + '-' + pad2(d);
+            var isPast = date < today;
+
+            var morningKey = dateStr + ' 00:00';
+            var afternoonKey = dateStr + ' 12:00';
+            var morningTaken = slotTaken[morningKey] || false;
+            var afternoonTaken = slotTaken[afternoonKey] || false;
+            var morningBooked = serverBookedSlots.indexOf(morningKey) !== -1;
+            var afternoonBooked = serverBookedSlots.indexOf(afternoonKey) !== -1;
+
+            var bothTaken = (morningTaken || morningBooked) && (afternoonTaken || afternoonBooked);
+
+            var cell = document.createElement('div');
+            cell.className = 'booking-calendar__day';
+
+            if (isPast) {
+                cell.classList.add('booking-calendar__day--past');
+            } else if (morningBooked && afternoonBooked) {
+                cell.classList.add('booking-calendar__day--booked');
+            } else if (bothTaken) {
+                cell.classList.add('booking-calendar__day--full');
+            } else {
+                cell.classList.add('booking-calendar__day--available');
+                cell.setAttribute('data-date', dateStr);
+                cell.addEventListener('click', function() {
+                    selectDateFn(this.getAttribute('data-date'));
+                });
+            }
+
+            var num = document.createElement('div');
+            num.className = 'booking-calendar__day-number';
+            num.textContent = d;
+            cell.appendChild(num);
+
+            if (!isPast) {
+                var slots = document.createElement('div');
+                slots.className = 'booking-calendar__day-slots';
+                if (morningBooked && afternoonBooked) {
+                    slots.textContent = 'Reserve';
+                    slots.style.color = '#1cc88a';
+                } else {
+                    var free = 0;
+                    if (!morningTaken && !morningBooked) free++;
+                    if (!afternoonTaken && !afternoonBooked) free++;
+                    slots.textContent = free > 0 ? free + ' dispo' : 'Pris';
+                    if (free === 0) slots.style.color = '#e74a3b';
+                }
+                cell.appendChild(slots);
+            }
+
+            grid.appendChild(cell);
+        }
+    }
+
+    function selectDateFn(dateStr) {
+        selectedDate = dateStr;
+
+        document.querySelectorAll('.booking-calendar__day--selected').forEach(function(el) {
+            el.classList.remove('booking-calendar__day--selected');
+        });
+        var cell = document.querySelector('[data-date="' + dateStr + '"]');
+        if (cell) cell.classList.add('booking-calendar__day--selected');
+
+        updateSlotButtons();
+        updateDurationButtons();
+        updateConfirm();
+        document.getElementById('bookingConfirm').classList.add('active');
+    }
+
+    function updateSlotButtons() {
+        if (!selectedDate) return;
+
+        var morningKey = selectedDate + ' 00:00';
+        var afternoonKey = selectedDate + ' 12:00';
+        var morningTaken = slotTaken[morningKey] || false;
+        var afternoonTaken = slotTaken[afternoonKey] || false;
+        var morningBooked = serverBookedSlots.indexOf(morningKey) !== -1;
+        var afternoonBooked = serverBookedSlots.indexOf(afternoonKey) !== -1;
+
+        var btns = document.querySelectorAll('.slot-btn');
+        btns.forEach(function(btn) {
+            var slot = btn.getAttribute('data-slot');
+            var taken = (slot === '00:00') ? morningTaken : afternoonTaken;
+            var booked = (slot === '00:00') ? morningBooked : afternoonBooked;
+
+            btn.classList.remove('slot-btn--active', 'slot-btn--booked', 'slot-btn--full');
+            btn.disabled = false;
+
+            if (booked) {
+                btn.classList.add('slot-btn--booked');
+                btn.disabled = true;
+            } else if (taken) {
+                btn.classList.add('slot-btn--full');
+                btn.disabled = true;
+            }
+        });
+
+        var morningAvailable = !morningTaken && !morningBooked;
+        var afternoonAvailable = !afternoonTaken && !afternoonBooked;
+
+        if (morningAvailable) {
+            selectedSlot = '00:00';
+            btns[0].classList.add('slot-btn--active');
+        } else if (afternoonAvailable) {
+            selectedSlot = '12:00';
+            btns[1].classList.add('slot-btn--active');
+        }
+
+        updateSubmitBtn();
+    }
+
+    function updateDurationButtons() {
+        var wrap = document.getElementById('durBtnsWrap');
+        wrap.innerHTML = '';
+        var durations = [12, 24, 48];
+        selectedDuration = 12;
+
+        durations.forEach(function(dur, idx) {
+            var cost = Math.ceil(dur / 12) * costPer12h;
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'dur-btn' + (idx === 0 ? ' dur-btn--active' : '');
+            btn.setAttribute('data-dur', dur);
+            btn.textContent = dur + 'h (' + cost + ' NexBoost)';
+            btn.addEventListener('click', function() {
+                selectedDuration = dur;
+                document.querySelectorAll('.dur-btn').forEach(function(el) { el.classList.remove('dur-btn--active'); });
+                btn.classList.add('dur-btn--active');
+                updateConfirm();
+            });
+            wrap.appendChild(btn);
+        });
+    }
+
+    function updateSubmitBtn() {
+        if (!selectedDate) return;
+        var key = selectedDate + ' ' + selectedSlot;
+        var taken = slotTaken[key] || false;
+        var booked = serverBookedSlots.indexOf(key) !== -1;
+        var btn = document.getElementById('confirmBtn');
+        btn.disabled = taken || booked;
+        btn.style.opacity = (taken || booked) ? '0.4' : '1';
+    }
+
+    function updateConfirm() {
+        if (!selectedDate) return;
+        var parts = selectedDate.split('-');
+        var formatted = parts[2] + '/' + parts[1] + '/' + parts[0];
+        var slotLabel = selectedSlot === '00:00' ? '00:00 - 12:00' : '12:00 - 00:00';
+        var scopeLabel = currentScope === 'homepage' ? 'Page d\'accueil' : serverGcName;
+
+        document.getElementById('confirmSummary').innerHTML =
+            '<strong>Scope :</strong> ' + scopeLabel +
+            ' &mdash; <strong>Position :</strong> #' + currentPosition +
+            ' &mdash; <strong>Date :</strong> ' + formatted +
+            ' &mdash; <strong>Creneau :</strong> ' + slotLabel +
+            ' &mdash; <strong>Duree :</strong> ' + selectedDuration + 'h';
+
+        var cost = Math.ceil(selectedDuration / 12) * costPer12h;
+        document.getElementById('confirmCost').innerHTML = '<i class="fas fa-bolt"></i> Cout : ' + cost + ' NexBoost';
+
+        document.getElementById('confirmScope').value = currentScope;
+        document.getElementById('confirmPosition').value = currentPosition;
+        document.getElementById('confirmStartsAt').value = selectedDate + ' ' + selectedSlot;
+        document.getElementById('confirmDuration').value = selectedDuration;
+
+        updateSubmitBtn();
+    }
+
+    window.selectSlot = function(slot, btn) {
+        if (btn.disabled) return;
+        selectedSlot = slot;
+        document.querySelectorAll('.slot-btn').forEach(function(el) {
+            if (!el.disabled) el.classList.remove('slot-btn--active');
+        });
+        btn.classList.add('slot-btn--active');
+        updateConfirm();
+    };
+
+    window.navigateMonth = function(dir) {
+        currentMonth += dir;
+        if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+        if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+        renderCalendar();
+    };
+
+    updateCostDisplay();
+    renderCalendar();
+})();
+</script>
+{% endblock %}

@@ -129,6 +129,24 @@
     padding: 2px 8px;
     border-radius: 4px;
 }
+.nx-dropdown__balances {
+    display: flex;
+    gap: 12px;
+    padding: 10px 20px;
+    background: rgba(0,0,0,0.15);
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.nx-dropdown__balance {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.7);
+}
+.nx-dropdown__balance i {
+    font-size: 11px;
+}
 .nx-dropdown__divider {
     height: 1px;
     background: rgba(255,255,255,0.04);
@@ -323,6 +341,75 @@
 @media (max-width: 575.98px) {
     .nx-logo img { height: 50px; }
     .nx-logo--mobile img { height: 45px !important; }
+}
+
+/* ─── Nested Sub-menu fix (hover gap) ─── */
+.tgmenu__navbar-wrap ul li .sub-menu li.menu-item-has-children > .sub-menu {
+    transition: all 0.3s ease-out 0s;
+}
+.tgmenu__navbar-wrap ul li .sub-menu li.menu-item-has-children:not(:hover) > .sub-menu {
+    transition-delay: 0.15s;
+}
+.tgmenu__navbar-wrap ul li .sub-menu li.menu-item-has-children {
+    position: relative;
+}
+.tgmenu__navbar-wrap ul li .sub-menu li.menu-item-has-children::after {
+    content: "";
+    position: absolute;
+    right: -20px;
+    top: 0;
+    width: 20px;
+    height: 100%;
+    z-index: 10;
+}
+/* Arrow indicator for items with children */
+.tgmenu__navbar-wrap ul li .sub-menu li.menu-item-has-children > a::after {
+    content: "\f105";
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    margin-left: auto;
+    font-size: 11px;
+    opacity: 0.4;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.tgmenu__navbar-wrap ul li .sub-menu li.menu-item-has-children:hover > a::after {
+    opacity: 1;
+    color: var(--tg-theme-primary);
+    transform: translateX(3px);
+}
+/* Category icons in submenu */
+.tgmenu__navbar-wrap ul li .sub-menu li a i {
+    width: 18px;
+    text-align: center;
+    margin-right: 4px;
+    font-size: 13px;
+    opacity: 0.5;
+}
+.tgmenu__navbar-wrap ul li .sub-menu li:hover > a i {
+    opacity: 1;
+    color: var(--tg-theme-primary);
+}
+
+/* ─── "Voir tout" link in submenu ─── */
+.nx-submenu-more {
+    border-top: 1px solid rgba(255,255,255,0.06);
+    margin-top: 6px;
+    padding-top: 6px;
+}
+.nx-submenu-more a {
+    color: var(--tg-theme-primary) !important;
+    font-size: 12px !important;
+    opacity: 0.7;
+    justify-content: space-between;
+}
+.nx-submenu-more a i {
+    font-size: 10px !important;
+    margin-left: 8px;
+    opacity: 1 !important;
+    color: var(--tg-theme-primary) !important;
+}
+.nx-submenu-more:hover a {
+    opacity: 1;
 }
 
 /* ─── Off-Canvas Tweaks ─── */

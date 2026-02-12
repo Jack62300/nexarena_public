@@ -8,6 +8,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use App\Service\WebhookService;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -19,6 +20,7 @@ class RegistrationController extends AbstractController
         UserPasswordHasherInterface $passwordHasher,
         EntityManagerInterface $em,
         Security $security,
+        WebhookService $webhookService,
     ): Response {
         if ($this->getUser()) {
             return $this->redirectToRoute('app_home');
@@ -76,6 +78,14 @@ class RegistrationController extends AbstractController
 
             $em->persist($user);
             $em->flush();
+
+            $webhookService->dispatch('user.registered', [
+                'title' => 'Inscription formulaire',
+                'fields' => [
+                    ['name' => 'Utilisateur', 'value' => $user->getUsername(), 'inline' => true],
+                    ['name' => 'Email', 'value' => $user->getEmail(), 'inline' => true],
+                ],
+            ]);
 
             $security->login($user, 'form_login', 'main');
 

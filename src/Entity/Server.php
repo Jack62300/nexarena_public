@@ -13,6 +13,7 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\HasLifecycleCallbacks]
 #[ORM\Index(name: 'idx_server_monthly_votes', columns: ['monthly_votes'])]
 #[ORM\Index(name: 'idx_server_total_votes', columns: ['total_votes'])]
+#[ORM\Index(name: 'idx_server_click_count', columns: ['click_count'])]
 class Server
 {
     #[ORM\Id]
@@ -119,6 +120,14 @@ class Server
     #[ORM\Column]
     private int $monthlyVotes = 0;
 
+    #[ORM\Column]
+    private int $clickCount = 0;
+
+    /** @var Collection<int, Tag> */
+    #[ORM\ManyToMany(targetEntity: Tag::class, inversedBy: 'servers')]
+    #[ORM\JoinTable(name: 'server_tag')]
+    private Collection $tags;
+
     #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'servers')]
     #[ORM\JoinColumn(nullable: false)]
     private ?User $owner = null;
@@ -133,9 +142,15 @@ class Server
     #[ORM\OneToMany(targetEntity: ServerCollaborator::class, mappedBy: 'server', orphanRemoval: true)]
     private Collection $collaborators;
 
+    /** @var Collection<int, ServerPremiumFeature> */
+    #[ORM\OneToMany(targetEntity: ServerPremiumFeature::class, mappedBy: 'server', orphanRemoval: true)]
+    private Collection $premiumFeatures;
+
     public function __construct()
     {
         $this->collaborators = new ArrayCollection();
+        $this->premiumFeatures = new ArrayCollection();
+        $this->tags = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -580,6 +595,49 @@ class Server
     public function getCollaborators(): Collection
     {
         return $this->collaborators;
+    }
+
+    /** @return Collection<int, ServerPremiumFeature> */
+    public function getPremiumFeatures(): Collection
+    {
+        return $this->premiumFeatures;
+    }
+
+    public function getClickCount(): int
+    {
+        return $this->clickCount;
+    }
+
+    public function incrementClickCount(): static
+    {
+        $this->clickCount++;
+        return $this;
+    }
+
+    /** @return Collection<int, Tag> */
+    public function getTags(): Collection
+    {
+        return $this->tags;
+    }
+
+    public function addTag(Tag $tag): static
+    {
+        if (!$this->tags->contains($tag)) {
+            $this->tags->add($tag);
+        }
+        return $this;
+    }
+
+    public function removeTag(Tag $tag): static
+    {
+        $this->tags->removeElement($tag);
+        return $this;
+    }
+
+    public function clearTags(): static
+    {
+        $this->tags->clear();
+        return $this;
     }
 
     public function __toString(): string

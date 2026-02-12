@@ -41,6 +41,56 @@
         </div>
     </section>
 
+    {# ===== SELECTION PREMIUM ===== #}
+    {% if premiumPositions|length > 0 and gameCategory is defined and gameCategory %}
+        {% set hasAnyBooking = false %}
+        {% for pos in 1..5 %}
+            {% if premiumPositions[pos] is defined and premiumPositions[pos] %}
+                {% set hasAnyBooking = true %}
+            {% endif %}
+        {% endfor %}
+        <section class="nx-rk-premium">
+            <div class="container">
+                <div class="nx-rk-premium__header">
+                    <div class="nx-rk-premium__badge">
+                        <i class="fas fa-crown"></i>
+                        <span>{{ setting('premium_selection_title', 'Selection premium') }}</span>
+                    </div>
+                    <div class="nx-rk-premium__line"></div>
+                </div>
+                <div class="nx-rk-premium__grid">
+                    {% for pos in 1..5 %}
+                        {% set booking = premiumPositions[pos] ?? null %}
+                        {% if booking and booking.server %}
+                            {% set server = booking.server %}
+                            <a href="{{ path('server_show', {slug: server.slug}) }}" class="nx-rk-premium__card">
+                                <div class="nx-rk-premium__pos">#{{ pos }}</div>
+                                <div class="nx-rk-premium__thumb">
+                                    {% if server.presentationImage %}
+                                        <img src="{{ asset('uploads/servers/presentations/' ~ server.presentationImage) }}" alt="{{ server.name }}">
+                                    {% else %}
+                                        <div class="nx-rk-premium__thumb-ph"><i class="fas fa-server"></i></div>
+                                    {% endif %}
+                                </div>
+                                <div class="nx-rk-premium__name">{{ server.name }}</div>
+                                <div class="nx-rk-premium__votes"><i class="fas fa-fire"></i> {{ server.monthlyVotes }}</div>
+                            </a>
+                        {% else %}
+                            <div class="nx-rk-premium__card nx-rk-premium__card--empty">
+                                <div class="nx-rk-premium__pos">#{{ pos }}</div>
+                                <div class="nx-rk-premium__thumb">
+                                    <div class="nx-rk-premium__thumb-ph"><i class="fas fa-plus" style="opacity:0.3;"></i></div>
+                                </div>
+                                <div class="nx-rk-premium__name" style="color:rgba(255,255,255,0.2);">Disponible</div>
+                                <div class="nx-rk-premium__votes" style="color:rgba(255,255,255,0.1);">—</div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+    {% endif %}
+
     {# ===== RANKING LIST ===== #}
     <section class="nx-rk-list">
         <div class="container">
@@ -51,6 +101,7 @@
                     <span class="nx-rk-table-head__pos">Rang</span>
                     <span class="nx-rk-table-head__server">Serveur</span>
                     <span class="nx-rk-table-head__votes">Votes</span>
+                    <span class="nx-rk-table-head__clicks">Clics</span>
                     <span class="nx-rk-table-head__action"></span>
                 </div>
 
@@ -85,9 +136,18 @@
                                     {% endif %}
                                 </a>
                                 <div class="nx-rk-row__info">
-                                    <h4 class="nx-rk-row__name">
-                                        <a href="{{ path('server_show', {slug: server.slug}) }}">{{ server.name }}</a>
-                                    </h4>
+                                    <div class="nx-rk-row__name-row">
+                                        <h4 class="nx-rk-row__name">
+                                            <a href="{{ path('server_show', {slug: server.slug}) }}">{{ server.name }}</a>
+                                        </h4>
+                                        {% if server_has_twitch_live(server) %}
+                                            <span class="nx-twitch-live-tag">
+                                                <span class="nx-twitch-live-tag__dot"></span>
+                                                <i class="fab fa-twitch"></i>
+                                                <span>LIVE</span>
+                                            </span>
+                                        {% endif %}
+                                    </div>
                                     {% if server.shortDescription %}
                                         <p class="nx-rk-row__desc">{{ server.shortDescription }}</p>
                                     {% endif %}
@@ -108,6 +168,11 @@
                                         {% if server.ip %}
                                             <span class="nx-rk-tag nx-rk-tag--ip d-none d-xl-inline-flex"><i class="fas fa-plug"></i> {{ server.ip }}{% if server.port %}:{{ server.port }}{% endif %}</span>
                                         {% endif %}
+                                        {% for tag in server.tags %}
+                                            <span class="nx-rk-tag nx-rk-tag--custom" {% if tag.color %}style="background:{{ tag.color }}15;color:{{ tag.color }};border:1px solid {{ tag.color }}30;"{% endif %}>
+                                                <i class="fas fa-hashtag" {% if tag.color %}style="color:{{ tag.color }} !important;opacity:1 !important;"{% endif %}></i> {{ tag.name }}
+                                            </span>
+                                        {% endfor %}
                                     </div>
                                 </div>
                             </div>
@@ -120,6 +185,15 @@
                                 </div>
                                 <span class="nx-rk-row__votes-label">votes ce mois</span>
                                 <span class="nx-rk-row__votes-total">{{ server.totalVotes }} au total</span>
+                            </div>
+
+                            {# ── Clicks ── #}
+                            <div class="nx-rk-row__clicks d-none d-lg-block">
+                                <div class="nx-rk-row__clicks-main">
+                                    <i class="fas fa-eye"></i>
+                                    <span class="nx-rk-row__clicks-count">{{ server.clickCount }}</span>
+                                </div>
+                                <span class="nx-rk-row__clicks-label">clics</span>
                             </div>
 
                             {# ── Action ── #}

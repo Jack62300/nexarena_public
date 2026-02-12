@@ -1,0 +1,473 @@
+/* ============================================
+   ADMIN DISCORD
+   Consistent with admin base.css + dashboard.css
+   ============================================ */
+
+/* ===== BOT STATUS BADGE ===== */
+.dc-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+.dc-status--online {
+    background: rgba(69,248,130,0.12);
+    color: var(--accent);
+}
+.dc-status--offline {
+    background: rgba(231,74,59,0.12);
+    color: var(--danger);
+}
+.dc-status i { font-size: 7px; }
+
+/* ===== GUILD INFO (dashboard) ===== */
+.dc-guild-info {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+.dc-guild-info__icon {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+.dc-guild-info__icon--placeholder {
+    background: #5865f2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 700;
+    color: #fff;
+}
+.dc-guild-info__name {
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--text-primary);
+}
+.dc-guild-info__meta {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+
+/* ===== STAT ROWS (dashboard cards) ===== */
+.dc-stat-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+.dc-stat-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+.dc-stat-row:last-child { border-bottom: none; }
+.dc-stat-row__label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+}
+.dc-stat-row__value {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+/* ===== TAB FILTERS (tickets) ===== */
+.dc-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+.dc-tab {
+    padding: 7px 18px;
+    border-radius: 6px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.dc-tab:hover {
+    border-color: var(--text-secondary);
+    color: var(--text-primary);
+}
+.dc-tab--active {
+    background: rgba(69,248,130,0.1);
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+/* ===== BADGES ===== */
+.dc-ticket-status {
+    display: inline-block;
+    padding: 3px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+}
+.dc-ticket-status--open {
+    background: rgba(69,248,130,0.1);
+    color: var(--accent);
+}
+.dc-ticket-status--closed {
+    background: rgba(255,255,255,0.06);
+    color: var(--text-secondary);
+}
+.dc-ticket-cat {
+    display: inline-block;
+    padding: 3px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    background: rgba(88,101,242,0.12);
+    color: #7289da;
+}
+
+/* ===== BANNED WORDS (moderation) ===== */
+.dc-word-form {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+.dc-word-form input[type="text"] {
+    background: var(--bg-darker);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 10px 14px;
+    color: var(--text-primary);
+    font-size: 13px;
+    width: 100%;
+    max-width: 380px;
+    transition: border-color 0.2s;
+}
+.dc-word-form input[type="text"]:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+.dc-word-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 20px;
+}
+.dc-word-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--bg-darker);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 7px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    transition: border-color 0.2s;
+}
+.dc-word-tag:hover {
+    border-color: var(--text-secondary);
+}
+.dc-word-tag form { display: inline; }
+.dc-word-tag button {
+    background: none;
+    border: none;
+    color: var(--danger);
+    cursor: pointer;
+    padding: 0;
+    font-size: 13px;
+    opacity: 0.5;
+    transition: opacity 0.2s;
+}
+.dc-word-tag button:hover { opacity: 1; }
+
+/* ===== TICKET CHAT (ticket_show) ===== */
+.dc-chat {
+    max-height: 550px;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 16px;
+    background: var(--bg-darker);
+}
+.dc-msg {
+    display: flex;
+    gap: 12px;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 4px;
+    transition: background 0.15s;
+}
+.dc-msg:hover { background: rgba(255,255,255,0.02); }
+.dc-msg__avatar {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    border-radius: 50%;
+    background: rgba(88,101,242,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 13px;
+    color: #7289da;
+}
+.dc-msg--staff .dc-msg__avatar {
+    background: rgba(69,248,130,0.15);
+    color: var(--accent);
+}
+.dc-msg__body { flex: 1; min-width: 0; }
+.dc-msg__head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 3px;
+}
+.dc-msg__author {
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text-primary);
+}
+.dc-msg--staff .dc-msg__author { color: var(--accent); }
+.dc-msg__time {
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+.dc-msg__badge {
+    font-size: 9px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: rgba(69,248,130,0.12);
+    color: var(--accent);
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+.dc-msg__text {
+    color: var(--text-primary);
+    font-size: 13px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+    opacity: 0.85;
+}
+
+/* ===== MODERATION LOG ===== */
+.dc-modlog-stats {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+.dc-modlog-stat {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 12px 18px;
+    min-width: 140px;
+}
+.dc-modlog-stat i {
+    font-size: 14px;
+    opacity: 0.7;
+}
+.dc-modlog-stat__count {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+.dc-modlog-stat__label {
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+.dc-modlog-stat--message_deleted i { color: var(--danger); }
+.dc-modlog-stat--user_warned i { color: #f0ad4e; }
+.dc-modlog-stat--user_muted i { color: var(--info, #17a2b8); }
+.dc-modlog-stat--user_kicked i,
+.dc-modlog-stat--user_banned i { color: #8b0000; }
+.dc-modlog-stat--spam_detected i { color: #e67e22; }
+
+.dc-modlog-table-wrap {
+    overflow-x: auto;
+}
+.dc-modlog-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.dc-modlog-table thead th {
+    padding: 12px 14px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-secondary);
+    font-weight: 600;
+    border-bottom: 1px solid var(--border-color);
+    text-align: left;
+    white-space: nowrap;
+}
+.dc-modlog-table tbody tr.dc-modlog-row {
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.dc-modlog-table tbody tr.dc-modlog-row:hover {
+    background: rgba(255,255,255,0.02);
+}
+.dc-modlog-table tbody td {
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+}
+.dc-modlog-date {
+    white-space: nowrap;
+    font-size: 12px !important;
+    color: var(--text-secondary) !important;
+    font-variant-numeric: tabular-nums;
+}
+.dc-modlog-user {
+    font-weight: 600;
+    display: block;
+    font-size: 13px;
+}
+.dc-modlog-userid {
+    font-size: 10px;
+    color: var(--text-secondary);
+    display: block;
+    margin-top: 1px;
+    font-family: monospace;
+}
+.dc-modlog-badge {
+    display: inline-block;
+    padding: 3px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.dc-modlog-badge--danger {
+    background: rgba(231,74,59,0.12);
+    color: var(--danger);
+}
+.dc-modlog-badge--warning {
+    background: rgba(240,173,78,0.12);
+    color: #f0ad4e;
+}
+.dc-modlog-badge--info {
+    background: rgba(23,162,184,0.12);
+    color: #17a2b8;
+}
+.dc-modlog-badge--dark {
+    background: rgba(139,0,0,0.15);
+    color: #ff4444;
+}
+.dc-modlog-badge--orange {
+    background: rgba(230,126,34,0.12);
+    color: #e67e22;
+}
+.dc-modlog-channel {
+    font-size: 12px;
+    color: #7289da;
+    font-weight: 500;
+}
+.dc-modlog-reason {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+.dc-modlog-word {
+    font-size: 11px;
+    background: rgba(231,74,59,0.1);
+    color: var(--danger);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: monospace;
+}
+.dc-modlog-content-preview {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+/* Expand row */
+.dc-modlog-expand {
+    display: none;
+}
+.dc-modlog-expand--visible {
+    display: table-row;
+}
+.dc-modlog-expand td {
+    padding: 0 14px 14px 14px !important;
+    border-bottom: 1px solid var(--border-color);
+    background: rgba(69,248,130,0.02);
+}
+.dc-modlog-expand__content {
+    padding: 12px 16px;
+    border-radius: 8px;
+    background: var(--bg-darker);
+    border: 1px solid var(--border-color);
+}
+.dc-modlog-expand__content p {
+    margin: 8px 0 0;
+    font-size: 13px;
+    color: var(--text-primary);
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* Pagination */
+.dc-modlog-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 16px 22px;
+    border-top: 1px solid var(--border-color);
+}
+.dc-modlog-pagination__info {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+/* ===== INFO GRID (ticket detail) ===== */
+.dc-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+}
+.dc-info-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 16px;
+}
+.dc-info-item__label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+.dc-info-item__value {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 14px;
+}

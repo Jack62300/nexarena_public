@@ -1,0 +1,75 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nouvelle promotion live - {{ setting('site_name', 'Nexarena') }}{% endblock %}
+
+{% block body %}
+<div class="container py-5" style="max-width:600px;">
+    <div class="mb-4">
+        <a href="{{ path('app_promotions_index') }}" style="color:rgba(255,255,255,0.5);text-decoration:none;font-size:13px;">
+            <i class="fas fa-arrow-left"></i> Retour
+        </a>
+    </div>
+
+    <h2 style="font-weight:700;color:#fff;margin-bottom:24px;"><i class="fas fa-broadcast-tower" style="color:#45f882;margin-right:8px;"></i> Nouvelle promotion live</h2>
+
+    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:24px;">
+        <div style="background:rgba(69,248,130,0.06);border:1px solid rgba(69,248,130,0.15);border-radius:8px;padding:12px 16px;margin-bottom:20px;font-size:13px;color:rgba(255,255,255,0.7);">
+            <i class="fas fa-coins" style="color:#45f882;margin-right:6px;"></i>
+            Votre solde: <strong style="color:#45f882;">{{ balance }} NexBits</strong>
+            &bull; Cout: <strong>{{ cost_per_day }} NexBits / jour</strong>
+        </div>
+
+        <form method="post" action="{{ path('app_promotions_new') }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('live_promo') }}">
+
+            <div style="margin-bottom:16px;">
+                <label style="display:block;font-size:12px;font-weight:600;color:rgba(255,255,255,0.6);text-transform:uppercase;margin-bottom:6px;">Plateforme</label>
+                <select name="platform" required style="width:100%;background:#1a1a2e;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:10px 14px;color:#fff;font-size:13px;">
+                    <option value="twitch">Twitch</option>
+                    <option value="youtube">YouTube</option>
+                </select>
+            </div>
+
+            <div style="margin-bottom:16px;">
+                <label style="display:block;font-size:12px;font-weight:600;color:rgba(255,255,255,0.6);text-transform:uppercase;margin-bottom:6px;">Nom de la chaine</label>
+                <input type="text" name="channel_name" required maxlength="100" placeholder="Ex: MonStream" style="width:100%;background:#1a1a2e;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:10px 14px;color:#fff;font-size:13px;">
+            </div>
+
+            <div style="margin-bottom:16px;">
+                <label style="display:block;font-size:12px;font-weight:600;color:rgba(255,255,255,0.6);text-transform:uppercase;margin-bottom:6px;">URL de la chaine</label>
+                <input type="url" name="channel_url" required maxlength="500" placeholder="https://twitch.tv/monstream" style="width:100%;background:#1a1a2e;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:10px 14px;color:#fff;font-size:13px;">
+            </div>
+
+            {% if servers is not empty %}
+            <div style="margin-bottom:16px;">
+                <label style="display:block;font-size:12px;font-weight:600;color:rgba(255,255,255,0.6);text-transform:uppercase;margin-bottom:6px;">Serveur associe (optionnel)</label>
+                <select name="server_id" style="width:100%;background:#1a1a2e;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:10px 14px;color:#fff;font-size:13px;">
+                    <option value="">Aucun</option>
+                    {% for server in servers %}
+                        <option value="{{ server.id }}">{{ server.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+
+            <div style="margin-bottom:20px;">
+                <label style="display:block;font-size:12px;font-weight:600;color:rgba(255,255,255,0.6);text-transform:uppercase;margin-bottom:6px;">Duree (jours)</label>
+                <input type="number" name="duration" required min="1" max="{{ max_days }}" value="7" id="durationInput" style="width:100%;background:#1a1a2e;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:10px 14px;color:#fff;font-size:13px;">
+                <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:4px;">
+                    Cout total: <strong id="totalCost" style="color:#45f882;">{{ cost_per_day * 7 }}</strong> NexBits
+                </div>
+            </div>
+
+            <button type="submit" style="width:100%;background:#45f882;color:#000;border:none;border-radius:8px;padding:12px;font-weight:600;font-size:14px;cursor:pointer;">
+                <i class="fas fa-rocket"></i> Activer la promotion
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+document.getElementById('durationInput').addEventListener('input', function() {
+    document.getElementById('totalCost').textContent = Math.max(1, parseInt(this.value) || 0) * {{ cost_per_day }};
+});
+</script>
+{% endblock %}

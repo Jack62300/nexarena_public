@@ -95,6 +95,11 @@
                             <span class="sv-status-dot"></span> Verification...
                         </span>
                     {% endif %}
+                    {% for tag in server.tags %}
+                        <span class="sv-tag sv-tag--custom" {% if tag.color %}style="background:{{ tag.color }}20;color:{{ tag.color }};border-color:{{ tag.color }}40;"{% endif %}>
+                            <i class="fas fa-hashtag"></i> {{ tag.name }}
+                        </span>
+                    {% endfor %}
                 </div>
                 {% if server.shortDescription %}
                     <p class="sv-hero__short">{{ server.shortDescription }}</p>
@@ -244,19 +249,66 @@
                     </div>
                 {% endif %}
 
-                {# Tab: Stream #}
+                {# Tab: Stream (Twitch) #}
                 {% if server.twitchChannel %}
                     <div class="sv-pane" id="pane-stream">
-                        <div class="sv-twitch">
-                            <div class="sv-twitch__label">
-                                <div class="live-dot"></div>
-                                <i class="fab fa-twitch"></i> {{ server.twitchChannel }}
+                        {# Twitch channel info bar - loaded via JS #}
+                        <div class="sv-twitch-bar" id="twitchBar">
+                            <div class="sv-twitch-bar__loading">
+                                <i class="fas fa-circle-notch fa-spin"></i> Chargement des informations Twitch...
                             </div>
-                            <iframe
-                                src="https://player.twitch.tv/?channel={{ server.twitchChannel }}&parent={{ app.request.host }}&muted=true"
-                                allowfullscreen>
-                            </iframe>
                         </div>
+
+                        {% if has_twitch_live %}
+                            {# Premium: Live embed + chat #}
+                            <div class="sv-twitch-live" id="twitchLiveSection" style="display:none;">
+                                <div class="sv-twitch-live__header">
+                                    <div class="sv-twitch-live__badge">
+                                        <span class="sv-twitch-live__dot"></span> EN DIRECT
+                                    </div>
+                                    <span class="sv-twitch-live__title" id="twitchStreamTitle"></span>
+                                    <span class="sv-twitch-live__viewers" id="twitchViewers">
+                                        <i class="fas fa-eye"></i> <span id="twitchViewerCount">0</span>
+                                    </span>
+                                </div>
+                                <div class="sv-twitch-live__player">
+                                    <iframe
+                                        id="twitchPlayerFrame"
+                                        src="https://player.twitch.tv/?channel={{ server.twitchChannel }}&parent={{ app.request.host }}&muted=true"
+                                        allowfullscreen>
+                                    </iframe>
+                                </div>
+                            </div>
+
+                            {# Offline message #}
+                            <div class="sv-twitch-offline" id="twitchOfflineSection" style="display:none;">
+                                <div class="sv-twitch-offline__icon"><i class="fab fa-twitch"></i></div>
+                                <div class="sv-twitch-offline__text">La chaine n'est pas en direct actuellement.</div>
+                                <div class="sv-twitch-offline__sub">Les rediffusions sont disponibles ci-dessous.</div>
+                            </div>
+
+                            {# VODs #}
+                            <div class="sv-twitch-vods" id="twitchVodsSection" style="display:none;">
+                                <h4 class="sv-twitch-vods__title">
+                                    <i class="fas fa-video"></i> Rediffusions recentes
+                                </h4>
+                                <div class="sv-twitch-vods__grid" id="twitchVodsGrid"></div>
+                            </div>
+                        {% else %}
+                            {# Not subscribed: teaser #}
+                            <div class="sv-twitch-teaser" id="twitchTeaser">
+                                <div class="sv-twitch-teaser__content">
+                                    <i class="fab fa-twitch sv-twitch-teaser__icon"></i>
+                                    <h4 class="sv-twitch-teaser__title">Direct & Rediffusions</h4>
+                                    <p class="sv-twitch-teaser__text">
+                                        Le direct Twitch et les rediffusions ne sont pas disponibles pour ce serveur.
+                                    </p>
+                                    <a href="https://twitch.tv/{{ server.twitchChannel }}" target="_blank" rel="noopener" class="sv-twitch-teaser__link">
+                                        <i class="fab fa-twitch"></i> Regarder sur Twitch
+                                    </a>
+                                </div>
+                            </div>
+                        {% endif %}
                     </div>
                 {% endif %}
 
@@ -374,6 +426,35 @@
                                     <i class="fab fa-twitch"></i>
                                 </a>
                             {% endif %}
+                        </div>
+                    {% endif %}
+
+                    {# Twitch sidebar widget #}
+                    {% if server.twitchChannel %}
+                        <div class="sv-twitch-widget" id="twitchSidebarWidget">
+                            <div class="sv-twitch-widget__header">
+                                <i class="fab fa-twitch"></i>
+                                <span class="sv-twitch-widget__channel" id="twitchWidgetName">{{ server.twitchChannel }}</span>
+                                <span class="sv-twitch-widget__status" id="twitchWidgetStatus">
+                                    <span class="sv-twitch-widget__dot sv-twitch-widget__dot--offline"></span> Hors ligne
+                                </span>
+                            </div>
+                            <div class="sv-twitch-widget__body" id="twitchWidgetBody">
+                                <div class="sv-twitch-widget__avatar" id="twitchWidgetAvatar"></div>
+                                <div class="sv-twitch-widget__stats">
+                                    <div class="sv-twitch-widget__stat">
+                                        <div class="sv-twitch-widget__stat-value" id="twitchWidgetFollowers">--</div>
+                                        <div class="sv-twitch-widget__stat-label">Followers</div>
+                                    </div>
+                                    <div class="sv-twitch-widget__stat" id="twitchWidgetViewersContainer" style="display:none;">
+                                        <div class="sv-twitch-widget__stat-value" id="twitchWidgetViewersStat">0</div>
+                                        <div class="sv-twitch-widget__stat-label">Spectateurs</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <a href="https://twitch.tv/{{ server.twitchChannel }}" target="_blank" rel="noopener" class="sv-twitch-widget__link">
+                                <i class="fab fa-twitch"></i> Voir la chaine
+                            </a>
                         </div>
                     {% endif %}
 
@@ -713,6 +794,222 @@
             statusBadge.style.display = 'none';
         });
     }
+})();
+</script>
+{% if server.twitchChannel %}
+<script>
+/* === Twitch Integration === */
+(function() {
+    var serverId = {{ server.id }};
+    var hasTwitchLive = {{ has_twitch_live ? 'true' : 'false' }};
+
+    function formatNumber(n) {
+        if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+        if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+        return n.toString();
+    }
+
+    function formatDuration(dur) {
+        // dur = "1h23m45s" or "23m45s"
+        var match = dur.match(/(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?/);
+        if (!match) return dur;
+        var h = match[1] || '0';
+        var m = match[2] || '0';
+        return h !== '0' ? h + 'h' + m.padStart(2, '0') : m + 'min';
+    }
+
+    function timeAgo(dateStr) {
+        var d = new Date(dateStr);
+        var now = new Date();
+        var diff = Math.floor((now - d) / 1000);
+        if (diff < 3600) return Math.floor(diff / 60) + ' min';
+        if (diff < 86400) return Math.floor(diff / 3600) + 'h';
+        return Math.floor(diff / 86400) + 'j';
+    }
+
+    fetch('/api/twitch-info/' + serverId)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.error) return;
+
+        var ch = data.channel;
+        var isLive = data.is_live;
+        var followers = data.followers;
+
+        // Update sidebar widget
+        var nameEl = document.getElementById('twitchWidgetName');
+        if (nameEl) nameEl.textContent = ch.display_name;
+
+        var statusEl = document.getElementById('twitchWidgetStatus');
+        if (statusEl) {
+            if (isLive) {
+                statusEl.innerHTML = '<span class="sv-twitch-widget__dot sv-twitch-widget__dot--live"></span> En direct';
+                statusEl.classList.add('sv-twitch-widget__status--live');
+            }
+        }
+
+        var avatarEl = document.getElementById('twitchWidgetAvatar');
+        if (avatarEl && ch.profile_image_url) {
+            avatarEl.innerHTML = '<img src="' + ch.profile_image_url + '" alt="' + ch.display_name + '">';
+        }
+
+        var followersEl = document.getElementById('twitchWidgetFollowers');
+        if (followersEl) followersEl.textContent = formatNumber(followers);
+
+        if (isLive && data.stream) {
+            var viewersContainer = document.getElementById('twitchWidgetViewersContainer');
+            if (viewersContainer) viewersContainer.style.display = '';
+            var viewersStat = document.getElementById('twitchWidgetViewersStat');
+            if (viewersStat) viewersStat.textContent = formatNumber(data.stream.viewer_count);
+        }
+
+        // Update stream tab bar
+        var bar = document.getElementById('twitchBar');
+        if (bar) {
+            var barHtml = '<div class="sv-twitch-bar__inner">';
+            barHtml += '<div class="sv-twitch-bar__left">';
+            if (ch.profile_image_url) {
+                barHtml += '<img src="' + ch.profile_image_url + '" alt="" class="sv-twitch-bar__avatar">';
+            }
+            barHtml += '<div class="sv-twitch-bar__info">';
+            barHtml += '<div class="sv-twitch-bar__name">' + ch.display_name + '</div>';
+            barHtml += '<div class="sv-twitch-bar__meta">' + formatNumber(followers) + ' followers</div>';
+            barHtml += '</div></div>';
+            barHtml += '<div class="sv-twitch-bar__right">';
+            if (isLive) {
+                barHtml += '<span class="sv-twitch-bar__live"><span class="sv-twitch-bar__live-dot"></span> EN DIRECT</span>';
+                barHtml += '<span class="sv-twitch-bar__viewers"><i class="fas fa-eye"></i> ' + formatNumber(data.stream.viewer_count) + '</span>';
+                barHtml += '<span class="sv-twitch-bar__game"><i class="fas fa-gamepad"></i> ' + (data.stream.game_name || '') + '</span>';
+            } else {
+                barHtml += '<span class="sv-twitch-bar__offline-badge">Hors ligne</span>';
+            }
+            barHtml += '</div></div>';
+            bar.innerHTML = barHtml;
+        }
+
+        // Stream tab: update nav badge
+        var streamTab = document.querySelector('.sv-nav__link[data-tab="stream"]');
+        if (streamTab && isLive) {
+            streamTab.innerHTML = '<span class="sv-twitch-bar__live-dot" style="display:inline-block;margin-right:5px;"></span> Stream';
+        }
+
+        if (hasTwitchLive) {
+            var liveSection = document.getElementById('twitchLiveSection');
+            var offlineSection = document.getElementById('twitchOfflineSection');
+            var vodsSection = document.getElementById('twitchVodsSection');
+
+            if (isLive) {
+                if (liveSection) {
+                    liveSection.style.display = 'block';
+                    var titleEl = document.getElementById('twitchStreamTitle');
+                    if (titleEl) titleEl.textContent = data.stream.title;
+                    var countEl = document.getElementById('twitchViewerCount');
+                    if (countEl) countEl.textContent = formatNumber(data.stream.viewer_count);
+                }
+            } else {
+                if (offlineSection) offlineSection.style.display = 'block';
+            }
+
+            // VODs
+            if (data.vods && data.vods.length > 0 && vodsSection) {
+                vodsSection.style.display = 'block';
+                var grid = document.getElementById('twitchVodsGrid');
+                if (grid) {
+                    var vodsHtml = '';
+                    data.vods.forEach(function(vod) {
+                        var thumb = vod.thumbnail_url || '';
+                        if (thumb === '') thumb = 'https://static-cdn.jtvnw.net/ttv-static/404_preview-320x180.jpg';
+                        vodsHtml += '<a href="' + vod.url + '" target="_blank" rel="noopener" class="sv-twitch-vod">';
+                        vodsHtml += '<div class="sv-twitch-vod__thumb"><img src="' + thumb + '" alt="">';
+                        vodsHtml += '<span class="sv-twitch-vod__duration">' + formatDuration(vod.duration) + '</span></div>';
+                        vodsHtml += '<div class="sv-twitch-vod__info">';
+                        vodsHtml += '<div class="sv-twitch-vod__title">' + vod.title + '</div>';
+                        vodsHtml += '<div class="sv-twitch-vod__meta">';
+                        vodsHtml += '<span><i class="fas fa-eye"></i> ' + formatNumber(vod.view_count) + '</span>';
+                        vodsHtml += '<span>il y a ' + timeAgo(vod.created_at) + '</span>';
+                        vodsHtml += '</div></div></a>';
+                    });
+                    grid.innerHTML = vodsHtml;
+                }
+            }
+        }
+    })
+    .catch(function() {
+        var bar = document.getElementById('twitchBar');
+        if (bar) bar.innerHTML = '<div class="sv-twitch-bar__inner sv-twitch-bar__error"><i class="fab fa-twitch" style="color:#9146ff;margin-right:8px;"></i> Informations Twitch indisponibles</div>';
+    });
+})();
+</script>
+{% endif %}
+
+<script>
+/* === Browser Fingerprint === */
+(function() {
+    function computeFingerprint() {
+        var components = [];
+        components.push(navigator.userAgent || '');
+        components.push(navigator.language || '');
+        components.push(screen.width + 'x' + screen.height + 'x' + screen.colorDepth);
+        components.push(new Date().getTimezoneOffset().toString());
+        components.push(navigator.hardwareConcurrency || '');
+        components.push(navigator.platform || '');
+
+        // Canvas fingerprint
+        try {
+            var canvas = document.createElement('canvas');
+            canvas.width = 200;
+            canvas.height = 50;
+            var ctx = canvas.getContext('2d');
+            ctx.textBaseline = 'top';
+            ctx.font = '14px Arial';
+            ctx.fillStyle = '#f60';
+            ctx.fillRect(125, 1, 62, 20);
+            ctx.fillStyle = '#069';
+            ctx.fillText('Nexarena fp', 2, 15);
+            ctx.fillStyle = 'rgba(102, 204, 0, 0.7)';
+            ctx.fillText('Nexarena fp', 4, 17);
+            components.push(canvas.toDataURL());
+        } catch (e) {
+            components.push('canvas_error');
+        }
+
+        // WebGL
+        try {
+            var gl = document.createElement('canvas').getContext('webgl');
+            if (gl) {
+                var debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                if (debugInfo) {
+                    components.push(gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL));
+                }
+            }
+        } catch (e) {
+            components.push('webgl_error');
+        }
+
+        var raw = components.join('|||');
+
+        // SHA-256 hash
+        return crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw)).then(function(hash) {
+            var bytes = new Uint8Array(hash);
+            var hex = '';
+            for (var i = 0; i < bytes.length; i++) {
+                hex += bytes[i].toString(16).padStart(2, '0');
+            }
+            return hex;
+        });
+    }
+
+    computeFingerprint().then(function(fp) {
+        // Append fingerprint to all vote links
+        var voteLinks = document.querySelectorAll('a[href*="/vote/"][href*="/discord"], a[href*="/vote/"][href*="/steam"]');
+        voteLinks.forEach(function(link) {
+            var url = new URL(link.href);
+            url.searchParams.set('fp', fp);
+            link.href = url.toString();
+        });
+    }).catch(function() {
+        // Fingerprint unavailable, vote without it
+    });
 })();
 </script>
 {% endblock %}

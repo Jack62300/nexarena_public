@@ -6,8 +6,11 @@ use App\Entity\Comment;
 use App\Entity\Server;
 use App\Repository\CommentRepository;
 use App\Repository\ServerRepository;
+use App\Service\PremiumService;
 use App\Service\StatusService;
+use App\Service\TwitchService;
 use App\Service\VoteService;
+use App\Service\WebhookService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -21,6 +24,9 @@ class PublicServerController extends AbstractController
         private VoteService $voteService,
         private StatusService $statusService,
         private EntityManagerInterface $em,
+        private WebhookService $webhookService,
+        private TwitchService $twitchService,
+        private PremiumService $premiumService,
     ) {
     }
 
@@ -32,6 +38,10 @@ class PublicServerController extends AbstractController
             throw $this->createNotFoundException('Serveur introuvable.');
         }
 
+        // Increment click count
+        $server->incrementClickCount();
+        $this->em->flush();
+
         $similarServers = [];
         if ($server->getGameCategory()) {
             $similarServers = $repo->findByGameCategory($server->getGameCategory(), 5);
@@ -42,11 +52,17 @@ class PublicServerController extends AbstractController
         $comments = $commentRepo->findVisibleByServer($server);
         $commentCount = $commentRepo->countVisibleByServer($server);
 
+        $hasTwitchLive = false;
+        if ($server->getTwitchChannel()) {
+            $hasTwitchLive = $this->premiumService->hasTwitchLiveActive($server);
+        }
+
         return $this->render('server/show.html.twig', [
             'server' => $server,
             'similarServers' => $similarServers,
             'comments' => $comments,
             'commentCount' => $commentCount,
+            'has_twitch_live' => $hasTwitchLive,
         ]);
     }
 
@@ -82,6 +98,15 @@ class PublicServerController extends AbstractController
 
         $this->em->persist($comment);
         $this->em->flush();
+
+        $this->webhookService->dispatch('comment.created', [
+            'title' => 'Nouveau commentaire',
+            'fields' => [
+                ['name' => 'Serveur', 'value' => $server->getName(), 'inline' => true],
+                ['name' => 'Auteur', 'value' => $user->getUsername(), 'inline' => true],
+                ['name' => 'Contenu', 'value' => mb_substr($content, 0, 200), 'inline' => false],
+            ],
+        ]);
 
         $this->addFlash('success', 'Votre commentaire a ete publie.');
         return $this->redirect($this->generateUrl('server_show', ['slug' => $slug]) . '#comments');
@@ -120,6 +145,16 @@ class PublicServerController extends AbstractController
 
         $this->em->flush();
 
+        $this->webhookService->dispatch('comment.flagged', [
+            'title' => 'Commentaire signale',
+            'fields' => [
+                ['name' => 'Serveur', 'value' => $server->getName(), 'inline' => true],
+                ['name' => 'Signale par', 'value' => $user->getUsername(), 'inline' => true],
+                ['name' => 'Auteur du commentaire', 'value' => $comment->getAuthor()->getUsername(), 'inline' => true],
+                ['name' => 'Raison', 'value' => $reason ?: 'Non specifiee', 'inline' => false],
+            ],
+        ]);
+
         $this->addFlash('success', 'Le commentaire a ete signale aux moderateurs.');
         return $this->redirect($this->generateUrl('server_show', ['slug' => $slug]) . '#comments');
     }
@@ -146,6 +181,22 @@ class PublicServerController extends AbstractController
         $online = $this->statusService->check($server->getIp(), $server->getPort());
 
         return $this->json(['online' => $online]);
+    }
+
+    #[Route('/api/twitch-info/{id}', name: 'api_twitch_info', methods: ['GET'])]
+    public function twitchInfo(int $id, ServerRepository $repo): JsonResponse
+    {
+        $server = $repo->find($id);
+        if (!$server || !$server->getTwitchChannel()) {
+            return $this->json(['error' => 'Not found'], 404);
+        }
+
+        $data = $this->twitchService->getChannelData($server->getTwitchChannel());
+        if (!$data) {
+            return $this->json(['error' => 'Twitch API unavailable'], 503);
+        }
+
+        return $this->json($data);
     }
 
     #[Route('/serveur/{slug}/vote-status', name: 'server_vote_status', methods: ['GET'], requirements: ['slug' => '[a-z0-9]+(?:-[a-z0-9]+)*'])]

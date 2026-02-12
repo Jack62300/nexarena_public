@@ -1,0 +1,60 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block page_title %}Reaction Roles{% endblock %}
+{% block title %}Nexarena Admin - Reaction Roles{% endblock %}
+
+{% block admin_body %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 style="margin:0;font-weight:600;"><i class="fas fa-smile" style="color:var(--accent);margin-right:6px;"></i> Reaction Roles</h4>
+    <a href="{{ path('admin_discord_index') }}" class="btn-admin btn-admin--outline btn-admin--sm"><i class="fas fa-arrow-left"></i> Retour</a>
+</div>
+
+{# Info note #}
+<div style="padding:14px 20px;font-size:13px;color:var(--text-secondary);background:rgba(69,248,130,0.04);border:1px solid var(--border-color);border-radius:8px;display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+    <i class="fas fa-info-circle" style="color:var(--accent);"></i>
+    Les reaction roles sont configures via la commande <code style="background:var(--bg-darker);padding:2px 6px;border-radius:4px;font-size:12px;color:var(--accent);">/setup reaction-role</code> sur Discord.
+</div>
+
+{# Table #}
+<div class="admin-table">
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Message ID</th>
+                <th>Canal ID</th>
+                <th>Emoji</th>
+                <th>Role ID</th>
+                <th>Label</th>
+                <th>Date</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for rr in reaction_roles %}
+            <tr>
+                <td style="font-weight:600;">{{ rr.id }}</td>
+                <td style="font-family:monospace;font-size:12px;color:var(--text-secondary);">{{ rr.messageId }}</td>
+                <td style="font-family:monospace;font-size:12px;color:var(--text-secondary);">{{ rr.channelId }}</td>
+                <td style="font-size:16px;">{{ rr.emoji }}</td>
+                <td style="font-family:monospace;font-size:12px;color:var(--text-secondary);">{{ rr.roleId }}</td>
+                <td style="color:var(--text-primary);font-size:13px;">{{ rr.label ?? '-' }}</td>
+                <td style="color:var(--text-secondary);font-size:12px;">{{ rr.createdAt|date('d/m/Y H:i') }}</td>
+                <td>
+                    <form action="{{ path('admin_discord_reaction_role_delete', {id: rr.id}) }}" method="post" style="display:inline;" onsubmit="return confirm('Supprimer ce reaction role ?')">
+                        <input type="hidden" name="_token" value="{{ csrf_token('rr_delete_' ~ rr.id) }}">
+                        <button type="submit" class="btn-admin btn-admin--outline btn-admin--sm" style="border-color:var(--danger);color:var(--danger);" title="Supprimer">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text-secondary);font-size:13px;">Aucun reaction role configure.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<link rel="stylesheet" href="{{ asset('assets/css/admin/dashboard.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/css/admin/discord.css') }}">
+{% endblock %}

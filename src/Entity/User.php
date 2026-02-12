@@ -53,6 +53,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     private ?string $steamId = null;
 
     #[ORM\Column]
+    private bool $isDiscordGuildMember = false;
+
+    #[ORM\Column]
     private bool $isVerified = false;
 
     #[ORM\Column(length: 255, nullable: true)]
@@ -62,10 +65,22 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     private bool $isTwoFactorEnabled = false;
 
     #[ORM\Column]
+    private int $tokenBalance = 0;
+
+    #[ORM\Column]
+    private int $boostTokenBalance = 0;
+
+    #[ORM\Column(type: 'decimal', precision: 8, scale: 2, options: ['default' => '0.00'])]
+    private string $pendingVoteTokens = '0.00';
+
+    #[ORM\Column]
     private ?\DateTimeImmutable $createdAt = null;
 
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $updatedAt = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $lastLoginAt = null;
 
     /** @var Collection<int, Server> */
     #[ORM\OneToMany(targetEntity: Server::class, mappedBy: 'owner')]
@@ -208,6 +223,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
         return $this;
     }
 
+    public function isDiscordGuildMember(): bool
+    {
+        return $this->isDiscordGuildMember;
+    }
+
+    public function setIsDiscordGuildMember(bool $isDiscordGuildMember): static
+    {
+        $this->isDiscordGuildMember = $isDiscordGuildMember;
+        return $this;
+    }
+
     public function isVerified(): bool
     {
         return $this->isVerified;
@@ -256,6 +282,79 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
         return $this->serverCollaborations;
     }
 
+    public function getTokenBalance(): int
+    {
+        return $this->tokenBalance;
+    }
+
+    public function setTokenBalance(int $tokenBalance): static
+    {
+        $this->tokenBalance = $tokenBalance;
+        return $this;
+    }
+
+    public function addTokens(int $amount): static
+    {
+        $this->tokenBalance += $amount;
+        return $this;
+    }
+
+    public function removeTokens(int $amount): static
+    {
+        $this->tokenBalance -= $amount;
+        return $this;
+    }
+
+    public function hasEnoughTokens(int $amount): bool
+    {
+        return $this->tokenBalance >= $amount;
+    }
+
+    public function getBoostTokenBalance(): int
+    {
+        return $this->boostTokenBalance;
+    }
+
+    public function setBoostTokenBalance(int $boostTokenBalance): static
+    {
+        $this->boostTokenBalance = $boostTokenBalance;
+        return $this;
+    }
+
+    public function addBoostTokens(int $amount): static
+    {
+        $this->boostTokenBalance += $amount;
+        return $this;
+    }
+
+    public function removeBoostTokens(int $amount): static
+    {
+        $this->boostTokenBalance -= $amount;
+        return $this;
+    }
+
+    public function hasEnoughBoostTokens(int $amount): bool
+    {
+        return $this->boostTokenBalance >= $amount;
+    }
+
+    public function getPendingVoteTokens(): float
+    {
+        return (float) $this->pendingVoteTokens;
+    }
+
+    public function setPendingVoteTokens(float $amount): static
+    {
+        $this->pendingVoteTokens = number_format($amount, 2, '.', '');
+        return $this;
+    }
+
+    public function addPendingVoteTokens(float $amount): static
+    {
+        $this->pendingVoteTokens = number_format((float) $this->pendingVoteTokens + $amount, 2, '.', '');
+        return $this;
+    }
+
     public function getTotpSecret(): ?string
     {
         return $this->totpSecret;
@@ -293,6 +392,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     public function getTotpAuthenticationConfiguration(): ?TotpConfigurationInterface
     {
         return new TotpConfiguration($this->totpSecret, TotpConfiguration::ALGORITHM_SHA1, 30, 6);
+    }
+
+    public function getLastLoginAt(): ?\DateTimeImmutable
+    {
+        return $this->lastLoginAt;
+    }
+
+    public function setLastLoginAt(?\DateTimeImmutable $lastLoginAt): static
+    {
+        $this->lastLoginAt = $lastLoginAt;
+        return $this;
     }
 
     #[ORM\PrePersist]

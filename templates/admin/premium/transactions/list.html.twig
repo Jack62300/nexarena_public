@@ -1,0 +1,107 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block page_title %}Transactions{% endblock %}
+{% block title %}Nexarena Admin - Transactions{% endblock %}
+
+{% block admin_body %}
+    <div class="admin-table">
+        <div class="admin-table__header">
+            <h3>Transactions</h3>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <a href="{{ path('admin_transactions_list') }}" class="btn-admin btn-admin--sm {{ current_type is null ? 'btn-admin--primary' : 'btn-admin--outline' }}">Toutes</a>
+                <a href="{{ path('admin_transactions_list', {type: 'purchase'}) }}" class="btn-admin btn-admin--sm {{ current_type == 'purchase' ? 'btn-admin--primary' : 'btn-admin--outline' }}">Achats</a>
+                <a href="{{ path('admin_transactions_list', {type: 'spend'}) }}" class="btn-admin btn-admin--sm {{ current_type == 'spend' ? 'btn-admin--primary' : 'btn-admin--outline' }}">Depenses</a>
+                <a href="{{ path('admin_transactions_list', {type: 'refund'}) }}" class="btn-admin btn-admin--sm {{ current_type == 'refund' ? 'btn-admin--primary' : 'btn-admin--outline' }}">Remboursements</a>
+                <a href="{{ path('admin_transactions_list', {type: 'admin_credit'}) }}" class="btn-admin btn-admin--sm {{ current_type == 'admin_credit' ? 'btn-admin--primary' : 'btn-admin--outline' }}">Credits admin</a>
+            </div>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Date</th>
+                    <th>Utilisateur</th>
+                    <th>Type</th>
+                    <th>Plan</th>
+                    <th>Montant</th>
+                    <th>NexBits</th>
+                    <th>NexBoost</th>
+                    <th>PayPal</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tx in transactions %}
+                    <tr>
+                        <td style="color:var(--text-secondary);">{{ tx.id }}</td>
+                        <td style="color:var(--text-secondary);font-size:12px;white-space:nowrap;">{{ tx.createdAt|date('d/m/Y H:i') }}</td>
+                        <td>
+                            {% if tx.user %}
+                                <strong>{{ tx.user.username }}</strong>
+                            {% else %}
+                                <span style="color:var(--text-secondary);">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if tx.type == 'purchase' %}
+                                <span style="color:#1cc88a;"><i class="fas fa-shopping-cart"></i> Achat</span>
+                            {% elseif tx.type == 'spend' %}
+                                <span style="color:#f6c23e;"><i class="fas fa-minus-circle"></i> Depense</span>
+                            {% elseif tx.type == 'refund' %}
+                                <span style="color:#e74a3b;"><i class="fas fa-undo"></i> Remboursement</span>
+                            {% elseif tx.type == 'admin_credit' %}
+                                <span style="color:#36b9cc;"><i class="fas fa-gift"></i> Credit admin</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if tx.plan %}
+                                {{ tx.plan.name }}
+                            {% else %}
+                                <span style="color:var(--text-secondary);">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if tx.amount %}
+                                <span style="color:{{ tx.type == 'refund' ? '#e74a3b' : 'var(--accent)' }};font-weight:600;">
+                                    {{ tx.amount }} {{ tx.currency }}
+                                </span>
+                            {% else %}
+                                <span style="color:var(--text-secondary);">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if tx.tokensAmount != 0 %}
+                                <span style="color:{{ tx.tokensAmount > 0 ? '#1cc88a' : '#e74a3b' }};">
+                                    {{ tx.tokensAmount > 0 ? '+' : '' }}{{ tx.tokensAmount }}
+                                </span>
+                            {% else %}
+                                <span style="color:var(--text-secondary);">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if tx.boostTokensAmount != 0 %}
+                                <span style="color:{{ tx.boostTokensAmount > 0 ? '#1cc88a' : '#e74a3b' }};">
+                                    {{ tx.boostTokensAmount > 0 ? '+' : '' }}{{ tx.boostTokensAmount }}
+                                </span>
+                            {% else %}
+                                <span style="color:var(--text-secondary);">—</span>
+                            {% endif %}
+                        </td>
+                        <td style="font-size:11px;color:var(--text-secondary);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                            {{ tx.paypalOrderId ?: '—' }}
+                        </td>
+                        <td style="font-size:12px;color:var(--text-secondary);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                            {{ tx.description ?: '—' }}
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="10" style="text-align:center;color:var(--text-secondary);padding:30px;">
+                            Aucune transaction pour le moment.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

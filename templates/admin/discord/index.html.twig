@@ -1,0 +1,160 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block page_title %}Discord{% endblock %}
+{% block title %}Nexarena Admin - Discord{% endblock %}
+
+{% block admin_body %}
+
+{# ===== KPI CARDS ===== #}
+<div class="row g-3 mb-4">
+    {% if bot_available and guild and guild.name is defined %}
+    <div class="col-xl-2 col-lg-4 col-md-6">
+        <div class="kpi-card">
+            <div class="kpi-card__icon" style="background:#5865f222;color:#5865f2;"><i class="fab fa-discord"></i></div>
+            <div class="kpi-card__data">
+                <div class="kpi-card__value">{{ guild.memberCount }}</div>
+                <div class="kpi-card__label">Membres</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-2 col-lg-4 col-md-6">
+        <div class="kpi-card">
+            <div class="kpi-card__icon" style="background:#36b9cc22;color:#36b9cc;"><i class="fas fa-hashtag"></i></div>
+            <div class="kpi-card__data">
+                <div class="kpi-card__value">{{ guild.channelCount }}</div>
+                <div class="kpi-card__label">Canaux</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-2 col-lg-4 col-md-6">
+        <div class="kpi-card">
+            <div class="kpi-card__icon" style="background:#9b59b622;color:#9b59b6;"><i class="fas fa-user-tag"></i></div>
+            <div class="kpi-card__data">
+                <div class="kpi-card__value">{{ guild.roleCount }}</div>
+                <div class="kpi-card__label">Roles</div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    <div class="col-xl-2 col-lg-4 col-md-6">
+        <div class="kpi-card">
+            <div class="kpi-card__icon" style="background:#45f88222;color:#45f882;"><i class="fas fa-ticket-alt"></i></div>
+            <div class="kpi-card__data">
+                <div class="kpi-card__value">{{ open_tickets }}</div>
+                <div class="kpi-card__label">Tickets ouverts</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-2 col-lg-4 col-md-6">
+        <div class="kpi-card">
+            <div class="kpi-card__icon" style="background:#8b949e22;color:#8b949e;"><i class="fas fa-archive"></i></div>
+            <div class="kpi-card__data">
+                <div class="kpi-card__value">{{ total_tickets }}</div>
+                <div class="kpi-card__label">Total tickets</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-2 col-lg-4 col-md-6">
+        <div class="kpi-card">
+            <div class="kpi-card__icon" style="background:#f6c23e22;color:#f6c23e;"><i class="fas fa-comments"></i></div>
+            <div class="kpi-card__data">
+                <div class="kpi-card__value">{{ total_messages }}</div>
+                <div class="kpi-card__label">Messages tickets</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ===== BOT STATUS + INFO ===== #}
+<div class="row g-3 mb-4">
+    <div class="col-xl-4 col-md-6">
+        <div class="dash-card">
+            <div class="dash-card__head">
+                <h4><i class="fab fa-discord"></i> Statut du bot</h4>
+                <span class="dc-status {{ bot_available ? 'dc-status--online' : 'dc-status--offline' }}">
+                    <i class="fas fa-circle"></i>
+                    {{ bot_available ? 'En ligne' : 'Hors ligne' }}
+                </span>
+            </div>
+            <div class="dash-card__body">
+                {% if bot_available and guild and guild.name is defined %}
+                <div class="dc-guild-info">
+                    {% if guild.icon %}
+                    <img src="{{ guild.icon }}" alt="" class="dc-guild-info__icon">
+                    {% else %}
+                    <div class="dc-guild-info__icon dc-guild-info__icon--placeholder">
+                        {{ guild.name|slice(0, 1)|upper }}
+                    </div>
+                    {% endif %}
+                    <div>
+                        <div class="dc-guild-info__name">{{ guild.name }}</div>
+                        <div class="dc-guild-info__meta">{{ guild.memberCount }} membres &bull; {{ guild.channelCount }} canaux &bull; {{ guild.roleCount }} roles</div>
+                    </div>
+                </div>
+                {% else %}
+                <div style="display:flex;align-items:center;gap:14px;">
+                    <div style="width:42px;height:42px;min-width:42px;border-radius:10px;background:rgba(231,74,59,0.12);display:flex;align-items:center;justify-content:center;">
+                        <i class="fas fa-exclamation-triangle" style="color:var(--danger);font-size:16px;"></i>
+                    </div>
+                    <div>
+                        <div style="font-weight:600;font-size:13px;margin-bottom:2px;">Bot hors ligne</div>
+                        <div style="font-size:12px;color:var(--text-secondary);">
+                            Verifiez la configuration dans
+                            <a href="{{ path('admin_settings_index', {tab: 'discord'}) }}">Parametres &gt; Discord</a>.
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-4 col-md-6">
+        <div class="dash-card">
+            <div class="dash-card__head">
+                <h4><i class="fas fa-ticket-alt"></i> Tickets</h4>
+                <a href="{{ path('admin_discord_tickets') }}" class="dash-card__link">Voir tout <i class="fas fa-arrow-right"></i></a>
+            </div>
+            <div class="dash-card__body">
+                <div class="dc-stat-rows">
+                    <div class="dc-stat-row">
+                        <span class="dc-stat-row__label"><span class="status-dot status-dot--active"></span> Ouverts</span>
+                        <span class="dc-stat-row__value" style="color:var(--accent);">{{ open_tickets }}</span>
+                    </div>
+                    <div class="dc-stat-row">
+                        <span class="dc-stat-row__label"><span class="status-dot status-dot--inactive"></span> Fermes</span>
+                        <span class="dc-stat-row__value">{{ closed_tickets }}</span>
+                    </div>
+                    <div class="dc-stat-row">
+                        <span class="dc-stat-row__label"><i class="fas fa-comments" style="font-size:10px;margin-right:4px;color:var(--text-secondary);"></i> Messages</span>
+                        <span class="dc-stat-row__value">{{ total_messages }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-4 col-md-12">
+        <div class="dash-card">
+            <div class="dash-card__head">
+                <h4><i class="fas fa-ban"></i> Moderation</h4>
+                <a href="{{ path('admin_discord_moderation') }}" class="dash-card__link">Gerer <i class="fas fa-arrow-right"></i></a>
+            </div>
+            <div class="dash-card__body">
+                <div class="dc-stat-rows">
+                    <div class="dc-stat-row">
+                        <span class="dc-stat-row__label"><i class="fas fa-ban" style="font-size:10px;margin-right:4px;color:var(--danger);"></i> Mots interdits</span>
+                        <span class="dc-stat-row__value" style="color:var(--danger);">{{ banned_words_count }}</span>
+                    </div>
+                </div>
+                <div style="margin-top:16px;font-size:12px;color:var(--text-secondary);line-height:1.5;">
+                    Les messages contenant des mots interdits sont automatiquement supprimes par le bot Discord.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="{{ asset('assets/css/admin/dashboard.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/css/admin/discord.css') }}">
+{% endblock %}

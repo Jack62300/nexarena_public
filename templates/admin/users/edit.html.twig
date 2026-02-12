@@ -78,7 +78,7 @@
 {% endblock %}
 
 {% block admin_body %}
-    <div style="max-width:700px;">
+    <div>
         <div class="admin-table">
             <div class="admin-table__header">
                 <h3>Modifier l'utilisateur</h3>
@@ -103,6 +103,58 @@
                             Inscrit le {{ user.createdAt|date('d/m/Y a H:i') }}
                         </div>
                     </div>
+                </div>
+
+                {# === Solde NexBits / NexBoost === #}
+                <div style="display:flex;gap:16px;margin-bottom:25px;">
+                    <div style="flex:1;padding:16px;background:rgba(255,215,0,0.06);border:1px solid rgba(255,215,0,0.15);border-radius:8px;display:flex;align-items:center;gap:12px;">
+                        <i class="fas fa-coins" style="color:#ffd700;font-size:22px;"></i>
+                        <div>
+                            <div style="font-size:12px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;">NexBits</div>
+                            <div style="font-size:22px;font-weight:700;color:#ffd700;">{{ user.tokenBalance }}</div>
+                        </div>
+                    </div>
+                    <div style="flex:1;padding:16px;background:rgba(255,107,53,0.06);border:1px solid rgba(255,107,53,0.15);border-radius:8px;display:flex;align-items:center;gap:12px;">
+                        <i class="fas fa-bolt" style="color:#ff6b35;font-size:22px;"></i>
+                        <div>
+                            <div style="font-size:12px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;">NexBoost</div>
+                            <div style="font-size:22px;font-weight:700;color:#ff6b35;">{{ user.boostTokenBalance }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                {# === Credit / Debit NexBits & NexBoost === #}
+                <div style="background:var(--bg-darker);border:1px solid var(--border-color);border-radius:8px;padding:20px;margin-bottom:25px;">
+                    <h4 style="font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:16px;">
+                        <i class="fas fa-gift" style="color:#36b9cc;"></i> Crediter / Debiter
+                    </h4>
+                    <form method="post" action="{{ path('admin_users_credit', {id: user.id}) }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('user_credit_' ~ user.id) }}">
+                        <div style="display:flex;gap:12px;margin-bottom:12px;">
+                            <div style="flex:1;">
+                                <label style="display:block;margin-bottom:4px;font-size:12px;font-weight:600;color:var(--text-secondary);">
+                                    <i class="fas fa-coins" style="color:#ffd700;"></i> NexBits
+                                </label>
+                                <input type="number" name="nexbits" class="form-control-admin" value="0" step="1" placeholder="Ex: 100 ou -50">
+                            </div>
+                            <div style="flex:1;">
+                                <label style="display:block;margin-bottom:4px;font-size:12px;font-weight:600;color:var(--text-secondary);">
+                                    <i class="fas fa-bolt" style="color:#ff6b35;"></i> NexBoost
+                                </label>
+                                <input type="number" name="nexboost" class="form-control-admin" value="0" step="1" placeholder="Ex: 5 ou -2">
+                            </div>
+                        </div>
+                        <div style="margin-bottom:12px;">
+                            <label style="display:block;margin-bottom:4px;font-size:12px;font-weight:600;color:var(--text-secondary);">Raison (optionnel)</label>
+                            <input type="text" name="credit_reason" class="form-control-admin" placeholder="Ex: Compensation, bonus evenement..." maxlength="200">
+                        </div>
+                        <div style="font-size:11px;color:var(--text-secondary);margin-bottom:12px;">
+                            <i class="fas fa-info-circle"></i> Entrez un nombre negatif pour debiter. Le solde ne descendra pas en dessous de 0.
+                        </div>
+                        <button type="submit" class="btn-admin btn-admin--primary" style="background:#36b9cc;border-color:#36b9cc;">
+                            <i class="fas fa-gift"></i> Appliquer
+                        </button>
+                    </form>
                 </div>
 
                 <form method="post">

@@ -2,8 +2,11 @@
 
 namespace App\Command;
 
+use App\Entity\PremiumPlan;
 use App\Entity\Setting;
+use App\Repository\PremiumPlanRepository;
 use App\Repository\SettingRepository;
+use App\Service\SlugService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -31,7 +34,7 @@ class InitSettingsCommand extends Command
         ['key' => 'banner_title', 'value' => 'Nexarena', 'type' => 'text', 'label' => 'Titre de la banniere', 'description' => 'Titre principal affiche dans la banniere de la page d\'accueil', 'category' => 'banner', 'position' => 0],
         ['key' => 'banner_subtitle', 'value' => 'Trouvez et votez pour les meilleurs serveurs de jeux', 'type' => 'text', 'label' => 'Sous-titre de la banniere', 'description' => 'Texte affiche sous le titre principal', 'category' => 'banner', 'position' => 1],
         ['key' => 'banner_text_stroke', 'value' => 'Nexarena', 'type' => 'text', 'label' => 'Texte en fond (text-stroke)', 'description' => 'Grand texte decoratif en arriere-plan de la banniere', 'category' => 'banner', 'position' => 2],
-        ['key' => 'banner_bg_image', 'value' => '', 'type' => 'image', 'label' => 'Image de fond banniere', 'description' => 'Image de fond de la banniere (laissez vide pour l\'image par defaut)', 'category' => 'banner', 'position' => 3],
+        ['key' => 'banner_slides', 'value' => '[]', 'type' => 'text', 'label' => 'Slides de la banniere', 'description' => 'Images du diaporama de la banniere (gerees via l\'interface dediee)', 'category' => 'banner', 'position' => 3],
         ['key' => 'banner_cta_text', 'value' => 'Ajouter mon serveur', 'type' => 'text', 'label' => 'Texte du bouton CTA', 'description' => 'Texte du bouton d\'action dans la banniere', 'category' => 'banner', 'position' => 4],
         ['key' => 'banner_cta_url', 'value' => '#', 'type' => 'url', 'label' => 'Lien du bouton CTA', 'description' => 'URL du bouton d\'action (ex: /serveurs/ajouter)', 'category' => 'banner', 'position' => 5],
         ['key' => 'homepage_categories_title', 'value' => 'Categories de jeux', 'type' => 'text', 'label' => 'Titre section categories', 'description' => 'Titre de la section categories sur la page d\'accueil', 'category' => 'banner', 'position' => 6],
@@ -115,6 +118,85 @@ class InitSettingsCommand extends Command
         // ========== SECURITE ==========
         ['key' => 'security_max_upload_size', 'value' => '5', 'type' => 'number', 'label' => 'Taille max upload (Mo)', 'description' => 'Taille maximale des fichiers uploades en megaoctets (images, bannieres)', 'category' => 'securite', 'position' => 0],
         ['key' => 'security_allowed_origins', 'value' => '', 'type' => 'textarea', 'label' => 'Origines autorisees (CORS)', 'description' => 'Domaines autorises pour les requetes cross-origin (un par ligne). Laissez vide pour tout autoriser.', 'category' => 'securite', 'position' => 1],
+
+        // ========== PAIEMENT ==========
+        ['key' => 'paypal_client_id', 'value' => '', 'type' => 'text', 'label' => 'PayPal Client ID', 'description' => 'Client ID de l\'application PayPal (developer.paypal.com)', 'category' => 'paiement', 'position' => 0],
+        ['key' => 'paypal_client_secret', 'value' => '', 'type' => 'text', 'label' => 'PayPal Client Secret', 'description' => 'Client Secret de l\'application PayPal', 'category' => 'paiement', 'position' => 1],
+        ['key' => 'paypal_sandbox_mode', 'value' => '1', 'type' => 'boolean', 'label' => 'Mode Sandbox', 'description' => 'Utiliser l\'environnement sandbox PayPal pour les tests (desactiver en production)', 'category' => 'paiement', 'position' => 2],
+        ['key' => 'paypal_webhook_id', 'value' => '', 'type' => 'text', 'label' => 'PayPal Webhook ID', 'description' => 'ID du webhook configure dans le dashboard PayPal (pour verification signature)', 'category' => 'paiement', 'position' => 3],
+        ['key' => 'payment_currency', 'value' => 'EUR', 'type' => 'text', 'label' => 'Devise', 'description' => 'Code devise ISO pour les paiements (EUR, USD, etc.)', 'category' => 'paiement', 'position' => 4],
+
+        // ========== PREMIUM ==========
+        ['key' => 'premium_theme_cost', 'value' => '50', 'type' => 'number', 'label' => 'Cout deblocage theme (NexBits)', 'description' => 'Nombre de NexBits pour debloquer le theme personnalise sur un serveur', 'category' => 'premium', 'position' => 0],
+        ['key' => 'premium_widget_cost', 'value' => '50', 'type' => 'number', 'label' => 'Cout deblocage widget (NexBits)', 'description' => 'Nombre de NexBits pour debloquer le widget personnalise sur un serveur', 'category' => 'premium', 'position' => 1],
+        ['key' => 'premium_recruitment_cost', 'value' => '50', 'type' => 'number', 'label' => 'Cout recrutement extra (NexBits)', 'description' => 'Nombre de NexBits pour chaque annonce de recrutement au-dela de la limite gratuite', 'category' => 'premium', 'position' => 2],
+        ['key' => 'premium_recruitment_free_limit', 'value' => '2', 'type' => 'number', 'label' => 'Annonces recrutement gratuites', 'description' => 'Nombre d\'annonces de recrutement gratuites par serveur', 'category' => 'premium', 'position' => 3],
+        ['key' => 'premium_boost_cost', 'value' => '1', 'type' => 'number', 'label' => 'Cout boost (NexBoost)', 'description' => 'Nombre de NexBoost par creneau de 12h de mise en avant', 'category' => 'premium', 'position' => 4],
+        ['key' => 'premium_max_featured_per_day', 'value' => '5', 'type' => 'number', 'label' => 'Max serveurs mis en avant / jour', 'description' => 'Nombre maximum de serveurs pouvant etre mis en avant le meme jour', 'category' => 'premium', 'position' => 5],
+        ['key' => 'premium_enabled', 'value' => '1', 'type' => 'boolean', 'label' => 'Systeme premium actif', 'description' => 'Activer le systeme premium (plans, tokens, deblocages)', 'category' => 'premium', 'position' => 6],
+        ['key' => 'premium_theme_gate_enabled', 'value' => '1', 'type' => 'boolean', 'label' => 'Bloquer theme sans premium', 'description' => 'Si desactive, les themes sont gratuits pour tous', 'category' => 'premium', 'position' => 7],
+        ['key' => 'premium_widget_gate_enabled', 'value' => '1', 'type' => 'boolean', 'label' => 'Bloquer widget perso sans premium', 'description' => 'Si desactive, le widget personnalise est gratuit pour tous', 'category' => 'premium', 'position' => 8],
+        ['key' => 'premium_recruitment_gate_enabled', 'value' => '1', 'type' => 'boolean', 'label' => 'Bloquer recrutement extra sans premium', 'description' => 'Si desactive, les recrutements supplementaires sont gratuits', 'category' => 'premium', 'position' => 9],
+        ['key' => 'premium_daily_random_boost_enabled', 'value' => '0', 'type' => 'boolean', 'label' => 'Boost quotidien aleatoire', 'description' => 'Un serveur du bas du classement est mis en avant gratuitement chaque jour', 'category' => 'premium', 'position' => 10],
+        ['key' => 'premium_twitch_live_gate_enabled', 'value' => '1', 'type' => 'boolean', 'label' => 'Bloquer Twitch Live sans premium', 'description' => 'Si desactive, l\'integration Twitch Live (embed video + VODs) est gratuite pour tous', 'category' => 'premium', 'position' => 11],
+        ['key' => 'premium_twitch_live_cost_tokens', 'value' => '100', 'type' => 'number', 'label' => 'Cout Twitch Live / mois (NexBits)', 'description' => 'Nombre de NexBits pour un mois d\'abonnement Twitch Live', 'category' => 'premium', 'position' => 12],
+        ['key' => 'premium_twitch_live_cost_eur', 'value' => '4.99', 'type' => 'text', 'label' => 'Prix Twitch Live / mois (EUR)', 'description' => 'Prix en euros pour un mois d\'abonnement Twitch Live', 'category' => 'premium', 'position' => 13],
+        ['key' => 'premium_selection_title', 'value' => 'Selection premium', 'type' => 'text', 'label' => 'Titre section selection premium', 'description' => 'Titre affiche pour la section des positions payantes sur la page d\'accueil', 'category' => 'premium', 'position' => 14],
+        ['key' => 'premium_selection_subtitle', 'value' => 'Les serveurs qui se demarquent', 'type' => 'text', 'label' => 'Sous-titre section selection premium', 'description' => 'Sous-titre de la section selection premium', 'category' => 'premium', 'position' => 15],
+        ['key' => 'premium_homepage_pos1_cost', 'value' => '10', 'type' => 'number', 'label' => 'Cout position #1 accueil (NexBoost/12h)', 'description' => 'NexBoost par creneau de 12h pour la position #1 sur la page d\'accueil', 'category' => 'premium', 'position' => 16],
+        ['key' => 'premium_homepage_pos2_cost', 'value' => '8', 'type' => 'number', 'label' => 'Cout position #2 accueil (NexBoost/12h)', 'description' => 'NexBoost par creneau de 12h pour la position #2 sur la page d\'accueil', 'category' => 'premium', 'position' => 17],
+        ['key' => 'premium_homepage_pos3_cost', 'value' => '6', 'type' => 'number', 'label' => 'Cout position #3 accueil (NexBoost/12h)', 'description' => 'NexBoost par creneau de 12h pour la position #3 sur la page d\'accueil', 'category' => 'premium', 'position' => 18],
+        ['key' => 'premium_homepage_pos4_cost', 'value' => '4', 'type' => 'number', 'label' => 'Cout position #4 accueil (NexBoost/12h)', 'description' => 'NexBoost par creneau de 12h pour la position #4 sur la page d\'accueil', 'category' => 'premium', 'position' => 19],
+        ['key' => 'premium_homepage_pos5_cost', 'value' => '2', 'type' => 'number', 'label' => 'Cout position #5 accueil (NexBoost/12h)', 'description' => 'NexBoost par creneau de 12h pour la position #5 sur la page d\'accueil', 'category' => 'premium', 'position' => 20],
+        ['key' => 'premium_game_pos1_cost', 'value' => '5', 'type' => 'number', 'label' => 'Cout position #1 jeu (NexBoost/12h)', 'description' => 'NexBoost par creneau de 12h pour la position #1 sur une page de jeu', 'category' => 'premium', 'position' => 21],
+        ['key' => 'premium_game_pos2_cost', 'value' => '4', 'type' => 'number', 'label' => 'Cout position #2 jeu (NexBoost/12h)', 'description' => 'NexBoost par creneau de 12h pour la position #2 sur une page de jeu', 'category' => 'premium', 'position' => 22],
+        ['key' => 'premium_game_pos3_cost', 'value' => '3', 'type' => 'number', 'label' => 'Cout position #3 jeu (NexBoost/12h)', 'description' => 'NexBoost par creneau de 12h pour la position #3 sur une page de jeu', 'category' => 'premium', 'position' => 23],
+        ['key' => 'premium_game_pos4_cost', 'value' => '2', 'type' => 'number', 'label' => 'Cout position #4 jeu (NexBoost/12h)', 'description' => 'NexBoost par creneau de 12h pour la position #4 sur une page de jeu', 'category' => 'premium', 'position' => 24],
+        ['key' => 'premium_game_pos5_cost', 'value' => '1', 'type' => 'number', 'label' => 'Cout position #5 jeu (NexBoost/12h)', 'description' => 'NexBoost par creneau de 12h pour la position #5 sur une page de jeu', 'category' => 'premium', 'position' => 25],
+
+        // ========== DISCORD ==========
+        ['key' => 'discord_bot_url', 'value' => 'http://localhost:3001', 'type' => 'text', 'label' => 'URL de l\'API du bot Discord', 'description' => 'URL de l\'API Express du bot Discord (ex: http://localhost:3001)', 'category' => 'discord', 'position' => 0],
+        ['key' => 'discord_bot_api_key', 'value' => '', 'type' => 'text', 'label' => 'Cle API partagee', 'description' => 'Cle API partagee entre le site et le bot Discord (doit etre identique dans le .env du bot)', 'category' => 'discord', 'position' => 1],
+        // Automod sanctions
+        ['key' => 'discord_automod_warn_to_mute', 'value' => '3', 'type' => 'number', 'label' => 'Warns avant mute auto', 'description' => 'Nombre d\'avertissements actifs avant mute automatique', 'category' => 'discord', 'position' => 2],
+        ['key' => 'discord_automod_warn_to_kick', 'value' => '5', 'type' => 'number', 'label' => 'Warns avant kick auto', 'description' => 'Nombre d\'avertissements actifs avant kick automatique', 'category' => 'discord', 'position' => 3],
+        ['key' => 'discord_automod_warn_to_ban', 'value' => '7', 'type' => 'number', 'label' => 'Warns avant ban auto', 'description' => 'Nombre d\'avertissements actifs avant ban automatique', 'category' => 'discord', 'position' => 4],
+        ['key' => 'discord_automod_kick_enabled', 'value' => '1', 'type' => 'boolean', 'label' => 'Kick auto actif', 'description' => 'Activer le kick automatique apres X warns', 'category' => 'discord', 'position' => 5],
+        ['key' => 'discord_automod_ban_enabled', 'value' => '1', 'type' => 'boolean', 'label' => 'Ban auto actif', 'description' => 'Activer le ban automatique apres X warns', 'category' => 'discord', 'position' => 6],
+        ['key' => 'discord_automod_mute_duration', 'value' => '60', 'type' => 'number', 'label' => 'Duree mute auto (minutes)', 'description' => 'Duree du mute automatique en minutes', 'category' => 'discord', 'position' => 7],
+        // Role commands
+        ['key' => 'discord_cmd_role_add_min_role', 'value' => 'Manager', 'type' => 'text', 'label' => 'Role min pour /role add', 'description' => 'Nom du role Discord minimum requis pour utiliser /role add', 'category' => 'discord', 'position' => 8],
+        ['key' => 'discord_cmd_role_remove_min_role', 'value' => 'Manager', 'type' => 'text', 'label' => 'Role min pour /role remove', 'description' => 'Nom du role Discord minimum requis pour utiliser /role remove', 'category' => 'discord', 'position' => 9],
+        // Welcome
+        ['key' => 'discord_welcome_enabled', 'value' => '0', 'type' => 'boolean', 'label' => 'Message de bienvenue actif', 'description' => 'Envoyer un message de bienvenue quand un membre rejoint le serveur Discord', 'category' => 'discord', 'position' => 10],
+        ['key' => 'discord_welcome_channel_id', 'value' => '', 'type' => 'text', 'label' => 'Canal de bienvenue (ID)', 'description' => 'ID du canal Discord ou envoyer les messages de bienvenue', 'category' => 'discord', 'position' => 11],
+        ['key' => 'discord_welcome_message', 'value' => 'Bienvenue {user} !', 'type' => 'textarea', 'label' => 'Message de bienvenue', 'description' => 'Message de bienvenue. Variables: {user} {server} {memberCount}', 'category' => 'discord', 'position' => 12],
+        ['key' => 'discord_welcome_banner_url', 'value' => '', 'type' => 'url', 'label' => 'Banniere de bienvenue', 'description' => 'URL de l\'image banniere pour le message de bienvenue', 'category' => 'discord', 'position' => 13],
+        // Anti-spam
+        ['key' => 'discord_antispam_enabled', 'value' => '1', 'type' => 'boolean', 'label' => 'Anti-spam actif', 'description' => 'Activer le module anti-spam Discord', 'category' => 'discord', 'position' => 14],
+        ['key' => 'discord_antispam_max_messages', 'value' => '5', 'type' => 'number', 'label' => 'Max messages / intervalle', 'description' => 'Nombre maximum de messages par intervalle avant detection spam', 'category' => 'discord', 'position' => 15],
+        ['key' => 'discord_antispam_interval', 'value' => '5', 'type' => 'number', 'label' => 'Intervalle anti-spam (sec)', 'description' => 'Fenetre de detection en secondes', 'category' => 'discord', 'position' => 16],
+        ['key' => 'discord_antispam_max_links', 'value' => '3', 'type' => 'number', 'label' => 'Max liens / intervalle', 'description' => 'Nombre maximum de liens par intervalle avant detection spam', 'category' => 'discord', 'position' => 17],
+        // Live promotions
+        ['key' => 'discord_live_promo_enabled', 'value' => '0', 'type' => 'boolean', 'label' => 'Promotions live actives', 'description' => 'Activer le systeme de promotion live (Twitch/YouTube)', 'category' => 'discord', 'position' => 18],
+        ['key' => 'discord_live_promo_channel_id', 'value' => '', 'type' => 'text', 'label' => 'Canal promotions live (ID)', 'description' => 'ID du canal Discord ou poster les annonces de streamers en live', 'category' => 'discord', 'position' => 19],
+        ['key' => 'discord_live_promo_cost_per_day', 'value' => '10', 'type' => 'number', 'label' => 'Cout promo / jour (NexBits)', 'description' => 'Nombre de NexBits par jour de promotion live', 'category' => 'discord', 'position' => 20],
+        ['key' => 'discord_live_promo_max_days', 'value' => '30', 'type' => 'number', 'label' => 'Duree max promo (jours)', 'description' => 'Nombre maximum de jours pour une promotion live', 'category' => 'discord', 'position' => 21],
+
+        // ========== VOTES (suite) ==========
+        ['key' => 'vote_captcha_threshold', 'value' => '10', 'type' => 'number', 'label' => 'Seuil captcha (votes/24h)', 'description' => 'Nombre de votes par 24h avant de demander un captcha', 'category' => 'votes', 'position' => 7],
+        ['key' => 'vote_antibot_max_fingerprint_ips', 'value' => '3', 'type' => 'number', 'label' => 'Max IPs par empreinte', 'description' => 'Nombre maximum d\'IPs differentes pour une meme empreinte navigateur', 'category' => 'votes', 'position' => 8],
+        ['key' => 'vote_antibot_max_ip_fingerprints', 'value' => '5', 'type' => 'number', 'label' => 'Max empreintes par IP', 'description' => 'Nombre maximum d\'empreintes navigateur pour une meme IP', 'category' => 'votes', 'position' => 9],
+        ['key' => 'vote_reward_enabled', 'value' => '1', 'type' => 'boolean', 'label' => 'Recompenses voteur actives', 'description' => 'Les voteurs connectes gagnent des NexBits en votant', 'category' => 'votes', 'position' => 10],
+        ['key' => 'vote_reward_tier1_max', 'value' => '5', 'type' => 'number', 'label' => 'Votes palier 1 (gain plein)', 'description' => 'Nombre de votes pour le palier 1 a gain maximal', 'category' => 'votes', 'position' => 11],
+        ['key' => 'vote_reward_tier1_amount', 'value' => '1.0', 'type' => 'text', 'label' => 'NexBits par vote (palier 1)', 'description' => 'NexBits gagnes par vote au palier 1', 'category' => 'votes', 'position' => 12],
+        ['key' => 'vote_reward_tier2_max', 'value' => '8', 'type' => 'number', 'label' => 'Votes palier 2', 'description' => 'Nombre de votes pour le palier 2', 'category' => 'votes', 'position' => 13],
+        ['key' => 'vote_reward_tier2_amount', 'value' => '0.5', 'type' => 'text', 'label' => 'NexBits par vote (palier 2)', 'description' => 'NexBits gagnes par vote au palier 2', 'category' => 'votes', 'position' => 14],
+        ['key' => 'vote_reward_tier3_amount', 'value' => '0.25', 'type' => 'text', 'label' => 'NexBits par vote (palier 3+)', 'description' => 'NexBits gagnes par vote au palier 3 et au-dela', 'category' => 'votes', 'position' => 15],
+        ['key' => 'vote_reward_new_server_days', 'value' => '7', 'type' => 'number', 'label' => 'Jours nouveau serveur (gain /2)', 'description' => 'Les serveurs de moins de X jours donnent moitie moins de NexBits', 'category' => 'votes', 'position' => 16],
+        ['key' => 'vote_reward_max_user_day', 'value' => '8', 'type' => 'number', 'label' => 'Max votes comptabilises/jour/user', 'description' => 'Nombre maximum de votes recompenses par jour et par utilisateur', 'category' => 'votes', 'position' => 17],
+        ['key' => 'vote_reward_max_server_day', 'value' => '150', 'type' => 'number', 'label' => 'Max votes comptabilises/jour/serveur', 'description' => 'Nombre maximum de votes recompenses par jour et par serveur', 'category' => 'votes', 'position' => 18],
+        ['key' => 'vote_reward_max_tokens_month', 'value' => '200', 'type' => 'number', 'label' => 'Max NexBits/mois via votes', 'description' => 'Nombre maximum de NexBits gagnables par mois via les votes', 'category' => 'votes', 'position' => 19],
     ];
 
     private const CATEGORY_LABELS = [
@@ -132,12 +214,25 @@ class InitSettingsCommand extends Command
         'webhooks' => 'Webhooks',
         'plugins' => 'Plugins',
         'securite' => 'Securite',
+        'paiement' => 'Paiement',
+        'premium' => 'Premium',
+        'discord' => 'Discord',
         'legal' => 'Pages legales',
+    ];
+
+    private const DEFAULT_PLANS = [
+        ['name' => 'Starter', 'price' => '5.00', 'tokens' => 500, 'boost' => 0, 'desc' => 'Ideal pour debuter et tester les fonctionnalites premium.'],
+        ['name' => 'Standard', 'price' => '10.00', 'tokens' => 1100, 'boost' => 0, 'desc' => '10% de tokens bonus. Le meilleur rapport qualite-prix pour demarrer.'],
+        ['name' => 'Pro', 'price' => '25.00', 'tokens' => 3000, 'boost' => 0, 'desc' => '20% de tokens bonus. Pour les gerants de serveurs actifs.'],
+        ['name' => 'Elite', 'price' => '50.00', 'tokens' => 6500, 'boost' => 0, 'desc' => '30% de tokens bonus. Debloquez tout et boostez votre serveur.'],
+        ['name' => 'Legendary', 'price' => '100.00', 'tokens' => 14000, 'boost' => 0, 'desc' => '40% de tokens bonus. Le pack ultime pour dominer le classement.'],
     ];
 
     public function __construct(
         private EntityManagerInterface $em,
         private SettingRepository $settingRepo,
+        private PremiumPlanRepository $planRepo,
+        private SlugService $slugService,
     ) {
         parent::__construct();
     }
@@ -166,6 +261,28 @@ class InitSettingsCommand extends Command
         $this->em->flush();
 
         $io->success("$created parametre(s) cree(s), " . (count(self::DEFAULT_SETTINGS) - $created) . " deja existant(s).");
+
+        // ========== SEED DEFAULT PREMIUM PLANS ==========
+        $existingPlans = $this->planRepo->count([]);
+        if ($existingPlans === 0) {
+            foreach (self::DEFAULT_PLANS as $pos => $data) {
+                $plan = new PremiumPlan();
+                $plan->setName($data['name']);
+                $plan->setSlug($this->slugService->slugify($data['name']));
+                $plan->setDescription($data['desc']);
+                $plan->setPrice($data['price']);
+                $plan->setCurrency('EUR');
+                $plan->setTokensGiven($data['tokens']);
+                $plan->setBoostTokensGiven($data['boost']);
+                $plan->setIsActive(true);
+                $plan->setPosition($pos);
+                $this->em->persist($plan);
+            }
+            $this->em->flush();
+            $io->success(count(self::DEFAULT_PLANS) . ' plan(s) premium cree(s) par defaut.');
+        } else {
+            $io->note("$existingPlans plan(s) premium deja existant(s), aucun ajout.");
+        }
 
         return Command::SUCCESS;
     }

@@ -1,20 +1,211 @@
 {% extends 'admin/base.html.twig' %}
 
-{% block page_title %}Webhooks{% endblock %}
+{% block page_title %}Webhooks Discord{% endblock %}
 {% block title %}Nexarena Admin - Webhooks{% endblock %}
+
+{% block admin_css %}
+.webhook-category {
+    margin-bottom: 30px;
+}
+.webhook-category__header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 20px;
+    background: rgba(255,255,255,0.03);
+    border-bottom: 1px solid var(--border-color);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+.webhook-category__header i {
+    color: var(--accent-color);
+    width: 20px;
+    text-align: center;
+}
+.webhook-row {
+    display: grid;
+    grid-template-columns: 200px 1fr 70px 80px;
+    align-items: center;
+    gap: 15px;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+.webhook-row:last-child {
+    border-bottom: none;
+}
+.webhook-row__label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+.webhook-row__input {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 8px 12px;
+    color: var(--text-primary);
+    font-size: 13px;
+    width: 100%;
+    font-family: monospace;
+}
+.webhook-row__input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+}
+.webhook-row__input::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.5;
+}
+.webhook-toggle {
+    position: relative;
+    width: 44px;
+    height: 24px;
+}
+.webhook-toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.webhook-toggle__slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background: rgba(255,255,255,0.1);
+    border-radius: 24px;
+    transition: 0.3s;
+}
+.webhook-toggle__slider:before {
+    content: '';
+    position: absolute;
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: 0.3s;
+}
+.webhook-toggle input:checked + .webhook-toggle__slider {
+    background: var(--accent-color);
+}
+.webhook-toggle input:checked + .webhook-toggle__slider:before {
+    transform: translateX(20px);
+}
+.webhook-test-btn {
+    padding: 6px 14px;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-secondary);
+    font-size: 12px;
+    cursor: pointer;
+    transition: 0.2s;
+    white-space: nowrap;
+}
+.webhook-test-btn:hover {
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+}
+.webhook-save-bar {
+    display: flex;
+    justify-content: flex-end;
+    padding: 15px 20px;
+    border-top: 1px solid var(--border-color);
+    background: rgba(255,255,255,0.02);
+}
+.webhook-info {
+    padding: 15px 20px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    background: rgba(69,248,130,0.05);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.webhook-info i {
+    color: var(--accent-color);
+}
+@media (max-width: 768px) {
+    .webhook-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+}
+{% endblock %}
 
 {% block admin_body %}
     <div class="admin-table">
         <div class="admin-table__header">
-            <h3>Webhooks</h3>
+            <h3><i class="fab fa-discord" style="margin-right:8px;"></i> Webhooks Discord</h3>
         </div>
-        <div style="padding:60px 25px;text-align:center;">
-            <i class="fas fa-plug" style="font-size:48px;color:var(--text-secondary);margin-bottom:15px;display:block;"></i>
-            <h4 style="color:var(--text-primary);margin-bottom:8px;">Gestion des webhooks</h4>
-            <p style="color:var(--text-secondary);font-size:14px;">
-                Configurez les webhooks pour recevoir des notifications lors des votes.<br>
-                Les webhooks enverront le nom, l'email, l'IP et le statut du vote.
-            </p>
+
+        <div class="webhook-info">
+            <i class="fas fa-info-circle"></i>
+            Configurez des URLs de webhooks Discord pour recevoir des notifications en temps reel.
+            Chaque evenement peut avoir sa propre URL ou partager la meme.
         </div>
+
+        <form method="post" action="{{ path('admin_webhooks_save') }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('webhooks_save') }}">
+
+            {% for category, webhooks in grouped %}
+                <div class="webhook-category">
+                    <div class="webhook-category__header">
+                        <i class="{{ category_icons[category] ?? 'fas fa-bell' }}"></i>
+                        {{ category }}
+                    </div>
+
+                    {% for webhook in webhooks %}
+                        <div class="webhook-row">
+                            <div class="webhook-row__label">{{ webhook.label }}</div>
+                            <input
+                                type="url"
+                                name="webhook_url[{{ webhook.id }}]"
+                                value="{{ webhook.webhookUrl }}"
+                                class="webhook-row__input"
+                                placeholder="https://discord.com/api/webhooks/..."
+                            >
+                            <label class="webhook-toggle">
+                                <input type="checkbox" name="webhook_enabled[{{ webhook.id }}]" value="1" {{ webhook.enabled ? 'checked' : '' }}>
+                                <span class="webhook-toggle__slider"></span>
+                            </label>
+                            <div>
+                                <button type="button" class="webhook-test-btn" title="Envoyer un test"
+                                    data-test-url="{{ path('admin_webhooks_test', {id: webhook.id}) }}"
+                                    data-test-token="{{ csrf_token('webhook_test_' ~ webhook.id) }}"
+                                    onclick="testWebhook(this)">
+                                    <i class="fas fa-paper-plane"></i> Test
+                                </button>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+
+            <div class="webhook-save-bar">
+                <button type="submit" class="admin-btn admin-btn--primary">
+                    <i class="fas fa-save"></i> Sauvegarder
+                </button>
+            </div>
+        </form>
     </div>
+
+    {# Test forms (outside main form to avoid nesting) #}
+    {% for category, webhooks in grouped %}
+        {% for webhook in webhooks %}
+            <form id="test-form-{{ webhook.id }}" method="post" action="{{ path('admin_webhooks_test', {id: webhook.id}) }}" style="display:none;">
+                <input type="hidden" name="_token" value="{{ csrf_token('webhook_test_' ~ webhook.id) }}">
+            </form>
+        {% endfor %}
+    {% endfor %}
+
+    <script>
+    function testWebhook(btn) {
+        var id = btn.dataset.testUrl.match(/\/(\d+)\/test/)[1];
+        var form = document.getElementById('test-form-' + id);
+        if (form) form.submit();
+    }
+    </script>
 {% endblock %}

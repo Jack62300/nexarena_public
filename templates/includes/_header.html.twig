@@ -25,6 +25,34 @@
                                     <li class="{{ _route == 'app_home' ? 'active' : '' }}">
                                         <a href="{{ path('app_home') }}">Accueil</a>
                                     </li>
+                                    <li class="menu-item-has-children {{ _route starts with 'ranking_' ? 'active' : '' }}">
+                                        <a href="#">Categories</a>
+                                        <ul class="sub-menu">
+                                            {% for item in nav_categories() %}
+                                                {% if item.gameCategories|length > 0 %}
+                                                    <li class="menu-item-has-children">
+                                                        <a href="{{ path('ranking_category', {slug: item.category.slug}) }}">
+                                                            <i class="{{ item.category.icon ?? 'fas fa-gamepad' }}"></i> {{ item.category.name }}
+                                                        </a>
+                                                        <ul class="sub-menu">
+                                                            {% for gc in item.gameCategories %}
+                                                                <li><a href="{{ path('ranking_game_category', {slug: gc.slug}) }}">{{ gc.name }}</a></li>
+                                                            {% endfor %}
+                                                            {% if item.hasMore %}
+                                                                <li class="nx-submenu-more"><a href="{{ path('ranking_category', {slug: item.category.slug}) }}">Voir tout <i class="fas fa-arrow-right"></i></a></li>
+                                                            {% endif %}
+                                                        </ul>
+                                                    </li>
+                                                {% else %}
+                                                    <li>
+                                                        <a href="{{ path('ranking_category', {slug: item.category.slug}) }}">
+                                                            <i class="{{ item.category.icon ?? 'fas fa-gamepad' }}"></i> {{ item.category.name }}
+                                                        </a>
+                                                    </li>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </ul>
+                                    </li>
                                     <li class="{{ _route starts with 'articles_' ? 'active' : '' }}">
                                         <a href="{{ path('articles_list') }}">Actualites</a>
                                     </li>
@@ -34,6 +62,13 @@
                                     <li class="{{ _route starts with 'recruitment_' ? 'active' : '' }}">
                                         <a href="{{ path('recruitment_index') }}">Recrutement</a>
                                     </li>
+                                    {% if premium_enabled() %}
+                                    <li class="{{ _route starts with 'premium_' ? 'active' : '' }}">
+                                        <a href="{{ path('premium_index') }}" style="display:flex;align-items:center;gap:4px;">
+                                            <i class="fas fa-crown" style="color:#ffd700;font-size:11px;"></i> Premium
+                                        </a>
+                                    </li>
+                                    {% endif %}
                                 </ul>
                             </div>
 
@@ -95,6 +130,18 @@
                                                         </span>
                                                     </div>
                                                 </div>
+                                                {% if premium_enabled() %}
+                                                    <div class="nx-dropdown__balances">
+                                                        <div class="nx-dropdown__balance">
+                                                            <i class="fas fa-coins" style="color:#ffd700;"></i>
+                                                            <span>{{ app.user.tokenBalance }} NexBits</span>
+                                                        </div>
+                                                        <div class="nx-dropdown__balance">
+                                                            <i class="fas fa-bolt" style="color:#ff6b35;"></i>
+                                                            <span>{{ app.user.boostTokenBalance }} NexBoost</span>
+                                                        </div>
+                                                    </div>
+                                                {% endif %}
                                                 <div class="nx-dropdown__divider"></div>
                                                 <a href="{{ path('user_profile') }}" class="nx-dropdown__item">
                                                     <i class="fas fa-user-circle"></i> Mon profil
@@ -200,6 +247,9 @@
                         <a href="{{ path('user_servers_list') }}"><i class="fas fa-server"></i> Mes serveurs</a>
                         <a href="{{ path('user_recruitment_list') }}"><i class="fas fa-bullhorn"></i> Mes recrutements</a>
                         <a href="{{ path('applicant_list') }}"><i class="fas fa-file-alt"></i> Mes candidatures</a>
+                        {% if premium_enabled() %}
+                            <a href="{{ path('premium_index') }}"><i class="fas fa-crown" style="color:#ffd700;"></i> Premium</a>
+                        {% endif %}
                         <a href="{{ path('user_profile') }}"><i class="fas fa-user-circle"></i> Mon profil</a>
                         {% if is_granted('ROLE_EDITEUR') %}
                             <a href="{{ path('admin_dashboard') }}" class="nx-mobile-user__admin"><i class="fas fa-shield-alt"></i> Administration</a>
@@ -280,6 +330,9 @@
                             <li><a href="{{ path('user_servers_list') }}"><i class="fas fa-server"></i> Mes serveurs</a></li>
                             <li><a href="{{ path('user_recruitment_list') }}"><i class="fas fa-bullhorn"></i> Mes recrutements</a></li>
                             <li><a href="{{ path('applicant_list') }}"><i class="fas fa-file-alt"></i> Mes candidatures</a></li>
+                            {% if premium_enabled() %}
+                                <li><a href="{{ path('premium_index') }}"><i class="fas fa-crown" style="color:#ffd700;"></i> Premium</a></li>
+                            {% endif %}
                         {% else %}
                             <li><a href="{{ path('app_login') }}"><i class="fas fa-sign-in-alt"></i> Connexion</a></li>
                             <li><a href="{{ path('app_register') }}"><i class="fas fa-user-plus"></i> Inscription</a></li>

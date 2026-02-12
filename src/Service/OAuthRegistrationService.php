@@ -5,13 +5,13 @@ namespace App\Service;
 use App\Entity\User;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use League\OAuth2\Client\Provider\ResourceOwnerInterface;
 
 class OAuthRegistrationService
 {
     public function __construct(
         private EntityManagerInterface $em,
         private UserRepository $userRepository,
+        private WebhookService $webhookService,
     ) {
     }
 
@@ -46,6 +46,14 @@ class OAuthRegistrationService
         $this->em->persist($user);
         $this->em->flush();
 
+        $this->webhookService->dispatch('user.oauth_created', [
+            'title' => 'Inscription OAuth',
+            'fields' => [
+                ['name' => 'Utilisateur', 'value' => $username, 'inline' => true],
+                ['name' => 'Provider', 'value' => ucfirst($provider), 'inline' => true],
+            ],
+        ]);
+
         return $user;
     }
 
@@ -73,6 +81,14 @@ class OAuthRegistrationService
 
         $this->em->persist($user);
         $this->em->flush();
+
+        $this->webhookService->dispatch('user.oauth_created', [
+            'title' => 'Inscription OAuth',
+            'fields' => [
+                ['name' => 'Utilisateur', 'value' => $username, 'inline' => true],
+                ['name' => 'Provider', 'value' => 'Steam', 'inline' => true],
+            ],
+        ]);
 
         return $user;
     }

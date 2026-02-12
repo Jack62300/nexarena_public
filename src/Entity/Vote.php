@@ -13,6 +13,7 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Index(name: 'idx_vote_voted_at', columns: ['voted_at'])]
 #[ORM\Index(name: 'idx_vote_discord_id', columns: ['discord_id'])]
 #[ORM\Index(name: 'idx_vote_steam_id', columns: ['steam_id'])]
+#[ORM\Index(name: 'idx_vote_fingerprint', columns: ['browser_fingerprint'])]
 class Vote
 {
     #[ORM\Id]
@@ -42,6 +43,9 @@ class Vote
 
     #[ORM\Column(length: 20, nullable: true)]
     private ?string $voteProvider = null;
+
+    #[ORM\Column(length: 64, nullable: true)]
+    private ?string $browserFingerprint = null;
 
     #[ORM\Column]
     private bool $vpnChecked = false;
@@ -147,6 +151,17 @@ class Vote
     {
         $this->voteProvider = $voteProvider;
 
+        return $this;
+    }
+
+    public function getBrowserFingerprint(): ?string
+    {
+        return $this->browserFingerprint;
+    }
+
+    public function setBrowserFingerprint(?string $browserFingerprint): static
+    {
+        $this->browserFingerprint = $browserFingerprint;
         return $this;
     }
 

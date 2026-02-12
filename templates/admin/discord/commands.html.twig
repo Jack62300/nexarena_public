@@ -1,0 +1,76 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block page_title %}Commandes personnalisees{% endblock %}
+{% block title %}Nexarena Admin - Commandes Discord{% endblock %}
+
+{% block admin_body %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 style="margin:0;font-weight:600;"><i class="fas fa-terminal" style="color:var(--accent);margin-right:6px;"></i> Commandes personnalisees</h4>
+    <div style="display:flex;gap:8px;">
+        <a href="{{ path('admin_discord_command_new') }}" class="btn-admin btn-admin--primary btn-admin--sm"><i class="fas fa-plus"></i> Nouvelle commande</a>
+        <a href="{{ path('admin_discord_index') }}" class="btn-admin btn-admin--outline btn-admin--sm"><i class="fas fa-arrow-left"></i> Retour</a>
+    </div>
+</div>
+
+{# Table #}
+<div class="admin-table">
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Nom</th>
+                <th>Description</th>
+                <th>Type</th>
+                <th>Role requis</th>
+                <th>Actif</th>
+                <th>Date</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for cmd in commands %}
+            <tr>
+                <td style="font-weight:600;">{{ cmd.id }}</td>
+                <td>
+                    <span style="color:var(--accent);font-weight:600;font-family:monospace;font-size:13px;">/{{ cmd.name }}</span>
+                </td>
+                <td style="color:var(--text-primary);font-size:13px;">{{ cmd.description|length > 60 ? cmd.description[:60] ~ '...' : cmd.description }}</td>
+                <td>
+                    {% if cmd.embedTitle %}
+                        <span class="dc-ticket-status" style="background:rgba(88,101,242,0.12);color:#7289da;">Embed</span>
+                    {% else %}
+                        <span class="dc-ticket-status" style="background:rgba(255,255,255,0.06);color:var(--text-secondary);">Texte</span>
+                    {% endif %}
+                </td>
+                <td style="color:var(--text-secondary);font-size:13px;">{{ cmd.requiredRole ?? 'Aucun' }}</td>
+                <td>
+                    {% if cmd.isActive %}
+                        <span class="dc-ticket-status dc-ticket-status--open">Actif</span>
+                    {% else %}
+                        <span class="dc-ticket-status dc-ticket-status--closed">Inactif</span>
+                    {% endif %}
+                </td>
+                <td style="color:var(--text-secondary);font-size:12px;">{{ cmd.createdAt|date('d/m/Y H:i') }}</td>
+                <td>
+                    <div style="display:flex;gap:6px;">
+                        <a href="{{ path('admin_discord_command_edit', {id: cmd.id}) }}" class="btn-admin btn-admin--outline btn-admin--sm" title="Modifier">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <form action="{{ path('admin_discord_command_delete', {id: cmd.id}) }}" method="post" style="display:inline;" onsubmit="return confirm('Supprimer cette commande ?')">
+                            <input type="hidden" name="_token" value="{{ csrf_token('cmd_delete_' ~ cmd.id) }}">
+                            <button type="submit" class="btn-admin btn-admin--outline btn-admin--sm" style="border-color:var(--danger);color:var(--danger);" title="Supprimer">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text-secondary);font-size:13px;">Aucune commande personnalisee.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<link rel="stylesheet" href="{{ asset('assets/css/admin/dashboard.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/css/admin/discord.css') }}">
+{% endblock %}

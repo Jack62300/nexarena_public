@@ -22,82 +22,189 @@
             <span>Administration</span>
         </div>
 
+        {% set _r = app.request.get('_route') %}
+
         <nav class="admin-sidebar__nav">
-            <div class="admin-sidebar__section">Principal</div>
-            <a href="{{ path('admin_dashboard') }}" class="admin-sidebar__link {{ app.request.get('_route') == 'admin_dashboard' ? 'active' : '' }}">
+
+            {# ── Principal ── #}
+            <a href="{{ path('admin_dashboard') }}" class="admin-sidebar__link admin-sidebar__link--solo {{ _r == 'admin_dashboard' ? 'active' : '' }}">
                 <i class="fas fa-tachometer-alt"></i> Dashboard
             </a>
 
-            <div class="admin-sidebar__section">Contenu</div>
-            <a href="{{ path('admin_articles_list') }}" class="admin-sidebar__link {{ app.request.get('_route') starts with 'admin_articles_' ? 'active' : '' }}">
-                <i class="fas fa-newspaper"></i> Articles
-            </a>
-            <a href="{{ path('admin_parent_categories_list') }}" class="admin-sidebar__link {{ app.request.get('_route') starts with 'admin_parent_categories_' ? 'active' : '' }}">
-                <i class="fas fa-layer-group"></i> Categories
-            </a>
-            <a href="{{ path('admin_categories_list') }}" class="admin-sidebar__link {{ app.request.get('_route') starts with 'admin_categories_' ? 'active' : '' }}">
-                <i class="fas fa-gamepad"></i> Sous-categories
-            </a>
-            <a href="{{ path('admin_server_types_list') }}" class="admin-sidebar__link {{ app.request.get('_route') starts with 'admin_server_types_' ? 'active' : '' }}">
-                <i class="fas fa-tags"></i> Types de serveur
-            </a>
-            <a href="{{ path('admin_servers_list') }}" class="admin-sidebar__link {{ app.request.get('_route') starts with 'admin_servers_' ? 'active' : '' }}">
-                <i class="fas fa-server"></i> Serveurs
-            </a>
-            <a href="{{ path('admin_comments_flagged') }}" class="admin-sidebar__link {{ app.request.get('_route') starts with 'admin_comments_' ? 'active' : '' }}">
-                <i class="fas fa-comments"></i> Commentaires
-                {% set flaggedCount = flagged_comments_count() %}
-                {% if flaggedCount > 0 %}
-                    <span class="badge bg-danger">{{ flaggedCount }}</span>
-                {% endif %}
-            </a>
-            <a href="{{ path('admin_plugins_list') }}" class="admin-sidebar__link {{ app.request.get('_route') starts with 'admin_plugins_' ? 'active' : '' }}">
-                <i class="fas fa-puzzle-piece"></i> Plugins
-            </a>
-            <a href="{{ path('admin_partners_list') }}" class="admin-sidebar__link {{ app.request.get('_route') starts with 'admin_partners_' ? 'active' : '' }}">
-                <i class="fas fa-handshake"></i> Partenaires
-            </a>
-            <a href="{{ path('admin_recruitment_list') }}" class="admin-sidebar__link {{ app.request.get('_route') starts with 'admin_recruitment_' ? 'active' : '' }}">
-                <i class="fas fa-bullhorn"></i> Recrutement
-                {% set pendingRecruitments = pending_recruitments_count() %}
-                {% if pendingRecruitments > 0 %}
-                    <span class="badge bg-warning text-dark">{{ pendingRecruitments }}</span>
-                {% endif %}
-            </a>
-            <a href="{{ path('admin_featured_list') }}" class="admin-sidebar__link {{ app.request.get('_route') starts with 'admin_featured_' ? 'active' : '' }}">
-                <i class="fas fa-star"></i> Mise en avant
-            </a>
+            {# ── Contenu ── #}
+            {% set contentActive = _r starts with 'admin_articles_' or _r starts with 'admin_parent_categories_' or _r starts with 'admin_categories_' or _r starts with 'admin_server_types_' or _r starts with 'admin_tags_' or _r starts with 'admin_servers_' or _r starts with 'admin_comments_' or _r starts with 'admin_plugins_' or _r starts with 'admin_partners_' or _r starts with 'admin_recruitment_' %}
+            <div class="admin-sidebar__group admin-sidebar__group--green {{ contentActive ? 'open' : '' }}">
+                <button class="admin-sidebar__section" type="button">
+                    <span><i class="fas fa-th-large"></i> Contenu</span>
+                    <i class="fas fa-chevron-right admin-sidebar__arrow"></i>
+                </button>
+                <div class="admin-sidebar__items">
+                    <a href="{{ path('admin_articles_list') }}" class="admin-sidebar__link {{ _r starts with 'admin_articles_' ? 'active' : '' }}">
+                        <i class="fas fa-newspaper"></i> Articles
+                    </a>
+                    <a href="{{ path('admin_parent_categories_list') }}" class="admin-sidebar__link {{ _r starts with 'admin_parent_categories_' ? 'active' : '' }}">
+                        <i class="fas fa-layer-group"></i> Categories
+                    </a>
+                    <a href="{{ path('admin_categories_list') }}" class="admin-sidebar__link {{ _r starts with 'admin_categories_' ? 'active' : '' }}">
+                        <i class="fas fa-gamepad"></i> Sous-categories
+                    </a>
+                    <a href="{{ path('admin_server_types_list') }}" class="admin-sidebar__link {{ _r starts with 'admin_server_types_' ? 'active' : '' }}">
+                        <i class="fas fa-tags"></i> Types de serveur
+                    </a>
+                    <a href="{{ path('admin_tags_list') }}" class="admin-sidebar__link {{ _r starts with 'admin_tags_' ? 'active' : '' }}">
+                        <i class="fas fa-hashtag"></i> Tags
+                    </a>
+                    <a href="{{ path('admin_servers_list') }}" class="admin-sidebar__link {{ _r starts with 'admin_servers_' ? 'active' : '' }}">
+                        <i class="fas fa-server"></i> Serveurs
+                    </a>
+                    <a href="{{ path('admin_comments_flagged') }}" class="admin-sidebar__link {{ _r starts with 'admin_comments_' ? 'active' : '' }}">
+                        <i class="fas fa-comments"></i> Commentaires
+                        {% set flaggedCount = flagged_comments_count() %}
+                        {% if flaggedCount > 0 %}
+                            <span class="badge bg-danger">{{ flaggedCount }}</span>
+                        {% endif %}
+                    </a>
+                    <a href="{{ path('admin_plugins_list') }}" class="admin-sidebar__link {{ _r starts with 'admin_plugins_' ? 'active' : '' }}">
+                        <i class="fas fa-puzzle-piece"></i> Plugins
+                    </a>
+                    <a href="{{ path('admin_partners_list') }}" class="admin-sidebar__link {{ _r starts with 'admin_partners_' ? 'active' : '' }}">
+                        <i class="fas fa-handshake"></i> Partenaires
+                    </a>
+                    <a href="{{ path('admin_recruitment_list') }}" class="admin-sidebar__link {{ _r starts with 'admin_recruitment_' ? 'active' : '' }}">
+                        <i class="fas fa-bullhorn"></i> Recrutement
+                        {% set pendingRecruitments = pending_recruitments_count() %}
+                        {% if pendingRecruitments > 0 %}
+                            <span class="badge bg-warning text-dark">{{ pendingRecruitments }}</span>
+                        {% endif %}
+                    </a>
+                </div>
+            </div>
 
-            <div class="admin-sidebar__section">Utilisateurs</div>
-            <a href="{{ path('admin_users_list') }}" class="admin-sidebar__link {{ app.request.get('_route') starts with 'admin_users_' ? 'active' : '' }}">
-                <i class="fas fa-users"></i> Utilisateurs
-            </a>
-            <a href="{{ path('admin_votes_list') }}" class="admin-sidebar__link {{ app.request.get('_route') starts with 'admin_votes_' ? 'active' : '' }}">
-                <i class="fas fa-vote-yea"></i> Votes
-            </a>
+            {# ── Paiement ── #}
+            {% set paymentActive = _r starts with 'admin_premium_plans_' or _r starts with 'admin_transactions_' %}
+            <div class="admin-sidebar__group admin-sidebar__group--gold {{ paymentActive ? 'open' : '' }}">
+                <button class="admin-sidebar__section" type="button">
+                    <span><i class="fas fa-crown"></i> Paiement</span>
+                    <i class="fas fa-chevron-right admin-sidebar__arrow"></i>
+                </button>
+                <div class="admin-sidebar__items">
+                    <a href="{{ path('admin_premium_plans_list') }}" class="admin-sidebar__link {{ _r starts with 'admin_premium_plans_' ? 'active' : '' }}">
+                        <i class="fas fa-gem"></i> Plans Premium
+                    </a>
+                    <a href="{{ path('admin_transactions_list') }}" class="admin-sidebar__link {{ _r starts with 'admin_transactions_' ? 'active' : '' }}">
+                        <i class="fas fa-receipt"></i> Transactions
+                    </a>
+                </div>
+            </div>
 
+            {# ── Utilisateurs ── #}
+            {% set usersActive = _r starts with 'admin_users_' or _r starts with 'admin_votes_' %}
+            <div class="admin-sidebar__group admin-sidebar__group--cyan {{ usersActive ? 'open' : '' }}">
+                <button class="admin-sidebar__section" type="button">
+                    <span><i class="fas fa-users"></i> Utilisateurs</span>
+                    <i class="fas fa-chevron-right admin-sidebar__arrow"></i>
+                </button>
+                <div class="admin-sidebar__items">
+                    <a href="{{ path('admin_users_list') }}" class="admin-sidebar__link {{ _r starts with 'admin_users_' ? 'active' : '' }}">
+                        <i class="fas fa-user-cog"></i> Utilisateurs
+                    </a>
+                    <a href="{{ path('admin_votes_list') }}" class="admin-sidebar__link {{ _r starts with 'admin_votes_' ? 'active' : '' }}">
+                        <i class="fas fa-vote-yea"></i> Votes
+                    </a>
+                </div>
+            </div>
+
+            {# ── Configuration ── #}
             {% if is_granted('ROLE_RESPONSABLE') %}
-            <div class="admin-sidebar__section">Configuration</div>
-            <a href="{{ path('admin_settings_index') }}" class="admin-sidebar__link {{ app.request.get('_route') starts with 'admin_settings_' ? 'active' : '' }}">
-                <i class="fas fa-cog"></i> Parametres
-            </a>
-            <a href="{{ path('admin_roles_index') }}" class="admin-sidebar__link {{ app.request.get('_route') starts with 'admin_roles_' ? 'active' : '' }}">
-                <i class="fas fa-shield-alt"></i> Roles & Permissions
-            </a>
-            <a href="{{ path('admin_themes_index') }}" class="admin-sidebar__link {{ app.request.get('_route') starts with 'admin_themes_' ? 'active' : '' }}">
-                <i class="fas fa-palette"></i> Themes
-            </a>
+            {% set configActive = _r starts with 'admin_settings_' or _r starts with 'admin_roles_' or _r starts with 'admin_themes_' %}
+            <div class="admin-sidebar__group admin-sidebar__group--purple {{ configActive ? 'open' : '' }}">
+                <button class="admin-sidebar__section" type="button">
+                    <span><i class="fas fa-cog"></i> Configuration</span>
+                    <i class="fas fa-chevron-right admin-sidebar__arrow"></i>
+                </button>
+                <div class="admin-sidebar__items">
+                    <a href="{{ path('admin_settings_index') }}" class="admin-sidebar__link {{ _r starts with 'admin_settings_' ? 'active' : '' }}">
+                        <i class="fas fa-sliders-h"></i> Parametres
+                    </a>
+                    <a href="{{ path('admin_roles_index') }}" class="admin-sidebar__link {{ _r starts with 'admin_roles_' ? 'active' : '' }}">
+                        <i class="fas fa-shield-alt"></i> Roles & Permissions
+                    </a>
+                    <a href="{{ path('admin_themes_index') }}" class="admin-sidebar__link {{ _r starts with 'admin_themes_' ? 'active' : '' }}">
+                        <i class="fas fa-palette"></i> Themes
+                    </a>
+                </div>
+            </div>
             {% endif %}
 
+            {# ── Discord ── #}
+            {% set discordActive = _r starts with 'admin_discord_' %}
+            <div class="admin-sidebar__group admin-sidebar__group--blurple {{ discordActive ? 'open' : '' }}">
+                <button class="admin-sidebar__section" type="button">
+                    <span><i class="fab fa-discord"></i> Discord</span>
+                    <i class="fas fa-chevron-right admin-sidebar__arrow"></i>
+                </button>
+                <div class="admin-sidebar__items">
+                    <a href="{{ path('admin_discord_index') }}" class="admin-sidebar__link {{ _r == 'admin_discord_index' ? 'active' : '' }}">
+                        <i class="fas fa-chart-bar"></i> Dashboard
+                    </a>
+                    <a href="{{ path('admin_discord_moderation') }}" class="admin-sidebar__link {{ _r == 'admin_discord_moderation' or _r == 'admin_discord_moderation_add' or _r == 'admin_discord_moderation_delete' ? 'active' : '' }}">
+                        <i class="fas fa-ban"></i> Moderation
+                    </a>
+                    <a href="{{ path('admin_discord_moderation_log') }}" class="admin-sidebar__link {{ _r == 'admin_discord_moderation_log' ? 'active' : '' }}">
+                        <i class="fas fa-scroll"></i> Journal Bot
+                        {% set modlogCount = discord_modlog_today_count() %}
+                        {% if modlogCount > 0 %}
+                            <span class="badge bg-info">{{ modlogCount }}</span>
+                        {% endif %}
+                    </a>
+                    <a href="{{ path('admin_discord_sanctions') }}" class="admin-sidebar__link {{ _r starts with 'admin_discord_sanction' ? 'active' : '' }}">
+                        <i class="fas fa-gavel"></i> Sanctions
+                        {% set activeSanctions = discord_active_sanctions_count() %}
+                        {% if activeSanctions > 0 %}
+                            <span class="badge bg-warning text-dark">{{ activeSanctions }}</span>
+                        {% endif %}
+                    </a>
+                    <a href="{{ path('admin_discord_tickets') }}" class="admin-sidebar__link {{ _r starts with 'admin_discord_ticket' ? 'active' : '' }}">
+                        <i class="fas fa-ticket-alt"></i> Tickets
+                        {% set openTickets = discord_open_tickets_count() %}
+                        {% if openTickets > 0 %}
+                            <span class="badge bg-success">{{ openTickets }}</span>
+                        {% endif %}
+                    </a>
+                    <a href="{{ path('admin_discord_reaction_roles') }}" class="admin-sidebar__link {{ _r starts with 'admin_discord_reaction_role' ? 'active' : '' }}">
+                        <i class="fas fa-smile"></i> Reaction Roles
+                    </a>
+                    <a href="{{ path('admin_discord_commands') }}" class="admin-sidebar__link {{ _r starts with 'admin_discord_command' ? 'active' : '' }}">
+                        <i class="fas fa-terminal"></i> Commandes
+                    </a>
+                    <a href="{{ path('admin_discord_announcements') }}" class="admin-sidebar__link {{ _r starts with 'admin_discord_announcement' ? 'active' : '' }}">
+                        <i class="fas fa-bullhorn"></i> Annonces
+                    </a>
+                    <a href="{{ path('admin_discord_invites') }}" class="admin-sidebar__link {{ _r starts with 'admin_discord_invite' ? 'active' : '' }}">
+                        <i class="fas fa-user-plus"></i> Invitations
+                    </a>
+                </div>
+            </div>
+
+            {# ── Technique ── #}
             {% if is_granted('ROLE_DEVELOPPEUR') %}
-            <div class="admin-sidebar__section">Technique</div>
-            <a href="{{ path('admin_webhooks_list') }}" class="admin-sidebar__link {{ app.request.get('_route') starts with 'admin_webhooks_' ? 'active' : '' }}">
-                <i class="fas fa-plug"></i> Webhooks
-            </a>
-            <a href="{{ path('admin_logs_list') }}" class="admin-sidebar__link {{ app.request.get('_route') starts with 'admin_logs_' ? 'active' : '' }}">
-                <i class="fas fa-terminal"></i> Logs
-            </a>
+            {% set techActive = _r starts with 'admin_webhooks_' or _r starts with 'admin_logs_' %}
+            <div class="admin-sidebar__group admin-sidebar__group--red {{ techActive ? 'open' : '' }}">
+                <button class="admin-sidebar__section" type="button">
+                    <span><i class="fas fa-code"></i> Technique</span>
+                    <i class="fas fa-chevron-right admin-sidebar__arrow"></i>
+                </button>
+                <div class="admin-sidebar__items">
+                    <a href="{{ path('admin_webhooks_list') }}" class="admin-sidebar__link {{ _r starts with 'admin_webhooks_' ? 'active' : '' }}">
+                        <i class="fas fa-plug"></i> Webhooks
+                    </a>
+                    <a href="{{ path('admin_logs_list') }}" class="admin-sidebar__link {{ _r starts with 'admin_logs_' ? 'active' : '' }}">
+                        <i class="fas fa-terminal"></i> Logs
+                    </a>
+                </div>
+            </div>
             {% endif %}
+
         </nav>
 
         <div class="admin-sidebar__footer">
@@ -150,6 +257,15 @@
 
     <script src="{{ asset('assets/js/vendor/jquery-3.6.0.min.js') }}"></script>
     <script src="{{ asset('assets/js/bootstrap.min.js') }}"></script>
+    <script>
+    document.querySelectorAll('.admin-sidebar__section').forEach(function(btn){
+        btn.addEventListener('click', function(){
+            var group = btn.closest('.admin-sidebar__group');
+            if(!group) return;
+            group.classList.toggle('open');
+        });
+    });
+    </script>
     {% block admin_js %}{% endblock %}
 </body>
 </html>

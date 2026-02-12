@@ -136,13 +136,23 @@ class ServerRepository extends ServiceEntityRepository
     public function findByCategoryPaginated(Category $category, int $page = 1, int $perPage = 10): array
     {
         $qb = $this->createQueryBuilder('s')
+            ->leftJoin('s.tags', 'tg')
+            ->addSelect('tg')
             ->where('s.category = :category')
             ->andWhere('s.isActive = true')
             ->andWhere('s.isApproved = true')
             ->setParameter('category', $category)
             ->orderBy('s.monthlyVotes', 'DESC');
 
-        $total = (int) (clone $qb)->select('COUNT(s.id)')->getQuery()->getSingleScalarResult();
+        $total = (int) $this->createQueryBuilder('s2')
+            ->select('COUNT(s2.id)')
+            ->where('s2.category = :category')
+            ->andWhere('s2.isActive = true')
+            ->andWhere('s2.isApproved = true')
+            ->setParameter('category', $category)
+            ->getQuery()
+            ->getSingleScalarResult();
+
         $pages = max(1, (int) ceil($total / $perPage));
         $page = max(1, min($page, $pages));
 
@@ -161,13 +171,23 @@ class ServerRepository extends ServiceEntityRepository
     public function findByGameCategoryPaginated(GameCategory $gc, int $page = 1, int $perPage = 10): array
     {
         $qb = $this->createQueryBuilder('s')
+            ->leftJoin('s.tags', 'tg')
+            ->addSelect('tg')
             ->where('s.gameCategory = :gc')
             ->andWhere('s.isActive = true')
             ->andWhere('s.isApproved = true')
             ->setParameter('gc', $gc)
             ->orderBy('s.monthlyVotes', 'DESC');
 
-        $total = (int) (clone $qb)->select('COUNT(s.id)')->getQuery()->getSingleScalarResult();
+        $total = (int) $this->createQueryBuilder('s2')
+            ->select('COUNT(s2.id)')
+            ->where('s2.gameCategory = :gc')
+            ->andWhere('s2.isActive = true')
+            ->andWhere('s2.isApproved = true')
+            ->setParameter('gc', $gc)
+            ->getQuery()
+            ->getSingleScalarResult();
+
         $pages = max(1, (int) ceil($total / $perPage));
         $page = max(1, min($page, $pages));
 

@@ -1,0 +1,197 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block page_title %}Journal Bot Discord{% endblock %}
+{% block title %}Nexarena Admin - Journal Bot Discord{% endblock %}
+
+{% block admin_body %}
+<link rel="stylesheet" href="{{ asset('assets/css/admin/dashboard.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/css/admin/discord.css') }}">
+
+{# ===== STATS DU JOUR ===== #}
+{% if stats_today|length > 0 %}
+<div class="dc-modlog-stats">
+    {% set actionLabels = {
+        'message_deleted': 'Messages supprimes',
+        'user_warned': 'Avertissements',
+        'user_muted': 'Mutes',
+        'user_kicked': 'Kicks',
+        'user_banned': 'Bans',
+        'spam_detected': 'Spam detecte'
+    } %}
+    {% set actionIcons = {
+        'message_deleted': 'fas fa-trash-alt',
+        'user_warned': 'fas fa-exclamation-triangle',
+        'user_muted': 'fas fa-volume-mute',
+        'user_kicked': 'fas fa-shoe-prints',
+        'user_banned': 'fas fa-hammer',
+        'spam_detected': 'fas fa-robot'
+    } %}
+    {% for actionKey, count in stats_today %}
+    <div class="dc-modlog-stat dc-modlog-stat--{{ actionKey }}">
+        <i class="{{ actionIcons[actionKey]|default('fas fa-circle') }}"></i>
+        <span class="dc-modlog-stat__count">{{ count }}</span>
+        <span class="dc-modlog-stat__label">{{ actionLabels[actionKey]|default(actionKey) }}</span>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="admin-table">
+    <div class="admin-table__header">
+        <h3><i class="fas fa-scroll" style="color:var(--accent);margin-right:8px;"></i> Journal des actions du bot <small style="color:var(--text-secondary);font-weight:400;font-size:13px;margin-left:8px;">{{ total }} entree(s)</small></h3>
+        <a href="{{ path('admin_discord_moderation') }}" class="btn-admin btn-admin--outline btn-admin--sm"><i class="fas fa-ban"></i> Mots interdits</a>
+    </div>
+
+    {# ===== TABS FILTRES ===== #}
+    <div style="padding:16px 22px;border-bottom:1px solid var(--border-color);">
+        <div class="dc-tabs">
+            <a href="{{ path('admin_discord_moderation_log') }}" class="dc-tab {{ current_action is null ? 'dc-tab--active' : '' }}">Tout</a>
+            <a href="{{ path('admin_discord_moderation_log', {action: 'message_deleted'}) }}" class="dc-tab {{ current_action == 'message_deleted' ? 'dc-tab--active' : '' }}">
+                <i class="fas fa-trash-alt"></i> Messages supprimes
+            </a>
+            <a href="{{ path('admin_discord_moderation_log', {action: 'user_warned'}) }}" class="dc-tab {{ current_action == 'user_warned' ? 'dc-tab--active' : '' }}">
+                <i class="fas fa-exclamation-triangle"></i> Warns
+            </a>
+            <a href="{{ path('admin_discord_moderation_log', {action: 'spam_detected'}) }}" class="dc-tab {{ current_action == 'spam_detected' ? 'dc-tab--active' : '' }}">
+                <i class="fas fa-robot"></i> Spam
+            </a>
+            <a href="{{ path('admin_discord_moderation_log', {action: 'user_muted'}) }}" class="dc-tab {{ current_action == 'user_muted' ? 'dc-tab--active' : '' }}">
+                <i class="fas fa-volume-mute"></i> Mutes
+            </a>
+            <a href="{{ path('admin_discord_moderation_log', {action: 'user_kicked'}) }}" class="dc-tab {{ current_action == 'user_kicked' ? 'dc-tab--active' : '' }}">
+                <i class="fas fa-shoe-prints"></i> Kicks
+            </a>
+            <a href="{{ path('admin_discord_moderation_log', {action: 'user_banned'}) }}" class="dc-tab {{ current_action == 'user_banned' ? 'dc-tab--active' : '' }}">
+                <i class="fas fa-hammer"></i> Bans
+            </a>
+        </div>
+    </div>
+
+    {# ===== TABLEAU ===== #}
+    {% if logs|length > 0 %}
+    <div class="dc-modlog-table-wrap">
+        <table class="dc-modlog-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Utilisateur</th>
+                    <th>Action</th>
+                    <th>Canal</th>
+                    <th>Raison</th>
+                    <th>Mot</th>
+                    <th>Contenu</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr class="dc-modlog-row" onclick="this.classList.toggle('dc-modlog-row--expanded')">
+                    <td class="dc-modlog-date">
+                        {{ log.createdAt|date('d/m H:i') }}
+                    </td>
+                    <td>
+                        <span class="dc-modlog-user">{{ log.discordUsername }}</span>
+                        <span class="dc-modlog-userid">{{ log.discordUserId }}</span>
+                    </td>
+                    <td>
+                        {% set badgeClass = {
+                            'message_deleted': 'dc-modlog-badge--danger',
+                            'user_warned': 'dc-modlog-badge--warning',
+                            'user_muted': 'dc-modlog-badge--info',
+                            'user_kicked': 'dc-modlog-badge--dark',
+                            'user_banned': 'dc-modlog-badge--dark',
+                            'spam_detected': 'dc-modlog-badge--orange'
+                        } %}
+                        {% set badgeLabel = {
+                            'message_deleted': 'Supprime',
+                            'user_warned': 'Warn',
+                            'user_muted': 'Mute',
+                            'user_kicked': 'Kick',
+                            'user_banned': 'Ban',
+                            'spam_detected': 'Spam'
+                        } %}
+                        <span class="dc-modlog-badge {{ badgeClass[log.action]|default('') }}">
+                            {{ badgeLabel[log.action]|default(log.action) }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if log.channelName %}
+                            <span class="dc-modlog-channel">#{{ log.channelName }}</span>
+                        {% else %}
+                            <span style="color:var(--text-secondary);font-size:12px;">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if log.reason %}
+                            <span class="dc-modlog-reason">{{ log.reason|length > 40 ? log.reason|slice(0, 40) ~ '...' : log.reason }}</span>
+                        {% else %}
+                            <span style="color:var(--text-secondary);font-size:12px;">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if log.triggeredWord %}
+                            <code class="dc-modlog-word">{{ log.triggeredWord }}</code>
+                        {% else %}
+                            <span style="color:var(--text-secondary);font-size:12px;">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if log.messageContent %}
+                            <span class="dc-modlog-content-preview">{{ log.messageContent|length > 60 ? log.messageContent|slice(0, 60) ~ '...' : log.messageContent }}</span>
+                        {% else %}
+                            <span style="color:var(--text-secondary);font-size:12px;">-</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% if log.messageContent and log.messageContent|length > 60 %}
+                <tr class="dc-modlog-expand">
+                    <td colspan="7">
+                        <div class="dc-modlog-expand__content">
+                            <strong style="color:var(--text-secondary);font-size:11px;text-transform:uppercase;letter-spacing:0.5px;">Message complet :</strong>
+                            <p>{{ log.messageContent }}</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {# ===== PAGINATION ===== #}
+    {% if total_pages > 1 %}
+    <div class="dc-modlog-pagination">
+        {% if page > 1 %}
+            <a href="{{ path('admin_discord_moderation_log', {action: current_action, page: page - 1}) }}" class="btn-admin btn-admin--outline btn-admin--sm">
+                <i class="fas fa-chevron-left"></i> Precedent
+            </a>
+        {% endif %}
+        <span class="dc-modlog-pagination__info">Page {{ page }} / {{ total_pages }}</span>
+        {% if page < total_pages %}
+            <a href="{{ path('admin_discord_moderation_log', {action: current_action, page: page + 1}) }}" class="btn-admin btn-admin--outline btn-admin--sm">
+                Suivant <i class="fas fa-chevron-right"></i>
+            </a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div style="padding:40px;text-align:center;color:var(--text-secondary);font-size:14px;">
+        <i class="fas fa-scroll" style="font-size:32px;opacity:0.3;display:block;margin-bottom:12px;"></i>
+        Aucune action enregistree{% if current_action %} pour ce filtre{% endif %}.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block admin_js %}
+<script>
+document.querySelectorAll('.dc-modlog-row').forEach(function(row) {
+    row.addEventListener('click', function() {
+        var expand = row.nextElementSibling;
+        if (expand && expand.classList.contains('dc-modlog-expand')) {
+            expand.classList.toggle('dc-modlog-expand--visible');
+        }
+    });
+});
+</script>
+{% endblock %}

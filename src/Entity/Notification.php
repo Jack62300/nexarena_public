@@ -15,6 +15,7 @@ class Notification
     public const TYPE_NEW_APPLICATION = 'new_application';
     public const TYPE_APPLICATION_STATUS = 'application_status';
     public const TYPE_NEW_MESSAGE = 'new_message';
+    public const TYPE_REWARD = 'reward';
 
     #[ORM\Id]
     #[ORM\GeneratedValue]

@@ -1,0 +1,550 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Premium - {{ setting('site_name', 'Nexarena') }}{% endblock %}
+
+{% block stylesheets %}
+<link rel="stylesheet" href="{{ asset('assets/css/pages/premium.css') }}">
+{% endblock %}
+
+{% block body %}
+
+{# ===== HERO ===== #}
+<section class="premium-hero">
+    <div class="premium-hero__grid"></div>
+    <div class="container">
+        <div class="premium-hero__badge">
+            <i class="fas fa-crown"></i> Premium
+        </div>
+        <h1 class="premium-hero__title">Passez au niveau<br><span>superieur</span></h1>
+        <p class="premium-hero__subtitle">Debloquez des fonctionnalites exclusives, personnalisez votre serveur et boostez votre visibilite sur Nexarena.</p>
+
+        {% if app.user %}
+            <div class="premium-balance">
+                <div class="premium-balance__card">
+                    <div class="premium-balance__icon premium-balance__icon--tokens">
+                        <i class="fas fa-coins"></i>
+                    </div>
+                    <div>
+                        <div class="premium-balance__label">NexBits</div>
+                        <div class="premium-balance__value">{{ app.user.tokenBalance }}</div>
+                    </div>
+                </div>
+                <div class="premium-balance__card">
+                    <div class="premium-balance__icon premium-balance__icon--boost">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <div>
+                        <div class="premium-balance__label">NexBoost</div>
+                        <div class="premium-balance__value">{{ app.user.boostTokenBalance }}</div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+{# ===== FLASH MESSAGES ===== #}
+{% for type, messages in app.flashes %}
+    {% for message in messages %}
+        <div class="container">
+            <div class="premium-alert{% if type == 'danger' %} premium-alert--error{% endif %}">
+                <i class="fas fa-{{ type == 'success' ? 'check-circle' : 'exclamation-circle' }}"></i>
+                {{ message }}
+                <button type="button" class="premium-alert__close" onclick="this.parentElement.remove()">&times;</button>
+            </div>
+        </div>
+    {% endfor %}
+{% endfor %}
+
+{# ===== FEATURES (Premium par defaut) ===== #}
+<section class="premium-features">
+    <div class="container">
+        <div class="premium-section-header">
+            <div class="premium-section-header__badge"><i class="fas fa-star"></i></div>
+            <div class="premium-plans-section__title">Fonctionnalites Premium</div>
+            <p class="premium-section-header__sub">Inclus par defaut avec vos NexBits et NexBoost</p>
+        </div>
+        <div class="premium-features__grid">
+            <div class="premium-feature">
+                <div class="premium-feature__icon"><i class="fas fa-palette"></i></div>
+                <div>
+                    <div class="premium-feature__title">Themes personnalises</div>
+                    <div class="premium-feature__desc">Appliquez un theme unique a votre page serveur.</div>
+                </div>
+            </div>
+            <div class="premium-feature">
+                <div class="premium-feature__icon"><i class="fas fa-code"></i></div>
+                <div>
+                    <div class="premium-feature__title">Widget integrable</div>
+                    <div class="premium-feature__desc">Integrez un widget dynamique sur votre site.</div>
+                </div>
+            </div>
+            <div class="premium-feature">
+                <div class="premium-feature__icon"><i class="fas fa-rocket"></i></div>
+                <div>
+                    <div class="premium-feature__title">Mise en avant</div>
+                    <div class="premium-feature__desc">Apparaissez en haut de la page d'accueil.</div>
+                </div>
+            </div>
+            <div class="premium-feature">
+                <div class="premium-feature__icon"><i class="fas fa-bullhorn"></i></div>
+                <div>
+                    <div class="premium-feature__title">Recrutement illimite</div>
+                    <div class="premium-feature__desc">Publiez autant d'annonces que necessaire.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{# ===== SEPARATOR ===== #}
+<div class="premium-separator">
+    <div class="container">
+        <div class="premium-separator__line"></div>
+    </div>
+</div>
+
+{# ===== DEFAULT PLANS (Packs de recharge) ===== #}
+{% if defaultPlans|length > 0 %}
+<section class="premium-plans-section">
+    <div class="container">
+        <div class="premium-section-header">
+            <div class="premium-section-header__badge premium-section-header__badge--shop"><i class="fas fa-shopping-bag"></i></div>
+            <div class="premium-plans-section__title">Nos Packs</div>
+            <p class="premium-section-header__sub">Rechargez votre solde NexBits et NexBoost</p>
+        </div>
+        <div class="premium-plans">
+            {% for plan in defaultPlans %}
+                {% set hasPaypal = plan.price > 0 %}
+                {% set hasNexbits = plan.nexbitsPrice > 0 %}
+                {% set isPopular = loop.length > 1 and loop.index == 2 %}
+                <div class="premium-card{% if isPopular %} premium-card--popular{% endif %}">
+                    {% if isPopular %}
+                        <div class="premium-card__popular-tag">Populaire</div>
+                    {% endif %}
+
+                    <div class="premium-card__icon{% if not plan.iconFileName %} premium-card__icon--default{% endif %}">
+                        {% if plan.iconFileName %}
+                            <img src="{{ asset('uploads/plans/' ~ plan.iconFileName) }}" alt="{{ plan.name }}">
+                        {% else %}
+                            <i class="fas fa-gem"></i>
+                        {% endif %}
+                    </div>
+
+                    <h3 class="premium-card__name">{{ plan.name }}</h3>
+                    <p class="premium-card__desc">{{ plan.description }}</p>
+
+                    <div class="premium-card__price-wrap">
+                        {% if hasPaypal %}
+                            <div class="premium-card__price">
+                                {{ plan.price }}<span class="premium-card__price-currency">{{ plan.currency }}</span>
+                            </div>
+                            {% if hasNexbits %}
+                                <div class="premium-card__price-alt">
+                                    ou <i class="fas fa-coins" style="color:#ffd700;"></i> <strong>{{ plan.nexbitsPrice }}</strong> NexBits
+                                </div>
+                            {% endif %}
+                        {% elseif hasNexbits %}
+                            <div class="premium-card__price">
+                                {{ plan.nexbitsPrice }}<span class="premium-card__price-currency"><i class="fas fa-coins" style="color:#ffd700;"></i> NexBits</span>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="premium-card__tokens">
+                        {% if plan.tokensGiven > 0 %}
+                            <div class="premium-card__token-row">
+                                <i class="fas fa-coins" style="color:var(--tg-theme-secondary, #ffbe18);"></i>
+                                <span class="token-amount">{{ plan.tokensGiven }}</span> NexBits inclus
+                            </div>
+                        {% endif %}
+                        {% if plan.boostTokensGiven > 0 %}
+                            <div class="premium-card__token-row">
+                                <i class="fas fa-bolt" style="color:#ff6b35;"></i>
+                                <span class="token-amount">{{ plan.boostTokensGiven }}</span> NexBoost inclus
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    {% if app.user %}
+                        <button type="button" class="premium-card__buy-btn" data-plan-id="{{ plan.id }}" data-plan-name="{{ plan.name }}" data-plan-price="{{ plan.price }}" data-plan-currency="{{ plan.currency }}" data-plan-tokens="{{ plan.tokensGiven }}" data-plan-boost="{{ plan.boostTokensGiven }}" data-plan-nexbits-price="{{ plan.nexbitsPrice }}" onclick="openPayment(this)">
+                            <i class="fas fa-shopping-cart"></i> Acheter maintenant
+                        </button>
+                    {% else %}
+                        <a href="{{ path('app_login') }}" class="premium-card__buy-btn premium-card__buy-btn--login">
+                            <i class="fas fa-sign-in-alt"></i> Connexion requise
+                        </a>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{# ===== CUSTOM PLANS (Offres speciales) ===== #}
+{% if customPlans|length > 0 %}
+<div class="premium-separator">
+    <div class="container">
+        <div class="premium-separator__line"></div>
+    </div>
+</div>
+<section class="premium-plans-section">
+    <div class="container">
+        <div class="premium-section-header">
+            <div class="premium-section-header__badge" style="background:rgba(255,107,53,0.15);color:#ff6b35;"><i class="fas fa-fire"></i></div>
+            <div class="premium-plans-section__title">Offres Speciales</div>
+            <p class="premium-section-header__sub">Packs et offres exclusives</p>
+        </div>
+        <div class="premium-plans">
+            {% for plan in customPlans %}
+                {% set hasPaypal = plan.price > 0 %}
+                {% set hasNexbits = plan.nexbitsPrice > 0 %}
+                <div class="premium-card">
+                    <div class="premium-card__icon{% if not plan.iconFileName %} premium-card__icon--default{% endif %}">
+                        {% if plan.iconFileName %}
+                            <img src="{{ asset('uploads/plans/' ~ plan.iconFileName) }}" alt="{{ plan.name }}">
+                        {% else %}
+                            <i class="fas fa-fire"></i>
+                        {% endif %}
+                    </div>
+
+                    <h3 class="premium-card__name">{{ plan.name }}</h3>
+                    <p class="premium-card__desc">{{ plan.description }}</p>
+
+                    <div class="premium-card__price-wrap">
+                        {% if hasPaypal %}
+                            <div class="premium-card__price">
+                                {{ plan.price }}<span class="premium-card__price-currency">{{ plan.currency }}</span>
+                            </div>
+                            {% if hasNexbits %}
+                                <div class="premium-card__price-alt">
+                                    ou <i class="fas fa-coins" style="color:#ffd700;"></i> <strong>{{ plan.nexbitsPrice }}</strong> NexBits
+                                </div>
+                            {% endif %}
+                        {% elseif hasNexbits %}
+                            <div class="premium-card__price">
+                                {{ plan.nexbitsPrice }}<span class="premium-card__price-currency"><i class="fas fa-coins" style="color:#ffd700;"></i> NexBits</span>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="premium-card__tokens">
+                        {% if plan.tokensGiven > 0 %}
+                            <div class="premium-card__token-row">
+                                <i class="fas fa-coins" style="color:var(--tg-theme-secondary, #ffbe18);"></i>
+                                <span class="token-amount">{{ plan.tokensGiven }}</span> NexBits inclus
+                            </div>
+                        {% endif %}
+                        {% if plan.boostTokensGiven > 0 %}
+                            <div class="premium-card__token-row">
+                                <i class="fas fa-bolt" style="color:#ff6b35;"></i>
+                                <span class="token-amount">{{ plan.boostTokensGiven }}</span> NexBoost inclus
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    {% if app.user %}
+                        <button type="button" class="premium-card__buy-btn" data-plan-id="{{ plan.id }}" data-plan-name="{{ plan.name }}" data-plan-price="{{ plan.price }}" data-plan-currency="{{ plan.currency }}" data-plan-tokens="{{ plan.tokensGiven }}" data-plan-boost="{{ plan.boostTokensGiven }}" data-plan-nexbits-price="{{ plan.nexbitsPrice }}" onclick="openPayment(this)">
+                            <i class="fas fa-shopping-cart"></i> Acheter maintenant
+                        </button>
+                    {% else %}
+                        <a href="{{ path('app_login') }}" class="premium-card__buy-btn premium-card__buy-btn--login">
+                            <i class="fas fa-sign-in-alt"></i> Connexion requise
+                        </a>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{# ===== EMPTY STATE ===== #}
+{% if defaultPlans|length == 0 and customPlans|length == 0 %}
+<section class="premium-plans-section">
+    <div class="container">
+        <div class="premium-empty">
+            <div class="premium-empty__icon"><i class="fas fa-box-open"></i></div>
+            <p class="premium-empty__text">Aucun plan premium disponible pour le moment.</p>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{# ===== PAYMENT MODAL ===== #}
+{% set allPlans = defaultPlans|merge(customPlans) %}
+{% if app.user and allPlans|length > 0 %}
+<div class="pp-overlay" id="ppOverlay" onclick="if(event.target===this)closePayment()">
+    <div class="pp-modal">
+        <button type="button" class="pp-modal__close" onclick="closePayment()"><i class="fas fa-times"></i></button>
+        <div class="pp-modal__header">
+            <div class="pp-modal__icon"><i class="fas fa-shopping-bag"></i></div>
+            <div class="pp-modal__title" id="ppPlanName"></div>
+            <div class="pp-modal__detail" id="ppPlanDetail"></div>
+        </div>
+        <div class="pp-modal__divider"></div>
+
+        {# Tabs (visible only if NexBits price > 0) #}
+        <div class="pp-modal__tabs" id="ppTabs" style="display:none;">
+            <button type="button" class="pp-modal__tab pp-modal__tab--active" data-tab="paypal" onclick="switchPayTab('paypal')">
+                <i class="fab fa-paypal"></i> PayPal
+            </button>
+            <button type="button" class="pp-modal__tab" data-tab="nexbits" onclick="switchPayTab('nexbits')">
+                <i class="fas fa-coins"></i> NexBits
+            </button>
+        </div>
+
+        {# PayPal tab content #}
+        <div class="pp-modal__tab-content" id="ppTabPaypal">
+            <div class="pp-modal__amount" id="ppPlanPrice"><span></span></div>
+            <div class="pp-modal__paypal-label">Payer avec PayPal</div>
+            <div class="pp-modal__paypal-container" id="ppButtonContainer"></div>
+            <div class="pp-modal__secure">
+                <i class="fas fa-lock"></i> Paiement securise par PayPal{% if is_sandbox %} (Mode Test){% endif %}
+            </div>
+        </div>
+
+        {# NexBits tab content #}
+        <div class="pp-modal__tab-content" id="ppTabNexbits" style="display:none;">
+            <div class="pp-modal__amount" id="ppNexbitsPrice"></div>
+            <div class="pp-modal__nexbits-balance">
+                Votre solde : <i class="fas fa-coins" style="color:#ffd700;"></i> <strong id="ppUserBalance">{{ app.user.tokenBalance }}</strong> NexBits
+            </div>
+            <button type="button" class="pp-modal__nexbits-btn" id="ppNexbitsBtn" onclick="buyWithNexbits()">
+                <i class="fas fa-coins"></i> <span id="ppNexbitsBtnLabel">Payer</span>
+            </button>
+            <div class="pp-modal__nexbits-error" id="ppNexbitsError" style="display:none;"></div>
+            <div class="pp-modal__secure">
+                <i class="fas fa-lock"></i> Debit instantane de votre solde NexBits
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block javascripts %}
+{% set allPlans = defaultPlans|merge(customPlans) %}
+{% if app.user and allPlans|length > 0 %}
+{% if paypal_client_id %}
+<script src="https://www.paypal.com/sdk/js?client-id={{ paypal_client_id }}&currency={{ paypal_currency }}&disable-funding=credit,card,paylater"></script>
+{% endif %}
+<script>
+(function() {
+    var currentPlanId = null;
+    var currentNexbitsPrice = 0;
+    var buttonsRendered = {};
+    var buying = false;
+
+    window.openPayment = function(btn) {
+        var planId = btn.getAttribute('data-plan-id');
+        var planName = btn.getAttribute('data-plan-name');
+        var planPrice = parseFloat(btn.getAttribute('data-plan-price') || '0');
+        var planCurrency = btn.getAttribute('data-plan-currency');
+        var planTokens = btn.getAttribute('data-plan-tokens');
+        var planBoost = btn.getAttribute('data-plan-boost');
+        var nexbitsPrice = parseInt(btn.getAttribute('data-plan-nexbits-price') || '0');
+
+        currentPlanId = parseInt(planId);
+        currentNexbitsPrice = nexbitsPrice;
+
+        var hasPaypal = planPrice > 0;
+        var hasNexbits = nexbitsPrice > 0;
+        var hasBoth = hasPaypal && hasNexbits;
+
+        document.getElementById('ppPlanName').textContent = planName;
+
+        var details = [];
+        if (parseInt(planTokens) > 0) details.push(planTokens + ' NexBits');
+        if (parseInt(planBoost) > 0) details.push(planBoost + ' NexBoost');
+        document.getElementById('ppPlanDetail').textContent = details.join(' + ');
+
+        // Tabs: show only if both payment methods available
+        var tabsEl = document.getElementById('ppTabs');
+        if (hasBoth) {
+            tabsEl.style.display = '';
+        } else {
+            tabsEl.style.display = 'none';
+        }
+
+        // PayPal tab content
+        if (hasPaypal) {
+            document.getElementById('ppPlanPrice').innerHTML = planPrice.toFixed(2) + ' <span>' + planCurrency + '</span>';
+        }
+
+        // NexBits tab content
+        if (hasNexbits) {
+            document.getElementById('ppNexbitsPrice').innerHTML = nexbitsPrice + ' <span>NexBits</span>';
+            document.getElementById('ppNexbitsBtnLabel').textContent = 'Payer ' + nexbitsPrice + ' NexBits';
+            document.getElementById('ppNexbitsError').style.display = 'none';
+
+            var balance = parseInt(document.getElementById('ppUserBalance').textContent);
+            var nbBtn = document.getElementById('ppNexbitsBtn');
+            if (balance < nexbitsPrice) {
+                nbBtn.disabled = true;
+                nbBtn.classList.add('pp-modal__nexbits-btn--disabled');
+                document.getElementById('ppNexbitsError').textContent = 'Solde insuffisant. Il vous manque ' + (nexbitsPrice - balance) + ' NexBits.';
+                document.getElementById('ppNexbitsError').style.display = '';
+            } else {
+                nbBtn.disabled = false;
+                nbBtn.classList.remove('pp-modal__nexbits-btn--disabled');
+            }
+        }
+
+        // Show the right tab first: PayPal if available, otherwise NexBits
+        if (hasPaypal) {
+            switchPayTab('paypal');
+        } else {
+            switchPayTab('nexbits');
+        }
+
+        // Show/hide tab contents for single-method plans
+        document.getElementById('ppTabPaypal').style.display = hasPaypal ? '' : 'none';
+        document.getElementById('ppTabNexbits').style.display = (!hasPaypal && hasNexbits) ? '' : 'none';
+
+        document.getElementById('ppOverlay').classList.add('active');
+        document.body.style.overflow = 'hidden';
+
+        // Render PayPal button if needed and not already done
+        if (hasPaypal && !buttonsRendered[planId] && typeof paypal !== 'undefined') {
+            var container = document.getElementById('ppButtonContainer');
+            container.innerHTML = '';
+            paypal.Buttons({
+                fundingSource: paypal.FUNDING.PAYPAL,
+                style: {
+                    layout: 'horizontal',
+                    color: 'black',
+                    shape: 'rect',
+                    label: 'pay',
+                    height: 50,
+                    tagline: false
+                },
+                createOrder: function(data, actions) {
+                    return fetch('{{ path("premium_create_order") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        credentials: 'same-origin',
+                        body: JSON.stringify({ planId: currentPlanId })
+                    })
+                    .then(function(res) {
+                        if (!res.ok) {
+                            return res.text().then(function(text) {
+                                console.error('createOrder HTTP ' + res.status, text.substring(0, 300));
+                                throw new Error('Erreur serveur (' + res.status + ')');
+                            });
+                        }
+                        return res.json();
+                    })
+                    .then(function(json) {
+                        if (json.error) throw new Error(json.error);
+                        return json.orderId;
+                    });
+                },
+                onApprove: function(data, actions) {
+                    return fetch('{{ path("premium_capture_order") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        credentials: 'same-origin',
+                        body: JSON.stringify({ orderId: data.orderID, planId: currentPlanId })
+                    })
+                    .then(function(res) {
+                        if (!res.ok) {
+                            return res.text().then(function(text) {
+                                console.error('captureOrder HTTP ' + res.status, text.substring(0, 300));
+                                throw new Error('Erreur serveur (' + res.status + ')');
+                            });
+                        }
+                        return res.json();
+                    })
+                    .then(function(json) {
+                        if (json.error) {
+                            alert('Erreur: ' + json.error);
+                        } else {
+                            window.location.href = '{{ path("premium_success") }}';
+                        }
+                    });
+                },
+                onCancel: function() {
+                    closePayment();
+                },
+                onError: function(err) {
+                    console.error('PayPal error:', err);
+                    alert('Une erreur est survenue avec PayPal. Veuillez reessayer.');
+                    closePayment();
+                }
+            }).render('#ppButtonContainer');
+
+            buttonsRendered[planId] = true;
+        }
+    };
+
+    window.switchPayTab = function(tab) {
+        document.querySelectorAll('.pp-modal__tab').forEach(function(t) {
+            t.classList.toggle('pp-modal__tab--active', t.getAttribute('data-tab') === tab);
+        });
+        document.getElementById('ppTabPaypal').style.display = tab === 'paypal' ? '' : 'none';
+        document.getElementById('ppTabNexbits').style.display = tab === 'nexbits' ? '' : 'none';
+    };
+
+    window.buyWithNexbits = function() {
+        if (buying) return;
+        buying = true;
+
+        var btn = document.getElementById('ppNexbitsBtn');
+        var errorEl = document.getElementById('ppNexbitsError');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Traitement...';
+        errorEl.style.display = 'none';
+
+        fetch('{{ path("premium_buy_nexbits") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({ planId: currentPlanId })
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(json) {
+            if (json.error) {
+                errorEl.textContent = json.error;
+                errorEl.style.display = '';
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-coins"></i> <span id="ppNexbitsBtnLabel">Payer ' + currentNexbitsPrice + ' NexBits</span>';
+            } else {
+                window.location.href = '{{ path("premium_success") }}';
+            }
+        })
+        .catch(function() {
+            errorEl.textContent = 'Une erreur est survenue. Veuillez reessayer.';
+            errorEl.style.display = '';
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-coins"></i> <span id="ppNexbitsBtnLabel">Payer ' + currentNexbitsPrice + ' NexBits</span>';
+        })
+        .finally(function() {
+            buying = false;
+        });
+    };
+
+    window.closePayment = function() {
+        document.getElementById('ppOverlay').classList.remove('active');
+        document.body.style.overflow = '';
+    };
+
+    // ESC key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closePayment();
+    });
+})();
+</script>
+{% endif %}
+{% endblock %}

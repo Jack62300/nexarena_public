@@ -28,6 +28,9 @@
 /public/uploads/settings/*
 /public/uploads/themes/*
 /public/uploads/plugins/*
+/public/uploads/announcements/*
+/public/uploads/banners/*
+/public/uploads/plans/*
 !/public/uploads/.htaccess
 !/public/uploads/*/.gitkeep
 

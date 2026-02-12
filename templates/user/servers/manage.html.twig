@@ -65,6 +65,11 @@
                 <i class="fas fa-code"></i> API
             </button>
             {% endif %}
+            {% if is_owner and premium_enabled %}
+            <button type="button" class="manage-tabs__btn" data-tab="premium" onclick="switchManageTab('premium')">
+                <i class="fas fa-crown" style="color:#ffd700;"></i> Premium
+            </button>
+            {% endif %}
         </div>
 
         <div class="row g-4">
@@ -74,10 +79,10 @@
                 {# === TOKEN API === #}
                 {% if can_manage_api %}
                 <div class="manage-card">
-                    <h4 class="manage-card__title"><i class="fas fa-key"></i> Token API</h4>
+                    <h4 class="manage-card__title"><i class="fas fa-key"></i> Cle API</h4>
                     <p style="color:#8b949e;font-size:13px;margin-bottom:15px;">
-                        Ce token permet d'acceder a l'API pour verifier les votes de votre serveur.
-                        Ne le partagez jamais publiquement.
+                        Cette cle permet d'acceder a l'API pour verifier les votes de votre serveur.
+                        Ne la partagez jamais publiquement.
                     </p>
                     <div class="token-box">
                         <code id="apiToken">{{ server.apiToken }}</code>
@@ -85,10 +90,10 @@
                             Copier
                         </button>
                     </div>
-                    <form method="post" action="{{ path('user_servers_regenerate_token', {id: server.id}) }}" onsubmit="return confirm('Regenerer le token ? L\'ancien token ne fonctionnera plus.');" style="display:inline;">
+                    <form method="post" action="{{ path('user_servers_regenerate_token', {id: server.id}) }}" onsubmit="return confirm('Regenerer la cle ? L\'ancienne cle ne fonctionnera plus.');" style="display:inline;">
                         <input type="hidden" name="_token" value="{{ csrf_token('regenerate_token') }}">
                         <button type="submit" class="btn-action btn-action--danger" style="font-size:12px;">
-                            <i class="fas fa-sync-alt"></i> Regenerer le token
+                            <i class="fas fa-sync-alt"></i> Regenerer la cle
                         </button>
                     </form>
                     <p style="color:#5a5c69;font-size:12px;margin-top:12px;margin-bottom:0;">
@@ -184,14 +189,152 @@
                 </div>
                 {% endif %}
 
+                {# === TWITCH LIVE === #}
+                {% if server.twitchChannel %}
+                <div class="manage-card" style="border-color:rgba(145,70,255,0.2);">
+                    <h4 class="manage-card__title" style="border-bottom-color:rgba(145,70,255,0.15);">
+                        <i class="fab fa-twitch" style="color:#9146ff;"></i> Twitch Live
+                        {% if twitch_sub and twitch_sub.isActive %}
+                            <span style="margin-left:8px;font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(28,200,138,0.12);color:#1cc88a;border:1px solid rgba(28,200,138,0.2);font-weight:600;">Actif</span>
+                        {% endif %}
+                    </h4>
+
+                    {% if not twitch_live_gated or (twitch_sub and twitch_sub.isActive) %}
+                        {# Active subscription #}
+                        <div style="background:linear-gradient(135deg,rgba(145,70,255,0.06),rgba(145,70,255,0.02));border:1px solid rgba(145,70,255,0.12);border-radius:12px;padding:20px;margin-bottom:16px;">
+                            <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+                                <div style="width:46px;height:46px;border-radius:12px;background:rgba(145,70,255,0.15);display:flex;align-items:center;justify-content:center;">
+                                    <i class="fab fa-twitch" style="font-size:22px;color:#9146ff;"></i>
+                                </div>
+                                <div>
+                                    <div style="font-size:15px;font-weight:700;color:#e4e6eb;">{{ server.twitchChannel }}</div>
+                                    <div style="font-size:12px;color:#8b949e;">
+                                        Integration active
+                                        {% if twitch_sub %}
+                                            — Expire le {{ twitch_sub.expiresAt|date('d/m/Y') }}
+                                            ({{ twitch_sub.daysRemaining }} jour{{ twitch_sub.daysRemaining > 1 ? 's' : '' }})
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                                <span style="font-size:12px;color:#1cc88a;"><i class="fas fa-check-circle"></i> Player live integre</span>
+                                <span style="font-size:12px;color:#1cc88a;margin-left:10px;"><i class="fas fa-check-circle"></i> Rediffusions</span>
+                                <span style="font-size:12px;color:#1cc88a;margin-left:10px;"><i class="fas fa-check-circle"></i> Stats en direct</span>
+                            </div>
+                        </div>
+
+                        {% if twitch_sub %}
+                            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                                {# Renew with NexBits #}
+                                <form method="post" action="{{ path('user_servers_twitch_subscribe', {id: server.id}) }}" style="display:inline;">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('twitch_subscribe') }}">
+                                    <input type="hidden" name="payment_method" value="nexbits">
+                                    <button type="submit" class="btn-action btn-action--primary" style="font-size:12px;padding:6px 14px;">
+                                        <i class="fas fa-redo"></i> Renouveler (+30j / {{ twitch_live_cost_tokens }} NexBits)
+                                    </button>
+                                </form>
+                                {# Cancel #}
+                                {% if twitch_sub.status != 'cancelled' %}
+                                    <form method="post" action="{{ path('user_servers_twitch_cancel', {id: server.id}) }}" onsubmit="return confirm('Annuler l\'abonnement Twitch Live ? L\'acces reste actif jusqu\'a expiration.');" style="display:inline;">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('twitch_cancel') }}">
+                                        <button type="submit" class="btn-action btn-action--danger" style="font-size:12px;padding:6px 14px;">
+                                            <i class="fas fa-times"></i> Annuler
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                            {% if twitch_sub.autoRenew %}
+                                <div style="margin-top:10px;font-size:12px;color:#8b949e;">
+                                    <i class="fas fa-sync-alt" style="color:#9146ff;"></i> Renouvellement automatique active (NexBits)
+                                </div>
+                            {% endif %}
+                        {% endif %}
+                    {% else %}
+                        {# Not subscribed: offer #}
+                        <div style="text-align:center;padding:20px 10px;">
+                            <div style="width:60px;height:60px;border-radius:16px;background:linear-gradient(135deg,#9146ff,#6441a5);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+                                <i class="fab fa-twitch" style="font-size:28px;color:#fff;"></i>
+                            </div>
+                            <h5 style="color:#e4e6eb;font-size:16px;margin-bottom:8px;">Integration Twitch Live</h5>
+                            <p style="color:#8b949e;font-size:13px;margin-bottom:20px;max-width:400px;margin-left:auto;margin-right:auto;">
+                                Integrez votre direct Twitch et vos rediffusions directement sur la page de votre serveur.
+                                Attirez plus de visiteurs avec votre contenu live !
+                            </p>
+
+                            <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:center;margin-bottom:16px;">
+                                <div style="font-size:12px;color:#8b949e;">Ce que vous obtenez :</div>
+                            </div>
+                            <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:24px;">
+                                <div style="padding:10px 16px;background:rgba(145,70,255,0.06);border:1px solid rgba(145,70,255,0.12);border-radius:10px;font-size:12px;color:#c4c9d2;">
+                                    <i class="fas fa-play-circle" style="color:#9146ff;margin-right:4px;"></i> Player live integre
+                                </div>
+                                <div style="padding:10px 16px;background:rgba(145,70,255,0.06);border:1px solid rgba(145,70,255,0.12);border-radius:10px;font-size:12px;color:#c4c9d2;">
+                                    <i class="fas fa-video" style="color:#9146ff;margin-right:4px;"></i> Rediffusions (VODs)
+                                </div>
+                                <div style="padding:10px 16px;background:rgba(145,70,255,0.06);border:1px solid rgba(145,70,255,0.12);border-radius:10px;font-size:12px;color:#c4c9d2;">
+                                    <i class="fas fa-chart-line" style="color:#9146ff;margin-right:4px;"></i> Stats en direct
+                                </div>
+                            </div>
+
+                            {# Price cards #}
+                            <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:16px;">
+                                {# NexBits option #}
+                                <form method="post" action="{{ path('user_servers_twitch_subscribe', {id: server.id}) }}">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('twitch_subscribe') }}">
+                                    <input type="hidden" name="payment_method" value="nexbits">
+                                    <div style="background:#0d1a26;border:1px solid rgba(255,215,0,0.2);border-radius:14px;padding:20px 24px;min-width:180px;text-align:center;">
+                                        <div style="font-size:11px;color:#ffd700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">NexBits</div>
+                                        <div style="font-size:28px;font-weight:800;color:#ffd700;">{{ twitch_live_cost_tokens }}</div>
+                                        <div style="font-size:11px;color:#8b949e;margin-bottom:14px;">NexBits / mois</div>
+                                        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#8b949e;cursor:pointer;justify-content:center;margin-bottom:12px;">
+                                            <input type="checkbox" name="auto_renew" value="1" style="accent-color:#9146ff;width:14px;height:14px;">
+                                            Renouveler automatiquement
+                                        </label>
+                                        <button type="submit" class="btn-action btn-action--primary" style="width:100%;background:linear-gradient(135deg,#ffd700,#ff6b35);color:#000;border:none;font-weight:700;border-radius:10px;padding:10px;">
+                                            <i class="fas fa-coins"></i> Payer en NexBits
+                                        </button>
+                                        <div style="font-size:11px;color:#5a5c69;margin-top:8px;">Solde : {{ app.user.tokenBalance }} NexBits</div>
+                                    </div>
+                                </form>
+
+                                {# EUR option #}
+                                <div style="background:#0d1a26;border:1px solid rgba(145,70,255,0.2);border-radius:14px;padding:20px 24px;min-width:180px;text-align:center;">
+                                    <div style="font-size:11px;color:#9146ff;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">PayPal</div>
+                                    <div style="font-size:28px;font-weight:800;color:#e4e6eb;">{{ twitch_live_cost_eur }}€</div>
+                                    <div style="font-size:11px;color:#8b949e;margin-bottom:14px;">EUR / mois</div>
+                                    <div id="twitchPaypalBtnContainer" style="margin-top:26px;">
+                                        <a href="{{ path('premium_index') }}" class="btn-action btn-action--primary" style="width:100%;background:#0070ba;border:none;font-weight:700;border-radius:10px;padding:10px;color:#fff;text-decoration:none;display:block;">
+                                            <i class="fab fa-paypal"></i> Payer via PayPal
+                                        </a>
+                                    </div>
+                                    <div style="font-size:11px;color:#5a5c69;margin-top:8px;">Paiement securise</div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+                {% else %}
+                    <div class="manage-card" style="border-color:rgba(145,70,255,0.15);">
+                        <h4 class="manage-card__title" style="border-bottom-color:rgba(145,70,255,0.1);">
+                            <i class="fab fa-twitch" style="color:#9146ff;"></i> Twitch Live
+                        </h4>
+                        <div style="background:rgba(246,194,62,0.06);border:1px solid rgba(246,194,62,0.15);border-radius:10px;padding:14px 18px;color:#f6c23e;font-size:13px;">
+                            <i class="fas fa-exclamation-triangle" style="margin-right:6px;"></i>
+                            Renseignez votre nom de chaine Twitch dans les <strong><a href="{{ path('user_servers_edit', {id: server.id}) }}" style="color:#f6c23e;">informations du serveur</a></strong> (section Reseaux sociaux) pour activer cette fonctionnalite.
+                        </div>
+                    </div>
+                {% endif %}
+
                 {# === WIDGETS INTEGRABLES === #}
+                {% set widget_gated = premium_feature_gated('widget') %}
                 <div class="manage-card">
                     <h4 class="manage-card__title"><i class="fas fa-code"></i> Widgets integrables</h4>
                     <p style="color:#8b949e;font-size:13px;margin-bottom:20px;">
                         Integrez ces widgets sur votre site web pour afficher les informations de votre serveur.
                     </p>
 
-                    {# Style selector: 5 options #}
+                    {# Style selector: 5 options — presets always free, custom requires premium if gated #}
                     <div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;">
                         <button type="button" class="wg-style-btn wg-style-btn--active" data-style="dark" onclick="switchWidgetStyle('dark')">
                             <i class="fas fa-moon"></i> Sombre
@@ -205,9 +348,16 @@
                         <button type="button" class="wg-style-btn" data-style="compact" onclick="switchWidgetStyle('compact')">
                             <i class="fas fa-compress-alt"></i> Compact
                         </button>
+                        {% if not widget_gated or has_premium_widget %}
                         <button type="button" class="wg-style-btn" data-style="custom" onclick="switchWidgetStyle('custom')">
                             <i class="fas fa-palette"></i> Personnalisable
                         </button>
+                        {% else %}
+                        <button type="button" class="wg-style-btn" data-style="custom" onclick="event.preventDefault();" data-bs-toggle="modal" data-bs-target="#premiumUnlockModal_widget"
+                                style="opacity:0.6;cursor:pointer;">
+                            <i class="fas fa-lock"></i> Personnalisable <i class="fas fa-crown" style="color:#ffd700;font-size:10px;"></i>
+                        </button>
+                        {% endif %}
                     </div>
 
                     {# Style description #}
@@ -293,6 +443,15 @@
                         </div>
                     </div>
                 </div>
+                {% if widget_gated and not has_premium_widget %}
+                {% include 'includes/_premium_unlock_modal.html.twig' with {
+                    server: server,
+                    feature: 'widget',
+                    feature_label: 'Widget personnalise',
+                    cost: widget_cost,
+                    user_balance: app.user.tokenBalance
+                } %}
+                {% endif %}
 
                 {# === COMMENTAIRES === #}
                 {% if can_moderate_comments %}
@@ -396,6 +555,32 @@
                 {# ========== TAB: THEME ========== #}
                 {% if can_manage_theme %}
                 <div id="tabTheme" class="manage-tab-panel">
+                    {% set theme_gated = premium_feature_gated('theme') %}
+                    {% if theme_gated and not has_premium_theme %}
+                    <div class="manage-card" style="text-align:center;padding:40px 20px;">
+                        <i class="fas fa-lock" style="font-size:48px;color:#ffd700;margin-bottom:16px;display:block;"></i>
+                        <h4 style="color:#fff;margin-bottom:8px;">Theme personnalise</h4>
+                        <p style="color:#8b949e;font-size:14px;margin-bottom:20px;">
+                            Debloquez les themes personnalises pour votre serveur avec des NexBits.
+                        </p>
+                        <button type="button" class="btn-action btn-action--primary" data-bs-toggle="modal" data-bs-target="#premiumUnlockModal_theme"
+                                style="background:linear-gradient(135deg,#ffd700,#ff6b35);color:#000;border:none;font-weight:700;padding:10px 24px;border-radius:10px;">
+                            <i class="fas fa-crown"></i> Debloquer ({{ theme_cost }} NexBits)
+                        </button>
+                        <div style="margin-top:12px;">
+                            <a href="{{ path('premium_index') }}" style="color:#ffd700;font-size:13px;text-decoration:underline;">
+                                Acheter des NexBits
+                            </a>
+                        </div>
+                    </div>
+                    {% include 'includes/_premium_unlock_modal.html.twig' with {
+                        server: server,
+                        feature: 'theme',
+                        feature_label: 'Theme personnalise',
+                        cost: theme_cost,
+                        user_balance: app.user.tokenBalance
+                    } %}
+                    {% else %}
                     <div class="manage-card">
                         <h4 class="manage-card__title"><i class="fas fa-palette"></i> Theme de la page</h4>
                         <p style="color:#8b949e;font-size:13px;margin-bottom:15px;">
@@ -425,6 +610,7 @@
                             </button>
                         </form>
                     </div>
+                    {% endif %}
                 </div>
                 {% endif %}
 
@@ -432,10 +618,10 @@
                 {% if can_manage_api %}
                 <div id="tabApi" class="manage-tab-panel">
                     <div class="manage-card">
-                        <h4 class="manage-card__title"><i class="fas fa-key"></i> Token API</h4>
+                        <h4 class="manage-card__title"><i class="fas fa-key"></i> Cle API</h4>
                         <p style="color:#8b949e;font-size:13px;margin-bottom:15px;">
-                            Ce token permet d'acceder a l'API pour verifier les votes de votre serveur.
-                            Ne le partagez jamais publiquement.
+                            Cette cle permet d'acceder a l'API pour verifier les votes de votre serveur.
+                            Ne la partagez jamais publiquement.
                         </p>
                         <div class="token-box">
                             <code id="apiTokenApi">{{ server.apiToken }}</code>
@@ -472,13 +658,13 @@
                                 <div style="margin-bottom:15px;padding:10px 14px;background:rgba(69,248,130,0.06);border:1px solid rgba(69,248,130,0.15);border-radius:6px;font-size:12px;">
                                     <i class="fas fa-lock" style="color:#45f882;margin-right:6px;"></i>
                                     <span style="color:#45f882;font-weight:600;">Protection active</span>
-                                    <span style="color:#8b949e;"> — Seules les IPs {{ server.allowedApiIps|join(', ') }} peuvent acceder a l'API.</span>
+                                    <span style="color:#8b949e;"> — Seules les IPs {{ server.allowedApiIps|join(', ') }} peuvent utiliser la cle API.</span>
                                 </div>
                             {% else %}
                                 <div style="margin-bottom:15px;padding:10px 14px;background:rgba(255,193,7,0.06);border:1px solid rgba(255,193,7,0.15);border-radius:6px;font-size:12px;">
                                     <i class="fas fa-unlock" style="color:#ffc107;margin-right:6px;"></i>
                                     <span style="color:#ffc107;font-weight:600;">Acces ouvert</span>
-                                    <span style="color:#8b949e;"> — Toute IP peut utiliser votre token API.</span>
+                                    <span style="color:#8b949e;"> — Toute IP peut utiliser votre cle API.</span>
                                 </div>
                             {% endif %}
                             <button type="submit" class="btn-action btn-action--primary">
@@ -491,7 +677,7 @@
                         <h4 class="manage-card__title"><i class="fas fa-book"></i> Documentation API</h4>
                         <p style="color:#8b949e;font-size:13px;margin-bottom:20px;">
                             Utilisez ces endpoints pour integrer le systeme de vote Nexarena dans vos plugins et applications.
-                            Tous les endpoints utilisent votre token API.
+                            Tous les endpoints utilisent votre cle API.
                         </p>
 
                         <div style="margin-bottom:8px;">
@@ -620,6 +806,197 @@
                             L'API est limitee a <strong style="color:#e4e6eb;">60 requetes par minute</strong> par adresse IP.
                             Les reponses incluent les headers <code style="color:#45f882;">X-RateLimit-Remaining</code> et <code style="color:#45f882;">X-RateLimit-Limit</code>.
                         </p>
+                    </div>
+                </div>
+                {% endif %}
+
+                {# ========== TAB: PREMIUM ========== #}
+                {% if is_owner and premium_enabled %}
+                <div id="tabPremium" class="manage-tab-panel">
+                    {# === SOLDE === #}
+                    <div class="manage-card">
+                        <h4 class="manage-card__title"><i class="fas fa-wallet" style="color:#ffd700;"></i> Solde</h4>
+                        <div style="display:flex;gap:16px;flex-wrap:wrap;">
+                            <div style="flex:1;min-width:160px;padding:16px 20px;background:rgba(255,107,53,0.08);border:1px solid rgba(255,107,53,0.2);border-radius:10px;text-align:center;">
+                                <div style="font-size:28px;font-weight:800;color:#ff6b35;">{{ app.user.boostTokenBalance }}</div>
+                                <div style="font-size:12px;color:#8b949e;margin-top:4px;">NexBoost</div>
+                            </div>
+                            <div style="flex:1;min-width:160px;padding:16px 20px;background:rgba(255,190,24,0.08);border:1px solid rgba(255,190,24,0.2);border-radius:10px;text-align:center;">
+                                <div style="font-size:28px;font-weight:800;color:#ffd700;">{{ app.user.tokenBalance }}</div>
+                                <div style="font-size:12px;color:#8b949e;margin-top:4px;">NexBits</div>
+                            </div>
+                        </div>
+                        <div style="margin-top:12px;text-align:center;">
+                            <a href="{{ path('premium_index') }}" style="color:#ffd700;font-size:13px;text-decoration:underline;">Acheter des NexBits / NexBoost</a>
+                        </div>
+                    </div>
+
+                    {# === BOOSTS (MISES EN AVANT) === #}
+                    <div class="manage-card">
+                        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+                            <h4 class="manage-card__title" style="margin-bottom:0;border-bottom:none;padding-bottom:0;"><i class="fas fa-bolt" style="color:#ff6b35;"></i> Mises en avant</h4>
+                            <a href="{{ path('featured_booking', {id: server.id}) }}" class="btn-action btn-action--primary" style="background:linear-gradient(135deg,#ff6b35,#ffd700);color:#000;border:none;font-size:12px;padding:6px 14px;">
+                                <i class="fas fa-calendar-alt"></i> Reserver
+                            </a>
+                        </div>
+                        {% if server_bookings|length > 0 %}
+                            <div style="overflow-x:auto;">
+                                <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                                    <thead>
+                                        <tr style="border-bottom:1px solid #1e3048;">
+                                            <th style="padding:8px 10px;text-align:center;color:#8b949e;font-weight:600;font-size:11px;text-transform:uppercase;">Scope</th>
+                                            <th style="padding:8px 10px;text-align:center;color:#8b949e;font-weight:600;font-size:11px;text-transform:uppercase;">Pos.</th>
+                                            <th style="padding:8px 10px;text-align:left;color:#8b949e;font-weight:600;font-size:11px;text-transform:uppercase;">Debut</th>
+                                            <th style="padding:8px 10px;text-align:left;color:#8b949e;font-weight:600;font-size:11px;text-transform:uppercase;">Fin</th>
+                                            <th style="padding:8px 10px;text-align:center;color:#8b949e;font-weight:600;font-size:11px;text-transform:uppercase;">Cout</th>
+                                            <th style="padding:8px 10px;text-align:center;color:#8b949e;font-weight:600;font-size:11px;text-transform:uppercase;">Statut</th>
+                                            <th style="padding:8px 10px;text-align:right;color:#8b949e;font-weight:600;font-size:11px;text-transform:uppercase;">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% set now = "now"|date("U") %}
+                                        {% for booking in server_bookings %}
+                                            {% set starts = booking.startsAt|date("U") %}
+                                            {% set ends = booking.endsAt|date("U") %}
+                                            {% if now < starts %}
+                                                {% set status = 'upcoming' %}
+                                            {% elseif now >= starts and now < ends %}
+                                                {% set status = 'active' %}
+                                            {% else %}
+                                                {% set status = 'past' %}
+                                            {% endif %}
+                                            <tr style="border-bottom:1px solid #1e3048;{{ status == 'past' ? 'opacity:0.5;' : '' }}">
+                                                <td style="padding:10px;text-align:center;">
+                                                    {% if booking.scope == 'homepage' %}
+                                                        <span style="font-size:10px;padding:2px 8px;border-radius:4px;background:rgba(255,215,0,0.1);color:#ffd700;border:1px solid rgba(255,215,0,0.2);">Accueil</span>
+                                                    {% else %}
+                                                        <span style="font-size:10px;padding:2px 8px;border-radius:4px;background:rgba(69,248,130,0.1);color:#45f882;border:1px solid rgba(69,248,130,0.2);">{{ booking.gameCategory ? booking.gameCategory.name : 'Jeu' }}</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td style="padding:10px;text-align:center;color:#ffd700;font-weight:700;">#{{ booking.position }}</td>
+                                                <td style="padding:10px;color:#e4e6eb;">{{ booking.startsAt|date('d/m/Y H:i') }}</td>
+                                                <td style="padding:10px;color:#e4e6eb;">{{ booking.endsAt|date('d/m/Y H:i') }}</td>
+                                                <td style="padding:10px;text-align:center;color:#ff6b35;font-weight:600;">{{ booking.boostTokensUsed }} <i class="fas fa-bolt" style="font-size:10px;"></i></td>
+                                                <td style="padding:10px;text-align:center;">
+                                                    {% if status == 'active' %}
+                                                        <span style="font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(28,200,138,0.12);color:#1cc88a;border:1px solid rgba(28,200,138,0.2);font-weight:600;">
+                                                            <i class="fas fa-circle" style="font-size:6px;vertical-align:middle;margin-right:3px;"></i> En cours
+                                                        </span>
+                                                    {% elseif status == 'upcoming' %}
+                                                        <span style="font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(54,185,204,0.12);color:#36b9cc;border:1px solid rgba(54,185,204,0.2);font-weight:600;">
+                                                            <i class="fas fa-clock" style="font-size:10px;margin-right:3px;"></i> Planifie
+                                                        </span>
+                                                    {% else %}
+                                                        <span style="font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(139,148,158,0.12);color:#8b949e;border:1px solid rgba(139,148,158,0.2);font-weight:600;">
+                                                            Termine
+                                                        </span>
+                                                    {% endif %}
+                                                </td>
+                                                <td style="padding:10px;text-align:right;">
+                                                    {% if status == 'upcoming' %}
+                                                        <form method="post" action="{{ path('user_servers_cancel_boost', {id: server.id, bookingId: booking.id}) }}" onsubmit="return confirm('Annuler cette reservation ? Les NexBoost seront recredites.');" style="display:inline;">
+                                                            <input type="hidden" name="_token" value="{{ csrf_token('cancel_boost_' ~ booking.id) }}">
+                                                            <button type="submit" class="btn-action btn-action--danger" style="padding:4px 10px;font-size:11px;">
+                                                                <i class="fas fa-times"></i> Annuler
+                                                            </button>
+                                                        </form>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div style="text-align:center;padding:30px 10px;color:#5a5c69;">
+                                <i class="fas fa-bolt" style="font-size:28px;color:#3d4250;margin-bottom:10px;display:block;"></i>
+                                Aucune mise en avant pour ce serveur.
+                                <div style="margin-top:10px;">
+                                    <a href="{{ path('featured_booking', {id: server.id}) }}" style="color:#ff6b35;font-size:13px;text-decoration:underline;">Reserver un creneau</a>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    {# === HISTORIQUE DES TRANSACTIONS === #}
+                    <div class="manage-card">
+                        <h4 class="manage-card__title"><i class="fas fa-receipt" style="color:#36b9cc;"></i> Historique des transactions</h4>
+                        {% if user_transactions|length > 0 %}
+                            <div style="overflow-x:auto;">
+                                <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                                    <thead>
+                                        <tr style="border-bottom:1px solid #1e3048;">
+                                            <th style="padding:8px 10px;text-align:left;color:#8b949e;font-weight:600;font-size:11px;text-transform:uppercase;">N°</th>
+                                            <th style="padding:8px 10px;text-align:left;color:#8b949e;font-weight:600;font-size:11px;text-transform:uppercase;">Date</th>
+                                            <th style="padding:8px 10px;text-align:center;color:#8b949e;font-weight:600;font-size:11px;text-transform:uppercase;">Type</th>
+                                            <th style="padding:8px 10px;text-align:left;color:#8b949e;font-weight:600;font-size:11px;text-transform:uppercase;">Description</th>
+                                            <th style="padding:8px 10px;text-align:center;color:#8b949e;font-weight:600;font-size:11px;text-transform:uppercase;">Montant</th>
+                                            <th style="padding:8px 10px;text-align:center;color:#8b949e;font-weight:600;font-size:11px;text-transform:uppercase;">NexBits</th>
+                                            <th style="padding:8px 10px;text-align:center;color:#8b949e;font-weight:600;font-size:11px;text-transform:uppercase;">NexBoost</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for tx in user_transactions %}
+                                            <tr style="border-bottom:1px solid #1e3048;">
+                                                <td style="padding:10px;color:#8b949e;font-family:monospace;font-size:12px;">#{{ tx.id }}</td>
+                                                <td style="padding:10px;color:#e4e6eb;white-space:nowrap;">{{ tx.createdAt|date('d/m/Y H:i') }}</td>
+                                                <td style="padding:10px;text-align:center;">
+                                                    {% if tx.type == 'purchase' %}
+                                                        <span style="font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(28,200,138,0.12);color:#1cc88a;border:1px solid rgba(28,200,138,0.2);font-weight:600;">Achat</span>
+                                                    {% elseif tx.type == 'spend' %}
+                                                        <span style="font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(255,107,53,0.12);color:#ff6b35;border:1px solid rgba(255,107,53,0.2);font-weight:600;">Depense</span>
+                                                    {% elseif tx.type == 'refund' %}
+                                                        <span style="font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(54,185,204,0.12);color:#36b9cc;border:1px solid rgba(54,185,204,0.2);font-weight:600;">Remboursement</span>
+                                                    {% elseif tx.type == 'admin_credit' %}
+                                                        <span style="font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(255,215,0,0.12);color:#ffd700;border:1px solid rgba(255,215,0,0.2);font-weight:600;">Credit admin</span>
+                                                    {% elseif tx.type == 'vote_reward' %}
+                                                        <span style="font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(108,92,231,0.12);color:#6c5ce7;border:1px solid rgba(108,92,231,0.2);font-weight:600;">Vote</span>
+                                                    {% else %}
+                                                        <span style="font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(139,148,158,0.12);color:#8b949e;border:1px solid rgba(139,148,158,0.2);font-weight:600;">{{ tx.type }}</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td style="padding:10px;color:#c9d1d9;font-size:12px;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="{{ tx.description }}">
+                                                    {{ tx.description ?? '—' }}
+                                                </td>
+                                                <td style="padding:10px;text-align:center;color:#e4e6eb;font-weight:600;">
+                                                    {% if tx.amount and tx.amount > 0 %}
+                                                        {{ tx.amount }} {{ tx.currency ?? 'EUR' }}
+                                                    {% else %}
+                                                        <span style="color:#5a5c69;">—</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td style="padding:10px;text-align:center;">
+                                                    {% if tx.tokensAmount != 0 %}
+                                                        <span style="color:{{ tx.tokensAmount > 0 ? '#1cc88a' : '#e74a3b' }};font-weight:600;">
+                                                            {{ tx.tokensAmount > 0 ? '+' : '' }}{{ tx.tokensAmount }}
+                                                        </span>
+                                                    {% else %}
+                                                        <span style="color:#5a5c69;">—</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td style="padding:10px;text-align:center;">
+                                                    {% if tx.boostTokensAmount != 0 %}
+                                                        <span style="color:{{ tx.boostTokensAmount > 0 ? '#1cc88a' : '#e74a3b' }};font-weight:600;">
+                                                            {{ tx.boostTokensAmount > 0 ? '+' : '' }}{{ tx.boostTokensAmount }}
+                                                        </span>
+                                                    {% else %}
+                                                        <span style="color:#5a5c69;">—</span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div style="text-align:center;padding:30px 10px;color:#5a5c69;">
+                                <i class="fas fa-receipt" style="font-size:28px;color:#3d4250;margin-bottom:10px;display:block;"></i>
+                                Aucune transaction pour le moment.
+                                <div style="margin-top:10px;">
+                                    <a href="{{ path('premium_index') }}" style="color:#ffd700;font-size:13px;text-decoration:underline;">Voir les offres Premium</a>
+                                </div>
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
                 {% endif %}
@@ -761,6 +1138,32 @@
                             Aucun collaborateur pour le moment.
                         </div>
                     {% endif %}
+                </div>
+                {% endif %}
+
+                {# === BOOST / MISE EN AVANT === #}
+                {% if is_owner and premium_enabled %}
+                <div class="manage-card">
+                    <h4 class="manage-card__title"><i class="fas fa-bolt" style="color:#ff6b35;"></i> Mise en avant</h4>
+                    <p style="color:#8b949e;font-size:13px;margin-bottom:15px;">
+                        Reservez un emplacement pour mettre votre serveur en avant sur la page d'accueil.
+                        Consultez l'onglet <strong style="color:#ffd700;cursor:pointer;" onclick="switchManageTab('premium')">Premium</strong> pour voir vos reservations et transactions.
+                    </p>
+                    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                        <div style="padding:8px 16px;background:rgba(255,107,53,0.1);border:1px solid rgba(255,107,53,0.2);border-radius:8px;">
+                            <i class="fas fa-bolt" style="color:#ff6b35;"></i>
+                            <span style="color:#fff;font-weight:600;margin-left:4px;">{{ app.user.boostTokenBalance }}</span>
+                            <span style="color:#8b949e;font-size:12px;"> NexBoost</span>
+                        </div>
+                        <div style="padding:8px 16px;background:rgba(255,190,24,0.08);border:1px solid rgba(255,190,24,0.2);border-radius:8px;">
+                            <i class="fas fa-coins" style="color:#ffd700;"></i>
+                            <span style="color:#fff;font-weight:600;margin-left:4px;">{{ app.user.tokenBalance }}</span>
+                            <span style="color:#8b949e;font-size:12px;"> NexBits</span>
+                        </div>
+                    </div>
+                    <a href="{{ path('featured_booking', {id: server.id}) }}" class="btn-action btn-action--primary" style="background:linear-gradient(135deg,#ff6b35,#ffd700);color:#000;border:none;">
+                        <i class="fas fa-calendar-alt"></i> Reserver une date
+                    </a>
                 </div>
                 {% endif %}
 

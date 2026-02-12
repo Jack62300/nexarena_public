@@ -223,12 +223,65 @@
                     </h3>
                 </div>
                 <div style="padding:25px;">
+                    {# ===== BANNER SLIDES MANAGER ===== #}
+                    {% if active_tab == 'banner' %}
+                        <div class="setting-group" style="margin-bottom:30px;padding-bottom:25px;border-bottom:1px solid var(--border-color);">
+                            <label class="setting-group__label" style="font-size:15px;margin-bottom:4px;">
+                                <i class="fas fa-images" style="color:var(--accent);margin-right:6px;"></i>
+                                Diaporama de la banniere
+                            </label>
+                            <div class="setting-group__desc" style="margin-bottom:14px;">
+                                Uploadez les images qui defileront en fond de la banniere d'accueil. Format recommande : 1920x1080px minimum.
+                            </div>
+
+                            {# Current slides grid #}
+                            {% if banner_slides|length > 0 %}
+                                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:16px;">
+                                    {% for slide in banner_slides %}
+                                        <div style="position:relative;border-radius:8px;overflow:hidden;border:1px solid var(--border-color);background:var(--bg-darker);">
+                                            <img src="{{ asset('uploads/banners/' ~ slide) }}" alt=""
+                                                 style="width:100%;height:110px;object-fit:cover;display:block;">
+                                            <form method="post" action="{{ path('admin_settings_banner_slide_delete') }}"
+                                                  style="position:absolute;top:6px;right:6px;"
+                                                  onsubmit="return confirm('Supprimer cette slide ?')">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('banner_slide_delete') }}">
+                                                <input type="hidden" name="filename" value="{{ slide }}">
+                                                <button type="submit" style="background:rgba(0,0,0,0.7);border:none;color:#ff4757;width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div style="padding:20px;text-align:center;background:var(--bg-darker);border:1px dashed var(--border-color);border-radius:8px;color:var(--text-secondary);margin-bottom:16px;">
+                                    <i class="fas fa-images" style="font-size:24px;margin-bottom:8px;display:block;opacity:0.4;"></i>
+                                    Aucune slide. L'image par defaut sera utilisee.
+                                </div>
+                            {% endif %}
+
+                            {# Upload form #}
+                            <form method="post" action="{{ path('admin_settings_banner_slide_upload') }}" enctype="multipart/form-data"
+                                  style="display:flex;align-items:center;gap:12px;">
+                                <input type="hidden" name="_token" value="{{ csrf_token('banner_slide') }}">
+                                <input type="file" name="slide_image" accept="image/jpeg,image/png,image/webp,image/gif"
+                                       class="setting-input" style="flex:1;" required>
+                                <button type="submit" class="btn-admin btn-admin--primary" style="white-space:nowrap;">
+                                    <i class="fas fa-plus"></i> Ajouter
+                                </button>
+                            </form>
+                        </div>
+                    {% endif %}
+
                     {% if settings_by_category[active_tab] is defined and settings_by_category[active_tab]|length > 0 %}
                         <form method="post" action="{{ path('admin_settings_save') }}" enctype="multipart/form-data">
                             <input type="hidden" name="_token" value="{{ csrf_token('settings_save') }}">
                             <input type="hidden" name="_category" value="{{ active_tab }}">
 
                             {% for setting in settings_by_category[active_tab] %}
+                                {# Skip banner slides/bg from normal loop — managed above #}
+                                {% if setting.key in ['banner_slides', 'banner_bg_image'] %}
+                                {% else %}
                                 <div class="setting-group">
                                     <label class="setting-group__label" for="setting_{{ setting.key }}">
                                         {{ setting.label }}
@@ -295,6 +348,7 @@
                                         {% endif %}
                                     {% endif %}
                                 </div>
+                                {% endif %}{# end skip banner_slides/banner_bg_image #}
                             {% endfor %}
 
                             <div style="padding-top:15px;border-top:1px solid var(--border-color);display:flex;gap:10px;">

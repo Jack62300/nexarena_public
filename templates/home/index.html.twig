@@ -8,27 +8,29 @@
 
 {% block body %}
 
-    {# ===== BANNER / HERO ===== #}
-    <section class="banner__area banner__area-four banner--compact">
-        <div class="banner__bg tg-jarallax">
-            {% if setting('banner_bg_image') %}
-                <img src="{{ asset(setting('banner_bg_image')) }}" alt="img">
-            {% else %}
-                <img src="{{ asset('assets/img/slider/banner_bg5.png') }}" alt="img">
-            {% endif %}
-        </div>
-        <div class="container custom-container4">
+    {# ============================================================
+       BANNER — fixed background with slideshow
+       ============================================================ #}
+    <section class="banner__area banner__padding">
+        {% if bannerSlides|length > 0 %}
+            <div class="banner-slider">
+                {% for slide in bannerSlides %}
+                    <div class="banner-slide {{ loop.first ? 'active' : '' }}" style="background-image: url('{{ asset('uploads/banners/' ~ slide) }}')"></div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="banner__bg" data-background="{{ asset('assets/img/slider/banner_bg.jpg') }}"></div>
+        {% endif %}
+        <div class="container custom-container">
             <div class="row justify-content-center">
                 <div class="col-xl-8 col-lg-10">
                     <div class="banner__content slider__content text-center">
-                        <h2 class="title wow fadeInUp" data-wow-delay=".1s">{{ setting('banner_title', 'Nexarena') }}</h2>
-                        <h3 class="sub-title wow fadeInUp" data-wow-delay=".2s" style="margin-left:auto;margin-right:auto;">{{ setting('banner_subtitle', 'Trouvez et votez pour les meilleurs serveurs de jeux') }}</h3>
-                        <div class="banner__btn d-flex justify-content-center wow fadeInUp" data-wow-delay=".4s">
-                            <a href="{{ setting('banner_cta_url', '#categories') }}" class="tg-btn-5">
+                        <h2 class="title wow bounceInLeft" data-wow-delay=".2s">{{ setting('banner_title', 'Nexarena') }}</h2>
+                        <p class="wow bounceInLeft" data-wow-delay=".4s">{{ setting('banner_subtitle', 'Trouvez et votez pour les meilleurs serveurs de jeux') }}</p>
+                        <div class="banner__btn d-flex justify-content-center wow bounceInLeft" data-wow-delay=".6s">
+                            <a href="{{ setting('banner_cta_url', '#categories') }}" class="tg-btn-3 tg-svg mx-auto">
+                                <div class="svg-icon" id="svg-1" data-svg-icon="{{ asset('assets/img/icons/shape.svg') }}"></div>
                                 <span>{{ setting('banner_cta_text', 'Voir les jeux') }}</span>
-                            </a>
-                            <a href="{{ path('articles_list') }}" class="tg-btn-line">
-                                <span>Actualites</span>
                             </a>
                         </div>
                     </div>
@@ -37,31 +39,90 @@
         </div>
     </section>
 
-    {# ===== MAIN CONTENT AREA — Shared background, no dividers ===== #}
-    <div class="home-area-bg area-background" data-background="{{ asset('assets/img/bg/area_bg02.jpg') }}">
+    {# ============================================================
+       TRANSITION DIVIDER (result_bg.png — diagonal cut with green accent)
+       Same as index-2: match__result-area between banner and content
+       ============================================================ #}
+    <section class="match__result-area nx-divider-section">
+        <div class="match__result-bg" data-background="{{ asset('assets/img/bg/result_bg.png') }}"></div>
+    </section>
 
-        {# ===== TOP 5 SERVEURS ===== #}
-        <section class="home-section">
+    {# ============================================================
+       AREA BACKGROUND — wraps Featured + Premium (shared bg)
+       Same pattern as index-2: about + streamers wrapped together
+       ============================================================ #}
+    <div class="area-background" data-background="{{ asset('assets/img/bg/area_bg02.jpg') }}">
+
+        {# --- Admin Featured Servers --- #}
+        {% if adminFeaturedServers|length > 0 %}
+        <section class="nx-featured section-pt-160 section-pb-90">
+            <div class="container">
+                <div class="nx-admin-featured">
+                    <div class="nx-admin-featured__header">
+                        <div class="nx-admin-featured__badge">
+                            <i class="fas fa-star"></i>
+                            <span>Mis en avant</span>
+                        </div>
+                        <div class="nx-admin-featured__line"></div>
+                    </div>
+                    <div class="nx-admin-featured__grid">
+                        {% for server in adminFeaturedServers %}
+                            <a href="{{ path('server_show', {slug: server.slug}) }}" class="nx-af-card">
+                                <div class="nx-af-card__img">
+                                    {% if server.presentationImage %}
+                                        <img src="{{ asset('uploads/servers/presentations/' ~ server.presentationImage) }}" alt="{{ server.name }}">
+                                    {% else %}
+                                        <div class="nx-af-card__img--ph"><i class="fas fa-server"></i></div>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <div class="nx-af-card__name">{{ server.name }}</div>
+                                    <div class="nx-af-card__cat">
+                                        {% if server.gameCategory %}
+                                            {{ server.gameCategory.name }}
+                                        {% elseif server.category %}
+                                            {{ server.category.name }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% if server_has_twitch_live(server) %}
+                                    <span class="nx-twitch-live-tag nx-twitch-live-tag--sm">
+                                        <span class="nx-twitch-live-tag__dot"></span>
+                                        <i class="fab fa-twitch"></i>
+                                        <span>LIVE</span>
+                                    </span>
+                                {% endif %}
+                                <div class="nx-af-card__votes">{{ server.monthlyVotes }} <span>votes</span></div>
+                            </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
+        {# --- Selection Premium (top 5) --- #}
+        <section class="nx-premium section-pt-95 section-pb-120">
             <div class="container">
                 <div class="row justify-content-center">
                     <div class="col-xl-6 col-lg-7 col-md-10">
-                        <div class="section__title text-center mb-50">
-                            <span class="sub-title tg__animate-text">{{ setting('homepage_top_servers_subtitle', 'Les serveurs les plus votes ce mois-ci') }}</span>
-                            <h3 class="title">{{ setting('homepage_top_servers_title', 'TOP SERVEURS') }}</h3>
+                        <div class="section__title text-center mb-60">
+                            <span class="sub-title tg__animate-text">{{ setting('premium_selection_subtitle', 'Les serveurs qui se demarquent') }}</span>
+                            <h3 class="title">{{ setting('premium_selection_title', 'Selection premium') }}</h3>
                         </div>
                     </div>
                 </div>
 
-                {% set top5 = topServers|slice(0, 5) %}
-                {% if top5|length > 0 %}
-                    <div class="lb-grid">
-                        {% for server in top5 %}
-                            {% set rank = loop.index %}
-                            <a href="{{ path('server_show', {slug: server.slug}) }}" class="lb-card lb-card--{{ rank }}">
+                <div class="lb-grid">
+                    {% for pos in 1..5 %}
+                        {% set booking = premiumPositions[pos] ?? null %}
+                        {% if booking and booking.server %}
+                            {% set server = booking.server %}
+                            <a href="{{ path('server_show', {slug: server.slug}) }}" class="lb-card lb-card--{{ pos }}">
                                 {% if server.presentationImage %}
                                     <div class="lb-card__bg"><img src="{{ asset('uploads/servers/presentations/' ~ server.presentationImage) }}" alt=""></div>
                                 {% endif %}
-                                <div class="lb-card__rank">{{ rank }}</div>
+                                <div class="lb-card__rank">{{ pos }}</div>
                                 <div class="lb-card__img">
                                     {% if server.presentationImage %}
                                         <img src="{{ asset('uploads/servers/presentations/' ~ server.presentationImage) }}" alt="{{ server.name }}">
@@ -70,6 +131,13 @@
                                     {% endif %}
                                 </div>
                                 <div class="lb-card__name">{{ server.name }}</div>
+                                {% if server_has_twitch_live(server) %}
+                                    <span class="nx-twitch-live-tag nx-twitch-live-tag--sm">
+                                        <span class="nx-twitch-live-tag__dot"></span>
+                                        <i class="fab fa-twitch"></i>
+                                        <span>LIVE</span>
+                                    </span>
+                                {% endif %}
                                 <div class="lb-card__meta">
                                     {% if server.gameCategory %}
                                         <i class="fas fa-gamepad"></i> {{ server.gameCategory.name }}
@@ -80,158 +148,115 @@
                                 <div class="lb-card__votes">{{ server.monthlyVotes }}</div>
                                 <div class="lb-card__votes-label">votes</div>
                             </a>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <div class="text-center" style="padding:40px 0;">
-                        <i class="fas fa-server" style="font-size:48px;color:rgba(255,255,255,0.15);margin-bottom:15px;display:block;"></i>
-                        <p style="color:rgba(255,255,255,0.4);">Aucun serveur pour le moment. Soyez le premier a ajouter le votre !</p>
-                    </div>
-                {% endif %}
-            </div>
-        </section>
-
-        {# ===== SERVEURS MIS EN AVANT ===== #}
-        {% if featuredServers|length > 0 %}
-            <div class="home-separator">
-                    <div class="home-separator__line"></div>
-                    <div class="home-separator__center">
-                        <div class="home-separator__dot"></div>
-                        <div class="home-separator__dot"></div>
-                        <div class="home-separator__diamond"></div>
-                        <div class="home-separator__dot"></div>
-                        <div class="home-separator__dot"></div>
-                    </div>
-                    <div class="home-separator__line home-separator__line--right"></div>
-                </div>
-
-            <section class="home-section">
-                <div class="container">
-                    <div class="nx-spot">
-                        <div class="nx-spot__header">
-                            <div class="nx-spot__badge">
-                                <i class="fas fa-star"></i>
-                                <span>Mis en avant</span>
+                        {% else %}
+                            <div class="lb-card lb-card--{{ pos }} lb-card--empty">
+                                <div class="lb-card__rank">{{ pos }}</div>
+                                <div class="lb-card__img">
+                                    <div class="lb-card__img--placeholder"><i class="fas fa-plus" style="opacity:0.3;"></i></div>
+                                </div>
+                                <div class="lb-card__name" style="color:rgba(255,255,255,0.25);">Emplacement disponible</div>
+                                <div class="lb-card__meta">&nbsp;</div>
+                                <div class="lb-card__votes" style="color:rgba(255,255,255,0.1);">&mdash;</div>
+                                <div class="lb-card__votes-label">&nbsp;</div>
                             </div>
-                            <div class="nx-spot__line"></div>
-                        </div>
-                        <div class="nx-spot__grid">
-                            {% for server in featuredServers %}
-                                <a href="{{ path('server_show', {slug: server.slug}) }}" class="nx-spot__card">
-                                    <div class="nx-spot__idx">{{ loop.index }}</div>
-                                    <div class="nx-spot__img">
-                                        {% if server.presentationImage %}
-                                            <img src="{{ asset('uploads/servers/presentations/' ~ server.presentationImage) }}" alt="{{ server.name }}">
-                                        {% else %}
-                                            <div class="nx-spot__img--ph"><i class="fas fa-server"></i></div>
-                                        {% endif %}
-                                    </div>
-                                    <div class="nx-spot__info">
-                                        <div class="nx-spot__name">{{ server.name }}</div>
-                                        <div class="nx-spot__meta">
-                                            <span class="nx-spot__meta-star"><i class="fas fa-star"></i></span>
-                                            <span class="nx-spot__meta-cat">
-                                                <i class="fas fa-gamepad"></i>
-                                                {% if server.gameCategory %}
-                                                    {{ server.gameCategory.name }}
-                                                {% elseif server.category %}
-                                                    {{ server.category.name }}
-                                                {% endif %}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div class="nx-spot__votes">
-                                        <div class="nx-spot__votes-num">{{ server.monthlyVotes }}</div>
-                                        <div class="nx-spot__votes-lbl">votes</div>
-                                    </div>
-                                </a>
-                            {% endfor %}
-                        </div>
-                    </div>
-                </div>
-            </section>
-        {% endif %}
-
-        {# ===== CATEGORIES — single section ===== #}
-        <div class="home-separator">
-            <div class="home-separator__line"></div>
-            <div class="home-separator__center">
-                <div class="home-separator__dot"></div>
-                <div class="home-separator__dot"></div>
-                <div class="home-separator__diamond"></div>
-                <div class="home-separator__dot"></div>
-                <div class="home-separator__dot"></div>
-            </div>
-            <div class="home-separator__line home-separator__line--right"></div>
-        </div>
-
-        <section id="categories" class="home-section">
-            <div class="container">
-                <div class="row justify-content-center">
-                    <div class="col-xl-6 col-lg-7 col-md-10">
-                        <div class="section__title text-center mb-50">
-                            <span class="sub-title tg__animate-text">Explorez nos classements</span>
-                            <h3 class="title">Nos categories</h3>
-                        </div>
-                    </div>
-                </div>
-
-                {% for parentCategory in categories %}
-                    {% set activeGames = [] %}
-                    {% for game in parentCategory.gameCategories %}
-                        {% if game.isActive %}
-                            {% set activeGames = activeGames|merge([game]) %}
                         {% endif %}
                     {% endfor %}
-                    {% if activeGames|length > 0 %}
-                        <div class="cat-group" id="categories-{{ parentCategory.slug }}">
-                            <div class="cat-group__header">
-                                <div class="cat-group__badge">
-                                    <i class="{{ parentCategory.icon ?? 'fas fa-gamepad' }}"></i>
-                                    <span>{{ parentCategory.name }}</span>
-                                </div>
-                                <div class="cat-group__line"></div>
-                            </div>
-                            <div class="cat-tiles">
-                                {% for game in activeGames %}
-                                    {% set gcImg = game.image ? asset('uploads/categories/' ~ game.image) : (parentCategory.image ? asset('uploads/categories/' ~ parentCategory.image) : null) %}
-                                    {% set sCount = serverCounts[game.id] ?? 0 %}
-                                    <a href="{{ path('ranking_game_category', {slug: game.slug}) }}" class="cat-tile"
-                                       {% if game.color %}style="--tile-color:{{ game.color|hex_to_rgb }}"{% endif %}
-                                       data-tip-name="{{ game.name }}"
-                                       data-tip-desc="{{ game.description|default('') }}"
-                                       data-tip-count="{{ sCount }}"
-                                       data-tip-img="{{ gcImg ?? '' }}"
-                                       data-tip-color="{{ game.color ? game.color|hex_to_rgb : '69,248,130' }}">
-                                        {% if gcImg %}
-                                            <div class="cat-tile__bg"><img src="{{ gcImg }}" alt=""></div>
-                                        {% endif %}
-                                        <div class="cat-tile__icon">
-                                            {% if gcImg %}
-                                                <img src="{{ gcImg }}" alt="{{ game.name }}">
-                                            {% else %}
-                                                <i class="{{ parentCategory.icon ?? 'fas fa-gamepad' }}"></i>
-                                            {% endif %}
-                                        </div>
-                                        <div class="cat-tile__name">{{ game.name }}</div>
-                                        <div class="cat-tile__arrow"><i class="fas fa-chevron-right"></i></div>
-                                    </a>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    {% endif %}
-                {% endfor %}
+                </div>
             </div>
         </section>
 
     </div>
-    {# end home-area-bg #}
+    {# end area-background #}
 
-    {# ===== PARTENAIRES & SERVICES ===== #}
+    {# ============================================================
+       CATEGORIES (own background — match_bg.jpg)
+       Same pattern as index-2: upcoming-match section
+       ============================================================ #}
+    <section id="categories" class="nx-categories section-pt-120 section-pb-85" data-background="{{ asset('assets/img/bg/match_bg.jpg') }}">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-xl-6 col-lg-7 col-md-10">
+                    <div class="section__title text-center mb-60">
+                        <span class="sub-title tg__animate-text">Explorez nos classements</span>
+                        <h3 class="title">Nos categories</h3>
+                    </div>
+                </div>
+            </div>
+
+            {% for parentCategory in categories %}
+                {% set activeGames = [] %}
+                {% for game in parentCategory.gameCategories %}
+                    {% if game.isActive %}
+                        {% set activeGames = activeGames|merge([game]) %}
+                    {% endif %}
+                {% endfor %}
+                {% if activeGames|length > 0 %}
+                    {% set catType = 'gaming' %}
+                    {% set pIcon = parentCategory.icon|default('') %}
+                    {% if 'server' in pIcon or 'cloud' in pIcon or 'database' in pIcon or 'hdd' in pIcon %}
+                        {% set catType = 'hosting' %}
+                    {% elseif 'headset' in pIcon or 'microphone' in pIcon or 'volume' in pIcon or 'comment' in pIcon %}
+                        {% set catType = 'vocal' %}
+                    {% endif %}
+
+                    <div class="cat-group cat-group--{{ catType }}" id="categories-{{ parentCategory.slug }}">
+                        <div class="cat-group__header">
+                            <div class="cat-group__badge">
+                                <i class="{{ parentCategory.icon ?? 'fas fa-gamepad' }}"></i>
+                                <span>{{ parentCategory.name }}</span>
+                            </div>
+                            <div class="cat-group__line"></div>
+                        </div>
+                        <div class="swiper-container cat-swiper">
+                            <div class="swiper-wrapper">
+                                {% for game in activeGames %}
+                                    {% set gcImg = game.image ? asset('uploads/categories/' ~ game.image) : (parentCategory.image ? asset('uploads/categories/' ~ parentCategory.image) : null) %}
+                                    {% set sCount = serverCounts[game.id] ?? 0 %}
+                                    <div class="swiper-slide">
+                                        <div class="streamers__item"
+                                             data-tip-name="{{ game.name }}"
+                                             data-tip-desc="{{ game.description|default('') }}"
+                                             data-tip-count="{{ sCount }}"
+                                             data-tip-img="{{ gcImg ?? '' }}"
+                                             data-tip-color="{{ game.color ? game.color|hex_to_rgb : '69,248,130' }}">
+                                            <div class="streamers__thumb">
+                                                <a href="{{ path('ranking_game_category', {slug: game.slug}) }}">
+                                                    {% if gcImg %}
+                                                        <img src="{{ gcImg }}" alt="{{ game.name }}">
+                                                    {% else %}
+                                                        <div class="cat-slide-placeholder">
+                                                            <i class="{{ parentCategory.icon ?? 'fas fa-gamepad' }}"></i>
+                                                        </div>
+                                                    {% endif %}
+                                                </a>
+                                            </div>
+                                            <div class="streamers__content">
+                                                <h4 class="name"><a href="{{ path('ranking_game_category', {slug: game.slug}) }}">{{ game.name }}</a></h4>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="streamers__pagination cat-swiper-pagination">
+                            <div class="cat-swiper-prev streamers__pagination-arrow"><i class="fas fa-angle-left"></i></div>
+                            <div class="cat-swiper-dots streamers__pagination-dots"></div>
+                            <div class="cat-swiper-next streamers__pagination-arrow"><i class="fas fa-angle-right"></i></div>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </section>
+
+    {# ============================================================
+       PARTENAIRES & SERVICES (social-bg style)
+       Same pattern as index-2: social__area section
+       ============================================================ #}
     {% if partners|length > 0 or services|length > 0 %}
-        <section class="nx-partners-zone">
-            <div class="nx-pz-bottom-line"></div>
-            <div class="container">
+    <section class="nx-partners section-pt-120 section-pb-120">
+        <div class="container">
+            <div class="nx-partners-zone">
                 <div class="nx-pz-header">
                     <div class="nx-pz-header__tag"><i class="fas fa-handshake"></i> Ecosysteme</div>
                     <h3 class="nx-pz-header__title">Nos partenaires & services</h3>
@@ -288,7 +313,8 @@
                     {% endif %}
                 </div>
             </div>
-        </section>
+        </div>
+    </section>
     {% endif %}
 
     {# ===== FLOATING TOOLTIP ===== #}
@@ -311,6 +337,49 @@
 {{ parent() }}
 <script>
 (function(){
+    /* ===== Banner Slideshow ===== */
+    var bannerSlides = document.querySelectorAll('.banner-slide');
+    if (bannerSlides.length > 1) {
+        var currentSlide = 0;
+        setInterval(function() {
+            bannerSlides[currentSlide].classList.remove('active');
+            currentSlide = (currentSlide + 1) % bannerSlides.length;
+            bannerSlides[currentSlide].classList.add('active');
+        }, 5000);
+    }
+
+    /* ===== Category Swiper Carousels ===== */
+    document.querySelectorAll('.cat-swiper').forEach(function(swiperEl) {
+        var group = swiperEl.closest('.cat-group');
+        if (!group) return;
+        var slideCount = swiperEl.querySelectorAll('.swiper-slide').length;
+
+        new Swiper(swiperEl, {
+            loop: slideCount > 5,
+            slidesPerView: 5,
+            spaceBetween: 16,
+            observer: true,
+            observeParents: true,
+            breakpoints: {
+                1500: { slidesPerView: 5 },
+                1200: { slidesPerView: 4 },
+                992:  { slidesPerView: 4 },
+                768:  { slidesPerView: 3 },
+                576:  { slidesPerView: 2 },
+                0:    { slidesPerView: 1.5, centeredSlides: true, centeredSlidesBounds: true },
+            },
+            pagination: {
+                el: group.querySelector('.cat-swiper-dots'),
+                clickable: true,
+            },
+            navigation: {
+                nextEl: group.querySelector('.cat-swiper-next'),
+                prevEl: group.querySelector('.cat-swiper-prev'),
+            },
+        });
+    });
+
+    /* ===== Floating tooltip ===== */
     var tip = document.getElementById('catFloatTip');
     if (!tip) return;
     var tipImg = document.getElementById('tipImg');
@@ -320,7 +389,7 @@
     var tipLabel = document.getElementById('tipLabel');
     var hideTimer;
 
-    document.querySelectorAll('.cat-tile[data-tip-name]').forEach(function(tile){
+    document.querySelectorAll('.cat-swiper .streamers__item[data-tip-name]').forEach(function(tile){
         tile.addEventListener('mouseenter', function(){
             clearTimeout(hideTimer);
             var name = tile.dataset.tipName;

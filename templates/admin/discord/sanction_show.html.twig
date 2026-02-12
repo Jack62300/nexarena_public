@@ -1,0 +1,107 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block page_title %}Sanction #{{ sanction.id }}{% endblock %}
+{% block title %}Nexarena Admin - Sanction #{{ sanction.id }}{% endblock %}
+
+{% block admin_body %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 style="margin:0;font-weight:600;">
+        <i class="fas fa-gavel" style="color:var(--accent);margin-right:6px;"></i>
+        Sanction #{{ sanction.id }}
+    </h4>
+    <a href="{{ path('admin_discord_sanctions') }}" class="btn-admin btn-admin--outline btn-admin--sm"><i class="fas fa-arrow-left"></i> Retour</a>
+</div>
+
+{# Info grid #}
+<div class="dc-info-grid">
+    <div class="dc-info-item">
+        <div class="dc-info-item__label">Type</div>
+        <div class="dc-info-item__value">
+            {% if sanction.type == 'warn' %}
+                <span class="dc-ticket-status" style="background:rgba(246,194,62,0.12);color:#f6c23e;">Warn</span>
+            {% elseif sanction.type == 'mute' %}
+                <span class="dc-ticket-status" style="background:rgba(54,185,204,0.12);color:#36b9cc;">Mute</span>
+            {% elseif sanction.type == 'kick' %}
+                <span class="dc-ticket-status" style="background:rgba(255,165,0,0.12);color:#ffa500;">Kick</span>
+            {% elseif sanction.type == 'ban' %}
+                <span class="dc-ticket-status" style="background:rgba(231,74,59,0.12);color:var(--danger);">Ban</span>
+            {% else %}
+                <span class="dc-ticket-status" style="background:rgba(255,255,255,0.06);color:var(--text-secondary);">{{ sanction.type }}</span>
+            {% endif %}
+        </div>
+    </div>
+    <div class="dc-info-item">
+        <div class="dc-info-item__label">Utilisateur</div>
+        <div class="dc-info-item__value">{{ sanction.discordUsername }}</div>
+    </div>
+    <div class="dc-info-item">
+        <div class="dc-info-item__label">Discord ID</div>
+        <div class="dc-info-item__value" style="font-family:monospace;font-size:13px;">{{ sanction.discordId }}</div>
+    </div>
+    <div class="dc-info-item">
+        <div class="dc-info-item__label">Raison</div>
+        <div class="dc-info-item__value" style="font-size:13px;">{{ sanction.reason }}</div>
+    </div>
+    <div class="dc-info-item">
+        <div class="dc-info-item__label">Emis par</div>
+        <div class="dc-info-item__value">{{ sanction.issuedBy }}</div>
+    </div>
+    <div class="dc-info-item">
+        <div class="dc-info-item__label">Date</div>
+        <div class="dc-info-item__value">{{ sanction.createdAt|date('d/m/Y H:i') }}</div>
+    </div>
+    <div class="dc-info-item">
+        <div class="dc-info-item__label">Expiration</div>
+        <div class="dc-info-item__value">{{ sanction.expiresAt ? sanction.expiresAt|date('d/m/Y H:i') : 'Permanente' }}</div>
+    </div>
+    <div class="dc-info-item">
+        <div class="dc-info-item__label">Statut</div>
+        <div class="dc-info-item__value">
+            {% if sanction.isRevoked %}
+                <span class="dc-ticket-status dc-ticket-status--closed">Revoquee</span>
+            {% else %}
+                <span class="dc-ticket-status dc-ticket-status--open">Active</span>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{# Linked site user #}
+{% if sanction.siteUser %}
+<div class="admin-table mb-3">
+    <div style="padding:16px 22px;display:flex;align-items:center;gap:12px;">
+        <i class="fas fa-user" style="color:var(--accent);font-size:14px;"></i>
+        <span style="font-size:13px;color:var(--text-primary);">
+            Utilisateur site lie :
+            <a href="{{ path('admin_users_edit', {id: sanction.siteUser.id}) }}" style="color:var(--accent);text-decoration:none;font-weight:600;">
+                {{ sanction.siteUser.username }}
+                <i class="fas fa-external-link-alt" style="font-size:10px;margin-left:4px;"></i>
+            </a>
+        </span>
+    </div>
+</div>
+{% endif %}
+
+{# Revoke info or revoke action #}
+{% if sanction.isRevoked %}
+<div class="admin-table">
+    <div style="padding:16px 22px;font-size:13px;color:var(--text-secondary);background:rgba(255,255,255,0.02);display:flex;align-items:center;gap:10px;">
+        <i class="fas fa-undo" style="color:var(--text-secondary);"></i>
+        Revoquee par <strong style="color:var(--text-primary);margin:0 4px;">{{ sanction.revokedBy }}</strong>
+        le {{ sanction.revokedAt|date('d/m/Y H:i') }}
+    </div>
+</div>
+{% else %}
+<div style="margin-top:20px;">
+    <form action="{{ path('admin_discord_sanction_revoke', {id: sanction.id}) }}" method="post" onsubmit="return confirm('Revoquer cette sanction ?')">
+        <input type="hidden" name="_token" value="{{ csrf_token('sanction_revoke_' ~ sanction.id) }}">
+        <button type="submit" class="btn-admin btn-admin--outline" style="border-color:var(--danger);color:var(--danger);">
+            <i class="fas fa-undo"></i> Revoquer la sanction
+        </button>
+    </form>
+</div>
+{% endif %}
+
+<link rel="stylesheet" href="{{ asset('assets/css/admin/dashboard.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/css/admin/discord.css') }}">
+{% endblock %}

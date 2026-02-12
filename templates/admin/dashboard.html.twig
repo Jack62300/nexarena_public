@@ -5,151 +5,224 @@
 
 {% block admin_body %}
 
-    {# ===== STATS CARDS ===== #}
-    <div class="row g-4 mb-4">
+    {# ===== KPI CARDS ===== #}
+    <div class="row g-3 mb-4">
         {% for key, stat in stats %}
             <div class="col-xl-2 col-lg-4 col-md-6">
-                <div class="stat-card">
-                    <div class="stat-card__header">
-                        <div>
-                            <div class="stat-card__label">{{ stat.label }}</div>
-                            <div class="stat-card__value">{{ stat.value }}</div>
-                        </div>
-                        <div class="stat-card__icon" style="background: {{ stat.color }};">
-                            <i class="{{ stat.icon }}"></i>
-                        </div>
+                <div class="kpi-card">
+                    <div class="kpi-card__icon" style="background:{{ stat.color }}22;color:{{ stat.color }};">
+                        <i class="{{ stat.icon }}"></i>
+                    </div>
+                    <div class="kpi-card__data">
+                        <div class="kpi-card__value">{{ stat.value }}</div>
+                        <div class="kpi-card__label">{{ stat.label }}</div>
                     </div>
                 </div>
             </div>
         {% endfor %}
     </div>
 
-    {# ===== CHARTS ===== #}
-    <div class="row g-4 mb-4">
-        <div class="col-xl-4">
-            <div class="stat-card chart-container">
-                <h4><i class="fas fa-chart-pie" style="margin-right:8px;color:var(--accent);"></i>Serveurs par catégorie</h4>
-                <canvas id="chartServersByCategory"></canvas>
+    {# ===== REVENUE CHART + CATEGORY DOUGHNUT ===== #}
+    <div class="row g-3 mb-4">
+        <div class="col-xl-8">
+            <div class="dash-card">
+                <div class="dash-card__head">
+                    <h4><i class="fas fa-chart-area"></i> Revenus PayPal (12 mois)</h4>
+                </div>
+                <div class="dash-card__body dash-card__body--chart">
+                    <canvas id="chartRevenue"></canvas>
+                </div>
             </div>
         </div>
         <div class="col-xl-4">
-            <div class="stat-card chart-container">
-                <h4><i class="fas fa-chart-line" style="margin-right:8px;color:var(--accent);"></i>Inscriptions (12 mois)</h4>
-                <canvas id="chartUsersByMonth"></canvas>
-            </div>
-        </div>
-        <div class="col-xl-4">
-            <div class="stat-card chart-container">
-                <h4><i class="fas fa-chart-bar" style="margin-right:8px;color:var(--accent);"></i>Votes (12 mois)</h4>
-                <canvas id="chartVotesByMonth"></canvas>
+            <div class="dash-card">
+                <div class="dash-card__head">
+                    <h4><i class="fas fa-chart-pie"></i> Serveurs par categorie</h4>
+                </div>
+                <div class="dash-card__body dash-card__body--chart">
+                    <canvas id="chartCategory"></canvas>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="row g-4">
-        {# ===== DERNIERS UTILISATEURS ===== #}
-        <div class="col-xl-8">
-            <div class="admin-table">
-                <div class="admin-table__header">
-                    <h3>Derniers utilisateurs inscrits</h3>
+    {# ===== INSCRIPTIONS + VOTES CHARTS ===== #}
+    <div class="row g-3 mb-4">
+        <div class="col-xl-6">
+            <div class="dash-card">
+                <div class="dash-card__head">
+                    <h4><i class="fas fa-chart-line"></i> Inscriptions (12 mois)</h4>
                 </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Utilisateur</th>
-                            <th>Email</th>
-                            <th>Role</th>
-                            <th>Inscription</th>
-                            <th>Methode</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for user in recent_users %}
+                <div class="dash-card__body dash-card__body--chart-sm">
+                    <canvas id="chartUsers"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-6">
+            <div class="dash-card">
+                <div class="dash-card__head">
+                    <h4><i class="fas fa-chart-bar"></i> Votes (12 mois)</h4>
+                </div>
+                <div class="dash-card__body dash-card__body--chart-sm">
+                    <canvas id="chartVotes"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ===== DERNIERS ARTICLES ===== #}
+    <div class="row g-3 mb-4">
+        <div class="col-12">
+            <div class="dash-card">
+                <div class="dash-card__head">
+                    <h4><i class="fas fa-newspaper"></i> Derniers articles</h4>
+                    <a href="{{ path('admin_articles_list') }}" class="dash-card__link">Voir tout <i class="fas fa-arrow-right"></i></a>
+                </div>
+                <div class="dash-card__body dash-card__body--flush">
+                    <table class="dash-table">
+                        <thead>
                             <tr>
-                                <td>
-                                    <div style="display:flex;align-items:center;gap:10px;">
-                                        {% set av = user_avatar(user) %}
-                                        {% if av %}
-                                            <img src="{{ av starts with 'http' ? av : asset(av) }}" alt="" style="width:30px;height:30px;border-radius:50%;object-fit:cover;">
+                                <th>Image</th>
+                                <th>Titre</th>
+                                <th>Statut</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for article in recent_articles %}
+                                <tr>
+                                    <td>
+                                        {% if article.image %}
+                                            <img src="{{ asset('uploads/articles/' ~ article.image) }}" alt="" style="width:48px;height:32px;object-fit:cover;border-radius:4px;">
                                         {% else %}
-                                            <div style="width:30px;height:30px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;">
-                                                {{ user.username|slice(0, 1)|upper }}
+                                            <div style="width:48px;height:32px;border-radius:4px;background:rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:center;">
+                                                <i class="fas fa-image" style="color:var(--text-secondary);font-size:11px;"></i>
                                             </div>
                                         {% endif %}
-                                        {{ user.username }}
-                                    </div>
-                                </td>
-                                <td style="color:var(--text-secondary);">{{ user.email }}</td>
-                                <td>{{ role_badge(user.roles)|raw }}</td>
-                                <td style="color:var(--text-secondary);">{{ user.createdAt|date('d/m/Y H:i') }}</td>
-                                <td>
-                                    {% if user.googleId %}
-                                        <i class="fab fa-google" style="color:#ea4335;" title="Google"></i>
-                                    {% endif %}
-                                    {% if user.discordId %}
-                                        <i class="fab fa-discord" style="color:#5865f2;" title="Discord"></i>
-                                    {% endif %}
-                                    {% if user.twitchId %}
-                                        <i class="fab fa-twitch" style="color:#9146ff;" title="Twitch"></i>
-                                    {% endif %}
-                                    {% if user.steamId %}
-                                        <i class="fab fa-steam" style="color:#c7d5e0;" title="Steam"></i>
-                                    {% endif %}
-                                    {% if user.password %}
-                                        <i class="fas fa-envelope" style="color:var(--text-secondary);" title="Email/Password"></i>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                        {% else %}
+                                    </td>
+                                    <td>
+                                        <span class="dash-user__name">{{ article.title }}</span>
+                                    </td>
+                                    <td>
+                                        {% if article.isPublished %}
+                                            <span class="dash-badge dash-badge--success">Publie</span>
+                                        {% else %}
+                                            <span class="dash-badge dash-badge--muted">Brouillon</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="dash-table__muted">{{ article.createdAt|date('d/m/Y H:i') }}</td>
+                                    <td>
+                                        <a href="{{ path('admin_articles_edit', {id: article.id}) }}" class="dash-card__link" style="font-size:13px;">
+                                            <i class="fas fa-edit"></i> Modifier
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr><td colspan="5" class="dash-table__empty">Aucun article pour le moment.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ===== RECENT USERS + RECENT TRANSACTIONS ===== #}
+    <div class="row g-3">
+        <div class="col-xl-7">
+            <div class="dash-card">
+                <div class="dash-card__head">
+                    <h4><i class="fas fa-users"></i> Derniers inscrits</h4>
+                    <a href="{{ path('admin_users_list') }}" class="dash-card__link">Voir tout <i class="fas fa-arrow-right"></i></a>
+                </div>
+                <div class="dash-card__body dash-card__body--flush">
+                    <table class="dash-table">
+                        <thead>
                             <tr>
-                                <td colspan="5" style="text-align:center;color:var(--text-secondary);padding:30px;">
-                                    Aucun utilisateur inscrit pour le moment.
-                                </td>
+                                <th>Utilisateur</th>
+                                <th>Role</th>
+                                <th>Date</th>
+                                <th>Via</th>
                             </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {% for user in recent_users %}
+                                <tr>
+                                    <td>
+                                        <div class="dash-user">
+                                            {% set av = user_avatar(user) %}
+                                            {% if av %}
+                                                <img src="{{ av starts with 'http' ? av : asset(av) }}" alt="" class="dash-user__avatar">
+                                            {% else %}
+                                                <div class="dash-user__avatar dash-user__avatar--placeholder">{{ user.username|slice(0, 1)|upper }}</div>
+                                            {% endif %}
+                                            <div>
+                                                <div class="dash-user__name">{{ user.username }}</div>
+                                                <div class="dash-user__email">{{ user.email }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ role_badge(user.roles)|raw }}</td>
+                                    <td class="dash-table__muted">{{ user.createdAt|date('d/m/Y') }}</td>
+                                    <td>
+                                        {% if user.googleId %}<i class="fab fa-google" style="color:#ea4335;" title="Google"></i> {% endif %}
+                                        {% if user.discordId %}<i class="fab fa-discord" style="color:#5865f2;" title="Discord"></i> {% endif %}
+                                        {% if user.twitchId %}<i class="fab fa-twitch" style="color:#9146ff;" title="Twitch"></i> {% endif %}
+                                        {% if user.steamId %}<i class="fab fa-steam" style="color:#c7d5e0;" title="Steam"></i> {% endif %}
+                                        {% if not user.googleId and not user.discordId and not user.twitchId and not user.steamId %}<i class="fas fa-envelope" style="color:var(--text-secondary);" title="Email"></i>{% endif %}
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr><td colspan="4" class="dash-table__empty">Aucun utilisateur.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
-        {# ===== DERNIERS ARTICLES ===== #}
-        <div class="col-xl-4">
-            <div class="admin-table">
-                <div class="admin-table__header">
-                    <h3>Derniers articles</h3>
+        <div class="col-xl-5">
+            <div class="dash-card">
+                <div class="dash-card__head">
+                    <h4><i class="fab fa-paypal"></i> Dernieres ventes</h4>
+                    <a href="{{ path('admin_transactions_list') }}" class="dash-card__link">Voir tout <i class="fas fa-arrow-right"></i></a>
                 </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Titre</th>
-                            <th>Statut</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for article in recent_articles %}
+                <div class="dash-card__body dash-card__body--flush">
+                    <table class="dash-table">
+                        <thead>
                             <tr>
-                                <td>{{ article.title }}</td>
-                                <td>
-                                    {% if article.isPublished %}
-                                        <span class="status-dot status-dot--active"></span>Publie
-                                    {% else %}
-                                        <span class="status-dot status-dot--inactive"></span>Brouillon
-                                    {% endif %}
-                                </td>
+                                <th>Utilisateur</th>
+                                <th>Plan</th>
+                                <th>Montant</th>
+                                <th>Date</th>
                             </tr>
-                        {% else %}
-                            <tr>
-                                <td colspan="2" style="text-align:center;color:var(--text-secondary);padding:30px;">
-                                    Aucun article pour le moment.
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {% for tx in recent_transactions %}
+                                <tr>
+                                    <td>
+                                        <div class="dash-user">
+                                            {% set av = user_avatar(tx.user) %}
+                                            {% if av %}
+                                                <img src="{{ av starts with 'http' ? av : asset(av) }}" alt="" class="dash-user__avatar">
+                                            {% else %}
+                                                <div class="dash-user__avatar dash-user__avatar--placeholder">{{ tx.user.username|slice(0, 1)|upper }}</div>
+                                            {% endif %}
+                                            <span class="dash-user__name">{{ tx.user.username }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="dash-table__muted">{{ tx.plan ? tx.plan.name : '-' }}</td>
+                                    <td><span class="dash-amount">{{ tx.amount }} {{ tx.currency }}</span></td>
+                                    <td class="dash-table__muted">{{ tx.createdAt|date('d/m H:i') }}</td>
+                                </tr>
+                            {% else %}
+                                <tr><td colspan="4" class="dash-table__empty">Aucune transaction.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
-
-            {# ===== HIERARCHIE DES ROLES ===== #}
-
         </div>
     </div>
 
@@ -157,111 +230,104 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const textSecondary = getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim() || '#8a8d93';
-            const gridColor = 'rgba(255,255,255,0.06)';
-
-            {# ===== DOUGHNUT: Serveurs par categorie ===== #}
-            const doughnutColors = [
-                '#45f882', '#4e73df', '#e74a3b', '#f6c23e', '#1cc88a',
-                '#36b9cc', '#5a5c69', '#fd7e14', '#6f42c1', '#e83e8c',
-                '#20c997', '#17a2b8', '#6610f2', '#ffc107', '#28a745'
-            ];
-
-            new Chart(document.getElementById('chartServersByCategory'), {
-                type: 'doughnut',
-                data: {
-                    labels: {{ chart_servers_by_category|map(i => i.name)|json_encode|raw }},
-                    datasets: [{
-                        data: {{ chart_servers_by_category|map(i => i.count)|json_encode|raw }},
-                        backgroundColor: doughnutColors.slice(0, {{ chart_servers_by_category|length }}),
-                        borderWidth: 0,
-                        hoverOffset: 6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: { color: textSecondary, padding: 12, font: { size: 12 } }
-                        }
-                    }
+    document.addEventListener('DOMContentLoaded', function() {
+        var ts = getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim() || '#8a8d93';
+        var gc = 'rgba(255,255,255,0.04)';
+        var baseOpts = function(showLegend) {
+            return {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: !!showLegend, position: 'bottom', labels: { color: ts, padding: 10, font: { size: 11 }, usePointStyle: true, pointStyle: 'circle' } } },
+                scales: {
+                    x: { ticks: { color: ts, font: { size: 10 }, maxRotation: 0 }, grid: { color: gc } },
+                    y: { beginAtZero: true, ticks: { color: ts, font: { size: 10 }, precision: 0 }, grid: { color: gc } }
                 }
-            });
+            };
+        };
 
-            {# ===== LINE: Inscriptions par mois ===== #}
-            new Chart(document.getElementById('chartUsersByMonth'), {
-                type: 'line',
-                data: {
-                    labels: {{ chart_users_by_month|map(i => i.month)|json_encode|raw }},
-                    datasets: [{
-                        label: 'Inscriptions',
-                        data: {{ chart_users_by_month|map(i => i.count)|json_encode|raw }},
-                        borderColor: '#45f882',
-                        backgroundColor: 'rgba(69, 248, 130, 0.1)',
-                        fill: true,
-                        tension: 0.3,
-                        pointBackgroundColor: '#45f882',
-                        pointRadius: 4,
-                        pointHoverRadius: 6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        x: {
-                            ticks: { color: textSecondary, font: { size: 11 } },
-                            grid: { color: gridColor }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            ticks: { color: textSecondary, font: { size: 11 }, precision: 0 },
-                            grid: { color: gridColor }
-                        }
-                    }
-                }
-            });
-
-            {# ===== BAR: Votes par mois ===== #}
-            new Chart(document.getElementById('chartVotesByMonth'), {
-                type: 'bar',
-                data: {
-                    labels: {{ chart_votes_by_month|map(i => i.month)|json_encode|raw }},
-                    datasets: [{
-                        label: 'Votes',
-                        data: {{ chart_votes_by_month|map(i => i.count)|json_encode|raw }},
-                        backgroundColor: 'rgba(69, 248, 130, 0.6)',
-                        hoverBackgroundColor: 'rgba(69, 248, 130, 0.85)',
-                        borderRadius: 4,
-                        borderSkipped: false
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        x: {
-                            ticks: { color: textSecondary, font: { size: 11 } },
-                            grid: { color: gridColor }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            ticks: { color: textSecondary, font: { size: 11 }, precision: 0 },
-                            grid: { color: gridColor }
-                        }
-                    }
-                }
-            });
+        {# ===== REVENUE AREA ===== #}
+        var revData = {{ chart_revenue_by_month|json_encode|raw }};
+        new Chart(document.getElementById('chartRevenue'), {
+            type: 'line',
+            data: {
+                labels: revData.map(function(r) { return r.month; }),
+                datasets: [{
+                    label: 'Revenus (€)',
+                    data: revData.map(function(r) { return r.total; }),
+                    borderColor: '#f6c23e',
+                    backgroundColor: 'rgba(246,194,62,0.08)',
+                    fill: true,
+                    tension: 0.35,
+                    pointBackgroundColor: '#f6c23e',
+                    pointRadius: 4,
+                    pointHoverRadius: 7,
+                    borderWidth: 2.5
+                }]
+            },
+            options: baseOpts(false)
         });
+
+        {# ===== CATEGORY DOUGHNUT ===== #}
+        var catColors = ['#45f882','#4e73df','#e74a3b','#f6c23e','#1cc88a','#36b9cc','#fd7e14','#6f42c1','#e83e8c','#20c997','#17a2b8','#6610f2'];
+        new Chart(document.getElementById('chartCategory'), {
+            type: 'doughnut',
+            data: {
+                labels: {{ chart_servers_by_category|map(i => i.name)|json_encode|raw }},
+                datasets: [{
+                    data: {{ chart_servers_by_category|map(i => i.count)|json_encode|raw }},
+                    backgroundColor: catColors.slice(0, {{ chart_servers_by_category|length }}),
+                    borderWidth: 0,
+                    hoverOffset: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '65%',
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: ts, padding: 10, font: { size: 11 }, usePointStyle: true, pointStyle: 'circle' } }
+                }
+            }
+        });
+
+        {# ===== USERS LINE ===== #}
+        new Chart(document.getElementById('chartUsers'), {
+            type: 'line',
+            data: {
+                labels: {{ chart_users_by_month|map(i => i.month)|json_encode|raw }},
+                datasets: [{
+                    label: 'Inscriptions',
+                    data: {{ chart_users_by_month|map(i => i.count)|json_encode|raw }},
+                    borderColor: '#45f882',
+                    backgroundColor: 'rgba(69,248,130,0.08)',
+                    fill: true,
+                    tension: 0.35,
+                    pointBackgroundColor: '#45f882',
+                    pointRadius: 3,
+                    pointHoverRadius: 6,
+                    borderWidth: 2
+                }]
+            },
+            options: baseOpts(false)
+        });
+
+        {# ===== VOTES BAR ===== #}
+        new Chart(document.getElementById('chartVotes'), {
+            type: 'bar',
+            data: {
+                labels: {{ chart_votes_by_month|map(i => i.month)|json_encode|raw }},
+                datasets: [{
+                    label: 'Votes',
+                    data: {{ chart_votes_by_month|map(i => i.count)|json_encode|raw }},
+                    backgroundColor: 'rgba(69,248,130,0.5)',
+                    hoverBackgroundColor: 'rgba(69,248,130,0.8)',
+                    borderRadius: 4,
+                    borderSkipped: false
+                }]
+            },
+            options: baseOpts(false)
+        });
+    });
     </script>
 
 {% endblock %}

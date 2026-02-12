@@ -31,6 +31,9 @@ class SettingsController extends AbstractController
         'webhooks' => 'Webhooks',
         'plugins' => 'Plugins',
         'securite' => 'Securite',
+        'paiement' => 'Paiement',
+        'premium' => 'Premium',
+        'discord' => 'Discord',
         'legal' => 'Pages legales',
     ];
 
@@ -49,6 +52,9 @@ class SettingsController extends AbstractController
         'webhooks' => 'fas fa-plug',
         'plugins' => 'fas fa-puzzle-piece',
         'securite' => 'fas fa-shield-alt',
+        'paiement' => 'fab fa-paypal',
+        'premium' => 'fas fa-crown',
+        'discord' => 'fab fa-discord',
         'legal' => 'fas fa-gavel',
     ];
 
@@ -63,12 +69,104 @@ class SettingsController extends AbstractController
     {
         $activeTab = $request->query->get('tab', 'general');
 
+        $bannerSlides = [];
+        if ($activeTab === 'banner') {
+            $setting = $this->settingRepo->findOneBy(['key' => 'banner_slides']);
+            if ($setting) {
+                $bannerSlides = json_decode($setting->getValue() ?: '[]', true) ?: [];
+            }
+        }
+
         return $this->render('admin/settings/index.html.twig', [
             'settings_by_category' => $this->settingRepo->findAllGroupedByCategory(),
             'category_labels' => self::CATEGORY_LABELS,
             'category_icons' => self::CATEGORY_ICONS,
             'active_tab' => $activeTab,
+            'banner_slides' => $bannerSlides,
         ]);
+    }
+
+    #[Route('/banner-slides/upload', name: 'banner_slide_upload', methods: ['POST'])]
+    #[IsGranted('settings.edit')]
+    public function bannerSlideUpload(Request $request): Response
+    {
+        if (!$this->isCsrfTokenValid('banner_slide', $request->request->get('_token'))) {
+            $this->addFlash('error', 'Token CSRF invalide.');
+            return $this->redirectToRoute('admin_settings_index', ['tab' => 'banner']);
+        }
+
+        $file = $request->files->get('slide_image');
+        if (!$file || !$file->isValid()) {
+            $this->addFlash('error', 'Fichier invalide.');
+            return $this->redirectToRoute('admin_settings_index', ['tab' => 'banner']);
+        }
+
+        $allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+        if (!in_array($file->getMimeType(), $allowed, true)) {
+            $this->addFlash('error', 'Format d\'image non supporte (JPG, PNG, WebP, GIF).');
+            return $this->redirectToRoute('admin_settings_index', ['tab' => 'banner']);
+        }
+
+        $filename = uniqid() . '.' . $file->guessExtension();
+        $uploadDir = $this->getParameter('kernel.project_dir') . '/public/uploads/banners';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+        $file->move($uploadDir, $filename);
+
+        $setting = $this->getOrCreateBannerSlidesSetting();
+        $slides = json_decode($setting->getValue() ?: '[]', true) ?: [];
+        $slides[] = $filename;
+        $setting->setValue(json_encode($slides));
+        $this->em->flush();
+
+        $this->addFlash('success', 'Slide ajoutee.');
+        return $this->redirectToRoute('admin_settings_index', ['tab' => 'banner']);
+    }
+
+    #[Route('/banner-slides/delete', name: 'banner_slide_delete', methods: ['POST'])]
+    #[IsGranted('settings.edit')]
+    public function bannerSlideDelete(Request $request): Response
+    {
+        if (!$this->isCsrfTokenValid('banner_slide_delete', $request->request->get('_token'))) {
+            $this->addFlash('error', 'Token CSRF invalide.');
+            return $this->redirectToRoute('admin_settings_index', ['tab' => 'banner']);
+        }
+
+        $filename = $request->request->get('filename');
+        if (!$filename) {
+            return $this->redirectToRoute('admin_settings_index', ['tab' => 'banner']);
+        }
+
+        $path = $this->getParameter('kernel.project_dir') . '/public/uploads/banners/' . basename($filename);
+        if (file_exists($path)) {
+            unlink($path);
+        }
+
+        $setting = $this->getOrCreateBannerSlidesSetting();
+        $slides = json_decode($setting->getValue() ?: '[]', true) ?: [];
+        $slides = array_values(array_filter($slides, fn($s) => $s !== $filename));
+        $setting->setValue(json_encode($slides));
+        $this->em->flush();
+
+        $this->addFlash('success', 'Slide supprimee.');
+        return $this->redirectToRoute('admin_settings_index', ['tab' => 'banner']);
+    }
+
+    private function getOrCreateBannerSlidesSetting(): Setting
+    {
+        $setting = $this->settingRepo->findOneBy(['key' => 'banner_slides']);
+        if (!$setting) {
+            $setting = new Setting();
+            $setting->setKey('banner_slides');
+            $setting->setValue('[]');
+            $setting->setType(Setting::TYPE_TEXT);
+            $setting->setLabel('Slides de la banniere');
+            $setting->setCategory('banner');
+            $setting->setPosition(3);
+            $this->em->persist($setting);
+        }
+        return $setting;
     }
 
     #[Route('/save', name: 'save', methods: ['POST'])]
@@ -85,6 +183,11 @@ class SettingsController extends AbstractController
 
         foreach ($settings as $setting) {
             $key = $setting->getKey();
+
+            // Skip banner_slides — managed by dedicated routes
+            if ($key === 'banner_slides') {
+                continue;
+            }
 
             if ($setting->getType() === Setting::TYPE_IMAGE) {
                 /** @var UploadedFile|null $file */

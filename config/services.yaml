@@ -47,7 +47,23 @@ services:
         arguments:
             $projectDir: '%kernel.project_dir%'
 
+    App\Controller\Admin\PremiumPlanController:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+
+    App\Service\PayPalService:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+
     App\Service\RecruitmentService:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+
+    App\Controller\Admin\DiscordController:
+        arguments:
+            $botService: '@App\Service\DiscordBotService'
+
+    App\Command\SendScheduledAnnouncementsCommand:
         arguments:
             $projectDir: '%kernel.project_dir%'
 

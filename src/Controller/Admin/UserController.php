@@ -2,9 +2,11 @@
 
 namespace App\Controller\Admin;
 
+use App\Entity\Transaction;
 use App\Entity\User;
 use App\Repository\RoleRepository;
 use App\Repository\UserRepository;
+use App\Service\WebhookService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -19,6 +21,7 @@ class UserController extends AbstractController
     public function __construct(
         private EntityManagerInterface $em,
         private RoleRepository $roleRepo,
+        private WebhookService $webhookService,
     ) {
     }
 
@@ -84,6 +87,72 @@ class UserController extends AbstractController
             'user' => $user,
             'assignable_roles' => $assignableRoles,
         ]);
+    }
+
+    #[Route('/{id}/credit', name: 'credit', methods: ['POST'])]
+    #[IsGranted('ROLE_RESPONSABLE')]
+    public function credit(User $user, Request $request): Response
+    {
+        if (!$this->isCsrfTokenValid('user_credit_' . $user->getId(), $request->request->get('_token'))) {
+            $this->addFlash('error', 'Token CSRF invalide.');
+            return $this->redirectToRoute('admin_users_edit', ['id' => $user->getId()]);
+        }
+
+        $nexbits = $request->request->getInt('nexbits', 0);
+        $nexboost = $request->request->getInt('nexboost', 0);
+        $reason = trim($request->request->get('credit_reason', ''));
+
+        if ($nexbits === 0 && $nexboost === 0) {
+            $this->addFlash('error', 'Veuillez entrer un montant.');
+            return $this->redirectToRoute('admin_users_edit', ['id' => $user->getId()]);
+        }
+
+        // Apply credits (can be negative for debit)
+        if ($nexbits !== 0) {
+            $newBalance = $user->getTokenBalance() + $nexbits;
+            $user->setTokenBalance(max(0, $newBalance));
+        }
+
+        if ($nexboost !== 0) {
+            $newBalance = $user->getBoostTokenBalance() + $nexboost;
+            $user->setBoostTokenBalance(max(0, $newBalance));
+        }
+
+        // Log transaction
+        $tx = new Transaction();
+        $tx->setUser($user);
+        $tx->setType(Transaction::TYPE_ADMIN_CREDIT);
+        $tx->setTokensAmount($nexbits);
+        $tx->setBoostTokensAmount($nexboost);
+        $desc = 'Credit admin par ' . $this->getUser()->getUsername();
+        if ($reason) {
+            $desc .= ' : ' . mb_substr($reason, 0, 200);
+        }
+        $tx->setDescription($desc);
+        $this->em->persist($tx);
+
+        $this->em->flush();
+
+        $parts = [];
+        if ($nexbits !== 0) {
+            $parts[] = ($nexbits > 0 ? '+' : '') . $nexbits . ' NexBits';
+        }
+        if ($nexboost !== 0) {
+            $parts[] = ($nexboost > 0 ? '+' : '') . $nexboost . ' NexBoost';
+        }
+
+        $this->webhookService->dispatch('admin.tokens_credited', [
+            'title' => 'Tokens credites par admin',
+            'fields' => [
+                ['name' => 'Utilisateur', 'value' => $user->getUsername(), 'inline' => true],
+                ['name' => 'Montant', 'value' => implode(', ', $parts), 'inline' => true],
+                ['name' => 'Par', 'value' => $this->getUser()->getUsername(), 'inline' => true],
+                ['name' => 'Raison', 'value' => $reason ?: '-', 'inline' => false],
+            ],
+        ]);
+
+        $this->addFlash('success', implode(', ', $parts) . ' credite(s) a ' . $user->getUsername() . '.');
+        return $this->redirectToRoute('admin_users_edit', ['id' => $user->getId()]);
     }
 
     #[Route('/{id}/delete', name: 'delete', methods: ['POST'])]

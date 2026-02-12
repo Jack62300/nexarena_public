@@ -1,0 +1,97 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block page_title %}Plans Premium{% endblock %}
+{% block title %}Nexarena Admin - Plans Premium{% endblock %}
+
+{% block admin_body %}
+    <div class="admin-table">
+        <div class="admin-table__header">
+            <h3>Plans Premium</h3>
+            <a href="{{ path('admin_premium_plans_new') }}" class="btn-admin btn-admin--primary">
+                <i class="fas fa-plus"></i> Ajouter un plan
+            </a>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Icone</th>
+                    <th>Nom</th>
+                    <th>Type</th>
+                    <th>Prix PayPal</th>
+                    <th>Prix NexBits</th>
+                    <th>NexBits</th>
+                    <th>NexBoost</th>
+                    <th>Position</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for plan in plans %}
+                    <tr>
+                        <td>
+                            {% if plan.iconFileName %}
+                                <img src="{{ asset('uploads/plans/' ~ plan.iconFileName) }}" alt="{{ plan.name }}" style="height:48px;width:auto;border-radius:6px;background:rgba(255,255,255,0.05);padding:3px;">
+                            {% else %}
+                                <i class="fas fa-crown" style="color:#ffd700;font-size:18px;"></i>
+                            {% endif %}
+                        </td>
+                        <td><strong>{{ plan.name }}</strong></td>
+                        <td>
+                            {% if plan.planType == 'custom' %}
+                                <span style="background:rgba(255,107,53,0.15);color:#ff6b35;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600;">Personnalise</span>
+                            {% else %}
+                                <span style="background:rgba(69,248,130,0.15);color:#45f882;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600;">Par defaut</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if plan.price > 0 %}
+                                <span style="color:var(--accent);font-weight:600;">{{ plan.price }} {{ plan.currency }}</span>
+                            {% else %}
+                                <span style="color:var(--text-secondary);">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if plan.nexbitsPrice > 0 %}
+                                <i class="fas fa-coins" style="color:#ffd700;"></i> {{ plan.nexbitsPrice }}
+                            {% else %}
+                                <span style="color:var(--text-secondary);">—</span>
+                            {% endif %}
+                        </td>
+                        <td><i class="fas fa-coins" style="color:#ffd700;"></i> {{ plan.tokensGiven }}</td>
+                        <td><i class="fas fa-bolt" style="color:#ff6b35;"></i> {{ plan.boostTokensGiven }}</td>
+                        <td style="color:var(--text-secondary);">{{ plan.position }}</td>
+                        <td>
+                            {% if plan.isActive %}
+                                <span class="status-dot status-dot--active"></span>Actif
+                            {% else %}
+                                <span class="status-dot status-dot--inactive"></span>Inactif
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div style="display:flex;gap:8px;">
+                                <a href="{{ path('admin_premium_plans_edit', {id: plan.id}) }}" class="btn-admin btn-admin--outline btn-admin--sm">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                {% if is_granted('ROLE_RESPONSABLE') %}
+                                    <form method="post" action="{{ path('admin_premium_plans_delete', {id: plan.id}) }}" onsubmit="return confirm('Supprimer ce plan ?');" style="display:inline;">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete_' ~ plan.id) }}">
+                                        <button type="submit" class="btn-admin btn-admin--sm" style="background:var(--danger);color:#fff;border:none;">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="10" style="text-align:center;color:var(--text-secondary);padding:30px;">
+                            Aucun plan premium pour le moment.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

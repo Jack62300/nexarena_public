@@ -266,6 +266,77 @@ class VoteRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
     }
 
+    public function countDistinctIpsByFingerprint(string $fingerprint, int $hours): int
+    {
+        $since = new \DateTimeImmutable("-{$hours} hours");
+
+        return (int) $this->createQueryBuilder('v')
+            ->select('COUNT(DISTINCT v.voterIp)')
+            ->where('v.browserFingerprint = :fp')
+            ->andWhere('v.votedAt > :since')
+            ->setParameter('fp', $fingerprint)
+            ->setParameter('since', $since)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    public function countDistinctFingerprintsByIp(string $ip, int $hours): int
+    {
+        $since = new \DateTimeImmutable("-{$hours} hours");
+
+        return (int) $this->createQueryBuilder('v')
+            ->select('COUNT(DISTINCT v.browserFingerprint)')
+            ->where('v.voterIp = :ip')
+            ->andWhere('v.browserFingerprint IS NOT NULL')
+            ->andWhere('v.votedAt > :since')
+            ->setParameter('ip', $ip)
+            ->setParameter('since', $since)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    public function countByUserInDay(User $user): int
+    {
+        $startOfDay = new \DateTimeImmutable('today 00:00:00');
+
+        return (int) $this->createQueryBuilder('v')
+            ->select('COUNT(v.id)')
+            ->where('v.user = :user')
+            ->andWhere('v.votedAt >= :start')
+            ->setParameter('user', $user)
+            ->setParameter('start', $startOfDay)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    public function countByServerInDay(Server $server): int
+    {
+        $startOfDay = new \DateTimeImmutable('today 00:00:00');
+
+        return (int) $this->createQueryBuilder('v')
+            ->select('COUNT(v.id)')
+            ->where('v.server = :server')
+            ->andWhere('v.votedAt >= :start')
+            ->setParameter('server', $server)
+            ->setParameter('start', $startOfDay)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    public function countByFingerprintInInterval(string $fingerprint, int $minutes): int
+    {
+        $since = new \DateTimeImmutable("-{$minutes} minutes");
+
+        return (int) $this->createQueryBuilder('v')
+            ->select('COUNT(v.id)')
+            ->where('v.browserFingerprint = :fp')
+            ->andWhere('v.votedAt > :since')
+            ->setParameter('fp', $fingerprint)
+            ->setParameter('since', $since)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
     /**
      * @return Vote[]
      */

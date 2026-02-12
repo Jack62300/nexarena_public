@@ -16,13 +16,14 @@ class VoteService
         private SettingsService $settings,
         private WebhookService $webhookService,
         private IpSecurityService $ipSecurity,
+        private AntiBotService $antiBotService,
     ) {
     }
 
     /**
-     * @return array{allowed: bool, reason: string, cooldown: int}
+     * @return array{allowed: bool, reason: string, cooldown: int, captcha_required?: bool}
      */
-    public function canVote(Server $server, string $ip, ?string $discordId = null, ?string $steamId = null): array
+    public function canVote(Server $server, string $ip, ?string $discordId = null, ?string $steamId = null, ?string $fingerprint = null, ?User $user = null): array
     {
         if (!$server->isActive() || !$server->isApproved()) {
             return ['allowed' => false, 'reason' => 'Ce serveur n\'est pas disponible.', 'cooldown' => 0];
@@ -64,10 +65,26 @@ class VoteService
             }
         }
 
+        // Anti-bot: fingerprint + pattern detection
+        if ($this->settings->getBool('vote_antifraud_enabled', true)) {
+            $pattern = $this->antiBotService->detectSuspiciousPattern($ip, $fingerprint, $user);
+            if ($pattern['suspicious']) {
+                if ($pattern['require_captcha']) {
+                    return ['allowed' => false, 'reason' => $pattern['reason'], 'cooldown' => 0, 'captcha_required' => true];
+                }
+                return ['allowed' => false, 'reason' => $pattern['reason'], 'cooldown' => 0];
+            }
+
+            // Check if captcha should be required based on volume
+            if ($this->antiBotService->shouldRequireCaptcha($ip, $user)) {
+                return ['allowed' => false, 'reason' => 'Verification requise avant de voter.', 'cooldown' => 0, 'captcha_required' => true];
+            }
+        }
+
         return ['allowed' => true, 'reason' => '', 'cooldown' => 0];
     }
 
-    public function castVote(Server $server, string $ip, ?string $username, ?string $discordId, ?string $steamId, string $provider): Vote
+    public function castVote(Server $server, string $ip, ?string $username, ?string $discordId, ?string $steamId, string $provider, ?string $fingerprint = null, ?User $user = null): Vote
     {
         $vote = new Vote();
         $vote->setServer($server);
@@ -77,6 +94,11 @@ class VoteService
         $vote->setSteamId($steamId);
         $vote->setVoteProvider($provider);
         $vote->setVpnChecked($this->settings->getBool('vote_vpn_check_enabled', true));
+        $vote->setBrowserFingerprint($fingerprint);
+
+        if ($user) {
+            $vote->setUser($user);
+        }
 
         $server->incrementTotalVotes();
         $server->incrementMonthlyVotes();
@@ -84,10 +106,20 @@ class VoteService
         $this->em->persist($vote);
         $this->em->flush();
 
-        // Send webhook
+        // Send server-level webhook
         if ($server->isWebhookEnabled() && $server->getWebhookUrl()) {
             $this->webhookService->sendVoteWebhook($server, $vote);
         }
+
+        // Admin Discord webhook
+        $this->webhookService->dispatch('vote.cast', [
+            'title' => 'Vote enregistre',
+            'fields' => [
+                ['name' => 'Serveur', 'value' => $server->getName(), 'inline' => true],
+                ['name' => 'Votant', 'value' => $username ?: 'Anonyme', 'inline' => true],
+                ['name' => 'Methode', 'value' => ucfirst($provider), 'inline' => true],
+            ],
+        ]);
 
         return $vote;
     }

@@ -13,8 +13,10 @@ use App\Repository\RecruitmentMessageRepository;
 use App\Repository\ServerCollaboratorRepository;
 use App\Repository\ServerRepository;
 use App\Service\NotificationService;
+use App\Service\PremiumService;
 use App\Service\RecruitmentService;
 use App\Service\SlugService;
+use App\Service\WebhookService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -32,8 +34,10 @@ class UserRecruitmentController extends AbstractController
         private EntityManagerInterface $em,
         private SlugService $slugService,
         private RecruitmentService $recruitmentService,
+        private PremiumService $premiumService,
         private ServerCollaboratorRepository $collabRepo,
         private NotificationService $notificationService,
+        private WebhookService $webhookService,
     ) {
     }
 
@@ -78,15 +82,33 @@ class UserRecruitmentController extends AbstractController
             throw $this->createAccessDeniedException();
         }
 
+        // Premium check: recruitment limit
+        $user = $this->getUser();
+        if ($this->premiumService->isPremiumEnabled()) {
+            $recruitmentCheck = $this->premiumService->canCreateRecruitment($server, $user);
+            if (!$recruitmentCheck['allowed']) {
+                $this->addFlash('error', $recruitmentCheck['reason']);
+                return $this->redirectToRoute('user_servers_manage', ['id' => $serverId]);
+            }
+        }
+
         if ($request->isMethod('POST')) {
             if (!$this->isCsrfTokenValid('recruitment_form', $request->request->get('_token'))) {
                 $this->addFlash('error', 'Token CSRF invalide.');
                 return $this->redirectToRoute('user_recruitment_new', ['serverId' => $serverId]);
             }
 
+            // Charge tokens for extra recruitment if needed
+            if ($this->premiumService->isPremiumEnabled()) {
+                $check = $this->premiumService->canCreateRecruitment($server, $user);
+                if ($check['cost'] > 0) {
+                    $this->premiumService->chargeRecruitmentExtra($user, $server);
+                }
+            }
+
             $listing = new RecruitmentListing();
             $listing->setServer($server);
-            $listing->setAuthor($this->getUser());
+            $listing->setAuthor($user);
             $this->handleForm($listing, $request);
 
             $this->em->persist($listing);
@@ -144,6 +166,15 @@ class UserRecruitmentController extends AbstractController
         $listing->setStatus(RecruitmentListing::STATUS_PENDING);
         $listing->setRevisionReason(null);
         $this->em->flush();
+
+        $this->webhookService->dispatch('recruitment.submitted', [
+            'title' => 'Annonce soumise',
+            'fields' => [
+                ['name' => 'Annonce', 'value' => $listing->getTitle(), 'inline' => true],
+                ['name' => 'Serveur', 'value' => $listing->getServer()->getName(), 'inline' => true],
+                ['name' => 'Auteur', 'value' => $this->getUser()->getUsername(), 'inline' => true],
+            ],
+        ]);
 
         $this->addFlash('success', 'Annonce soumise pour validation. Un administrateur la examinera prochainement.');
         return $this->redirectToRoute('user_recruitment_list');

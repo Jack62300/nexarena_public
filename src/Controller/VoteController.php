@@ -3,7 +3,9 @@
 namespace App\Controller;
 
 use App\Repository\ServerRepository;
+use App\Service\AntiBotService;
 use App\Service\SettingsService;
+use App\Service\VoteRewardService;
 use App\Service\VoteService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -19,6 +21,8 @@ class VoteController extends AbstractController
         private VoteService $voteService,
         private ServerRepository $serverRepo,
         private SettingsService $settings,
+        private AntiBotService $antiBotService,
+        private VoteRewardService $voteRewardService,
     ) {
     }
 
@@ -74,9 +78,34 @@ class VoteController extends AbstractController
         $username = $discordUser['username'] ?? 'Discord_' . $discordId;
 
         $ip = $request->getClientIp();
+        $fingerprint = $request->getSession()->get('vote_fingerprint');
+        $request->getSession()->remove('vote_fingerprint');
+        $user = $this->getUser();
 
-        $check = $this->voteService->canVote($server, $ip, $discordId, null);
+        // Captcha check
+        if ($request->getSession()->get('vote_captcha_required')) {
+            $captchaAnswer = $request->getSession()->get('vote_captcha_answer');
+            $request->getSession()->remove('vote_captcha_required');
+            $request->getSession()->remove('vote_captcha_answer');
+            // Captcha was already verified in the initiate step
+        }
+
+        $check = $this->voteService->canVote($server, $ip, $discordId, null, $fingerprint, $user);
         if (!$check['allowed']) {
+            if (!empty($check['captcha_required'])) {
+                // Store state and redirect to captcha page
+                $request->getSession()->set('vote_captcha_pending', [
+                    'slug' => $slug,
+                    'provider' => 'discord',
+                    'discordId' => $discordId,
+                    'username' => $username,
+                ]);
+                $captcha = $this->antiBotService->generateCaptcha();
+                $request->getSession()->set('vote_captcha_answer', $captcha['answer']);
+                $request->getSession()->set('vote_captcha_question', $captcha['question']);
+                return $this->redirectToRoute('vote_captcha', ['slug' => $slug]);
+            }
+
             $message = $check['reason'];
             if ($check['cooldown'] > 0) {
                 $minutes = ceil($check['cooldown'] / 60);
@@ -86,7 +115,12 @@ class VoteController extends AbstractController
             return $this->redirectToRoute('server_show', ['slug' => $slug]);
         }
 
-        $this->voteService->castVote($server, $ip, $username, $discordId, null, 'discord');
+        $vote = $this->voteService->castVote($server, $ip, $username, $discordId, null, 'discord', $fingerprint, $user);
+
+        // Vote rewards
+        if ($user) {
+            $this->voteRewardService->calculateReward($user, $server, $vote);
+        }
 
         $this->addFlash('success', 'Vote enregistre avec succes via Discord !');
         return $this->redirectToRoute('server_show', ['slug' => $slug]);
@@ -125,9 +159,25 @@ class VoteController extends AbstractController
         $username = $this->getSteamUsername($steamId);
 
         $ip = $request->getClientIp();
+        $fingerprint = $request->getSession()->get('vote_fingerprint');
+        $request->getSession()->remove('vote_fingerprint');
+        $user = $this->getUser();
 
-        $check = $this->voteService->canVote($server, $ip, null, $steamId);
+        $check = $this->voteService->canVote($server, $ip, null, $steamId, $fingerprint, $user);
         if (!$check['allowed']) {
+            if (!empty($check['captcha_required'])) {
+                $request->getSession()->set('vote_captcha_pending', [
+                    'slug' => $slug,
+                    'provider' => 'steam',
+                    'steamId' => $steamId,
+                    'username' => $username,
+                ]);
+                $captcha = $this->antiBotService->generateCaptcha();
+                $request->getSession()->set('vote_captcha_answer', $captcha['answer']);
+                $request->getSession()->set('vote_captcha_question', $captcha['question']);
+                return $this->redirectToRoute('vote_captcha', ['slug' => $slug]);
+            }
+
             $message = $check['reason'];
             if ($check['cooldown'] > 0) {
                 $minutes = ceil($check['cooldown'] / 60);
@@ -137,7 +187,12 @@ class VoteController extends AbstractController
             return $this->redirectToRoute('server_show', ['slug' => $slug]);
         }
 
-        $this->voteService->castVote($server, $ip, $username, null, $steamId, 'steam');
+        $vote = $this->voteService->castVote($server, $ip, $username, null, $steamId, 'steam', $fingerprint, $user);
+
+        // Vote rewards
+        if ($user) {
+            $this->voteRewardService->calculateReward($user, $server, $vote);
+        }
 
         $this->addFlash('success', 'Vote enregistre avec succes via Steam !');
         return $this->redirectToRoute('server_show', ['slug' => $slug]);
@@ -149,6 +204,12 @@ class VoteController extends AbstractController
         $server = $this->findServer($slug);
         if (!$server) {
             throw $this->createNotFoundException('Serveur introuvable.');
+        }
+
+        // Store fingerprint in session
+        $fingerprint = $request->query->get('fp');
+        if ($fingerprint && $this->antiBotService->validateFingerprint($fingerprint)) {
+            $request->getSession()->set('vote_fingerprint', $fingerprint);
         }
 
         $state = bin2hex(random_bytes(16));
@@ -177,6 +238,12 @@ class VoteController extends AbstractController
             throw $this->createNotFoundException('Serveur introuvable.');
         }
 
+        // Store fingerprint in session
+        $fingerprint = $request->query->get('fp');
+        if ($fingerprint && $this->antiBotService->validateFingerprint($fingerprint)) {
+            $request->getSession()->set('vote_fingerprint', $fingerprint);
+        }
+
         $request->getSession()->set('vote_slug', $slug);
         $request->getSession()->set('vote_provider', 'steam');
 
@@ -193,6 +260,71 @@ class VoteController extends AbstractController
         ];
 
         return $this->redirect('https://steamcommunity.com/openid/login?' . http_build_query($params));
+    }
+
+    #[Route('/vote/{slug}/captcha', name: 'vote_captcha')]
+    public function captcha(string $slug, Request $request): Response
+    {
+        $server = $this->findServer($slug);
+        if (!$server) {
+            throw $this->createNotFoundException('Serveur introuvable.');
+        }
+
+        $pending = $request->getSession()->get('vote_captcha_pending');
+        if (!$pending || $pending['slug'] !== $slug) {
+            $this->addFlash('error', 'Session captcha expiree.');
+            return $this->redirectToRoute('server_show', ['slug' => $slug]);
+        }
+
+        $question = $request->getSession()->get('vote_captcha_question', '? + ? = ?');
+
+        if ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid('vote_captcha', $request->request->get('_token'))) {
+                $this->addFlash('error', 'Token CSRF invalide.');
+                return $this->redirectToRoute('server_show', ['slug' => $slug]);
+            }
+
+            $answer = $request->request->getInt('captcha_answer');
+            $expected = $request->getSession()->get('vote_captcha_answer');
+
+            if (!$this->antiBotService->verifyCaptcha($answer, (int) $expected)) {
+                // Regenerate captcha
+                $captcha = $this->antiBotService->generateCaptcha();
+                $request->getSession()->set('vote_captcha_answer', $captcha['answer']);
+                $request->getSession()->set('vote_captcha_question', $captcha['question']);
+                $this->addFlash('error', 'Reponse incorrecte. Reessayez.');
+                return $this->redirectToRoute('vote_captcha', ['slug' => $slug]);
+            }
+
+            // Captcha passed, cast the vote
+            $ip = $request->getClientIp();
+            $fingerprint = $request->getSession()->get('vote_fingerprint');
+            $user = $this->getUser();
+            $provider = $pending['provider'];
+            $discordId = $pending['discordId'] ?? null;
+            $steamId = $pending['steamId'] ?? null;
+            $username = $pending['username'] ?? null;
+
+            // Clean up session
+            $request->getSession()->remove('vote_captcha_pending');
+            $request->getSession()->remove('vote_captcha_answer');
+            $request->getSession()->remove('vote_captcha_question');
+            $request->getSession()->remove('vote_fingerprint');
+
+            $vote = $this->voteService->castVote($server, $ip, $username, $discordId, $steamId, $provider, $fingerprint, $user);
+
+            if ($user) {
+                $this->voteRewardService->calculateReward($user, $server, $vote);
+            }
+
+            $this->addFlash('success', 'Vote enregistre avec succes !');
+            return $this->redirectToRoute('server_show', ['slug' => $slug]);
+        }
+
+        return $this->render('server/captcha.html.twig', [
+            'server' => $server,
+            'question' => $question,
+        ]);
     }
 
     private function findServer(string $slug): ?\App\Entity\Server
