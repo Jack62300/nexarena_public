@@ -75,10 +75,6 @@
                             {# ── ACTIONS ── #}
                             <div class="tgmenu__action d-none d-md-block">
                                 <ul class="list-wrap">
-                                    <li class="search">
-                                        <a href="javascript:void(0)"><i class="flaticon-loupe"></i></a>
-                                    </li>
-
                                     {% if app.user %}
                                         <li class="header-btn">
                                             <a href="{{ path('user_servers_new') }}" class="tg-border-btn">
@@ -207,12 +203,6 @@
                     <img src="{{ asset('assets/img/logo/new_logo_hd.png') }}" alt="{{ setting('site_name', 'Nexarena') }}">
                 </a>
             </div>
-            <div class="tgmobile__search">
-                <form action="#">
-                    <input type="text" placeholder="Rechercher un serveur...">
-                    <button><i class="flaticon-loupe"></i></button>
-                </form>
-            </div>
             <div class="tgmobile__menu-outer">
                 {# Auto-populated by JS from .navigation #}
             </div>
@@ -275,31 +265,6 @@
         </nav>
     </div>
     <div class="tgmobile__menu-backdrop"></div>
-
-    {# ============================================ #}
-    {#  SEARCH POPUP                                #}
-    {# ============================================ #}
-    <div class="search__popup-wrap">
-        <div class="search__layer"></div>
-        <div class="search__close">
-            <span><i class="flaticon-swords-in-cross-arrangement"></i></span>
-        </div>
-        <div class="search__wrap text-center">
-            <div class="container">
-                <div class="row">
-                    <div class="col-12">
-                        <h2 class="title">... <span>Rechercher</span> ...</h2>
-                        <div class="search__form">
-                            <form action="#">
-                                <input type="text" name="search" placeholder="Tapez vos mots-cles ici..." required>
-                                <button class="search-btn"><i class="flaticon-loupe"></i></button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
     {# ============================================ #}
     {#  OFF-CANVAS SIDE PANEL                       #}
