@@ -1,3 +1,29 @@
+/* ─── Navbar layout fix ─── */
+@media (min-width: 1200px) {
+    .tgmenu__nav {
+        flex-wrap: nowrap !important;
+    }
+    .tgmenu__navbar-wrap {
+        min-width: 0;
+    }
+    .tgmenu__navbar-wrap ul.navigation {
+        margin-left: 40px !important;
+        gap: 2px;
+    }
+}
+@media (min-width: 1200px) and (max-width: 1399.98px) {
+    .tgmenu__navbar-wrap ul.navigation {
+        margin-left: 20px !important;
+    }
+    .tgmenu__action > ul li {
+        margin-left: 15px;
+    }
+}
+.tgmenu__action {
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
 /* ─── Profile Toggle ─── */
 .nx-profile {
     position: relative;
