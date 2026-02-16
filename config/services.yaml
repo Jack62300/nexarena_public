@@ -19,6 +19,11 @@ services:
     App\:
         resource: '../src/'
 
+    # Lazy-load all services: proxy injected, real instance created only on first method call
+    App\Service\:
+        resource: '../src/Service/'
+        lazy: true
+
     App\Service\EncryptionService:
         arguments:
             $appSecret: '%env(APP_SECRET)%'
