@@ -57,6 +57,8 @@ class NavigationExtension extends AbstractExtension
             $result[] = [
                 'category' => $category,
                 'gameCategories' => $topGames,
+                'allGameCategories' => $gameCategories,
+                'serverCounts' => $serverCounts,
                 'hasMore' => count($gameCategories) > count($topGames),
             ];
         }

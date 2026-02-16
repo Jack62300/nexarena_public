@@ -50,7 +50,7 @@ class FeaturedBookingController extends AbstractController
             'homepage_costs' => $homepageCosts,
             'game_costs' => $gameCosts,
             'homepage_availability' => $homepageAvailability,
-            'user_boost_balance' => $this->getUser()->getBoostTokenBalance(),
+            'user_boost_balance' => $server->getBoostTokenBalance(),
             'has_game_scope' => $hasGameScope,
             'server_gc_id' => $serverGc ? $serverGc->getId() : 0,
             'server_gc_name' => $serverGc ? $serverGc->getName() : '',
@@ -172,8 +172,8 @@ class FeaturedBookingController extends AbstractController
         $user = $this->getUser();
 
         $cost = $this->premiumService->calculatePositionBookingCost($scope, $position, $duration);
-        if (!$user->hasEnoughBoostTokens($cost)) {
-            $this->addFlash('danger', 'NexBoost insuffisants. Achetez des NexBoost sur la page Premium.');
+        if (!$server->hasEnoughBoostTokens($cost)) {
+            $this->addFlash('danger', 'NexBoost insuffisants sur le serveur. Deposez des NexBoost depuis la page de gestion.');
             return $this->redirectToRoute('featured_booking', ['id' => $server->getId()]);
         }
 

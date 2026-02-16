@@ -16,6 +16,7 @@ class Transaction
     public const TYPE_REFUND = 'refund';
     public const TYPE_ADMIN_CREDIT = 'admin_credit';
     public const TYPE_VOTE_REWARD = 'vote_reward';
+    public const TYPE_DEPOSIT = 'deposit';
 
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -29,6 +30,10 @@ class Transaction
     #[ORM\ManyToOne(targetEntity: PremiumPlan::class)]
     #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
     private ?PremiumPlan $plan = null;
+
+    #[ORM\ManyToOne(targetEntity: Server::class)]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    private ?Server $server = null;
 
     #[ORM\Column(length: 20)]
     private ?string $type = null;
@@ -81,6 +86,17 @@ class Transaction
     public function setPlan(?PremiumPlan $plan): static
     {
         $this->plan = $plan;
+        return $this;
+    }
+
+    public function getServer(): ?Server
+    {
+        return $this->server;
+    }
+
+    public function setServer(?Server $server): static
+    {
+        $this->server = $server;
         return $this;
     }
 

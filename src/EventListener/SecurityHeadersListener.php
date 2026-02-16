@@ -46,7 +46,7 @@ class SecurityHeadersListener
                 "style-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net 'unsafe-inline'",
                 "img-src 'self' https: data:",
                 "font-src 'self' data:",
-                "frame-src https://player.twitch.tv https://www.paypal.com",
+                "frame-src 'self' https://player.twitch.tv https://www.paypal.com https://discord.com",
                 "connect-src 'self' https://www.paypal.com",
                 "object-src 'none'",
                 "base-uri 'self'",

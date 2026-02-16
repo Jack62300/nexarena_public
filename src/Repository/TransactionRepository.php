@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Entity\Server;
 use App\Entity\Transaction;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
@@ -46,6 +47,21 @@ class TransactionRepository extends ServiceEntityRepository
             ->addSelect('p')
             ->where('t.user = :user')
             ->setParameter('user', $user)
+            ->orderBy('t.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * @return Transaction[]
+     */
+    public function findByServer(Server $server): array
+    {
+        return $this->createQueryBuilder('t')
+            ->leftJoin('t.user', 'u')
+            ->addSelect('u')
+            ->where('t.server = :server')
+            ->setParameter('server', $server)
             ->orderBy('t.createdAt', 'DESC')
             ->getQuery()
             ->getResult();

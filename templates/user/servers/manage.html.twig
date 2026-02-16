@@ -294,7 +294,7 @@
                                         <button type="submit" class="btn-action btn-action--primary" style="width:100%;background:linear-gradient(135deg,#ffd700,#ff6b35);color:#000;border:none;font-weight:700;border-radius:10px;padding:10px;">
                                             <i class="fas fa-coins"></i> Payer en NexBits
                                         </button>
-                                        <div style="font-size:11px;color:#5a5c69;margin-top:8px;">Solde : {{ app.user.tokenBalance }} NexBits</div>
+                                        <div style="font-size:11px;color:#5a5c69;margin-top:8px;">Solde serveur : {{ server.tokenBalance }} NexBits</div>
                                     </div>
                                 </form>
 
@@ -449,7 +449,7 @@
                     feature: 'widget',
                     feature_label: 'Widget personnalise',
                     cost: widget_cost,
-                    user_balance: app.user.tokenBalance
+                    user_balance: server.tokenBalance
                 } %}
                 {% endif %}
 
@@ -578,7 +578,7 @@
                         feature: 'theme',
                         feature_label: 'Theme personnalise',
                         cost: theme_cost,
-                        user_balance: app.user.tokenBalance
+                        user_balance: server.tokenBalance
                     } %}
                     {% else %}
                     <div class="manage-card">
@@ -634,43 +634,22 @@
                     <div class="manage-card">
                         <h4 class="manage-card__title"><i class="fas fa-shield-alt"></i> Restriction par IP</h4>
                         <p style="color:#8b949e;font-size:13px;margin-bottom:15px;">
-                            Limitez l'acces a votre API aux IPs de vos serveurs uniquement.
-                            Laissez vide pour autoriser toutes les IPs.
-                            Vous pouvez definir jusqu'a <strong style="color:#e4e6eb;">2 adresses IP</strong>.
+                            L'acces a l'API est automatiquement restreint a l'adresse IP de votre serveur.
+                            Pour modifier l'IP autorisee, modifiez l'IP dans les <a href="{{ path('user_servers_edit', {id: server.id}) }}" style="color:#45f882;text-decoration:underline;">informations du serveur</a>.
                         </p>
-                        <form method="post" action="{{ path('user_servers_update_api_ips', {id: server.id}) }}">
-                            <input type="hidden" name="_token" value="{{ csrf_token('api_ips') }}">
-                            <div class="form-group">
-                                <label>IP Serveur 1</label>
-                                <input type="text" name="allowed_ip_1" class="form-input"
-                                       placeholder="Ex: 51.210.123.45"
-                                       value="{{ server.allowedApiIps[0] ?? '' }}"
-                                       pattern="^[\d.:a-fA-F]+$">
+                        {% if server.ip %}
+                            <div style="padding:10px 14px;background:rgba(69,248,130,0.06);border:1px solid rgba(69,248,130,0.15);border-radius:6px;font-size:12px;">
+                                <i class="fas fa-lock" style="color:#45f882;margin-right:6px;"></i>
+                                <span style="color:#45f882;font-weight:600;">Protection active</span>
+                                <span style="color:#8b949e;"> — Seule l'IP <strong style="color:#e4e6eb;font-family:monospace;">{{ server.ip }}</strong> peut utiliser la cle API.</span>
                             </div>
-                            <div class="form-group">
-                                <label>IP Serveur 2 <span style="color:#8b949e;font-weight:400;">(optionnel)</span></label>
-                                <input type="text" name="allowed_ip_2" class="form-input"
-                                       placeholder="Ex: 162.19.45.67"
-                                       value="{{ server.allowedApiIps[1] ?? '' }}"
-                                       pattern="^[\d.:a-fA-F]+$">
+                        {% else %}
+                            <div style="padding:10px 14px;background:rgba(255,193,7,0.06);border:1px solid rgba(255,193,7,0.15);border-radius:6px;font-size:12px;">
+                                <i class="fas fa-unlock" style="color:#ffc107;margin-right:6px;"></i>
+                                <span style="color:#ffc107;font-weight:600;">Acces ouvert</span>
+                                <span style="color:#8b949e;"> — Aucune IP configuree. Renseignez l'IP du serveur pour activer la protection.</span>
                             </div>
-                            {% if server.allowedApiIps is not empty %}
-                                <div style="margin-bottom:15px;padding:10px 14px;background:rgba(69,248,130,0.06);border:1px solid rgba(69,248,130,0.15);border-radius:6px;font-size:12px;">
-                                    <i class="fas fa-lock" style="color:#45f882;margin-right:6px;"></i>
-                                    <span style="color:#45f882;font-weight:600;">Protection active</span>
-                                    <span style="color:#8b949e;"> — Seules les IPs {{ server.allowedApiIps|join(', ') }} peuvent utiliser la cle API.</span>
-                                </div>
-                            {% else %}
-                                <div style="margin-bottom:15px;padding:10px 14px;background:rgba(255,193,7,0.06);border:1px solid rgba(255,193,7,0.15);border-radius:6px;font-size:12px;">
-                                    <i class="fas fa-unlock" style="color:#ffc107;margin-right:6px;"></i>
-                                    <span style="color:#ffc107;font-weight:600;">Acces ouvert</span>
-                                    <span style="color:#8b949e;"> — Toute IP peut utiliser votre cle API.</span>
-                                </div>
-                            {% endif %}
-                            <button type="submit" class="btn-action btn-action--primary">
-                                <i class="fas fa-save"></i> Enregistrer
-                            </button>
-                        </form>
+                        {% endif %}
                     </div>
 
                     <div class="manage-card">
@@ -813,22 +792,49 @@
                 {# ========== TAB: PREMIUM ========== #}
                 {% if is_owner and premium_enabled %}
                 <div id="tabPremium" class="manage-tab-panel">
-                    {# === SOLDE === #}
+                    {# === SOLDE SERVEUR === #}
                     <div class="manage-card">
-                        <h4 class="manage-card__title"><i class="fas fa-wallet" style="color:#ffd700;"></i> Solde</h4>
+                        <h4 class="manage-card__title"><i class="fas fa-wallet" style="color:#ffd700;"></i> Solde du serveur</h4>
                         <div style="display:flex;gap:16px;flex-wrap:wrap;">
                             <div style="flex:1;min-width:160px;padding:16px 20px;background:rgba(255,107,53,0.08);border:1px solid rgba(255,107,53,0.2);border-radius:10px;text-align:center;">
-                                <div style="font-size:28px;font-weight:800;color:#ff6b35;">{{ app.user.boostTokenBalance }}</div>
+                                <div style="font-size:28px;font-weight:800;color:#ff6b35;">{{ server.boostTokenBalance }}</div>
                                 <div style="font-size:12px;color:#8b949e;margin-top:4px;">NexBoost</div>
                             </div>
                             <div style="flex:1;min-width:160px;padding:16px 20px;background:rgba(255,190,24,0.08);border:1px solid rgba(255,190,24,0.2);border-radius:10px;text-align:center;">
-                                <div style="font-size:28px;font-weight:800;color:#ffd700;">{{ app.user.tokenBalance }}</div>
+                                <div style="font-size:28px;font-weight:800;color:#ffd700;">{{ server.tokenBalance }}</div>
                                 <div style="font-size:12px;color:#8b949e;margin-top:4px;">NexBits</div>
                             </div>
                         </div>
-                        <div style="margin-top:12px;text-align:center;">
-                            <a href="{{ path('premium_index') }}" style="color:#ffd700;font-size:13px;text-decoration:underline;">Acheter des NexBits / NexBoost</a>
+                    </div>
+
+                    {# === DEPOT DE JETONS === #}
+                    <div class="manage-card">
+                        <h4 class="manage-card__title"><i class="fas fa-arrow-circle-down" style="color:#1cc88a;"></i> Deposer des jetons</h4>
+                        <div style="background:rgba(231,74,59,0.08);border:1px solid rgba(231,74,59,0.2);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:#e74a3b;">
+                            <i class="fas fa-exclamation-triangle" style="margin-right:6px;"></i>
+                            <strong>Irreversible</strong> — Les jetons deposes sur le serveur ne peuvent pas etre retires. Ils seront utilises pour les fonctionnalites premium du serveur (boosts, themes, Twitch, recrutement...).
                         </div>
+                        <div style="font-size:13px;color:#8b949e;margin-bottom:14px;">
+                            Votre solde personnel : <strong style="color:#ffd700;">{{ app.user.tokenBalance }} NexBits</strong> / <strong style="color:#ff6b35;">{{ app.user.boostTokenBalance }} NexBoost</strong>
+                            &mdash; <a href="{{ path('premium_index') }}" style="color:#ffd700;text-decoration:underline;">Acheter</a>
+                        </div>
+                        <form method="post" onsubmit="return confirmDeposit();">
+                            <input type="hidden" name="_token" value="{{ csrf_token('server_manage') }}">
+                            <input type="hidden" name="_action" value="deposit">
+                            <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
+                                <div style="flex:1;min-width:140px;">
+                                    <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:600;color:#8b949e;">NexBits</label>
+                                    <input type="number" name="deposit_nexbits" id="depositNexbits" class="form-input" value="0" min="0" max="{{ app.user.tokenBalance }}" style="text-align:center;">
+                                </div>
+                                <div style="flex:1;min-width:140px;">
+                                    <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:600;color:#8b949e;">NexBoost</label>
+                                    <input type="number" name="deposit_nexboost" id="depositNexboost" class="form-input" value="0" min="0" max="{{ app.user.boostTokenBalance }}" style="text-align:center;">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn-action btn-action--primary" style="background:linear-gradient(135deg,#1cc88a,#17a673);border:none;">
+                                <i class="fas fa-arrow-circle-down"></i> Deposer sur le serveur
+                            </button>
+                        </form>
                     </div>
 
                     {# === BOOSTS (MISES EN AVANT) === #}
@@ -918,10 +924,10 @@
                         {% endif %}
                     </div>
 
-                    {# === HISTORIQUE DES TRANSACTIONS === #}
+                    {# === HISTORIQUE DES TRANSACTIONS SERVEUR === #}
                     <div class="manage-card">
-                        <h4 class="manage-card__title"><i class="fas fa-receipt" style="color:#36b9cc;"></i> Historique des transactions</h4>
-                        {% if user_transactions|length > 0 %}
+                        <h4 class="manage-card__title"><i class="fas fa-receipt" style="color:#36b9cc;"></i> Historique des transactions du serveur</h4>
+                        {% if server_transactions|length > 0 %}
                             <div style="overflow-x:auto;">
                                 <table style="width:100%;border-collapse:collapse;font-size:13px;">
                                     <thead>
@@ -929,41 +935,33 @@
                                             <th style="padding:8px 10px;text-align:left;color:#8b949e;font-weight:600;font-size:11px;text-transform:uppercase;">N°</th>
                                             <th style="padding:8px 10px;text-align:left;color:#8b949e;font-weight:600;font-size:11px;text-transform:uppercase;">Date</th>
                                             <th style="padding:8px 10px;text-align:center;color:#8b949e;font-weight:600;font-size:11px;text-transform:uppercase;">Type</th>
+                                            <th style="padding:8px 10px;text-align:left;color:#8b949e;font-weight:600;font-size:11px;text-transform:uppercase;">Par</th>
                                             <th style="padding:8px 10px;text-align:left;color:#8b949e;font-weight:600;font-size:11px;text-transform:uppercase;">Description</th>
-                                            <th style="padding:8px 10px;text-align:center;color:#8b949e;font-weight:600;font-size:11px;text-transform:uppercase;">Montant</th>
                                             <th style="padding:8px 10px;text-align:center;color:#8b949e;font-weight:600;font-size:11px;text-transform:uppercase;">NexBits</th>
                                             <th style="padding:8px 10px;text-align:center;color:#8b949e;font-weight:600;font-size:11px;text-transform:uppercase;">NexBoost</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {% for tx in user_transactions %}
+                                        {% for tx in server_transactions %}
                                             <tr style="border-bottom:1px solid #1e3048;">
                                                 <td style="padding:10px;color:#8b949e;font-family:monospace;font-size:12px;">#{{ tx.id }}</td>
                                                 <td style="padding:10px;color:#e4e6eb;white-space:nowrap;">{{ tx.createdAt|date('d/m/Y H:i') }}</td>
                                                 <td style="padding:10px;text-align:center;">
-                                                    {% if tx.type == 'purchase' %}
-                                                        <span style="font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(28,200,138,0.12);color:#1cc88a;border:1px solid rgba(28,200,138,0.2);font-weight:600;">Achat</span>
+                                                    {% if tx.type == 'deposit' %}
+                                                        <span style="font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(28,200,138,0.12);color:#1cc88a;border:1px solid rgba(28,200,138,0.2);font-weight:600;">Depot</span>
                                                     {% elseif tx.type == 'spend' %}
                                                         <span style="font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(255,107,53,0.12);color:#ff6b35;border:1px solid rgba(255,107,53,0.2);font-weight:600;">Depense</span>
                                                     {% elseif tx.type == 'refund' %}
                                                         <span style="font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(54,185,204,0.12);color:#36b9cc;border:1px solid rgba(54,185,204,0.2);font-weight:600;">Remboursement</span>
-                                                    {% elseif tx.type == 'admin_credit' %}
-                                                        <span style="font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(255,215,0,0.12);color:#ffd700;border:1px solid rgba(255,215,0,0.2);font-weight:600;">Credit admin</span>
-                                                    {% elseif tx.type == 'vote_reward' %}
-                                                        <span style="font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(108,92,231,0.12);color:#6c5ce7;border:1px solid rgba(108,92,231,0.2);font-weight:600;">Vote</span>
                                                     {% else %}
                                                         <span style="font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(139,148,158,0.12);color:#8b949e;border:1px solid rgba(139,148,158,0.2);font-weight:600;">{{ tx.type }}</span>
                                                     {% endif %}
                                                 </td>
+                                                <td style="padding:10px;color:#c9d1d9;font-size:12px;">
+                                                    {{ tx.user ? tx.user.username : '—' }}
+                                                </td>
                                                 <td style="padding:10px;color:#c9d1d9;font-size:12px;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="{{ tx.description }}">
                                                     {{ tx.description ?? '—' }}
-                                                </td>
-                                                <td style="padding:10px;text-align:center;color:#e4e6eb;font-weight:600;">
-                                                    {% if tx.amount and tx.amount > 0 %}
-                                                        {{ tx.amount }} {{ tx.currency ?? 'EUR' }}
-                                                    {% else %}
-                                                        <span style="color:#5a5c69;">—</span>
-                                                    {% endif %}
                                                 </td>
                                                 <td style="padding:10px;text-align:center;">
                                                     {% if tx.tokensAmount != 0 %}
@@ -991,9 +989,9 @@
                         {% else %}
                             <div style="text-align:center;padding:30px 10px;color:#5a5c69;">
                                 <i class="fas fa-receipt" style="font-size:28px;color:#3d4250;margin-bottom:10px;display:block;"></i>
-                                Aucune transaction pour le moment.
+                                Aucune transaction pour ce serveur.
                                 <div style="margin-top:10px;">
-                                    <a href="{{ path('premium_index') }}" style="color:#ffd700;font-size:13px;text-decoration:underline;">Voir les offres Premium</a>
+                                    Deposez des jetons ci-dessus pour commencer.
                                 </div>
                             </div>
                         {% endif %}
@@ -1152,12 +1150,12 @@
                     <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
                         <div style="padding:8px 16px;background:rgba(255,107,53,0.1);border:1px solid rgba(255,107,53,0.2);border-radius:8px;">
                             <i class="fas fa-bolt" style="color:#ff6b35;"></i>
-                            <span style="color:#fff;font-weight:600;margin-left:4px;">{{ app.user.boostTokenBalance }}</span>
+                            <span style="color:#fff;font-weight:600;margin-left:4px;">{{ server.boostTokenBalance }}</span>
                             <span style="color:#8b949e;font-size:12px;"> NexBoost</span>
                         </div>
                         <div style="padding:8px 16px;background:rgba(255,190,24,0.08);border:1px solid rgba(255,190,24,0.2);border-radius:8px;">
                             <i class="fas fa-coins" style="color:#ffd700;"></i>
-                            <span style="color:#fff;font-weight:600;margin-left:4px;">{{ app.user.tokenBalance }}</span>
+                            <span style="color:#fff;font-weight:600;margin-left:4px;">{{ server.tokenBalance }}</span>
                             <span style="color:#8b949e;font-size:12px;"> NexBits</span>
                         </div>
                     </div>
@@ -1219,6 +1217,20 @@ window.switchManageTab = function(tab) {
     });
     var target = document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1));
     if (target) target.classList.add('active');
+};
+
+/* === Deposit confirmation === */
+window.confirmDeposit = function() {
+    var nb = parseInt(document.getElementById('depositNexbits').value) || 0;
+    var boost = parseInt(document.getElementById('depositNexboost').value) || 0;
+    if (nb <= 0 && boost <= 0) {
+        alert('Veuillez saisir un montant a deposer.');
+        return false;
+    }
+    var parts = [];
+    if (nb > 0) parts.push(nb + ' NexBits');
+    if (boost > 0) parts.push(boost + ' NexBoost');
+    return confirm('Deposer ' + parts.join(' + ') + ' sur ce serveur ?\n\nCette action est IRREVERSIBLE. Les jetons ne pourront pas etre retires.');
 };
 
 window.copyWidgetCode = function(textareaId, btn) {

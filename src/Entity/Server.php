@@ -75,6 +75,9 @@ class Server
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $instagramUrl = null;
 
+    #[ORM\Column(length: 20, nullable: true)]
+    private ?string $discordServerId = null;
+
     #[ORM\Column]
     private int $slots = 0;
 
@@ -111,9 +114,6 @@ class Server
     #[ORM\Column]
     private int $featuredPosition = 0;
 
-    #[ORM\Column(type: Types::JSON, nullable: true)]
-    private ?array $allowedApiIps = null;
-
     #[ORM\Column]
     private int $totalVotes = 0;
 
@@ -122,6 +122,12 @@ class Server
 
     #[ORM\Column]
     private int $clickCount = 0;
+
+    #[ORM\Column]
+    private int $tokenBalance = 0;
+
+    #[ORM\Column]
+    private int $boostTokenBalance = 0;
 
     /** @var Collection<int, Tag> */
     #[ORM\ManyToMany(targetEntity: Tag::class, inversedBy: 'servers')]
@@ -362,6 +368,18 @@ class Server
         return $this;
     }
 
+    public function getDiscordServerId(): ?string
+    {
+        return $this->discordServerId;
+    }
+
+    public function setDiscordServerId(?string $discordServerId): static
+    {
+        $this->discordServerId = $discordServerId;
+
+        return $this;
+    }
+
     public function getSlots(): int
     {
         return $this->slots;
@@ -478,18 +496,6 @@ class Server
     public function setStatusCheckEnabled(bool $statusCheckEnabled): static
     {
         $this->statusCheckEnabled = $statusCheckEnabled;
-
-        return $this;
-    }
-
-    public function getAllowedApiIps(): ?array
-    {
-        return $this->allowedApiIps;
-    }
-
-    public function setAllowedApiIps(?array $allowedApiIps): static
-    {
-        $this->allowedApiIps = $allowedApiIps;
 
         return $this;
     }
@@ -638,6 +644,62 @@ class Server
     {
         $this->tags->clear();
         return $this;
+    }
+
+    public function getTokenBalance(): int
+    {
+        return $this->tokenBalance;
+    }
+
+    public function setTokenBalance(int $tokenBalance): static
+    {
+        $this->tokenBalance = $tokenBalance;
+        return $this;
+    }
+
+    public function addTokens(int $amount): static
+    {
+        $this->tokenBalance += $amount;
+        return $this;
+    }
+
+    public function removeTokens(int $amount): static
+    {
+        $this->tokenBalance -= $amount;
+        return $this;
+    }
+
+    public function hasEnoughTokens(int $amount): bool
+    {
+        return $this->tokenBalance >= $amount;
+    }
+
+    public function getBoostTokenBalance(): int
+    {
+        return $this->boostTokenBalance;
+    }
+
+    public function setBoostTokenBalance(int $boostTokenBalance): static
+    {
+        $this->boostTokenBalance = $boostTokenBalance;
+        return $this;
+    }
+
+    public function addBoostTokens(int $amount): static
+    {
+        $this->boostTokenBalance += $amount;
+        return $this;
+    }
+
+    public function removeBoostTokens(int $amount): static
+    {
+        $this->boostTokenBalance -= $amount;
+        return $this;
+    }
+
+    public function hasEnoughBoostTokens(int $amount): bool
+    {
+        return $this->boostTokenBalance >= $amount;
     }
 
     public function __toString(): string

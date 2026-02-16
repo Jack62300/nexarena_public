@@ -46,28 +46,26 @@ class RankingController extends AbstractController
     }
 
     #[Route('/classement/categorie/{slug}', name: 'ranking_category', requirements: ['slug' => '[a-z0-9]+(?:-[a-z0-9]+)*'], priority: 1)]
-    public function category(string $slug, Request $request, CategoryRepository $catRepo, ServerRepository $serverRepo): Response
+    public function category(string $slug, CategoryRepository $catRepo, ServerRepository $serverRepo, GameCategoryRepository $gcRepo): Response
     {
         $category = $catRepo->findOneBy(['slug' => $slug, 'isActive' => true]);
         if (!$category) {
             throw $this->createNotFoundException('Categorie introuvable.');
         }
 
-        $page = max(1, $request->query->getInt('page', 1));
-        $result = $serverRepo->findByCategoryPaginated($category, $page, self::PER_PAGE);
+        $gameCategories = $gcRepo->findByCategory($category);
+        $serverCounts = $serverRepo->countActiveByGameCategory();
 
-        return $this->render('ranking/index.html.twig', [
-            'title' => $category->getName(),
-            'description' => $category->getDescription(),
-            'image' => $category->getImage(),
-            'servers' => $result['servers'],
-            'total_servers' => $result['total'],
-            'current_page' => $page,
-            'total_pages' => $result['pages'],
-            'per_page' => self::PER_PAGE,
-            'parentCategory' => $category,
-            'gameCategory' => null,
-            'premiumPositions' => [],
+        $totalServers = 0;
+        foreach ($gameCategories as $gc) {
+            $totalServers += $serverCounts[$gc->getId()] ?? 0;
+        }
+
+        return $this->render('ranking/category.html.twig', [
+            'category' => $category,
+            'gameCategories' => $gameCategories,
+            'serverCounts' => $serverCounts,
+            'totalServers' => $totalServers,
         ]);
     }
 }

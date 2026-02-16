@@ -77,11 +77,6 @@ class LivePromotionController extends AbstractController
 
             $totalCost = $costPerDay * $duration;
 
-            if ($user->getTokenBalance() < $totalCost) {
-                $this->addFlash('error', "Solde insuffisant. Cout: $totalCost NexBits.");
-                return $this->redirectToRoute('app_promotions_new');
-            }
-
             $server = null;
             if ($serverId) {
                 $server = $serverRepo->find($serverId);
@@ -90,15 +85,29 @@ class LivePromotionController extends AbstractController
                 }
             }
 
-            // Deduct tokens
-            $user->removeTokens($totalCost);
+            // Deduct from server if linked, otherwise from user
+            if ($server) {
+                if ($server->getTokenBalance() < $totalCost) {
+                    $this->addFlash('error', "NexBits insuffisants sur le serveur. Cout: $totalCost NexBits.");
+                    return $this->redirectToRoute('app_promotions_new');
+                }
+                $server->removeTokens($totalCost);
+            } else {
+                if ($user->getTokenBalance() < $totalCost) {
+                    $this->addFlash('error', "Solde insuffisant. Cout: $totalCost NexBits.");
+                    return $this->redirectToRoute('app_promotions_new');
+                }
+                $user->removeTokens($totalCost);
+            }
 
             $transaction = new Transaction();
             $transaction->setUser($user);
+            if ($server) {
+                $transaction->setServer($server);
+            }
             $transaction->setType(Transaction::TYPE_SPEND);
-            $transaction->setAmount('-' . $totalCost);
+            $transaction->setTokensAmount(-$totalCost);
             $transaction->setDescription("Promotion live {$channelName} ({$duration}j)");
-            $transaction->setStatus('completed');
 
             $promo = new LivePromotion();
             $promo->setUser($user);

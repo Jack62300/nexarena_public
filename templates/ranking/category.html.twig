@@ -1,0 +1,92 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ category.name }} - {{ setting('site_name', 'Nexarena') }}{% endblock %}
+
+{% block body %}
+
+    {# ===== PAGE HEADER ===== #}
+    <section class="nx-rk-header">
+        <div class="container">
+            <nav aria-label="breadcrumb" class="nx-rk-breadcrumb">
+                <ol>
+                    <li><a href="{{ path('app_home') }}">Accueil</a></li>
+                    <li><i class="fas fa-chevron-right"></i></li>
+                    <li class="active">{{ category.name }}</li>
+                </ol>
+            </nav>
+
+            <div class="nx-rk-header__content">
+                <div class="nx-rk-header__left">
+                    <div class="nx-rk-header__icon">
+                        <i class="{{ category.icon ?? 'fas fa-gamepad' }}"></i>
+                    </div>
+                    <div>
+                        <h1 class="nx-rk-header__title">{{ category.name }}</h1>
+                        {% if category.description %}
+                            <p class="nx-rk-header__desc">{{ category.description }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="nx-rk-header__right" style="display:flex;gap:12px;">
+                    <div class="nx-rk-header__stat">
+                        <span class="nx-rk-header__stat-value">{{ totalServers }}</span>
+                        <span class="nx-rk-header__stat-label">serveur{{ totalServers > 1 ? 's' : '' }}</span>
+                    </div>
+                    <div class="nx-rk-header__stat">
+                        <span class="nx-rk-header__stat-value">{{ gameCategories|length }}</span>
+                        <span class="nx-rk-header__stat-label">sous-cat.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {# ===== SUBCATEGORIES GRID ===== #}
+    <section class="nx-cat-grid-section">
+        <div class="container">
+            {% if gameCategories|length > 0 %}
+                <div class="nx-cat-grid">
+                    {% for gc in gameCategories %}
+                        {% set count = serverCounts[gc.id] ?? 0 %}
+                        <a href="{{ path('ranking_game_category', {slug: gc.slug}) }}" class="nx-cat-card wow fadeInUp" data-wow-delay="{{ (loop.index0 * 0.06)|round(2) }}s">
+                            <div class="nx-cat-card__img">
+                                {% if gc.image %}
+                                    <img src="{{ asset('uploads/categories/' ~ gc.image) }}" alt="{{ gc.name }}">
+                                {% elseif category.image %}
+                                    <img src="{{ asset('uploads/categories/' ~ category.image) }}" alt="{{ gc.name }}">
+                                {% else %}
+                                    <div class="nx-cat-card__placeholder">
+                                        <i class="{{ category.icon ?? 'fas fa-gamepad' }}"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="nx-cat-card__body">
+                                <h3 class="nx-cat-card__name">{{ gc.name }}</h3>
+                                <span class="nx-cat-card__count">
+                                    <i class="fas fa-server"></i> {{ count }} serveur{{ count > 1 ? 's' : '' }}
+                                </span>
+                            </div>
+                            <div class="nx-cat-card__arrow">
+                                <i class="fas fa-arrow-right"></i>
+                            </div>
+                            <div class="nx-cat-card__glow"></div>
+                        </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="nx-rk-empty">
+                    <div class="nx-rk-empty__icon">
+                        <i class="{{ category.icon ?? 'fas fa-gamepad' }}"></i>
+                    </div>
+                    <h3 class="nx-rk-empty__title">Aucune sous-categorie</h3>
+                    <p class="nx-rk-empty__text">Cette categorie ne contient pas encore de sous-categories.</p>
+                </div>
+            {% endif %}
+        </div>
+    </section>
+
+{% endblock %}
+
+{% block stylesheets %}
+<link rel="stylesheet" href="{{ asset('assets/css/pages/ranking.css') }}">
+{% endblock %}

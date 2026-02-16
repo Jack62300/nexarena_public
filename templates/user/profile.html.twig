@@ -145,6 +145,7 @@
                             <button type="button" class="btn-action btn-action--primary" id="btn2faEnable">
                                 <i class="fas fa-qrcode"></i> Activer le 2FA
                             </button>
+                            <div class="twofa-msg" id="twofaMsg"></div>
 
                             <div class="twofa-setup" id="twofaSetup">
                                 <div class="twofa-qr" id="twofaQr"></div>
@@ -156,7 +157,7 @@
                                     <input type="text" id="twofaCode" class="form-input" placeholder="000000" maxlength="6" pattern="[0-9]{6}" inputmode="numeric">
                                     <button type="button" class="btn-action btn-action--primary" id="btn2faConfirm"><i class="fas fa-check"></i></button>
                                 </div>
-                                <div class="twofa-msg" id="twofaMsg"></div>
+                                <div class="twofa-msg twofa-msg--confirm" id="twofaConfirmMsg"></div>
                             </div>
                         {% endif %}
                     </div>
@@ -199,6 +200,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var twofaQr = document.getElementById('twofaQr');
     var twofaSecret = document.getElementById('twofaSecret');
     var twofaMsg = document.getElementById('twofaMsg');
+    var twofaConfirmMsg = document.getElementById('twofaConfirmMsg');
     var btn2faConfirm = document.getElementById('btn2faConfirm');
     var twofaCode = document.getElementById('twofaCode');
     var csrfToken = '{{ csrf_token('profile_2fa') }}';
@@ -207,6 +209,8 @@ document.addEventListener('DOMContentLoaded', function() {
         btn2faEnable.addEventListener('click', function() {
             btn2faEnable.disabled = true;
             btn2faEnable.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Chargement...';
+            twofaMsg.className = 'twofa-msg';
+            twofaMsg.textContent = '';
 
             var formData = new FormData();
             formData.append('_token', csrfToken);
@@ -215,7 +219,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 method: 'POST',
                 body: formData
             })
-            .then(function(r) { return r.json(); })
+            .then(function(r) {
+                if (!r.ok) {
+                    return r.text().then(function(text) {
+                        try { var j = JSON.parse(text); throw new Error(j.error || 'Erreur serveur (' + r.status + ')'); }
+                        catch(e) { if (e.message) throw e; throw new Error('Erreur serveur (' + r.status + ')'); }
+                    });
+                }
+                return r.json();
+            })
             .then(function(data) {
                 if (data.error) {
                     twofaMsg.className = 'twofa-msg twofa-msg--error';
@@ -230,9 +242,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 btn2faEnable.style.display = 'none';
                 twofaCode.focus();
             })
-            .catch(function() {
+            .catch(function(err) {
                 twofaMsg.className = 'twofa-msg twofa-msg--error';
-                twofaMsg.textContent = 'Une erreur est survenue.';
+                twofaMsg.textContent = err.message || 'Une erreur est survenue.';
                 btn2faEnable.disabled = false;
                 btn2faEnable.innerHTML = '<i class="fas fa-qrcode"></i> Activer le 2FA';
             });
@@ -243,8 +255,8 @@ document.addEventListener('DOMContentLoaded', function() {
         btn2faConfirm.addEventListener('click', function() {
             var code = twofaCode.value.trim();
             if (code.length !== 6) {
-                twofaMsg.className = 'twofa-msg twofa-msg--error';
-                twofaMsg.textContent = 'Entrez un code a 6 chiffres.';
+                twofaConfirmMsg.className = 'twofa-msg twofa-msg--confirm twofa-msg--error';
+                twofaConfirmMsg.textContent = 'Entrez un code a 6 chiffres.';
                 return;
             }
 
@@ -261,18 +273,18 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(function(r) { return r.json(); })
             .then(function(data) {
                 if (data.error) {
-                    twofaMsg.className = 'twofa-msg twofa-msg--error';
-                    twofaMsg.textContent = data.error;
+                    twofaConfirmMsg.className = 'twofa-msg twofa-msg--confirm twofa-msg--error';
+                    twofaConfirmMsg.textContent = data.error;
                     btn2faConfirm.disabled = false;
                     return;
                 }
-                twofaMsg.className = 'twofa-msg twofa-msg--success';
-                twofaMsg.textContent = data.message;
+                twofaConfirmMsg.className = 'twofa-msg twofa-msg--confirm twofa-msg--success';
+                twofaConfirmMsg.textContent = data.message;
                 setTimeout(function() { location.reload(); }, 1500);
             })
             .catch(function() {
-                twofaMsg.className = 'twofa-msg twofa-msg--error';
-                twofaMsg.textContent = 'Une erreur est survenue.';
+                twofaConfirmMsg.className = 'twofa-msg twofa-msg--confirm twofa-msg--error';
+                twofaConfirmMsg.textContent = 'Une erreur est survenue.';
                 btn2faConfirm.disabled = false;
             });
         });

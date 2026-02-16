@@ -81,12 +81,12 @@ class PremiumService
         }
 
         $cost = $this->getFeatureCost($feature);
-        if ($cost > 0 && !$user->hasEnoughTokens($cost)) {
+        if ($cost > 0 && !$server->hasEnoughTokens($cost)) {
             return false;
         }
 
         if ($cost > 0) {
-            $user->removeTokens($cost);
+            $server->removeTokens($cost);
         }
 
         $unlock = new ServerPremiumFeature();
@@ -105,6 +105,7 @@ class PremiumService
 
         $tx = new Transaction();
         $tx->setUser($user);
+        $tx->setServer($server);
         $tx->setType(Transaction::TYPE_SPEND);
         $tx->setTokensAmount(-$cost);
         $tx->setDescription('Deblocage ' . $featureLabel . ' - ' . $server->getName());
@@ -213,14 +214,14 @@ class PremiumService
         }
 
         $cost = $this->getRecruitmentCost();
-        if ($user->hasEnoughTokens($cost)) {
+        if ($server->hasEnoughTokens($cost)) {
             return ['allowed' => true, 'cost' => $cost, 'reason' => null];
         }
 
         return [
             'allowed' => false,
             'cost' => $cost,
-            'reason' => 'NexBits insuffisants. Vous avez atteint la limite gratuite de ' . $freeLimit . ' annonces par serveur.',
+            'reason' => 'NexBits insuffisants sur le serveur. Vous avez atteint la limite gratuite de ' . $freeLimit . ' annonces par serveur.',
         ];
     }
 
@@ -231,10 +232,11 @@ class PremiumService
             return;
         }
 
-        $user->removeTokens($cost);
+        $server->removeTokens($cost);
 
         $tx = new Transaction();
         $tx->setUser($user);
+        $tx->setServer($server);
         $tx->setType(Transaction::TYPE_SPEND);
         $tx->setTokensAmount(-$cost);
         $tx->setDescription('Annonce recrutement supplementaire - ' . $server->getName());
@@ -280,7 +282,7 @@ class PremiumService
     public function bookFeaturedSlot(Server $server, User $user, \DateTimeInterface $startsAt, int $durationHours = 12): bool
     {
         $cost = (int) ceil($durationHours / 12) * $this->getBoostCost();
-        if (!$user->hasEnoughBoostTokens($cost)) {
+        if (!$server->hasEnoughBoostTokens($cost)) {
             return false;
         }
 
@@ -291,7 +293,7 @@ class PremiumService
 
         $endsAt = (clone $startsAt)->modify("+{$durationHours} hours");
 
-        $user->removeBoostTokens($cost);
+        $server->removeBoostTokens($cost);
 
         $booking = new FeaturedBooking();
         $booking->setServer($server);
@@ -304,6 +306,7 @@ class PremiumService
 
         $tx = new Transaction();
         $tx->setUser($user);
+        $tx->setServer($server);
         $tx->setType(Transaction::TYPE_SPEND);
         $tx->setBoostTokensAmount(-$cost);
         $tx->setDescription('Mise en avant ' . $server->getName() . ' du ' . $startsAt->format('d/m/Y H:i') . ' au ' . $endsAt->format('d/m/Y H:i'));
@@ -356,11 +359,11 @@ class PremiumService
     public function subscribeTwitchLiveWithTokens(Server $server, User $user): bool
     {
         $cost = $this->getTwitchLiveMonthlyTokenCost();
-        if (!$user->hasEnoughTokens($cost)) {
+        if (!$server->hasEnoughTokens($cost)) {
             return false;
         }
 
-        $user->removeTokens($cost);
+        $server->removeTokens($cost);
 
         $sub = $this->twitchSubRepo->findByServer($server);
         if ($sub) {
@@ -381,6 +384,7 @@ class PremiumService
 
         $tx = new Transaction();
         $tx->setUser($user);
+        $tx->setServer($server);
         $tx->setType(Transaction::TYPE_SPEND);
         $tx->setTokensAmount(-$cost);
         $tx->setDescription('Abonnement Twitch Live (30j) - ' . $server->getName());
@@ -467,20 +471,22 @@ class PremiumService
         $expired = $this->twitchSubRepo->findExpired();
         foreach ($expired as $sub) {
             if ($sub->isAutoRenew() && $sub->getPaymentMethod() === 'nexbits') {
+                $server = $sub->getServer();
                 $user = $sub->getSubscribedBy();
                 $cost = $this->getTwitchLiveMonthlyTokenCost();
 
-                if ($user->hasEnoughTokens($cost)) {
-                    $user->removeTokens($cost);
+                if ($server && $server->hasEnoughTokens($cost)) {
+                    $server->removeTokens($cost);
                     $sub->setExpiresAt((new \DateTimeImmutable())->modify('+30 days'));
                     $sub->setStatus(TwitchSubscription::STATUS_ACTIVE);
                     $sub->setRenewedAt(new \DateTimeImmutable());
 
                     $tx = new Transaction();
                     $tx->setUser($user);
+                    $tx->setServer($server);
                     $tx->setType(Transaction::TYPE_SPEND);
                     $tx->setTokensAmount(-$cost);
-                    $tx->setDescription('Renouvellement Twitch Live (auto) - ' . $sub->getServer()->getName());
+                    $tx->setDescription('Renouvellement Twitch Live (auto) - ' . $server->getName());
                     $this->em->persist($tx);
 
                     $results['renewed']++;
@@ -570,13 +576,13 @@ class PremiumService
         }
 
         $cost = $check['cost'];
-        if (!$user->hasEnoughBoostTokens($cost)) {
+        if (!$server->hasEnoughBoostTokens($cost)) {
             return false;
         }
 
         $endsAt = (clone $startsAt)->modify("+{$durationHours} hours");
 
-        $user->removeBoostTokens($cost);
+        $server->removeBoostTokens($cost);
 
         $booking = new FeaturedBooking();
         $booking->setServer($server);
@@ -593,6 +599,7 @@ class PremiumService
         $scopeLabel = $scope === FeaturedBooking::SCOPE_HOMEPAGE ? 'Accueil' : ('Jeu: ' . ($gc ? $gc->getName() : '?'));
         $tx = new Transaction();
         $tx->setUser($user);
+        $tx->setServer($server);
         $tx->setType(Transaction::TYPE_SPEND);
         $tx->setBoostTokensAmount(-$cost);
         $tx->setDescription('Selection premium #' . $position . ' (' . $scopeLabel . ') - ' . $server->getName() . ' du ' . $startsAt->format('d/m/Y H:i') . ' au ' . $endsAt->format('d/m/Y H:i'));
@@ -609,6 +616,62 @@ class PremiumService
                 ['name' => 'Utilisateur', 'value' => $user->getUsername(), 'inline' => true],
                 ['name' => 'Creneau', 'value' => $startsAt->format('d/m/Y H:i') . ' - ' . $endsAt->format('d/m/Y H:i'), 'inline' => false],
                 ['name' => 'Cout', 'value' => $cost . ' NexBoost', 'inline' => true],
+            ],
+        ]);
+
+        return true;
+    }
+
+    public function depositToServer(User $user, Server $server, int $nexbits, int $nexboost): bool
+    {
+        if ($nexbits < 0 || $nexboost < 0) {
+            return false;
+        }
+        if ($nexbits === 0 && $nexboost === 0) {
+            return false;
+        }
+        if ($nexbits > 0 && !$user->hasEnoughTokens($nexbits)) {
+            return false;
+        }
+        if ($nexboost > 0 && !$user->hasEnoughBoostTokens($nexboost)) {
+            return false;
+        }
+
+        if ($nexbits > 0) {
+            $user->removeTokens($nexbits);
+            $server->addTokens($nexbits);
+        }
+        if ($nexboost > 0) {
+            $user->removeBoostTokens($nexboost);
+            $server->addBoostTokens($nexboost);
+        }
+
+        $tx = new Transaction();
+        $tx->setUser($user);
+        $tx->setServer($server);
+        $tx->setType(Transaction::TYPE_DEPOSIT);
+        $tx->setTokensAmount($nexbits);
+        $tx->setBoostTokensAmount($nexboost);
+
+        $parts = [];
+        if ($nexbits > 0) {
+            $parts[] = $nexbits . ' NexBits';
+        }
+        if ($nexboost > 0) {
+            $parts[] = $nexboost . ' NexBoost';
+        }
+        $tx->setDescription('Depot sur ' . $server->getName() . ' : ' . implode(' + ', $parts));
+
+        $this->em->persist($tx);
+        $this->em->flush();
+
+        $this->webhookService->dispatch('premium.deposit', [
+            'title' => 'Depot sur serveur',
+            'fields' => [
+                ['name' => 'Serveur', 'value' => $server->getName(), 'inline' => true],
+                ['name' => 'Utilisateur', 'value' => $user->getUsername(), 'inline' => true],
+                ['name' => 'NexBits', 'value' => (string) $nexbits, 'inline' => true],
+                ['name' => 'NexBoost', 'value' => (string) $nexboost, 'inline' => true],
             ],
         ]);
 

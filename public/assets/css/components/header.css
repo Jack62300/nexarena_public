@@ -1,8 +1,20 @@
 /* ─── Navbar layout fix ─── */
+.tgmenu__nav {
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+}
+.tgmenu__action {
+    flex-shrink: 0;
+    margin-left: auto;
+    display: flex !important;
+    align-items: center;
+}
+.tgmenu__action > .list-wrap {
+    display: flex !important;
+    align-items: center;
+    flex-wrap: nowrap;
+}
 @media (min-width: 1200px) {
-    .tgmenu__nav {
-        flex-wrap: nowrap !important;
-    }
     .tgmenu__navbar-wrap {
         min-width: 0;
     }
@@ -19,9 +31,10 @@
         margin-left: 15px;
     }
 }
-.tgmenu__action {
-    flex-shrink: 0;
-    margin-left: auto;
+@media (max-width: 767.98px) {
+    .tgmenu__action {
+        display: none !important;
+    }
 }
 
 /* ─── Profile Toggle ─── */
@@ -369,73 +382,127 @@
     .nx-logo--mobile img { height: 45px !important; }
 }
 
-/* ─── Nested Sub-menu fix (hover gap) ─── */
-.tgmenu__navbar-wrap ul li .sub-menu li.menu-item-has-children > .sub-menu {
-    transition: all 0.3s ease-out 0s;
+/* ─── Categories Dropdown ─── */
+.nx-cat-dropdown > .nx-cat-menu {
+    min-width: 300px !important;
+    background: #0c1219 !important;
+    border: 1px solid rgba(69,248,130,0.08) !important;
+    border-radius: 14px !important;
+    padding: 10px !important;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 30px rgba(69,248,130,0.04) !important;
+    transform-origin: center top !important;
 }
-.tgmenu__navbar-wrap ul li .sub-menu li.menu-item-has-children:not(:hover) > .sub-menu {
-    transition-delay: 0.15s;
+.nx-cat-menu li {
+    margin: 0 !important;
 }
-.tgmenu__navbar-wrap ul li .sub-menu li.menu-item-has-children {
-    position: relative;
+.nx-cat-menu li + li {
+    margin-top: 4px !important;
 }
-.tgmenu__navbar-wrap ul li .sub-menu li.menu-item-has-children::after {
-    content: "";
+/* Override base theme ::before on links */
+.nx-cat-menu li a.nx-cat-item::before {
+    display: none !important;
+}
+.nx-cat-item {
+    display: flex !important;
+    align-items: center !important;
+    gap: 14px !important;
+    padding: 12px 14px !important;
+    border-radius: 10px !important;
+    text-transform: none !important;
+    letter-spacing: 0 !important;
+    transition: all 0.25s ease !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+.nx-cat-item::after {
+    content: '';
     position: absolute;
-    right: -20px;
-    top: 0;
-    width: 20px;
-    height: 100%;
-    z-index: 10;
+    inset: 0;
+    border-radius: 10px;
+    opacity: 0;
+    background: radial-gradient(ellipse at 20% 50%, rgba(69,248,130,0.06) 0%, transparent 70%);
+    transition: opacity 0.25s;
+    pointer-events: none;
 }
-/* Arrow indicator for items with children */
-.tgmenu__navbar-wrap ul li .sub-menu li.menu-item-has-children > a::after {
-    content: "\f105";
-    font-family: "Font Awesome 5 Free";
-    font-weight: 900;
-    margin-left: auto;
-    font-size: 11px;
-    opacity: 0.4;
-    transition: opacity 0.2s ease, transform 0.2s ease;
+.nx-cat-item:hover {
+    background: rgba(255,255,255,0.04) !important;
 }
-.tgmenu__navbar-wrap ul li .sub-menu li.menu-item-has-children:hover > a::after {
+.nx-cat-item:hover::after {
     opacity: 1;
+}
+.nx-cat-item__icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(69,248,130,0.1), rgba(69,248,130,0.02));
+    border: 1px solid rgba(69,248,130,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.25s ease;
+}
+.nx-cat-item__icon i {
+    font-size: 15px;
     color: var(--tg-theme-primary);
-    transform: translateX(3px);
-}
-/* Category icons in submenu */
-.tgmenu__navbar-wrap ul li .sub-menu li a i {
-    width: 18px;
-    text-align: center;
-    margin-right: 4px;
-    font-size: 13px;
-    opacity: 0.5;
-}
-.tgmenu__navbar-wrap ul li .sub-menu li:hover > a i {
-    opacity: 1;
-    color: var(--tg-theme-primary);
-}
-
-/* ─── "Voir tout" link in submenu ─── */
-.nx-submenu-more {
-    border-top: 1px solid rgba(255,255,255,0.06);
-    margin-top: 6px;
-    padding-top: 6px;
-}
-.nx-submenu-more a {
-    color: var(--tg-theme-primary) !important;
-    font-size: 12px !important;
     opacity: 0.7;
-    justify-content: space-between;
+    transition: all 0.25s ease;
+    width: auto !important;
+    margin-right: 0 !important;
 }
-.nx-submenu-more a i {
-    font-size: 10px !important;
-    margin-left: 8px;
-    opacity: 1 !important;
-    color: var(--tg-theme-primary) !important;
+.nx-cat-item:hover .nx-cat-item__icon {
+    background: linear-gradient(135deg, rgba(69,248,130,0.18), rgba(69,248,130,0.06));
+    border-color: rgba(69,248,130,0.25);
+    box-shadow: 0 0 12px rgba(69,248,130,0.1);
 }
-.nx-submenu-more:hover a {
+.nx-cat-item:hover .nx-cat-item__icon i {
     opacity: 1;
+}
+.nx-cat-item__text {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+.nx-cat-item__name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    font-family: var(--tg-heading-font-family);
+    letter-spacing: 0.3px;
+    line-height: 1.2;
+}
+.nx-cat-item__sub {
+    font-size: 11px;
+    color: rgba(255,255,255,0.3);
+    font-weight: 500;
+    margin-top: 2px;
+    letter-spacing: 0;
+}
+.nx-cat-item:hover .nx-cat-item__sub {
+    color: rgba(69,248,130,0.5);
+}
+.nx-cat-item__arrow {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    opacity: 0;
+    transform: translateX(-6px);
+    transition: all 0.25s ease;
+}
+.nx-cat-item__arrow i {
+    font-size: 10px;
+    color: var(--tg-theme-primary);
+    width: auto !important;
+    margin-right: 0 !important;
+    opacity: 1 !important;
+}
+.nx-cat-item:hover .nx-cat-item__arrow {
+    opacity: 1;
+    transform: translateX(0);
 }
 
 /* ─── Off-Canvas Tweaks ─── */

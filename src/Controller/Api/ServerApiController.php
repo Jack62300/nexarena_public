@@ -31,10 +31,10 @@ class ServerApiController extends AbstractController
             return $this->json(['error' => 'Invalid token.'], 401);
         }
 
-        $allowedIps = $server->getAllowedApiIps();
-        if (!empty($allowedIps)) {
+        $serverIp = $server->getIp();
+        if ($serverIp) {
             $clientIp = $request->getClientIp();
-            if (!in_array($clientIp, $allowedIps, true)) {
+            if ($clientIp !== $serverIp) {
                 return $this->json(['error' => 'IP not authorized.'], 403);
             }
         }

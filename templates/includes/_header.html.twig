@@ -25,31 +25,22 @@
                                     <li class="{{ _route == 'app_home' ? 'active' : '' }}">
                                         <a href="{{ path('app_home') }}">Accueil</a>
                                     </li>
-                                    <li class="menu-item-has-children {{ _route starts with 'ranking_' ? 'active' : '' }}">
+                                    <li class="menu-item-has-children nx-cat-dropdown {{ _route starts with 'ranking_' ? 'active' : '' }}">
                                         <a href="#">Categories</a>
-                                        <ul class="sub-menu">
+                                        <ul class="sub-menu nx-cat-menu">
                                             {% for item in nav_categories() %}
-                                                {% if item.gameCategories|length > 0 %}
-                                                    <li class="menu-item-has-children">
-                                                        <a href="{{ path('ranking_category', {slug: item.category.slug}) }}">
-                                                            <i class="{{ item.category.icon ?? 'fas fa-gamepad' }}"></i> {{ item.category.name }}
-                                                        </a>
-                                                        <ul class="sub-menu">
-                                                            {% for gc in item.gameCategories %}
-                                                                <li><a href="{{ path('ranking_game_category', {slug: gc.slug}) }}">{{ gc.name }}</a></li>
-                                                            {% endfor %}
-                                                            {% if item.hasMore %}
-                                                                <li class="nx-submenu-more"><a href="{{ path('ranking_category', {slug: item.category.slug}) }}">Voir tout <i class="fas fa-arrow-right"></i></a></li>
-                                                            {% endif %}
-                                                        </ul>
-                                                    </li>
-                                                {% else %}
-                                                    <li>
-                                                        <a href="{{ path('ranking_category', {slug: item.category.slug}) }}">
-                                                            <i class="{{ item.category.icon ?? 'fas fa-gamepad' }}"></i> {{ item.category.name }}
-                                                        </a>
-                                                    </li>
-                                                {% endif %}
+                                                <li>
+                                                    <a href="{{ path('ranking_category', {slug: item.category.slug}) }}" class="nx-cat-item">
+                                                        <span class="nx-cat-item__icon">
+                                                            <i class="{{ item.category.icon ?? 'fas fa-gamepad' }}"></i>
+                                                        </span>
+                                                        <span class="nx-cat-item__text">
+                                                            <span class="nx-cat-item__name">{{ item.category.name }}</span>
+                                                            <span class="nx-cat-item__sub">{{ item.allGameCategories|length }} sous-categorie{{ item.allGameCategories|length > 1 ? 's' : '' }}</span>
+                                                        </span>
+                                                        <span class="nx-cat-item__arrow"><i class="fas fa-chevron-right"></i></span>
+                                                    </a>
+                                                </li>
                                             {% endfor %}
                                         </ul>
                                     </li>
@@ -73,7 +64,7 @@
                             </div>
 
                             {# ── ACTIONS ── #}
-                            <div class="tgmenu__action d-none d-md-block">
+                            <div class="tgmenu__action d-none d-md-flex">
                                 <ul class="list-wrap">
                                     {% if app.user %}
                                         <li class="header-btn">

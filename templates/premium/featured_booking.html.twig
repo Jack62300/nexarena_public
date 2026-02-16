@@ -31,10 +31,10 @@
         <div class="booking-balance">
             <i class="fas fa-bolt booking-balance__icon"></i>
             <div>
-                <div class="booking-balance__label">NexBoost disponibles</div>
+                <div class="booking-balance__label">NexBoost du serveur</div>
                 <div class="booking-balance__value">{{ user_boost_balance }}</div>
             </div>
-            <a href="{{ path('premium_index') }}" style="margin-left:auto;color:#ff6b35;font-size:13px;text-decoration:underline;">Acheter</a>
+            <a href="{{ path('user_servers_manage', {id: server.id}) }}" style="margin-left:auto;color:#ff6b35;font-size:13px;text-decoration:underline;">Deposer des jetons</a>
         </div>
 
         {# === SCOPE TABS === #}

@@ -287,6 +287,25 @@ class UserServerController extends AbstractController
                 }
             }
 
+            if ($action === 'deposit') {
+                if (!$isOwner) {
+                    throw $this->createAccessDeniedException();
+                }
+                $nexbits = max(0, (int) $request->request->get('deposit_nexbits', 0));
+                $nexboost = max(0, (int) $request->request->get('deposit_nexboost', 0));
+                $user = $this->getUser();
+
+                $result = $this->premiumService->depositToServer($user, $server, $nexbits, $nexboost);
+                if ($result) {
+                    $parts = [];
+                    if ($nexbits > 0) { $parts[] = $nexbits . ' NexBits'; }
+                    if ($nexboost > 0) { $parts[] = $nexboost . ' NexBoost'; }
+                    $this->addFlash('success', 'Depot effectue : ' . implode(' + ', $parts));
+                } else {
+                    $this->addFlash('error', 'Depot impossible. Verifiez votre solde personnel.');
+                }
+            }
+
             return $this->redirectToRoute('user_servers_manage', ['id' => $server->getId()]);
         }
 
@@ -297,7 +316,7 @@ class UserServerController extends AbstractController
 
         $premiumEnabled = $this->premiumService->isPremiumEnabled();
         $serverBookings = $isOwner && $premiumEnabled ? $bookingRepo->findByServer($server) : [];
-        $userTransactions = $isOwner && $premiumEnabled ? $transactionRepo->findByUser($this->getUser()) : [];
+        $serverTransactions = $isOwner && $premiumEnabled ? $transactionRepo->findByServer($server) : [];
 
         $twitchSub = $this->premiumService->getTwitchSubscription($server);
         $twitchLiveGated = $this->premiumService->isFeatureGated('twitch_live');
@@ -321,7 +340,7 @@ class UserServerController extends AbstractController
             'permissions' => self::PERMISSIONS,
             'recruitment_listings' => $recruitmentListings,
             'server_bookings' => $serverBookings,
-            'user_transactions' => $userTransactions,
+            'server_transactions' => $serverTransactions,
             'premium_enabled' => $premiumEnabled,
             'has_premium_theme' => !$premiumEnabled || $this->premiumService->hasServerFeature($server, 'theme'),
             'has_premium_widget' => !$premiumEnabled || $this->premiumService->hasServerFeature($server, 'widget'),
@@ -367,38 +386,6 @@ class UserServerController extends AbstractController
         }
 
         return $this->redirectToRoute('user_servers_list');
-    }
-
-    #[Route('/serveur/{id}/gestion/api-ips', name: 'user_servers_update_api_ips', methods: ['POST'])]
-    public function updateApiIps(Server $server, Request $request): Response
-    {
-        $this->requireAccess($server, 'manage_api');
-
-        if (!$this->isCsrfTokenValid('api_ips', $request->request->get('_token'))) {
-            $this->addFlash('error', 'Token CSRF invalide.');
-            return $this->redirectToRoute('user_servers_manage', ['id' => $server->getId()]);
-        }
-
-        $ip1 = trim((string) $request->request->get('allowed_ip_1'));
-        $ip2 = trim((string) $request->request->get('allowed_ip_2'));
-
-        $ips = [];
-        foreach ([$ip1, $ip2] as $ip) {
-            if ($ip !== '' && filter_var($ip, FILTER_VALIDATE_IP)) {
-                $ips[] = $ip;
-            } elseif ($ip !== '') {
-                $this->addFlash('error', 'Adresse IP invalide : ' . $ip);
-                return $this->redirectToRoute('user_servers_manage', ['id' => $server->getId()]);
-            }
-        }
-
-        $server->setAllowedApiIps(!empty($ips) ? array_values(array_unique($ips)) : null);
-        $this->em->flush();
-
-        $this->addFlash('success', empty($ips)
-            ? 'Restriction IP desactivee. L\'API est accessible depuis toutes les IPs.'
-            : 'IPs autorisees mises a jour : ' . implode(', ', $ips));
-        return $this->redirectToRoute('user_servers_manage', ['id' => $server->getId()]);
     }
 
     #[Route('/serveur/{id}/gestion/comment/{commentId}/flag', name: 'user_servers_flag_comment', methods: ['POST'])]
@@ -453,7 +440,7 @@ class UserServerController extends AbstractController
             $label = $feature === 'theme' ? 'Theme personnalise' : 'Widget personnalise';
             $this->addFlash('success', $label . ' debloque avec succes !');
         } else {
-            $this->addFlash('error', 'NexBits insuffisants. Achetez des NexBits sur la page Premium.');
+            $this->addFlash('error', 'NexBits insuffisants sur le serveur. Deposez des NexBits depuis l\'onglet Premium.');
         }
 
         return $this->redirectToRoute('user_servers_manage', ['id' => $server->getId()]);
@@ -488,7 +475,7 @@ class UserServerController extends AbstractController
                 }
                 $this->addFlash('success', 'Abonnement Twitch Live active pour 30 jours !');
             } else {
-                $this->addFlash('error', 'NexBits insuffisants. Il vous faut ' . $this->premiumService->getTwitchLiveMonthlyTokenCost() . ' NexBits.');
+                $this->addFlash('error', 'NexBits insuffisants sur le serveur. Il faut ' . $this->premiumService->getTwitchLiveMonthlyTokenCost() . ' NexBits. Deposez des NexBits depuis l\'onglet Premium.');
             }
         }
         // PayPal flow is handled via AJAX in a separate route
@@ -671,11 +658,11 @@ class UserServerController extends AbstractController
         }
 
         $refundAmount = $booking->getBoostTokensUsed();
-        $user = $this->getUser();
-        $user->addBoostTokens($refundAmount);
+        $server->addBoostTokens($refundAmount);
 
         $tx = new Transaction();
-        $tx->setUser($user);
+        $tx->setUser($this->getUser());
+        $tx->setServer($server);
         $tx->setType(Transaction::TYPE_REFUND);
         $tx->setBoostTokensAmount($refundAmount);
         $tx->setTokensAmount(0);
@@ -685,7 +672,7 @@ class UserServerController extends AbstractController
         $this->em->remove($booking);
         $this->em->flush();
 
-        $this->addFlash('success', 'Reservation annulee. ' . $refundAmount . ' NexBoost recredites.');
+        $this->addFlash('success', 'Reservation annulee. ' . $refundAmount . ' NexBoost recredites sur le serveur.');
         return $this->redirectToRoute('user_servers_manage', ['id' => $server->getId()]);
     }
 
@@ -762,6 +749,14 @@ class UserServerController extends AbstractController
                 $server->$setter($value);
             }
             $server->setTwitchChannel($request->request->get('twitch_channel') ?: null);
+
+            // Discord server ID (for widget embed) — numeric only
+            $discordSid = $request->request->get('discord_server_id') ?: null;
+            if ($discordSid && preg_match('/^\d{1,20}$/', $discordSid)) {
+                $server->setDiscordServerId($discordSid);
+            } else {
+                $server->setDiscordServerId(null);
+            }
         }
 
         if ($canEditImages) {

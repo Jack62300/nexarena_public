@@ -190,6 +190,13 @@
                                         <span class="form-hint">Le stream sera affiche sur la page publique de votre serveur.</span>
                                     </div>
                                 </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="discord_server_id"><i class="fab fa-discord" style="margin-right:5px;"></i> ID Serveur Discord (widget)</label>
+                                        <input type="text" id="discord_server_id" name="discord_server_id" class="form-input" value="{{ server ? server.discordServerId : '' }}" placeholder="123456789012345678" {{ not can_edit_social ? 'disabled' : '' }}>
+                                        <span class="form-hint">ID numerique du serveur Discord. Activez le widget dans Parametres serveur &gt; Widget.</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

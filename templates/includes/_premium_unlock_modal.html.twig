@@ -22,7 +22,7 @@
                         </div>
                     </div>
                     <div style="text-align:right;">
-                        <div style="color:#8b949e;font-size:12px;text-transform:uppercase;">Votre solde</div>
+                        <div style="color:#8b949e;font-size:12px;text-transform:uppercase;">Solde serveur</div>
                         <div style="font-size:20px;font-weight:700;color:{{ user_balance >= cost ? '#1cc88a' : '#e74a3b' }};">
                             <i class="fas fa-coins"></i> {{ user_balance }}
                         </div>
@@ -30,8 +30,8 @@
                 </div>
                 {% if user_balance < cost %}
                     <div style="background:rgba(231,74,59,0.1);border:1px solid rgba(231,74,59,0.3);border-radius:8px;padding:12px;color:#e74a3b;font-size:13px;">
-                        <i class="fas fa-exclamation-triangle"></i> NexBits insuffisants.
-                        <a href="{{ path('premium_index') }}" style="color:#ffd700;text-decoration:underline;">Acheter des NexBits</a>
+                        <i class="fas fa-exclamation-triangle"></i> NexBits insuffisants sur le serveur.
+                        <a href="{{ path('user_servers_manage', {id: server.id}) }}" style="color:#ffd700;text-decoration:underline;">Deposer des NexBits</a>
                     </div>
                 {% endif %}
             </div>

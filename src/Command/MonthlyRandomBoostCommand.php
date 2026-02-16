@@ -159,7 +159,7 @@ class MonthlyRandomBoostCommand extends Command
                 $monthLabel,
                 self::TOKENS_REWARD
             ),
-            '/mes-serveurs/' . $winner->getId() . '/gerer'
+            '/serveur/' . $winner->getId() . '/gestion'
         );
 
         $io->success(sprintf(
