@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e"/>
+      <stop offset="100%" style="stop-color:#0f0f1a"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <!-- Hexagon -->
+  <polygon points="64,6 116,32 116,84 64,122 12,84 12,32" fill="url(#bg)" stroke="#45f882" stroke-width="3"/>
+  <polygon points="64,14 108,37 108,81 64,114 20,81 20,37" fill="none" stroke="rgba(69,248,130,0.15)" stroke-width="1"/>
+  <!-- Thumbs up / vote icon -->
+  <g transform="translate(64,58)" filter="url(#glow)">
+    <!-- Hand -->
+    <path d="M-8,6 L-8,-14 Q-8,-20 -2,-22 L2,-22 Q6,-22 6,-16 L6,-10 L18,-10 Q22,-10 22,-4 L20,14 Q20,18 16,18 L-2,18 Q-8,18 -8,14 Z" fill="#45f882"/>
+    <!-- Thumb -->
+    <rect x="-20" y="0" width="10" height="18" rx="3" fill="#2ecc71"/>
+  </g>
+  <!-- Text -->
+  <text x="64" y="105" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="13" font-weight="900" fill="#45f882" opacity="0.6">VOTEUR</text>
+</svg>

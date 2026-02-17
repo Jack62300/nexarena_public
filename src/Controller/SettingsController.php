@@ -18,7 +18,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[IsGranted('ROLE_USER')]
-class ProfileController extends AbstractController
+class SettingsController extends AbstractController
 {
     public function __construct(
         private EntityManagerInterface $em,
@@ -26,48 +26,46 @@ class ProfileController extends AbstractController
     ) {
     }
 
-    #[Route('/profil', name: 'user_profile')]
+    #[Route('/profil/parametres', name: 'user_settings')]
     public function index(): Response
     {
-        return $this->render('user/profile.html.twig');
+        return $this->render('user/settings.html.twig');
     }
 
-    #[Route('/profil/avatar', name: 'user_profile_avatar', methods: ['POST'])]
+    #[Route('/profil/parametres/avatar', name: 'user_settings_avatar', methods: ['POST'])]
     public function updateAvatar(Request $request): Response
     {
         if (!$this->isCsrfTokenValid('profile_avatar', $request->request->get('_token'))) {
             $this->addFlash('error', 'Token CSRF invalide.');
-            return $this->redirectToRoute('user_profile');
+            return $this->redirectToRoute('user_settings');
         }
 
         /** @var UploadedFile|null $file */
         $file = $request->files->get('avatar');
         if (!$file) {
             $this->addFlash('error', 'Aucun fichier selectionne.');
-            return $this->redirectToRoute('user_profile');
+            return $this->redirectToRoute('user_settings');
         }
 
         $allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
         if (!in_array($file->getMimeType(), $allowed)) {
             $this->addFlash('error', 'Format d\'image non supporte. Utilisez JPG, PNG, GIF ou WebP.');
-            return $this->redirectToRoute('user_profile');
+            return $this->redirectToRoute('user_settings');
         }
 
         if ($file->getSize() > 2 * 1024 * 1024) {
             $this->addFlash('error', 'L\'image ne doit pas depasser 2 Mo.');
-            return $this->redirectToRoute('user_profile');
+            return $this->redirectToRoute('user_settings');
         }
 
-        // Verify it's a real image via GD
         $imageInfo = @getimagesize($file->getPathname());
         if ($imageInfo === false) {
             $this->addFlash('error', 'Le fichier n\'est pas une image valide.');
-            return $this->redirectToRoute('user_profile');
+            return $this->redirectToRoute('user_settings');
         }
 
         $user = $this->getUser();
 
-        // Delete old avatar if it's a local file
         $oldAvatar = $user->getAvatar();
         if ($oldAvatar && !str_starts_with($oldAvatar, 'http')) {
             $oldPath = $this->projectDir . '/public/uploads/avatars/' . basename($oldAvatar);
@@ -88,22 +86,22 @@ class ProfileController extends AbstractController
         $this->em->flush();
 
         $this->addFlash('success', 'Avatar mis a jour.');
-        return $this->redirectToRoute('user_profile');
+        return $this->redirectToRoute('user_settings');
     }
 
-    #[Route('/profil/email', name: 'user_profile_email', methods: ['POST'])]
+    #[Route('/profil/parametres/email', name: 'user_settings_email', methods: ['POST'])]
     public function updateEmail(Request $request, UserRepository $userRepo): Response
     {
         if (!$this->isCsrfTokenValid('profile_email', $request->request->get('_token'))) {
             $this->addFlash('error', 'Token CSRF invalide.');
-            return $this->redirectToRoute('user_profile');
+            return $this->redirectToRoute('user_settings');
         }
 
         $email = trim((string) $request->request->get('email'));
 
         if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $this->addFlash('error', 'Adresse email invalide.');
-            return $this->redirectToRoute('user_profile');
+            return $this->redirectToRoute('user_settings');
         }
 
         $user = $this->getUser();
@@ -112,7 +110,7 @@ class ProfileController extends AbstractController
             $existing = $userRepo->findOneBy(['email' => $email]);
             if ($existing) {
                 $this->addFlash('error', 'Cette adresse email est deja utilisee.');
-                return $this->redirectToRoute('user_profile');
+                return $this->redirectToRoute('user_settings');
             }
 
             $user->setEmail($email);
@@ -120,15 +118,15 @@ class ProfileController extends AbstractController
             $this->addFlash('success', 'Adresse email mise a jour.');
         }
 
-        return $this->redirectToRoute('user_profile');
+        return $this->redirectToRoute('user_settings');
     }
 
-    #[Route('/profil/password', name: 'user_profile_password', methods: ['POST'])]
+    #[Route('/profil/parametres/password', name: 'user_settings_password', methods: ['POST'])]
     public function updatePassword(Request $request, UserPasswordHasherInterface $hasher): Response
     {
         if (!$this->isCsrfTokenValid('profile_password', $request->request->get('_token'))) {
             $this->addFlash('error', 'Token CSRF invalide.');
-            return $this->redirectToRoute('user_profile');
+            return $this->redirectToRoute('user_settings');
         }
 
         $user = $this->getUser();
@@ -136,32 +134,31 @@ class ProfileController extends AbstractController
         $newPassword = $request->request->get('new_password', '');
         $confirmPassword = $request->request->get('confirm_password', '');
 
-        // If user has a password (not OAuth-only), check the current one
         if ($user->getPassword()) {
             if (!$hasher->isPasswordValid($user, $currentPassword)) {
                 $this->addFlash('error', 'Le mot de passe actuel est incorrect.');
-                return $this->redirectToRoute('user_profile');
+                return $this->redirectToRoute('user_settings');
             }
         }
 
         if (strlen($newPassword) < 10) {
             $this->addFlash('error', 'Le nouveau mot de passe doit contenir au moins 10 caracteres.');
-            return $this->redirectToRoute('user_profile');
+            return $this->redirectToRoute('user_settings');
         }
 
         if ($newPassword !== $confirmPassword) {
             $this->addFlash('error', 'Les mots de passe ne correspondent pas.');
-            return $this->redirectToRoute('user_profile');
+            return $this->redirectToRoute('user_settings');
         }
 
         $user->setPassword($hasher->hashPassword($user, $newPassword));
         $this->em->flush();
 
         $this->addFlash('success', 'Mot de passe mis a jour.');
-        return $this->redirectToRoute('user_profile');
+        return $this->redirectToRoute('user_settings');
     }
 
-    #[Route('/profil/2fa/enable', name: 'user_profile_2fa_enable', methods: ['POST'])]
+    #[Route('/profil/parametres/2fa/enable', name: 'user_settings_2fa_enable', methods: ['POST'])]
     public function enable2fa(Request $request, TotpAuthenticatorInterface $totpAuth): JsonResponse
     {
         if (!$this->isCsrfTokenValid('profile_2fa', $request->request->get('_token'))) {
@@ -170,12 +167,10 @@ class ProfileController extends AbstractController
 
         $user = $this->getUser();
 
-        // Generate a new secret
         $secret = $totpAuth->generateSecret();
         $user->setTotpSecret($secret);
         $this->em->flush();
 
-        // Generate QR code content (otpauth URI)
         $qrContent = $totpAuth->getQRContent($user);
 
         $qrCode = new QrCode($qrContent);
@@ -188,14 +183,13 @@ class ProfileController extends AbstractController
         ]);
     }
 
-    #[Route('/profil/2fa/confirm', name: 'user_profile_2fa_confirm', methods: ['POST'])]
+    #[Route('/profil/parametres/2fa/confirm', name: 'user_settings_2fa_confirm', methods: ['POST'])]
     public function confirm2fa(Request $request, TotpAuthenticatorInterface $totpAuth, CacheItemPoolInterface $cache): JsonResponse
     {
         if (!$this->isCsrfTokenValid('profile_2fa', $request->request->get('_token'))) {
             return new JsonResponse(['error' => 'Token CSRF invalide.'], 400);
         }
 
-        // Rate limit: 5 attempts / 5 min
         $cacheKey = '2fa_confirm_' . $this->getUser()->getId();
         $cacheItem = $cache->getItem($cacheKey);
         $attempts = $cacheItem->isHit() ? (int) $cacheItem->get() : 0;
@@ -220,27 +214,25 @@ class ProfileController extends AbstractController
         $user->setIsTwoFactorEnabled(true);
         $this->em->flush();
 
-        // Reset attempts on success
         $cache->deleteItem($cacheKey);
 
         return new JsonResponse(['success' => true, 'message' => 'Authentification 2FA activee avec succes.']);
     }
 
-    #[Route('/profil/2fa/disable', name: 'user_profile_2fa_disable', methods: ['POST'])]
+    #[Route('/profil/parametres/2fa/disable', name: 'user_settings_2fa_disable', methods: ['POST'])]
     public function disable2fa(Request $request, UserPasswordHasherInterface $hasher): Response
     {
         if (!$this->isCsrfTokenValid('profile_2fa', $request->request->get('_token'))) {
             $this->addFlash('error', 'Token CSRF invalide.');
-            return $this->redirectToRoute('user_profile');
+            return $this->redirectToRoute('user_settings');
         }
 
         $user = $this->getUser();
 
-        // Require password to disable 2FA
         $password = $request->request->get('password', '');
         if ($user->getPassword() && !$hasher->isPasswordValid($user, $password)) {
             $this->addFlash('error', 'Mot de passe incorrect. Impossible de desactiver la 2FA.');
-            return $this->redirectToRoute('user_profile');
+            return $this->redirectToRoute('user_settings');
         }
 
         $user->setIsTwoFactorEnabled(false);
@@ -248,6 +240,6 @@ class ProfileController extends AbstractController
         $this->em->flush();
 
         $this->addFlash('success', 'Authentification 2FA desactivee.');
-        return $this->redirectToRoute('user_profile');
+        return $this->redirectToRoute('user_settings');
     }
 }

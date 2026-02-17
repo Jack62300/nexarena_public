@@ -20,6 +20,7 @@ class Admin2faListener
     public function __construct(
         private TokenStorageInterface $tokenStorage,
         private UrlGeneratorInterface $urlGenerator,
+        private string $kernelEnvironment,
     ) {
     }
 
@@ -31,6 +32,11 @@ class Admin2faListener
 
         $request = $event->getRequest();
         $path = $request->getPathInfo();
+
+        // Skip in dev environment
+        if ($this->kernelEnvironment === 'dev') {
+            return;
+        }
 
         // Only apply to /admin routes
         if (!str_starts_with($path, '/admin')) {
@@ -64,7 +70,7 @@ class Admin2faListener
             );
 
             $event->setResponse(new RedirectResponse(
-                $this->urlGenerator->generate('user_profile')
+                $this->urlGenerator->generate('user_settings')
             ));
         }
     }

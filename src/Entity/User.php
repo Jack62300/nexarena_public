@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Scheb\TwoFactorBundle\Model\Totp\TotpConfiguration;
@@ -82,6 +83,35 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $lastLoginAt = null;
 
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $bio = null;
+
+    #[ORM\Column(length: 100, nullable: true)]
+    private ?string $discordUsername = null;
+
+    #[ORM\Column(length: 100, nullable: true)]
+    private ?string $steamUsername = null;
+
+    #[ORM\Column(length: 100, nullable: true)]
+    private ?string $twitchUsername = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?array $gameUsernames = null;
+
+    #[ORM\Column(options: ['default' => '{"email":false,"discord":false,"steam":false,"twitch":false,"games":false,"servers":true}'])]
+    private array $profileVisibility = [
+        'email' => false,
+        'discord' => false,
+        'steam' => false,
+        'twitch' => false,
+        'games' => false,
+        'servers' => true,
+    ];
+
+    /** @var Collection<int, UserBadge> */
+    #[ORM\OneToMany(targetEntity: UserBadge::class, mappedBy: 'user', orphanRemoval: true)]
+    private Collection $userBadges;
+
     /** @var Collection<int, Server> */
     #[ORM\OneToMany(targetEntity: Server::class, mappedBy: 'owner')]
     private Collection $servers;
@@ -94,6 +124,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     {
         $this->servers = new ArrayCollection();
         $this->serverCollaborations = new ArrayCollection();
+        $this->userBadges = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -403,6 +434,83 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     {
         $this->lastLoginAt = $lastLoginAt;
         return $this;
+    }
+
+    public function getBio(): ?string
+    {
+        return $this->bio;
+    }
+
+    public function setBio(?string $bio): static
+    {
+        $this->bio = $bio;
+        return $this;
+    }
+
+    public function getDiscordUsername(): ?string
+    {
+        return $this->discordUsername;
+    }
+
+    public function setDiscordUsername(?string $discordUsername): static
+    {
+        $this->discordUsername = $discordUsername;
+        return $this;
+    }
+
+    public function getSteamUsername(): ?string
+    {
+        return $this->steamUsername;
+    }
+
+    public function setSteamUsername(?string $steamUsername): static
+    {
+        $this->steamUsername = $steamUsername;
+        return $this;
+    }
+
+    public function getTwitchUsername(): ?string
+    {
+        return $this->twitchUsername;
+    }
+
+    public function setTwitchUsername(?string $twitchUsername): static
+    {
+        $this->twitchUsername = $twitchUsername;
+        return $this;
+    }
+
+    public function getGameUsernames(): ?array
+    {
+        return $this->gameUsernames;
+    }
+
+    public function setGameUsernames(?array $gameUsernames): static
+    {
+        $this->gameUsernames = $gameUsernames;
+        return $this;
+    }
+
+    public function getProfileVisibility(): array
+    {
+        return $this->profileVisibility;
+    }
+
+    public function setProfileVisibility(array $profileVisibility): static
+    {
+        $this->profileVisibility = $profileVisibility;
+        return $this;
+    }
+
+    public function isFieldVisible(string $field): bool
+    {
+        return $this->profileVisibility[$field] ?? false;
+    }
+
+    /** @return Collection<int, UserBadge> */
+    public function getUserBadges(): Collection
+    {
+        return $this->userBadges;
     }
 
     #[ORM\PrePersist]

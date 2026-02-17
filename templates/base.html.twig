@@ -82,5 +82,107 @@
     <script src="{{ asset('assets/js/main.js') }}"></script>
 
     {% block javascripts %}{% endblock %}
+
+    {# ===== DEV LOGIN TOOLBAR (dev only) ===== #}
+    {% if _dev_users is defined and _dev_users is not empty %}
+    <div id="devToolbar" class="dev-toolbar">
+        <button type="button" class="dev-toolbar__toggle" id="devToolbarToggle" title="Dev Login">
+            <i class="fas fa-bug"></i>
+        </button>
+        <div class="dev-toolbar__panel" id="devToolbarPanel">
+            <div class="dev-toolbar__header">
+                <span><i class="fas fa-bug"></i> Dev Login</span>
+                <button type="button" class="dev-toolbar__close" id="devToolbarClose">&times;</button>
+            </div>
+            <div class="dev-toolbar__list">
+                {% for u in _dev_users %}
+                    <form method="post" action="{{ path('dev_login', {id: u.id}) }}" class="dev-toolbar__item {{ app.user and app.user.id == u.id ? 'dev-toolbar__item--active' : '' }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('dev_login') }}">
+                        <button type="submit" class="dev-toolbar__btn">
+                            <span class="dev-toolbar__name">{{ u.username }}</span>
+                            <span class="dev-toolbar__role dev-toolbar__role--{{ u.roles|first|lower|replace({'role_': ''}) }}">
+                                {{ u.roles|first|replace({'ROLE_': ''}) }}
+                            </span>
+                        </button>
+                    </form>
+                {% endfor %}
+            </div>
+            {% if app.user %}
+                <div class="dev-toolbar__footer">
+                    <a href="{{ path('app_logout') }}" class="dev-toolbar__logout">
+                        <i class="fas fa-sign-out-alt"></i> Deconnecter
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    <style>
+        .dev-toolbar { position: fixed; bottom: 36px; left: 12px; z-index: 99999; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+        .dev-toolbar__toggle {
+            width: 42px; height: 42px; border-radius: 50%; border: 2px solid #45f882;
+            background: #1a1a2e; color: #45f882; font-size: 18px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 2px 12px rgba(69,248,130,0.3); transition: all 0.2s;
+        }
+        .dev-toolbar__toggle:hover { background: #45f882; color: #1a1a2e; transform: scale(1.1); }
+        .dev-toolbar__panel {
+            display: none; position: absolute; bottom: 52px; left: 0;
+            width: 280px; background: #12121a; border: 1px solid #2a2a3e;
+            border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+            overflow: hidden; animation: devSlideUp 0.2s ease-out;
+        }
+        .dev-toolbar__panel.open { display: block; }
+        @keyframes devSlideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .dev-toolbar__header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 16px; background: #1a1a2e; border-bottom: 1px solid #2a2a3e;
+            color: #45f882; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .dev-toolbar__close { background: none; border: none; color: #666; font-size: 20px; cursor: pointer; line-height: 1; }
+        .dev-toolbar__close:hover { color: #ff4757; }
+        .dev-toolbar__list { max-height: 320px; overflow-y: auto; padding: 6px; }
+        .dev-toolbar__list::-webkit-scrollbar { width: 4px; }
+        .dev-toolbar__list::-webkit-scrollbar-thumb { background: #2a2a3e; border-radius: 2px; }
+        .dev-toolbar__item { margin: 0; }
+        .dev-toolbar__item--active .dev-toolbar__btn { background: rgba(69,248,130,0.1); border-color: #45f882; }
+        .dev-toolbar__btn {
+            display: flex; align-items: center; justify-content: space-between; width: 100%;
+            padding: 8px 12px; background: transparent; border: 1px solid transparent;
+            border-radius: 8px; cursor: pointer; transition: all 0.15s; color: #e0e0e0; font-size: 13px;
+        }
+        .dev-toolbar__btn:hover { background: rgba(255,255,255,0.05); border-color: #2a2a3e; }
+        .dev-toolbar__name { font-weight: 600; }
+        .dev-toolbar__role {
+            font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+            padding: 2px 8px; border-radius: 4px; color: #fff;
+        }
+        .dev-toolbar__role--fondateur { background: #e74c3c; }
+        .dev-toolbar__role--developpeur { background: #9b59b6; }
+        .dev-toolbar__role--responsable { background: #e67e22; }
+        .dev-toolbar__role--manager { background: #3498db; }
+        .dev-toolbar__role--editeur { background: #1abc9c; }
+        .dev-toolbar__role--user { background: #636e72; }
+        .dev-toolbar__footer {
+            padding: 10px 16px; border-top: 1px solid #2a2a3e; text-align: center;
+        }
+        .dev-toolbar__logout {
+            color: #ff4757; font-size: 12px; font-weight: 600; text-decoration: none;
+            transition: opacity 0.15s;
+        }
+        .dev-toolbar__logout:hover { opacity: 0.8; color: #ff4757; }
+    </style>
+    <script>
+    (function(){
+        var toggle = document.getElementById('devToolbarToggle');
+        var panel = document.getElementById('devToolbarPanel');
+        var close = document.getElementById('devToolbarClose');
+        toggle.addEventListener('click', function(){ panel.classList.toggle('open'); });
+        close.addEventListener('click', function(){ panel.classList.remove('open'); });
+        document.addEventListener('click', function(e){
+            if (!e.target.closest('#devToolbar')) panel.classList.remove('open');
+        });
+    })();
+    </script>
+    {% endif %}
 </body>
 </html>

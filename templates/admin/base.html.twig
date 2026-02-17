@@ -98,7 +98,7 @@
             </div>
 
             {# ── Utilisateurs ── #}
-            {% set usersActive = _r starts with 'admin_users_' or _r starts with 'admin_votes_' %}
+            {% set usersActive = _r starts with 'admin_users_' or _r starts with 'admin_votes_' or _r starts with 'admin_badges_' %}
             <div class="admin-sidebar__group admin-sidebar__group--cyan {{ usersActive ? 'open' : '' }}">
                 <button class="admin-sidebar__section" type="button">
                     <span><i class="fas fa-users"></i> Utilisateurs</span>
@@ -110,6 +110,9 @@
                     </a>
                     <a href="{{ path('admin_votes_list') }}" class="admin-sidebar__link {{ _r starts with 'admin_votes_' ? 'active' : '' }}">
                         <i class="fas fa-vote-yea"></i> Votes
+                    </a>
+                    <a href="{{ path('admin_badges_list') }}" class="admin-sidebar__link {{ _r starts with 'admin_badges_' ? 'active' : '' }}">
+                        <i class="fas fa-award"></i> Badges
                     </a>
                 </div>
             </div>

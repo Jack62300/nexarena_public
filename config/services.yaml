@@ -32,7 +32,11 @@ services:
         arguments:
             $projectDir: '%kernel.project_dir%'
 
-    App\Controller\ProfileController:
+    App\Controller\SettingsController:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+
+    App\Controller\Admin\BadgeController:
         arguments:
             $projectDir: '%kernel.project_dir%'
 
@@ -75,6 +79,18 @@ services:
     App\Command\SendScheduledAnnouncementsCommand:
         arguments:
             $projectDir: '%kernel.project_dir%'
+
+    App\Controller\DevLoginController:
+        arguments:
+            $kernelEnvironment: '%kernel.environment%'
+
+    App\Twig\DevToolbarExtension:
+        arguments:
+            $kernelEnvironment: '%kernel.environment%'
+
+    App\EventListener\Admin2faListener:
+        arguments:
+            $kernelEnvironment: '%kernel.environment%'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

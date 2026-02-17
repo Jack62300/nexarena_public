@@ -76,6 +76,19 @@ class TransactionRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
     }
 
+    public function hasAnyPurchase(User $user): bool
+    {
+        return (int) $this->createQueryBuilder('t')
+            ->select('COUNT(t.id)')
+            ->where('t.user = :user')
+            ->andWhere('t.type = :type')
+            ->setParameter('user', $user)
+            ->setParameter('type', Transaction::TYPE_PURCHASE)
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getSingleScalarResult() > 0;
+    }
+
     public function getTotalRevenue(): float
     {
         $result = $this->createQueryBuilder('t')

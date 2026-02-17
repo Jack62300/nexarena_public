@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e"/>
+      <stop offset="100%" style="stop-color:#0f0f1a"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#45f882"/>
+      <stop offset="100%" style="stop-color:#2ecc71"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <!-- Shield shape -->
+  <path d="M64 8 L112 30 L112 65 Q112 95 64 120 Q16 95 16 65 L16 30 Z" fill="url(#bg)" stroke="#45f882" stroke-width="3"/>
+  <path d="M64 16 L104 35 L104 63 Q104 89 64 112 Q24 89 24 63 L24 35 Z" fill="none" stroke="rgba(69,248,130,0.2)" stroke-width="1"/>
+  <!-- Star -->
+  <polygon points="64,32 72,52 94,52 76,64 82,84 64,74 46,84 52,64 34,52 56,52" fill="url(#accent)" filter="url(#glow)"/>
+  <!-- V letter -->
+  <text x="64" y="105" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="16" font-weight="900" fill="#45f882" opacity="0.6">VETERAN</text>
+</svg>

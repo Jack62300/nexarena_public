@@ -291,6 +291,22 @@ class ServerRepository extends ServiceEntityRepository
         return $map;
     }
 
+    /** @return Server[] */
+    public function findActiveByOwner(User $user): array
+    {
+        return $this->createQueryBuilder('s')
+            ->leftJoin('s.category', 'c')
+            ->leftJoin('s.gameCategory', 'gc')
+            ->addSelect('c', 'gc')
+            ->where('s.owner = :user')
+            ->andWhere('s.isActive = true')
+            ->andWhere('s.isApproved = true')
+            ->setParameter('user', $user)
+            ->orderBy('s.monthlyVotes', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
     public function countByOwner(User $user): int
     {
         return (int) $this->createQueryBuilder('s')

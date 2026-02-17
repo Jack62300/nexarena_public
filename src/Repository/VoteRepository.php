@@ -323,6 +323,17 @@ class VoteRepository extends ServiceEntityRepository
             ->getSingleScalarResult();
     }
 
+    public function countTotalVotesForUserServers(User $user): int
+    {
+        return (int) $this->createQueryBuilder('v')
+            ->select('COUNT(v.id)')
+            ->join('v.server', 's')
+            ->where('s.owner = :user')
+            ->setParameter('user', $user)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
     public function countByFingerprintInInterval(string $fingerprint, int $minutes): int
     {
         $since = new \DateTimeImmutable("-{$minutes} minutes");

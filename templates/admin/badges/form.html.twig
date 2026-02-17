@@ -1,0 +1,194 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block page_title %}{{ badge ? 'Modifier' : 'Ajouter un badge' }}{% endblock %}
+{% block title %}Nexarena Admin - {{ badge ? 'Modifier' : 'Nouveau' }} badge{% endblock %}
+
+{% block admin_css %}
+    .form-group { margin-bottom: 20px; }
+    .form-group label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .form-control-admin {
+        width: 100%;
+        padding: 10px 14px;
+        background: var(--bg-darker);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        color: var(--text-primary);
+        font-size: 14px;
+        transition: border-color 0.2s;
+    }
+    .form-control-admin:focus {
+        outline: none;
+        border-color: var(--accent);
+    }
+    .form-check-admin {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+    }
+    .form-check-admin input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        accent-color: var(--accent);
+    }
+    .color-preview {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 8px;
+    }
+    .color-preview__swatch {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+    .awarded-users { margin-top: 30px; }
+    .awarded-user { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--border-color); }
+    .awarded-user:last-child { border-bottom:none; }
+    .award-form { display:flex; gap:8px; margin-top:10px; }
+{% endblock %}
+
+{% block admin_body %}
+    <div style="max-width:800px;">
+        <div class="admin-table">
+            <div class="admin-table__header">
+                <h3>{{ badge ? 'Modifier le badge' : 'Ajouter un badge' }}</h3>
+                <a href="{{ path('admin_badges_list') }}" class="btn-admin btn-admin--outline btn-admin--sm">
+                    <i class="fas fa-arrow-left"></i> Retour
+                </a>
+            </div>
+            <div style="padding:25px;">
+                <form method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="_token" value="{{ csrf_token('badge_form') }}">
+
+                    <div class="form-group">
+                        <label for="name">Nom</label>
+                        <input type="text" id="name" name="name" class="form-control-admin" value="{{ badge ? badge.name : '' }}" required placeholder="Ex: Veteran, Contributeur..." maxlength="100">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <textarea id="description" name="description" class="form-control-admin" rows="3" placeholder="Description du badge...">{{ badge ? badge.description : '' }}</textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="icon">Icone</label>
+                        {% if badge and badge.iconFileName %}
+                            <div style="margin-bottom:8px;">
+                                <img src="{{ asset('uploads/badges/' ~ badge.iconFileName) }}" alt="" style="width:48px;height:48px;object-fit:contain;border-radius:8px;border:1px solid var(--border-color);">
+                            </div>
+                        {% endif %}
+                        <input type="file" id="icon" name="icon" accept="image/*" style="color:var(--text-secondary);">
+                        <div style="font-size:11px;color:var(--text-secondary);margin-top:4px;">PNG, JPG, SVG ou WebP - 1 Mo max</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="color">Couleur</label>
+                        <input type="color" id="color" name="color" value="{{ badge and badge.color ? badge.color : '#45f882' }}" style="width:60px;height:40px;border:1px solid var(--border-color);border-radius:6px;background:var(--bg-darker);cursor:pointer;">
+                        <div class="color-preview">
+                            <div class="color-preview__swatch" id="colorSwatch" style="background:{{ badge and badge.color ? badge.color : '#45f882' }};"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="criteria_type">Type de critere</label>
+                        <select id="criteria_type" name="criteria_type" class="form-control-admin">
+                            <option value="">-- Aucun critere --</option>
+                            <option value="vote_count" {{ badge and badge.criteria.type|default('') == 'vote_count' ? 'selected' : '' }}>Nombre de votes recus</option>
+                            <option value="server_count" {{ badge and badge.criteria.type|default('') == 'server_count' ? 'selected' : '' }}>Nombre de serveurs</option>
+                            <option value="account_age" {{ badge and badge.criteria.type|default('') == 'account_age' ? 'selected' : '' }}>Age du compte (jours)</option>
+                            <option value="comment_count" {{ badge and badge.criteria.type|default('') == 'comment_count' ? 'selected' : '' }}>Nombre de commentaires</option>
+                            <option value="premium_purchase" {{ badge and badge.criteria.type|default('') == 'premium_purchase' ? 'selected' : '' }}>Achat premium effectue</option>
+                            <option value="custom" {{ badge and badge.criteria.type|default('') == 'custom' ? 'selected' : '' }}>Manuel (attribution admin)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="thresholdGroup">
+                        <label for="criteria_threshold">Seuil</label>
+                        <input type="number" id="criteria_threshold" name="criteria_threshold" class="form-control-admin" value="{{ badge ? badge.criteria.threshold|default(1) : 1 }}" min="1" style="max-width:200px;">
+                        <div style="font-size:11px;color:var(--text-secondary);margin-top:4px;">Valeur minimale pour obtenir le badge</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-check-admin">
+                            <input type="checkbox" name="is_active" value="1" {{ (badge is null or badge.isActive) ? 'checked' : '' }}>
+                            Actif
+                        </label>
+                    </div>
+
+                    <div style="display:flex;gap:10px;padding-top:10px;">
+                        <button type="submit" class="btn-admin btn-admin--primary">
+                            <i class="fas fa-save"></i> {{ badge ? 'Enregistrer' : 'Creer' }}
+                        </button>
+                        <a href="{{ path('admin_badges_list') }}" class="btn-admin btn-admin--outline">Annuler</a>
+                    </div>
+                </form>
+
+                {# ── Awarded Users (edit mode only) ── #}
+                {% if badge %}
+                    <div class="awarded-users">
+                        <h4 style="color:var(--text-primary);margin-bottom:12px;"><i class="fas fa-users" style="color:var(--accent);"></i> Utilisateurs ayant ce badge ({{ awardedUsers|length }})</h4>
+
+                        {% if is_granted('ROLE_MANAGER') %}
+                            <form method="post" action="{{ path('admin_badges_award', {id: badge.id}) }}" class="award-form">
+                                <input type="hidden" name="_token" value="{{ csrf_token('badge_award_' ~ badge.id) }}">
+                                <input type="text" name="username" class="form-control-admin" placeholder="Nom d'utilisateur" required style="max-width:250px;">
+                                <button type="submit" class="btn-admin btn-admin--primary btn-admin--sm">
+                                    <i class="fas fa-plus"></i> Attribuer
+                                </button>
+                            </form>
+                        {% endif %}
+
+                        {% for ub in awardedUsers %}
+                            <div class="awarded-user">
+                                <span style="color:var(--text-primary);font-weight:600;">{{ ub.user.username }}</span>
+                                <span style="color:var(--text-secondary);font-size:12px;">{{ ub.awardedAt|date('d/m/Y H:i') }}</span>
+                                {% if is_granted('ROLE_MANAGER') %}
+                                    <form method="post" action="{{ path('admin_badges_revoke', {id: badge.id, userId: ub.user.id}) }}" style="margin-left:auto;" onsubmit="return confirm('Revoquer ce badge ?');">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('badge_revoke_' ~ badge.id ~ '_' ~ ub.user.id) }}">
+                                        <button type="submit" class="btn-admin btn-admin--sm" style="background:var(--danger);color:#fff;border:none;">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <p style="color:var(--text-secondary);font-size:13px;margin-top:10px;">Aucun utilisateur n'a ce badge.</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block admin_js %}
+<script>
+(function() {
+    var colorInput = document.getElementById('color');
+    var swatch = document.getElementById('colorSwatch');
+    var criteriaType = document.getElementById('criteria_type');
+    var thresholdGroup = document.getElementById('thresholdGroup');
+
+    colorInput.addEventListener('input', function() {
+        swatch.style.background = colorInput.value;
+    });
+
+    function toggleThreshold() {
+        var val = criteriaType.value;
+        thresholdGroup.style.display = (val === '' || val === 'custom' || val === 'premium_purchase') ? 'none' : 'block';
+    }
+    criteriaType.addEventListener('change', toggleThreshold);
+    toggleThreshold();
+})();
+</script>
+{% endblock %}
