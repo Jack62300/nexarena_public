@@ -45,6 +45,7 @@ class UserServerController extends AbstractController
         'manage_theme' => 'Changer le theme',
         'manage_api' => 'Gerer la cle API',
         'manage_status' => 'Gerer le status serveur',
+        'manage_boost' => 'Gerer les boosts premium',
         'moderate_comments' => 'Moderer les commentaires',
         'manage_recruitment' => 'Gerer le recrutement',
         'delete_server' => 'Supprimer le serveur',
@@ -315,7 +316,8 @@ class UserServerController extends AbstractController
         $recruitmentListings = $canManageRecruitment ? $recruitmentRepo->findByServer($server) : [];
 
         $premiumEnabled = $this->premiumService->isPremiumEnabled();
-        $serverBookings = $isOwner && $premiumEnabled ? $bookingRepo->findByServer($server) : [];
+        $canManageBoost = $this->hasPermission($server, 'manage_boost');
+        $serverBookings = $canManageBoost && $premiumEnabled ? $bookingRepo->findByServer($server) : [];
         $serverTransactions = $isOwner && $premiumEnabled ? $transactionRepo->findByServer($server) : [];
 
         $twitchSub = $this->premiumService->getTwitchSubscription($server);
@@ -329,6 +331,7 @@ class UserServerController extends AbstractController
             'can_manage_api' => $this->hasPermission($server, 'manage_api'),
             'can_manage_webhooks' => $this->hasPermission($server, 'manage_webhooks'),
             'can_manage_status' => $this->hasPermission($server, 'manage_status'),
+            'can_manage_boost' => $canManageBoost,
             'can_edit_images' => $this->hasPermission($server, 'edit_images'),
             'can_manage_theme' => $this->hasPermission($server, 'manage_theme'),
             'can_moderate_comments' => $this->hasPermission($server, 'moderate_comments'),
@@ -636,9 +639,7 @@ class UserServerController extends AbstractController
     #[Route('/serveur/{id}/boost/{bookingId}/cancel', name: 'user_servers_cancel_boost', methods: ['POST'])]
     public function cancelBoost(Server $server, int $bookingId, Request $request, FeaturedBookingRepository $bookingRepo): Response
     {
-        if (!$this->isOwner($server)) {
-            throw $this->createAccessDeniedException();
-        }
+        $this->requireAccess($server, 'manage_boost');
 
         if (!$this->isCsrfTokenValid('cancel_boost_' . $bookingId, $request->request->get('_token'))) {
             $this->addFlash('danger', 'Token CSRF invalide.');

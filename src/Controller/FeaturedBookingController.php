@@ -4,7 +4,9 @@ namespace App\Controller;
 
 use App\Entity\FeaturedBooking;
 use App\Entity\Server;
+use App\Entity\ServerCollaborator;
 use App\Repository\FeaturedBookingRepository;
+use App\Repository\ServerCollaboratorRepository;
 use App\Service\PremiumService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -21,13 +23,24 @@ class FeaturedBookingController extends AbstractController
         private EntityManagerInterface $em,
         private PremiumService $premiumService,
         private FeaturedBookingRepository $bookingRepo,
+        private ServerCollaboratorRepository $collabRepo,
     ) {
+    }
+
+    private function canAccessBoost(Server $server): bool
+    {
+        $user = $this->getUser();
+        if ($server->getOwner() === $user) {
+            return true;
+        }
+        $collab = $this->collabRepo->findByServerAndUser($server, $user);
+        return $collab !== null && $collab->hasPermission('manage_boost');
     }
 
     #[Route('/serveur/{id}/boost', name: 'featured_booking')]
     public function index(Server $server): Response
     {
-        if ($server->getOwner() !== $this->getUser()) {
+        if (!$this->canAccessBoost($server)) {
             throw $this->createAccessDeniedException();
         }
 
@@ -60,7 +73,7 @@ class FeaturedBookingController extends AbstractController
     #[Route('/serveur/{id}/boost/availability', name: 'featured_booking_availability', methods: ['GET'])]
     public function availability(Server $server, Request $request): JsonResponse
     {
-        if ($server->getOwner() !== $this->getUser()) {
+        if (!$this->canAccessBoost($server)) {
             return new JsonResponse(['error' => 'Acces refuse.'], 403);
         }
 
@@ -122,7 +135,7 @@ class FeaturedBookingController extends AbstractController
     #[Route('/serveur/{id}/boost/book', name: 'featured_booking_book', methods: ['POST'])]
     public function book(Server $server, Request $request): Response
     {
-        if ($server->getOwner() !== $this->getUser()) {
+        if (!$this->canAccessBoost($server)) {
             throw $this->createAccessDeniedException();
         }
 

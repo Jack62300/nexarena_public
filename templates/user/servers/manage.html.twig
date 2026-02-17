@@ -838,6 +838,7 @@
                     </div>
 
                     {# === BOOSTS (MISES EN AVANT) === #}
+                    {% if can_manage_boost %}
                     <div class="manage-card">
                         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
                             <h4 class="manage-card__title" style="margin-bottom:0;border-bottom:none;padding-bottom:0;"><i class="fas fa-bolt" style="color:#ff6b35;"></i> Mises en avant</h4>
@@ -923,6 +924,7 @@
                             </div>
                         {% endif %}
                     </div>
+                    {% endif %}{# can_manage_boost #}
 
                     {# === HISTORIQUE DES TRANSACTIONS SERVEUR === #}
                     <div class="manage-card">
@@ -1140,7 +1142,7 @@
                 {% endif %}
 
                 {# === BOOST / MISE EN AVANT === #}
-                {% if is_owner and premium_enabled %}
+                {% if can_manage_boost and premium_enabled %}
                 <div class="manage-card">
                     <h4 class="manage-card__title"><i class="fas fa-bolt" style="color:#ff6b35;"></i> Mise en avant</h4>
                     <p style="color:#8b949e;font-size:13px;margin-bottom:15px;">
