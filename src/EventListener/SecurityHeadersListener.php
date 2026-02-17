@@ -42,15 +42,15 @@ class SecurityHeadersListener
         if (!$response->headers->has('Content-Security-Policy')) {
             $csp = implode('; ', [
                 "default-src 'self'",
-                "script-src 'self' https://cdn.jsdelivr.net https://www.paypal.com 'unsafe-inline'",
+                "script-src 'self' https://cdn.jsdelivr.net https://www.paypal.com https://www.sandbox.paypal.com 'unsafe-inline'",
                 "style-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net 'unsafe-inline'",
                 "img-src 'self' https: data:",
                 "font-src 'self' data:",
-                "frame-src 'self' https://player.twitch.tv https://www.paypal.com https://discord.com",
-                "connect-src 'self' https://www.paypal.com",
+                "frame-src 'self' https://player.twitch.tv https://www.paypal.com https://www.sandbox.paypal.com https://discord.com",
+                "connect-src 'self' https://www.paypal.com https://www.sandbox.paypal.com",
                 "object-src 'none'",
                 "base-uri 'self'",
-                "form-action 'self' https://www.paypal.com https://steamcommunity.com",
+                "form-action 'self' https://www.paypal.com https://www.sandbox.paypal.com https://steamcommunity.com",
                 "frame-ancestors 'self'",
                 "upgrade-insecure-requests",
             ]);
