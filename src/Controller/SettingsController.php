@@ -161,62 +161,74 @@ class SettingsController extends AbstractController
     #[Route('/profil/parametres/2fa/enable', name: 'user_settings_2fa_enable', methods: ['POST'])]
     public function enable2fa(Request $request, TotpAuthenticatorInterface $totpAuth): JsonResponse
     {
-        if (!$this->isCsrfTokenValid('profile_2fa', $request->request->get('_token'))) {
-            return new JsonResponse(['error' => 'Token CSRF invalide.'], 400);
+        try {
+            if (!$this->isCsrfTokenValid('profile_2fa', $request->request->get('_token'))) {
+                return new JsonResponse(['error' => 'Token CSRF invalide.'], 400);
+            }
+
+            $user = $this->getUser();
+
+            $secret = $totpAuth->generateSecret();
+            $user->setTotpSecret($secret);
+            $this->em->flush();
+
+            $qrContent = $totpAuth->getQRContent($user);
+
+            $qrCode = new QrCode($qrContent);
+            $writer = new PngWriter();
+            $result = $writer->write($qrCode);
+
+            return new JsonResponse([
+                'qr' => 'data:image/png;base64,' . base64_encode($result->getString()),
+                'secret' => $secret,
+            ]);
+        } catch (\Throwable $e) {
+            return new JsonResponse([
+                'error' => 'Erreur lors de la generation du QR code: ' . $e->getMessage()
+            ], 500);
         }
-
-        $user = $this->getUser();
-
-        $secret = $totpAuth->generateSecret();
-        $user->setTotpSecret($secret);
-        $this->em->flush();
-
-        $qrContent = $totpAuth->getQRContent($user);
-
-        $qrCode = new QrCode($qrContent);
-        $writer = new PngWriter();
-        $result = $writer->write($qrCode);
-
-        return new JsonResponse([
-            'qr' => 'data:image/png;base64,' . base64_encode($result->getString()),
-            'secret' => $secret,
-        ]);
     }
 
     #[Route('/profil/parametres/2fa/confirm', name: 'user_settings_2fa_confirm', methods: ['POST'])]
     public function confirm2fa(Request $request, TotpAuthenticatorInterface $totpAuth, CacheItemPoolInterface $cache): JsonResponse
     {
-        if (!$this->isCsrfTokenValid('profile_2fa', $request->request->get('_token'))) {
-            return new JsonResponse(['error' => 'Token CSRF invalide.'], 400);
+        try {
+            if (!$this->isCsrfTokenValid('profile_2fa', $request->request->get('_token'))) {
+                return new JsonResponse(['error' => 'Token CSRF invalide.'], 400);
+            }
+
+            $cacheKey = '2fa_confirm_' . $this->getUser()->getId();
+            $cacheItem = $cache->getItem($cacheKey);
+            $attempts = $cacheItem->isHit() ? (int) $cacheItem->get() : 0;
+            if ($attempts >= 5) {
+                return new JsonResponse(['error' => 'Trop de tentatives. Reessayez dans 5 minutes.'], 429);
+            }
+
+            $user = $this->getUser();
+            $code = $request->request->get('code', '');
+
+            if (!$user->getTotpSecret()) {
+                return new JsonResponse(['error' => 'Veuillez d\'abord generer un secret 2FA.'], 400);
+            }
+
+            if (!$totpAuth->checkCode($user, $code)) {
+                $cacheItem->set($attempts + 1);
+                $cacheItem->expiresAfter(300);
+                $cache->save($cacheItem);
+                return new JsonResponse(['error' => 'Code invalide. Veuillez reessayer.'], 400);
+            }
+
+            $user->setIsTwoFactorEnabled(true);
+            $this->em->flush();
+
+            $cache->deleteItem($cacheKey);
+
+            return new JsonResponse(['success' => true, 'message' => 'Authentification 2FA activee avec succes.']);
+        } catch (\Throwable $e) {
+            return new JsonResponse([
+                'error' => 'Erreur lors de la confirmation 2FA: ' . $e->getMessage()
+            ], 500);
         }
-
-        $cacheKey = '2fa_confirm_' . $this->getUser()->getId();
-        $cacheItem = $cache->getItem($cacheKey);
-        $attempts = $cacheItem->isHit() ? (int) $cacheItem->get() : 0;
-        if ($attempts >= 5) {
-            return new JsonResponse(['error' => 'Trop de tentatives. Reessayez dans 5 minutes.'], 429);
-        }
-
-        $user = $this->getUser();
-        $code = $request->request->get('code', '');
-
-        if (!$user->getTotpSecret()) {
-            return new JsonResponse(['error' => 'Veuillez d\'abord generer un secret 2FA.'], 400);
-        }
-
-        if (!$totpAuth->checkCode($user, $code)) {
-            $cacheItem->set($attempts + 1);
-            $cacheItem->expiresAfter(300);
-            $cache->save($cacheItem);
-            return new JsonResponse(['error' => 'Code invalide. Veuillez reessayer.'], 400);
-        }
-
-        $user->setIsTwoFactorEnabled(true);
-        $this->em->flush();
-
-        $cache->deleteItem($cacheKey);
-
-        return new JsonResponse(['success' => true, 'message' => 'Authentification 2FA activee avec succes.']);
     }
 
     #[Route('/profil/parametres/2fa/disable', name: 'user_settings_2fa_disable', methods: ['POST'])]
