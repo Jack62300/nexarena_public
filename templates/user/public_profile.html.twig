@@ -5,92 +5,290 @@
 {% block stylesheets %}
 <link rel="stylesheet" href="{{ asset('assets/css/pages/profile.css') }}">
 <style>
-.pub-profile { padding: 80px 0; min-height: 60vh; }
-.pub-profile__header { display:flex; align-items:center; gap:24px; margin-bottom:32px; flex-wrap:wrap; }
-.pub-profile__avatar { width:120px; height:120px; border-radius:50%; overflow:hidden; border:3px solid #45f882; flex-shrink:0; background:#1a1a2e; display:flex; align-items:center; justify-content:center; }
-.pub-profile__avatar img { width:100%; height:100%; object-fit:cover; }
-.pub-profile__avatar i { font-size:48px; color:#8b949e; }
-.pub-profile__info h1 { font-size:28px; font-weight:700; color:#fff; margin:0 0 4px; }
-.pub-profile__info .member-since { font-size:13px; color:#8b949e; }
-.pub-profile__actions { margin-left:auto; display:flex; gap:8px; flex-wrap:wrap; }
-.pub-profile__share { background:#2a2a3e; color:#8b949e; border:1px solid #3a3a4e; padding:8px 14px; border-radius:8px; cursor:pointer; font-size:13px; transition:all .2s; }
-.pub-profile__share:hover { color:#45f882; border-color:#45f882; }
-.pub-profile__share.copied { color:#45f882; border-color:#45f882; }
+/* ── Public profile ── */
+.pub-page {
+    padding: 90px 0 80px;
+    min-height: 100vh;
+    background: #0a1018;
+}
 
-.pub-section { margin-bottom:32px; }
-.pub-section__title { font-size:18px; font-weight:600; color:#fff; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
-.pub-section__title i { color:#45f882; }
+/* ── Hero card ── */
+.pub-hero {
+    position: relative;
+    background: linear-gradient(135deg, #0f1c2d 0%, #162231 60%, #0f1c2d 100%);
+    border: 1px solid #1e3048;
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 28px;
+}
+.pub-hero__bar {
+    height: 4px;
+    background: linear-gradient(90deg, #45f882 0%, #00c6ff 50%, #45f882 100%);
+    background-size: 200% 100%;
+    animation: shimmer 3s linear infinite;
+}
+@keyframes shimmer { 0%{background-position:0 0} 100%{background-position:200% 0} }
+.pub-hero__body {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    padding: 28px 32px;
+    flex-wrap: wrap;
+}
+.pub-hero__avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 3px solid rgba(69,248,130,0.4);
+    background: #0a1018;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+    box-shadow: 0 0 24px rgba(69,248,130,0.15);
+}
+.pub-hero__avatar img { width:100%; height:100%; object-fit:cover; }
+.pub-hero__avatar i { font-size:40px; color:rgba(255,255,255,0.2); }
+.pub-hero__info { flex:1; min-width:0; }
+.pub-hero__username {
+    font-size: 26px;
+    font-weight: 800;
+    color: #e6edf3;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.pub-hero__badge-2fa {
+    font-size: 11px;
+    padding: 3px 9px;
+    border-radius: 4px;
+    background: rgba(69,248,130,0.1);
+    color: #45f882;
+    border: 1px solid rgba(69,248,130,0.2);
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+.pub-hero__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    font-size: 13px;
+    color: #8b949e;
+}
+.pub-hero__meta-item { display:flex; align-items:center; gap:5px; }
+.pub-hero__meta-item i { color:#45f882; font-size:11px; }
+.pub-hero__stats {
+    display: flex;
+    gap: 20px;
+    padding: 0 32px 24px;
+    flex-wrap: wrap;
+}
+.pub-stat {
+    text-align: center;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 10px;
+    padding: 12px 20px;
+    min-width: 90px;
+}
+.pub-stat__val { font-size: 22px; font-weight: 800; color: #45f882; }
+.pub-stat__lbl { font-size: 11px; color: #8b949e; margin-top: 2px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
+.pub-hero__actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+    align-self: flex-start;
+    margin-top: 4px;
+}
+.pub-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+    border: none;
+    text-decoration: none;
+}
+.pub-btn--outline {
+    background: transparent;
+    color: #8b949e;
+    border: 1px solid #1e3048;
+}
+.pub-btn--outline:hover { color:#e6edf3; border-color:#2d4a66; background:rgba(255,255,255,0.03); }
+.pub-btn--primary { background:#45f882; color:#0a1018; }
+.pub-btn--primary:hover { background:#3de074; color:#0a1018; }
+.pub-btn--share.copied { color:#45f882; border-color:#45f882; }
 
-.pub-bio { background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:12px; padding:20px; color:#c9d1d9; font-size:14px; line-height:1.7; }
-.pub-bio p { margin-bottom:8px; }
+/* ── Sections ── */
+.pub-section { margin-bottom: 22px; }
+.pub-section:last-child { margin-bottom: 0; }
+.pub-section-card {
+    background: #162231;
+    border: 1px solid #1e3048;
+    border-radius: 12px;
+    padding: 22px;
+}
+.pub-section-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #8b949e;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #1e3048;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.pub-section-title i { color:#45f882; }
+.pub-empty { color:#5a5c69; font-size:13px; font-style:italic; }
 
-.pub-socials { display:flex; flex-wrap:wrap; gap:10px; }
-.pub-social { display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:8px 14px; font-size:13px; color:#c9d1d9; }
-.pub-social i { font-size:16px; }
-.pub-social--discord i { color:#5865f2; }
-.pub-social--steam i { color:#1b2838; }
-.pub-social--twitch i { color:#9146ff; }
-.pub-social--game i { color:#45f882; }
-.pub-social--email i { color:#f0a030; }
+/* ── Bio ── */
+.pub-bio {
+    color: #c9d1d9;
+    font-size: 14px;
+    line-height: 1.75;
+}
+.pub-bio p { margin-bottom: 8px; }
+.pub-bio p:last-child { margin-bottom: 0; }
 
-.pub-badges { display:flex; flex-wrap:wrap; gap:12px; }
-.pub-badge { display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:10px 16px; transition:transform .2s; }
+/* ── Server cards ── */
+.pub-servers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 14px;
+}
+.pub-server-card {
+    display: block;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 10px;
+    padding: 14px 16px;
+    text-decoration: none;
+    transition: all .2s;
+}
+.pub-server-card:hover {
+    border-color: rgba(69,248,130,0.3);
+    background: rgba(69,248,130,0.03);
+    transform: translateY(-2px);
+}
+.pub-server-card__name { font-size:15px; font-weight:700; color:#e6edf3; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.pub-server-card__cat { font-size:11px; color:#8b949e; margin-bottom:8px; }
+.pub-server-card__footer { display:flex; align-items:center; justify-content:space-between; }
+.pub-server-card__votes { font-size:12px; color:#45f882; font-weight:600; }
+.pub-server-card__status { font-size:10px; padding:2px 7px; border-radius:4px; font-weight:600; }
+.pub-server-card__status--active { background:rgba(69,248,130,0.1); color:#45f882; }
+.pub-server-card__status--inactive { background:rgba(255,255,255,0.05); color:#5a5c69; }
+
+/* ── Badges ── */
+.pub-badges-grid { display:flex; flex-wrap:wrap; gap:12px; }
+.pub-badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 10px;
+    padding: 10px 14px;
+    transition: transform .2s;
+}
 .pub-badge:hover { transform:translateY(-2px); }
-.pub-badge__icon { width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:18px; }
+.pub-badge__icon {
+    width:34px; height:34px;
+    border-radius:8px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:16px; flex-shrink:0;
+}
 .pub-badge__icon img { width:100%; height:100%; object-fit:contain; border-radius:6px; }
-.pub-badge__name { font-size:14px; font-weight:600; color:#fff; }
-.pub-badge__date { font-size:11px; color:#8b949e; }
+.pub-badge__name { font-size:13px; font-weight:600; color:#e6edf3; }
+.pub-badge__date { font-size:11px; color:#5a5c69; }
 
-.pub-servers { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:16px; }
-.pub-server { background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:12px; padding:16px; transition:all .2s; text-decoration:none; display:block; }
-.pub-server:hover { border-color:#45f882; transform:translateY(-2px); }
-.pub-server__name { font-size:16px; font-weight:600; color:#fff; margin-bottom:4px; }
-.pub-server__cat { font-size:12px; color:#8b949e; }
-.pub-server__votes { font-size:13px; color:#45f882; margin-top:8px; }
+/* ── Sidebar ── */
+.pub-sidebar-card {
+    background: #162231;
+    border: 1px solid #1e3048;
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 18px;
+}
+.pub-sidebar-card:last-child { margin-bottom:0; }
+.pub-sidebar-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #8b949e;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #1e3048;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+.pub-sidebar-title i { color:#45f882; }
 
-.pub-empty { color:#8b949e; font-size:14px; font-style:italic; }
+/* Social rows */
+.pub-social-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 13px;
+}
+.pub-social-row:last-child { border-bottom:none; padding-bottom:0; }
+.pub-social-row:first-child { padding-top:0; }
+.pub-social-icon {
+    width:30px; height:30px;
+    border-radius:7px;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+}
+.pub-social-icon i { font-size:13px; color:#fff; }
+.pub-social-name { color:#e6edf3; font-weight:500; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.pub-social-label { font-size:11px; color:#5a5c69; }
+.pub-social-hidden { font-size:10px; color:#5a5c69; font-style:italic; }
+
+/* Flash */
+.profile-flash {
+    display:flex; align-items:center; gap:8px;
+    padding:12px 18px; border-radius:8px; margin-bottom:20px;
+    font-size:14px; font-weight:500;
+}
+.profile-flash--success { background:rgba(69,248,130,0.08); border:1px solid rgba(69,248,130,0.2); color:#45f882; }
+.profile-flash--error   { background:rgba(220,53,69,0.08);  border:1px solid rgba(220,53,69,0.2);  color:#dc3545; }
+
+@media (max-width:767px) {
+    .pub-hero__body { padding:20px; gap:16px; }
+    .pub-hero__stats { padding:0 20px 20px; gap:12px; }
+    .pub-hero__actions { width:100%; }
+    .pub-servers-grid { grid-template-columns:1fr; }
+}
 </style>
 {% endblock %}
 
 {% block body %}
+<section class="pub-page">
+    <div class="container">
 
-    {# breadcrumb-area #}
-    <section class="breadcrumb-area" data-background="{{ asset('assets/img/bg/breadcrumb_bg01.jpg') }}">
-        <div class="container">
-            <div class="breadcrumb__wrapper">
-                <div class="row">
-                    <div class="col-xl-6 col-lg-7">
-                        <div class="breadcrumb__content">
-                            <h2 class="title">{{ profileUser.username }}</h2>
-                            <nav aria-label="breadcrumb">
-                                <ol class="breadcrumb">
-                                    <li class="breadcrumb-item"><a href="{{ path('app_home') }}">Accueil</a></li>
-                                    <li class="breadcrumb-item active" aria-current="page">Profil</li>
-                                </ol>
-                            </nav>
-                        </div>
-                    </div>
-                    <div class="col-xl-6 col-lg-5 position-relative d-none d-lg-block">
-                        <div class="breadcrumb__img">
-                            <img src="{{ asset('assets/img/others/breadcrumb_img02.png') }}" alt="img">
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+        {# Flash messages #}
+        {% for message in app.flashes('success') %}
+            <div class="profile-flash profile-flash--success"><i class="fas fa-check-circle"></i> {{ message }}</div>
+        {% endfor %}
 
-    <section class="pub-profile" data-background="{{ asset('assets/img/bg/team_bg.jpg') }}">
-        <div class="container">
-
-            {# Flash messages #}
-            {% for message in app.flashes('success') %}
-                <div class="profile-flash profile-flash--success"><i class="fas fa-check-circle"></i> {{ message }}</div>
-            {% endfor %}
-
-            {# ── Header ── #}
-            <div class="pub-profile__header">
-                <div class="pub-profile__avatar">
+        {# ── Hero ── #}
+        <div class="pub-hero">
+            <div class="pub-hero__bar"></div>
+            <div class="pub-hero__body">
+                <div class="pub-hero__avatar">
                     {% if profileUser.avatar starts with 'http' %}
                         <img src="{{ profileUser.avatar }}" alt="{{ profileUser.username }}">
                     {% elseif profileUser.avatar %}
@@ -99,171 +297,285 @@
                         <i class="fas fa-user"></i>
                     {% endif %}
                 </div>
-                <div class="pub-profile__info">
-                    <h1>{{ profileUser.username }}</h1>
-                    <div class="member-since"><i class="fas fa-calendar-alt"></i> Membre depuis {{ profileUser.createdAt ? profileUser.createdAt|date('d/m/Y') : 'N/A' }}</div>
+                <div class="pub-hero__info">
+                    <div class="pub-hero__username">
+                        {{ profileUser.username }}
+                        {% if profileUser.isTwoFactorEnabled %}
+                            <span class="pub-hero__badge-2fa"><i class="fas fa-shield-alt"></i> 2FA</span>
+                        {% endif %}
+                    </div>
+                    <div class="pub-hero__meta">
+                        <span class="pub-hero__meta-item"><i class="fas fa-calendar-alt"></i> Membre depuis {{ profileUser.createdAt ? profileUser.createdAt|date('d/m/Y') : 'N/A' }}</span>
+                        {% if profileUser.discordUsername and profileUser.isFieldVisible('discord') %}
+                            <span class="pub-hero__meta-item" style="color:#5865f2;"><i class="fab fa-discord"></i> {{ profileUser.discordUsername }}</span>
+                        {% endif %}
+                        {% if profileUser.twitchUsername and profileUser.isFieldVisible('twitch') %}
+                            <span class="pub-hero__meta-item" style="color:#9146ff;"><i class="fab fa-twitch"></i> {{ profileUser.twitchUsername }}</span>
+                        {% endif %}
+                    </div>
                 </div>
-                <div class="pub-profile__actions">
+                <div class="pub-hero__actions">
                     {% if isOwnProfile %}
-                        <a href="{{ path('user_profile_edit') }}" class="pub-profile__share"><i class="fas fa-pen"></i> Modifier</a>
-                        <a href="{{ path('user_settings') }}" class="pub-profile__share"><i class="fas fa-cog"></i> Parametres</a>
+                        <a href="{{ path('user_profile_edit') }}" class="pub-btn pub-btn--outline"><i class="fas fa-pen"></i> Modifier</a>
+                        <a href="{{ path('user_settings') }}" class="pub-btn pub-btn--outline"><i class="fas fa-cog"></i></a>
                     {% endif %}
-                    <button type="button" class="pub-profile__share" id="btnShareProfile" data-url="{{ url('profile_show', {username: profileUser.username}) }}">
-                        <i class="fas fa-share-alt"></i> Partager
+                    <button type="button" class="pub-btn pub-btn--outline pub-btn--share" id="btnShareProfile"
+                            data-url="{{ url('profile_show', {username: profileUser.username}) }}">
+                        <i class="fas fa-share-alt"></i>
                     </button>
                 </div>
             </div>
-
-            {# ── Bio ── #}
-            {% if profileUser.bio %}
-                <div class="pub-section">
-                    <h3 class="pub-section__title"><i class="fas fa-quote-left"></i> Presentation</h3>
-                    <div class="pub-bio">{{ profileUser.bio|raw }}</div>
+            <div class="pub-hero__stats">
+                <div class="pub-stat">
+                    <div class="pub-stat__val">{{ servers|length }}</div>
+                    <div class="pub-stat__lbl">Serveurs</div>
                 </div>
-            {% elseif isOwnProfile %}
-                <div class="pub-section">
-                    <h3 class="pub-section__title"><i class="fas fa-quote-left"></i> Presentation</h3>
-                    <div class="pub-empty">Aucune presentation. <a href="{{ path('user_profile_edit') }}" style="color:#45f882;">Ajouter une bio</a></div>
+                <div class="pub-stat">
+                    <div class="pub-stat__val">{{ badges|length }}</div>
+                    <div class="pub-stat__lbl">Badges</div>
                 </div>
-            {% endif %}
+                <div class="pub-stat">
+                    {% set totalVotes = 0 %}
+                    {% for s in servers %}{% set totalVotes = totalVotes + s.monthlyVotes %}{% endfor %}
+                    <div class="pub-stat__val">{{ totalVotes }}</div>
+                    <div class="pub-stat__lbl">Votes/mois</div>
+                </div>
+            </div>
+        </div>
 
-            {# ── Socials ── #}
-            {% set hasSocials = (profileUser.isFieldVisible('email') and profileUser.email)
-                or (profileUser.isFieldVisible('discord') and profileUser.discordUsername)
-                or (profileUser.isFieldVisible('steam') and profileUser.steamUsername)
-                or (profileUser.isFieldVisible('twitch') and profileUser.twitchUsername)
-                or (profileUser.isFieldVisible('games') and profileUser.gameUsernames)
-                or isOwnProfile %}
+        <div class="row g-4">
 
-            {% if hasSocials %}
-                <div class="pub-section">
-                    <h3 class="pub-section__title"><i class="fas fa-link"></i> Reseaux & pseudos</h3>
-                    <div class="pub-socials">
-                        {% if (profileUser.isFieldVisible('email') or isOwnProfile) and profileUser.email %}
-                            <div class="pub-social pub-social--email">
-                                <i class="fas fa-envelope"></i> {{ profileUser.email }}
-                                {% if isOwnProfile and not profileUser.isFieldVisible('email') %}
-                                    <span style="font-size:10px;color:#8b949e;">(masque)</span>
-                                {% endif %}
-                            </div>
-                        {% endif %}
-                        {% if (profileUser.isFieldVisible('discord') or isOwnProfile) and profileUser.discordUsername %}
-                            <div class="pub-social pub-social--discord">
-                                <i class="fab fa-discord"></i> {{ profileUser.discordUsername }}
-                                {% if isOwnProfile and not profileUser.isFieldVisible('discord') %}
-                                    <span style="font-size:10px;color:#8b949e;">(masque)</span>
-                                {% endif %}
-                            </div>
-                        {% endif %}
-                        {% if (profileUser.isFieldVisible('steam') or isOwnProfile) and profileUser.steamUsername %}
-                            <div class="pub-social pub-social--steam">
-                                <i class="fab fa-steam"></i> {{ profileUser.steamUsername }}
-                                {% if isOwnProfile and not profileUser.isFieldVisible('steam') %}
-                                    <span style="font-size:10px;color:#8b949e;">(masque)</span>
-                                {% endif %}
-                            </div>
-                        {% endif %}
-                        {% if (profileUser.isFieldVisible('twitch') or isOwnProfile) and profileUser.twitchUsername %}
-                            <div class="pub-social pub-social--twitch">
-                                <i class="fab fa-twitch"></i> {{ profileUser.twitchUsername }}
-                                {% if isOwnProfile and not profileUser.isFieldVisible('twitch') %}
-                                    <span style="font-size:10px;color:#8b949e;">(masque)</span>
-                                {% endif %}
-                            </div>
-                        {% endif %}
-                        {% if (profileUser.isFieldVisible('games') or isOwnProfile) and profileUser.gameUsernames %}
-                            {% for game, name in profileUser.gameUsernames %}
-                                <div class="pub-social pub-social--game">
-                                    <i class="fas fa-gamepad"></i> {{ game }}: <strong>{{ name }}</strong>
-                                </div>
-                            {% endfor %}
-                            {% if isOwnProfile and not profileUser.isFieldVisible('games') %}
-                                <span style="font-size:10px;color:#8b949e;">(masque)</span>
-                            {% endif %}
-                        {% endif %}
+            {# ══════════ MAIN COL ══════════ #}
+            <div class="col-lg-8">
+
+                {# Bio #}
+                {% if profileUser.bio %}
+                    <div class="pub-section">
+                        <div class="pub-section-card">
+                            <div class="pub-section-title"><i class="fas fa-quote-left"></i> Présentation</div>
+                            <div class="pub-bio">{{ profileUser.bio|raw }}</div>
+                        </div>
                     </div>
-                </div>
-            {% endif %}
+                {% elseif isOwnProfile %}
+                    <div class="pub-section">
+                        <div class="pub-section-card">
+                            <div class="pub-section-title"><i class="fas fa-quote-left"></i> Présentation</div>
+                            <div class="pub-empty">Aucune présentation.
+                                <a href="{{ path('user_profile_edit') }}" style="color:#45f882;">Ajouter une bio →</a>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
 
-            {# ── Badges ── #}
-            {% if badges|length > 0 %}
-                <div class="pub-section">
-                    <h3 class="pub-section__title"><i class="fas fa-award"></i> Badges ({{ badges|length }})</h3>
-                    <div class="pub-badges">
-                        {% for ub in badges %}
-                            <div class="pub-badge" {% if ub.badge.color %}style="border-color:{{ ub.badge.color }};"{% endif %}>
-                                <div class="pub-badge__icon" {% if ub.badge.color %}style="background:{{ ub.badge.color }}22;"{% endif %}>
-                                    {% if ub.badge.iconFileName %}
-                                        <img src="{{ asset('uploads/badges/' ~ ub.badge.iconFileName) }}" alt="{{ ub.badge.name }}">
-                                    {% else %}
-                                        <i class="fas fa-award" {% if ub.badge.color %}style="color:{{ ub.badge.color }};"{% endif %}></i>
-                                    {% endif %}
+                {# Servers #}
+                {% if servers|length > 0 %}
+                    <div class="pub-section">
+                        <div class="pub-section-card">
+                            <div class="pub-section-title"><i class="fas fa-server"></i> Serveurs ({{ servers|length }})</div>
+                            <div class="pub-servers-grid">
+                                {% for server in servers %}
+                                    <a href="{{ path('server_show', {id: server.id, slug: server.slug}) }}" class="pub-server-card">
+                                        <div class="pub-server-card__name">{{ server.name }}</div>
+                                        <div class="pub-server-card__cat">
+                                            <i class="fas fa-tag" style="font-size:10px;"></i>
+                                            {{ server.category.name }}{% if server.gameCategory %} / {{ server.gameCategory.name }}{% endif %}
+                                        </div>
+                                        <div class="pub-server-card__footer">
+                                            <span class="pub-server-card__votes"><i class="fas fa-chart-bar"></i> {{ server.monthlyVotes }} votes</span>
+                                            <span class="pub-server-card__status {{ server.isActive ? 'pub-server-card__status--active' : 'pub-server-card__status--inactive' }}">
+                                                {{ server.isActive ? 'Actif' : 'Inactif' }}
+                                            </span>
+                                        </div>
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                {% elseif isOwnProfile %}
+                    <div class="pub-section">
+                        <div class="pub-section-card">
+                            <div class="pub-section-title"><i class="fas fa-server"></i> Serveurs</div>
+                            <div class="pub-empty">Aucun serveur.
+                                <a href="{{ path('user_servers_new') }}" style="color:#45f882;">Ajouter un serveur →</a>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+
+                {# Badges #}
+                {% if badges|length > 0 %}
+                    <div class="pub-section">
+                        <div class="pub-section-card">
+                            <div class="pub-section-title"><i class="fas fa-award"></i> Badges ({{ badges|length }})</div>
+                            <div class="pub-badges-grid">
+                                {% for ub in badges %}
+                                    <div class="pub-badge" {% if ub.badge.color %}style="border-color:{{ ub.badge.color }}40;"{% endif %}>
+                                        <div class="pub-badge__icon" {% if ub.badge.color %}style="background:{{ ub.badge.color }}22;"{% endif %}>
+                                            {% if ub.badge.iconFileName %}
+                                                <img src="{{ asset('uploads/badges/' ~ ub.badge.iconFileName) }}" alt="{{ ub.badge.name }}">
+                                            {% else %}
+                                                <i class="fas fa-award" {% if ub.badge.color %}style="color:{{ ub.badge.color }};"{% endif %}></i>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <div class="pub-badge__name">{{ ub.badge.name }}</div>
+                                            <div class="pub-badge__date">{{ ub.awardedAt|date('d/m/Y') }}</div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+
+            </div>
+
+            {# ══════════ SIDEBAR ══════════ #}
+            <div class="col-lg-4">
+
+                {# Réseaux connectés #}
+                {% set hasSocials =
+                    (profileUser.isFieldVisible('discord') and profileUser.discordUsername) or
+                    (profileUser.isFieldVisible('steam')   and profileUser.steamUsername)   or
+                    (profileUser.isFieldVisible('twitch')  and profileUser.twitchUsername)  or
+                    (profileUser.isFieldVisible('email')   and profileUser.email)           or
+                    (profileUser.isFieldVisible('games')   and profileUser.gameUsernames)   or
+                    isOwnProfile %}
+
+                {% if hasSocials %}
+                <div class="pub-sidebar-card">
+                    <div class="pub-sidebar-title"><i class="fas fa-plug"></i> Réseaux</div>
+
+                    {% if (profileUser.isFieldVisible('discord') or isOwnProfile) and profileUser.discordUsername %}
+                        <div class="pub-social-row">
+                            <div class="pub-social-icon" style="background:#5865f2;">
+                                <i class="fab fa-discord"></i>
+                            </div>
+                            <div>
+                                <div class="pub-social-name">{{ profileUser.discordUsername }}</div>
+                                <div class="pub-social-label">Discord</div>
+                            </div>
+                            {% if isOwnProfile and not profileUser.isFieldVisible('discord') %}
+                                <span class="pub-social-hidden">masqué</span>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
+                    {% if (profileUser.isFieldVisible('steam') or isOwnProfile) and profileUser.steamUsername %}
+                        <div class="pub-social-row">
+                            <div class="pub-social-icon" style="background:#2a475e;">
+                                <i class="fab fa-steam"></i>
+                            </div>
+                            <div>
+                                <div class="pub-social-name">{{ profileUser.steamUsername }}</div>
+                                <div class="pub-social-label">Steam</div>
+                            </div>
+                            {% if isOwnProfile and not profileUser.isFieldVisible('steam') %}
+                                <span class="pub-social-hidden">masqué</span>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
+                    {% if (profileUser.isFieldVisible('twitch') or isOwnProfile) and profileUser.twitchUsername %}
+                        <div class="pub-social-row">
+                            <div class="pub-social-icon" style="background:#9146ff;">
+                                <i class="fab fa-twitch"></i>
+                            </div>
+                            <div>
+                                <div class="pub-social-name">{{ profileUser.twitchUsername }}</div>
+                                <div class="pub-social-label">Twitch</div>
+                            </div>
+                            {% if isOwnProfile and not profileUser.isFieldVisible('twitch') %}
+                                <span class="pub-social-hidden">masqué</span>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
+                    {% if (profileUser.isFieldVisible('email') or isOwnProfile) and profileUser.email %}
+                        <div class="pub-social-row">
+                            <div class="pub-social-icon" style="background:#f0a030;">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                            <div>
+                                <div class="pub-social-name" style="font-size:12px;">{{ profileUser.email }}</div>
+                                <div class="pub-social-label">Email</div>
+                            </div>
+                            {% if isOwnProfile and not profileUser.isFieldVisible('email') %}
+                                <span class="pub-social-hidden">masqué</span>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
+                    {% if (profileUser.isFieldVisible('games') or isOwnProfile) and profileUser.gameUsernames %}
+                        {% for game, name in profileUser.gameUsernames %}
+                            <div class="pub-social-row">
+                                <div class="pub-social-icon" style="background:rgba(69,248,130,0.15);">
+                                    <i class="fas fa-gamepad" style="color:#45f882;"></i>
                                 </div>
                                 <div>
-                                    <div class="pub-badge__name">{{ ub.badge.name }}</div>
-                                    <div class="pub-badge__date">{{ ub.awardedAt|date('d/m/Y') }}</div>
+                                    <div class="pub-social-name">{{ name }}</div>
+                                    <div class="pub-social-label">{{ game }}</div>
                                 </div>
                             </div>
                         {% endfor %}
-                    </div>
-                </div>
-            {% endif %}
+                        {% if isOwnProfile and not profileUser.isFieldVisible('games') %}
+                            <span class="pub-social-hidden" style="display:block;text-align:right;">pseudos masqués</span>
+                        {% endif %}
+                    {% endif %}
 
-            {# ── Servers ── #}
-            {% if servers|length > 0 %}
-                <div class="pub-section">
-                    <h3 class="pub-section__title"><i class="fas fa-server"></i> Serveurs ({{ servers|length }})</h3>
-                    <div class="pub-servers">
-                        {% for server in servers %}
-                            <a href="{{ path('server_show', {id: server.id, slug: server.slug}) }}" class="pub-server">
-                                <div class="pub-server__name">{{ server.name }}</div>
-                                <div class="pub-server__cat">
-                                    {{ server.category.name }}
-                                    {% if server.gameCategory %} / {{ server.gameCategory.name }}{% endif %}
-                                </div>
-                                <div class="pub-server__votes"><i class="fas fa-chart-line"></i> {{ server.monthlyVotes }} votes ce mois</div>
-                            </a>
-                        {% endfor %}
+                </div>
+                {% endif %}
+
+                {# Actions rapides (propre profil) #}
+                {% if isOwnProfile %}
+                <div class="pub-sidebar-card">
+                    <div class="pub-sidebar-title"><i class="fas fa-bolt"></i> Actions</div>
+                    <div style="display:flex;flex-direction:column;gap:8px;">
+                        <a href="{{ path('user_profile_edit') }}" class="pub-btn pub-btn--primary" style="justify-content:flex-start;">
+                            <i class="fas fa-pen"></i> Modifier mon profil
+                        </a>
+                        <a href="{{ path('user_settings') }}" class="pub-btn pub-btn--outline" style="justify-content:flex-start;">
+                            <i class="fas fa-cog"></i> Paramètres du compte
+                        </a>
+                        <a href="{{ path('user_servers_list') }}" class="pub-btn pub-btn--outline" style="justify-content:flex-start;">
+                            <i class="fas fa-server"></i> Gérer mes serveurs
+                        </a>
                     </div>
                 </div>
-            {% elseif isOwnProfile %}
-                <div class="pub-section">
-                    <h3 class="pub-section__title"><i class="fas fa-server"></i> Serveurs</h3>
-                    <div class="pub-empty">Aucun serveur. <a href="{{ path('user_servers_new') }}" style="color:#45f882;">Ajouter un serveur</a></div>
-                </div>
-            {% endif %}
+                {% endif %}
+
+            </div>
 
         </div>
-    </section>
-
+    </div>
+</section>
 {% endblock %}
 
 {% block javascripts %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('btnShareProfile');
     if (btn) {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', function () {
             var url = this.dataset.url;
             if (navigator.clipboard) {
-                navigator.clipboard.writeText(url).then(function() {
+                navigator.clipboard.writeText(url).then(function () {
                     btn.classList.add('copied');
-                    btn.innerHTML = '<i class="fas fa-check"></i> Copie !';
-                    setTimeout(function() {
+                    btn.innerHTML = '<i class="fas fa-check"></i>';
+                    setTimeout(function () {
                         btn.classList.remove('copied');
-                        btn.innerHTML = '<i class="fas fa-share-alt"></i> Partager';
+                        btn.innerHTML = '<i class="fas fa-share-alt"></i>';
                     }, 2000);
                 });
             } else {
-                // Fallback
                 var input = document.createElement('input');
                 input.value = url;
                 document.body.appendChild(input);
                 input.select();
                 document.execCommand('copy');
                 document.body.removeChild(input);
-                btn.innerHTML = '<i class="fas fa-check"></i> Copie !';
-                setTimeout(function() { btn.innerHTML = '<i class="fas fa-share-alt"></i> Partager'; }, 2000);
+                btn.innerHTML = '<i class="fas fa-check"></i>';
+                setTimeout(function () { btn.innerHTML = '<i class="fas fa-share-alt"></i>'; }, 2000);
             }
         });
     }
