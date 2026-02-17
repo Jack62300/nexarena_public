@@ -917,14 +917,7 @@ ScrollTrigger.addEventListener("refresh", tg_title_animation);
 	=    		 Wow Active  	         =
 =============================================*/
 function wowAnimation() {
-	var wow = new WOW({
-		boxClass: 'wow',
-		animateClass: 'animated',
-		offset: 0,
-		mobile: false,
-		live: true
-	});
-	wow.init();
+	// WOW animations disabled — instant page rendering
 }
 
 

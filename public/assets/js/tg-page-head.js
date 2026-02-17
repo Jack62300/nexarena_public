@@ -1,5 +1,5 @@
-const ENABLE_PAGE_REVEALER = true;
-const ENABLE_PAGE_PRELOADER = true;
+const ENABLE_PAGE_REVEALER = false;
+const ENABLE_PAGE_PRELOADER = false;
 
 const ENABLE_PAGE_REVEALER_USED = ENABLE_PAGE_REVEALER && localStorage.getItem('page-revealer') === 'show';
 
