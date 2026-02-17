@@ -254,4 +254,65 @@ class SettingsController extends AbstractController
         $this->addFlash('success', 'Authentification 2FA desactivee.');
         return $this->redirectToRoute('user_settings');
     }
+
+    #[Route('/profil/parametres/oauth/disconnect/{provider}', name: 'user_settings_oauth_disconnect', methods: ['POST'])]
+    public function disconnectOauth(string $provider, Request $request): Response
+    {
+        $allowed = ['discord', 'google', 'twitch', 'steam'];
+        if (!in_array($provider, $allowed, true)) {
+            $this->addFlash('error', 'Fournisseur OAuth invalide.');
+            return $this->redirectToRoute('user_settings');
+        }
+
+        if (!$this->isCsrfTokenValid('oauth_disconnect_' . $provider, $request->request->get('_token'))) {
+            $this->addFlash('error', 'Token CSRF invalide.');
+            return $this->redirectToRoute('user_settings');
+        }
+
+        $user = $this->getUser();
+
+        // Security: user must keep at least one login method
+        $hasPassword = (bool) $user->getPassword();
+        $connectedProviders = array_filter([
+            'discord' => $user->getDiscordId(),
+            'google'  => $user->getGoogleId(),
+            'twitch'  => $user->getTwitchId(),
+            'steam'   => $user->getSteamId(),
+        ]);
+
+        if (!$hasPassword && count($connectedProviders) <= 1) {
+            $this->addFlash('error', 'Impossible de deconnecter ce compte : vous n\'avez pas de mot de passe et ce serait votre seul moyen de connexion. Definissez d\'abord un mot de passe.');
+            return $this->redirectToRoute('user_settings');
+        }
+
+        // Clear the provider ID (and avatar if it came from this provider)
+        match ($provider) {
+            'discord' => $user->setDiscordId(null),
+            'google'  => $user->setGoogleId(null),
+            'twitch'  => $user->setTwitchId(null),
+            'steam'   => $user->setSteamId(null),
+        };
+
+        // If avatar is an OAuth URL and came from this provider, reset it
+        $avatar = $user->getAvatar();
+        if ($avatar && str_starts_with($avatar, 'http')) {
+            $isProviderAvatar = match ($provider) {
+                'discord' => str_contains($avatar, 'cdn.discordapp.com') || str_contains($avatar, 'discord'),
+                'google'  => str_contains($avatar, 'googleusercontent.com') || str_contains($avatar, 'google'),
+                'twitch'  => str_contains($avatar, 'twitch.tv') || str_contains($avatar, 'twitch'),
+                'steam'   => str_contains($avatar, 'steamcdn') || str_contains($avatar, 'steam'),
+                default   => false,
+            };
+            if ($isProviderAvatar) {
+                $user->setAvatar(null);
+            }
+        }
+
+        $this->em->flush();
+
+        $labels = ['discord' => 'Discord', 'google' => 'Google', 'twitch' => 'Twitch', 'steam' => 'Steam'];
+        $this->addFlash('success', 'Compte ' . $labels[$provider] . ' deconnecte de votre profil.');
+
+        return $this->redirectToRoute('user_settings');
+    }
 }

@@ -169,6 +169,50 @@
 
                 </div>
             </div>
+
+            {# ── Comptes liés Card ── #}
+            <div class="form-card" style="margin-top:24px;">
+                <h3 class="form-card__title"><i class="fas fa-link"></i> Comptes liés (OAuth)</h3>
+                <p style="color:#8b949e;font-size:13px;margin-bottom:20px;">
+                    Gérez les comptes externes connectés à votre profil. Déconnecter un compte supprime uniquement le lien — vous pouvez le reconnecter à tout moment.
+                </p>
+
+                {% set providers = [
+                    {key: 'discord', label: 'Discord',  icon: 'fab fa-discord',  color: '#5865f2', id: app.user.discordId},
+                    {key: 'google',  label: 'Google',   icon: 'fab fa-google',   color: '#ea4335', id: app.user.googleId},
+                    {key: 'twitch',  label: 'Twitch',   icon: 'fab fa-twitch',   color: '#9146ff', id: app.user.twitchId},
+                    {key: 'steam',   label: 'Steam',    icon: 'fab fa-steam',    color: '#1b2838', id: app.user.steamId},
+                ] %}
+
+                <div style="display:flex;flex-direction:column;gap:12px;">
+                    {% for p in providers %}
+                        <div style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;">
+                            <div style="width:40px;height:40px;border-radius:10px;background:{{ p.color }};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                <i class="{{ p.icon }}" style="color:#fff;font-size:18px;"></i>
+                            </div>
+                            <div style="flex:1;min-width:0;">
+                                <div style="font-weight:600;color:#e6edf3;font-size:14px;">{{ p.label }}</div>
+                                {% if p.id %}
+                                    <div style="font-size:12px;color:#45f882;margin-top:2px;"><i class="fas fa-check-circle"></i> Connecté</div>
+                                {% else %}
+                                    <div style="font-size:12px;color:#8b949e;margin-top:2px;"><i class="fas fa-times-circle"></i> Non connecté</div>
+                                {% endif %}
+                            </div>
+                            {% if p.id %}
+                                <form method="post" action="{{ path('user_settings_oauth_disconnect', {provider: p.key}) }}"
+                                      onsubmit="return confirm('Déconnecter votre compte {{ p.label }} ?');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('oauth_disconnect_' ~ p.key) }}">
+                                    <button type="submit" style="padding:6px 14px;background:rgba(231,74,59,0.12);color:#e74a3b;border:1px solid rgba(231,74,59,0.25);border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;"
+                                            onmouseover="this.style.background='rgba(231,74,59,0.25)'" onmouseout="this.style.background='rgba(231,74,59,0.12)'">
+                                        <i class="fas fa-unlink"></i> Déconnecter
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
         </div>
     </section>
 
