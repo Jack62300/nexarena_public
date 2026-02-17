@@ -56,6 +56,16 @@ class RankingController extends AbstractController
         $gameCategories = $gcRepo->findByCategory($category);
         $serverCounts = $serverRepo->countActiveByGameCategory();
 
+        // Sort game categories by server count (descending), then by position
+        usort($gameCategories, function ($a, $b) use ($serverCounts) {
+            $countA = $serverCounts[$a->getId()] ?? 0;
+            $countB = $serverCounts[$b->getId()] ?? 0;
+            if ($countB !== $countA) {
+                return $countB <=> $countA;
+            }
+            return $a->getPosition() <=> $b->getPosition();
+        });
+
         $totalServers = 0;
         foreach ($gameCategories as $gc) {
             $totalServers += $serverCounts[$gc->getId()] ?? 0;
