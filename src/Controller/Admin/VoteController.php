@@ -35,7 +35,7 @@ class VoteController extends AbstractController
     }
 
     #[Route('/{id}/delete', name: 'delete', methods: ['POST'])]
-    #[IsGranted('ROLE_MANAGER')]
+    #[IsGranted('votes.manage')]
     public function delete(Vote $vote, Request $request): Response
     {
         if ($this->isCsrfTokenValid('delete_vote_' . $vote->getId(), $request->request->get('_token'))) {

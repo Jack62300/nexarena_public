@@ -78,7 +78,7 @@ class ArticleController extends AbstractController
     }
 
     #[Route('/{id}/delete', name: 'delete', methods: ['POST'])]
-    #[IsGranted('ROLE_MANAGER')]
+    #[IsGranted('articles.delete')]
     public function delete(Article $article, Request $request): Response
     {
         if ($this->isCsrfTokenValid('delete_' . $article->getId(), $request->request->get('_token'))) {

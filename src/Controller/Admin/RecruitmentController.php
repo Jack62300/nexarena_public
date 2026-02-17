@@ -55,7 +55,7 @@ class RecruitmentController extends AbstractController
     }
 
     #[Route('/{id}/approve', name: 'approve', methods: ['POST'])]
-    #[IsGranted('ROLE_MANAGER')]
+    #[IsGranted('recruitment.moderate')]
     public function approve(RecruitmentListing $listing, Request $request): Response
     {
         if (!$this->isCsrfTokenValid('recruitment_action_' . $listing->getId(), $request->request->get('_token'))) {
@@ -84,7 +84,7 @@ class RecruitmentController extends AbstractController
     }
 
     #[Route('/{id}/revision', name: 'revision', methods: ['POST'])]
-    #[IsGranted('ROLE_MANAGER')]
+    #[IsGranted('recruitment.moderate')]
     public function revision(RecruitmentListing $listing, Request $request): Response
     {
         if (!$this->isCsrfTokenValid('recruitment_action_' . $listing->getId(), $request->request->get('_token'))) {
@@ -107,7 +107,7 @@ class RecruitmentController extends AbstractController
     }
 
     #[Route('/{id}/reject', name: 'reject', methods: ['POST'])]
-    #[IsGranted('ROLE_MANAGER')]
+    #[IsGranted('recruitment.moderate')]
     public function reject(RecruitmentListing $listing, Request $request): Response
     {
         if (!$this->isCsrfTokenValid('recruitment_action_' . $listing->getId(), $request->request->get('_token'))) {
@@ -130,7 +130,7 @@ class RecruitmentController extends AbstractController
     }
 
     #[Route('/{id}/delete', name: 'delete', methods: ['POST'])]
-    #[IsGranted('ROLE_MANAGER')]
+    #[IsGranted('recruitment.moderate')]
     public function delete(RecruitmentListing $listing, Request $request): Response
     {
         if (!$this->isCsrfTokenValid('recruitment_delete_' . $listing->getId(), $request->request->get('_token'))) {

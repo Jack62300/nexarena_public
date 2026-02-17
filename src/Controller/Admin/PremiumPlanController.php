@@ -87,7 +87,7 @@ class PremiumPlanController extends AbstractController
     }
 
     #[Route('/{id}/delete', name: 'delete', methods: ['POST'])]
-    #[IsGranted('ROLE_RESPONSABLE')]
+    #[IsGranted('settings.edit')]
     public function delete(PremiumPlan $plan, Request $request): Response
     {
         if ($this->isCsrfTokenValid('delete_' . $plan->getId(), $request->request->get('_token'))) {

@@ -34,7 +34,7 @@ class UserController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'edit')]
-    #[IsGranted('ROLE_RESPONSABLE')]
+    #[IsGranted('users.edit')]
     public function edit(User $user, Request $request): Response
     {
         $assignableRoles = $this->roleRepo->findBy(
@@ -90,7 +90,7 @@ class UserController extends AbstractController
     }
 
     #[Route('/{id}/credit', name: 'credit', methods: ['POST'])]
-    #[IsGranted('ROLE_RESPONSABLE')]
+    #[IsGranted('users.credit')]
     public function credit(User $user, Request $request): Response
     {
         if (!$this->isCsrfTokenValid('user_credit_' . $user->getId(), $request->request->get('_token'))) {
@@ -156,7 +156,7 @@ class UserController extends AbstractController
     }
 
     #[Route('/{id}/delete', name: 'delete', methods: ['POST'])]
-    #[IsGranted('ROLE_FONDATEUR')]
+    #[IsGranted('users.delete')]
     public function delete(User $user, Request $request): Response
     {
         if ($this->isCsrfTokenValid('delete_' . $user->getId(), $request->request->get('_token'))) {

@@ -49,7 +49,7 @@ class CommentController extends AbstractController
     }
 
     #[Route('/{id}/approve-delete', name: 'approve_delete', methods: ['POST'])]
-    #[IsGranted('ROLE_MANAGER')]
+    #[IsGranted('comments.moderate')]
     public function approveDelete(Comment $comment, Request $request): Response
     {
         if (!$this->isCsrfTokenValid('comment_action_' . $comment->getId(), $request->request->get('_token'))) {
@@ -67,7 +67,7 @@ class CommentController extends AbstractController
     }
 
     #[Route('/{id}/dismiss-flag', name: 'dismiss_flag', methods: ['POST'])]
-    #[IsGranted('ROLE_MANAGER')]
+    #[IsGranted('comments.moderate')]
     public function dismissFlag(Comment $comment, Request $request): Response
     {
         if (!$this->isCsrfTokenValid('comment_action_' . $comment->getId(), $request->request->get('_token'))) {
@@ -86,7 +86,7 @@ class CommentController extends AbstractController
     }
 
     #[Route('/{id}/delete', name: 'delete', methods: ['POST'])]
-    #[IsGranted('ROLE_MANAGER')]
+    #[IsGranted('comments.moderate')]
     public function delete(Comment $comment, Request $request): Response
     {
         if (!$this->isCsrfTokenValid('comment_delete_' . $comment->getId(), $request->request->get('_token'))) {

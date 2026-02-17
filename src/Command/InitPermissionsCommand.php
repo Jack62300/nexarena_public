@@ -23,41 +23,94 @@ class InitPermissionsCommand extends Command
     private const DEFAULT_PERMISSIONS = [
         // Dashboard
         ['code' => 'dashboard.view', 'label' => 'Voir le dashboard', 'category' => 'dashboard'],
+
         // Articles
-        ['code' => 'articles.list', 'label' => 'Voir la liste des articles', 'category' => 'articles'],
-        ['code' => 'articles.create', 'label' => 'Creer des articles', 'category' => 'articles'],
-        ['code' => 'articles.edit', 'label' => 'Modifier des articles', 'category' => 'articles'],
-        ['code' => 'articles.delete', 'label' => 'Supprimer des articles', 'category' => 'articles'],
+        ['code' => 'articles.list',   'label' => 'Voir la liste des articles', 'category' => 'articles'],
+        ['code' => 'articles.create', 'label' => 'Creer des articles',          'category' => 'articles'],
+        ['code' => 'articles.edit',   'label' => 'Modifier des articles',        'category' => 'articles'],
+        ['code' => 'articles.delete', 'label' => 'Supprimer des articles',       'category' => 'articles'],
+
         // Categories
-        ['code' => 'categories.list', 'label' => 'Voir les categories de jeux', 'category' => 'categories'],
-        ['code' => 'categories.create', 'label' => 'Creer des categories', 'category' => 'categories'],
-        ['code' => 'categories.edit', 'label' => 'Modifier des categories', 'category' => 'categories'],
-        ['code' => 'categories.delete', 'label' => 'Supprimer des categories', 'category' => 'categories'],
+        ['code' => 'categories.list',   'label' => 'Voir les categories',       'category' => 'categories'],
+        ['code' => 'categories.create', 'label' => 'Creer des categories',       'category' => 'categories'],
+        ['code' => 'categories.edit',   'label' => 'Modifier des categories',    'category' => 'categories'],
+        ['code' => 'categories.delete', 'label' => 'Supprimer des categories',   'category' => 'categories'],
+
         // Servers
-        ['code' => 'servers.list', 'label' => 'Voir les serveurs', 'category' => 'servers'],
-        ['code' => 'servers.create', 'label' => 'Creer des serveurs', 'category' => 'servers'],
-        ['code' => 'servers.edit', 'label' => 'Modifier des serveurs', 'category' => 'servers'],
-        ['code' => 'servers.delete', 'label' => 'Supprimer des serveurs', 'category' => 'servers'],
+        ['code' => 'servers.list',   'label' => 'Voir les serveurs',         'category' => 'servers'],
+        ['code' => 'servers.create', 'label' => 'Creer des serveurs',         'category' => 'servers'],
+        ['code' => 'servers.edit',   'label' => 'Modifier / approuver les serveurs', 'category' => 'servers'],
+        ['code' => 'servers.delete', 'label' => 'Supprimer des serveurs',     'category' => 'servers'],
+
+        // Server Types
+        ['code' => 'server_types.list',   'label' => 'Voir les types de serveur',    'category' => 'server_types'],
+        ['code' => 'server_types.manage', 'label' => 'Gerer les types de serveur',   'category' => 'server_types'],
+
         // Votes
-        ['code' => 'votes.list', 'label' => 'Voir les votes', 'category' => 'votes'],
-        ['code' => 'votes.manage', 'label' => 'Gerer les votes', 'category' => 'votes'],
+        ['code' => 'votes.list',   'label' => 'Voir les votes',    'category' => 'votes'],
+        ['code' => 'votes.manage', 'label' => 'Gerer les votes',   'category' => 'votes'],
+
+        // Comments
+        ['code' => 'comments.list',     'label' => 'Voir les commentaires',          'category' => 'comments'],
+        ['code' => 'comments.moderate', 'label' => 'Moderer / supprimer les commentaires', 'category' => 'comments'],
+
+        // Tags
+        ['code' => 'tags.list',   'label' => 'Voir les tags',    'category' => 'tags'],
+        ['code' => 'tags.manage', 'label' => 'Gerer les tags',   'category' => 'tags'],
+
+        // Badges
+        ['code' => 'badges.list',   'label' => 'Voir les badges',               'category' => 'badges'],
+        ['code' => 'badges.manage', 'label' => 'Gerer / attribuer les badges',  'category' => 'badges'],
+
+        // Plugins
+        ['code' => 'plugins.list',   'label' => 'Voir les plugins',    'category' => 'plugins'],
+        ['code' => 'plugins.manage', 'label' => 'Gerer les plugins',   'category' => 'plugins'],
+
+        // Partners
+        ['code' => 'partners.list',   'label' => 'Voir les partenaires',    'category' => 'partners'],
+        ['code' => 'partners.manage', 'label' => 'Gerer les partenaires',   'category' => 'partners'],
+
+        // Recruitment (admin)
+        ['code' => 'recruitment.list',     'label' => 'Voir les annonces de recrutement',          'category' => 'recruitment'],
+        ['code' => 'recruitment.moderate', 'label' => 'Approuver / rejeter les annonces',          'category' => 'recruitment'],
+
+        // Premium / Transactions
+        ['code' => 'transactions.list',    'label' => 'Voir les transactions',              'category' => 'premium'],
+        ['code' => 'premium_plans.list',   'label' => 'Voir les plans premium',             'category' => 'premium'],
+        ['code' => 'premium_plans.manage', 'label' => 'Creer / modifier des plans premium', 'category' => 'premium'],
+
+        // Featured (selection premium admin)
+        ['code' => 'featured.list',   'label' => 'Voir les selections premium', 'category' => 'featured'],
+        ['code' => 'featured.manage', 'label' => 'Gerer les selections premium', 'category' => 'featured'],
+
+        // Discord bot
+        ['code' => 'discord.manage', 'label' => 'Gerer le bot Discord', 'category' => 'discord'],
+
+        // Themes
+        ['code' => 'themes.manage', 'label' => 'Gerer les images de themes', 'category' => 'themes'],
+
         // Users
-        ['code' => 'users.list', 'label' => 'Voir les utilisateurs', 'category' => 'users'],
-        ['code' => 'users.edit', 'label' => 'Modifier les utilisateurs', 'category' => 'users'],
-        ['code' => 'users.delete', 'label' => 'Supprimer les utilisateurs', 'category' => 'users'],
+        ['code' => 'users.list',   'label' => 'Voir les utilisateurs',                   'category' => 'users'],
+        ['code' => 'users.edit',   'label' => 'Modifier les utilisateurs',                'category' => 'users'],
+        ['code' => 'users.credit', 'label' => 'Crediter des tokens aux utilisateurs',    'category' => 'users'],
+        ['code' => 'users.delete', 'label' => 'Supprimer des utilisateurs',               'category' => 'users'],
+
         // Roles
-        ['code' => 'roles.view', 'label' => 'Voir les roles et permissions', 'category' => 'roles'],
-        ['code' => 'roles.create', 'label' => 'Creer de nouveaux roles', 'category' => 'roles'],
-        ['code' => 'roles.edit', 'label' => 'Modifier les roles et permissions', 'category' => 'roles'],
-        ['code' => 'roles.delete', 'label' => 'Supprimer les roles', 'category' => 'roles'],
+        ['code' => 'roles.view',   'label' => 'Voir les roles et permissions',   'category' => 'roles'],
+        ['code' => 'roles.create', 'label' => 'Creer de nouveaux roles',          'category' => 'roles'],
+        ['code' => 'roles.edit',   'label' => 'Modifier les roles et permissions', 'category' => 'roles'],
+        ['code' => 'roles.delete', 'label' => 'Supprimer les roles',               'category' => 'roles'],
+
         // Settings
-        ['code' => 'settings.view', 'label' => 'Voir les parametres', 'category' => 'settings'],
-        ['code' => 'settings.edit', 'label' => 'Modifier les parametres', 'category' => 'settings'],
+        ['code' => 'settings.view', 'label' => 'Voir les parametres',      'category' => 'settings'],
+        ['code' => 'settings.edit', 'label' => 'Modifier les parametres',  'category' => 'settings'],
+
         // Webhooks
-        ['code' => 'webhooks.list', 'label' => 'Voir les webhooks', 'category' => 'webhooks'],
-        ['code' => 'webhooks.manage', 'label' => 'Gerer les webhooks', 'category' => 'webhooks'],
+        ['code' => 'webhooks.list',   'label' => 'Voir les webhooks',    'category' => 'webhooks'],
+        ['code' => 'webhooks.manage', 'label' => 'Gerer les webhooks',   'category' => 'webhooks'],
+
         // Logs
-        ['code' => 'logs.view', 'label' => 'Voir les logs', 'category' => 'logs'],
+        ['code' => 'logs.view', 'label' => 'Voir les logs systeme', 'category' => 'logs'],
     ];
 
     private const DEFAULT_ROLES = [
@@ -66,7 +119,7 @@ class InitPermissionsCommand extends Command
             'technicalName' => 'ROLE_USER',
             'color' => '#5a5c69',
             'position' => 0,
-            'description' => 'Acces de base',
+            'description' => 'Acces de base — espace utilisateur uniquement',
             'permissions' => [],
         ],
         [
@@ -74,13 +127,20 @@ class InitPermissionsCommand extends Command
             'technicalName' => 'ROLE_EDITEUR',
             'color' => '#1cc88a',
             'position' => 10,
-            'description' => 'Edition d\'articles et categories',
+            'description' => 'Consultation et edition du contenu',
             'permissions' => [
                 'dashboard.view',
                 'articles.list', 'articles.create', 'articles.edit',
                 'categories.list', 'categories.create', 'categories.edit',
-                'servers.list', 'servers.create', 'servers.edit',
+                'servers.list', 'servers.create',
+                'server_types.list',
                 'votes.list',
+                'comments.list',
+                'tags.list',
+                'badges.list',
+                'plugins.list',
+                'partners.list',
+                'recruitment.list',
             ],
         ],
         [
@@ -88,13 +148,24 @@ class InitPermissionsCommand extends Command
             'technicalName' => 'ROLE_MANAGER',
             'color' => '#36b9cc',
             'position' => 20,
-            'description' => 'Gestion du contenu et des utilisateurs',
+            'description' => 'Gestion du contenu, moderation et utilisateurs',
             'permissions' => [
                 'dashboard.view',
                 'articles.list', 'articles.create', 'articles.edit', 'articles.delete',
                 'categories.list', 'categories.create', 'categories.edit', 'categories.delete',
                 'servers.list', 'servers.create', 'servers.edit', 'servers.delete',
+                'server_types.list', 'server_types.manage',
                 'votes.list', 'votes.manage',
+                'comments.list', 'comments.moderate',
+                'tags.list', 'tags.manage',
+                'badges.list', 'badges.manage',
+                'plugins.list', 'plugins.manage',
+                'partners.list', 'partners.manage',
+                'recruitment.list', 'recruitment.moderate',
+                'transactions.list',
+                'premium_plans.list', 'premium_plans.manage',
+                'featured.list', 'featured.manage',
+                'discord.manage',
                 'users.list',
             ],
         ],
@@ -103,15 +174,27 @@ class InitPermissionsCommand extends Command
             'technicalName' => 'ROLE_RESPONSABLE',
             'color' => '#f6c23e',
             'position' => 30,
-            'description' => 'Configuration et permissions',
+            'description' => 'Configuration, permissions et gestion des utilisateurs',
             'permissions' => [
                 'dashboard.view',
                 'articles.list', 'articles.create', 'articles.edit', 'articles.delete',
                 'categories.list', 'categories.create', 'categories.edit', 'categories.delete',
                 'servers.list', 'servers.create', 'servers.edit', 'servers.delete',
+                'server_types.list', 'server_types.manage',
                 'votes.list', 'votes.manage',
-                'users.list', 'users.edit',
-                'roles.view', 'roles.edit',
+                'comments.list', 'comments.moderate',
+                'tags.list', 'tags.manage',
+                'badges.list', 'badges.manage',
+                'plugins.list', 'plugins.manage',
+                'partners.list', 'partners.manage',
+                'recruitment.list', 'recruitment.moderate',
+                'transactions.list',
+                'premium_plans.list', 'premium_plans.manage',
+                'featured.list', 'featured.manage',
+                'discord.manage',
+                'themes.manage',
+                'users.list', 'users.edit', 'users.credit',
+                'roles.view', 'roles.create', 'roles.edit',
                 'settings.view', 'settings.edit',
             ],
         ],
@@ -120,15 +203,27 @@ class InitPermissionsCommand extends Command
             'technicalName' => 'ROLE_DEVELOPPEUR',
             'color' => '#6fffa0',
             'position' => 40,
-            'description' => 'Technique, logs, webhooks',
+            'description' => 'Technique — logs, webhooks et tout le reste',
             'permissions' => [
                 'dashboard.view',
                 'articles.list', 'articles.create', 'articles.edit', 'articles.delete',
                 'categories.list', 'categories.create', 'categories.edit', 'categories.delete',
                 'servers.list', 'servers.create', 'servers.edit', 'servers.delete',
+                'server_types.list', 'server_types.manage',
                 'votes.list', 'votes.manage',
-                'users.list', 'users.edit',
-                'roles.view', 'roles.edit',
+                'comments.list', 'comments.moderate',
+                'tags.list', 'tags.manage',
+                'badges.list', 'badges.manage',
+                'plugins.list', 'plugins.manage',
+                'partners.list', 'partners.manage',
+                'recruitment.list', 'recruitment.moderate',
+                'transactions.list',
+                'premium_plans.list', 'premium_plans.manage',
+                'featured.list', 'featured.manage',
+                'discord.manage',
+                'themes.manage',
+                'users.list', 'users.edit', 'users.credit',
+                'roles.view', 'roles.create', 'roles.edit', 'roles.delete',
                 'settings.view', 'settings.edit',
                 'webhooks.list', 'webhooks.manage',
                 'logs.view',
@@ -139,8 +234,8 @@ class InitPermissionsCommand extends Command
             'technicalName' => 'ROLE_FONDATEUR',
             'color' => '#e74a3b',
             'position' => 50,
-            'description' => 'Tous les droits',
-            'permissions' => [], // All permissions handled via voter shortcut
+            'description' => 'Tous les droits sans restriction',
+            'permissions' => [], // Tous les droits geres par le voter (shortcut ROLE_FONDATEUR)
         ],
     ];
 

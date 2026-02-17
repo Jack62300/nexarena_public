@@ -1,5 +1,7 @@
 /* ─── Navbar layout fix ─── */
-.tgmenu__nav {
+/* Strong selector matching base-theme specificity to guarantee nowrap on all sizes */
+.tg-header__area .tgmenu__nav,
+.tg-header__area.tg-sticky-menu .tgmenu__nav {
     flex-wrap: nowrap !important;
     align-items: center !important;
 }
@@ -17,23 +19,67 @@
 @media (min-width: 1200px) {
     .tgmenu__navbar-wrap {
         min-width: 0;
+        flex-shrink: 1;
     }
+    .tgmenu__navbar-wrap ul.navigation {
+        margin-left: 28px !important;
+        gap: 0;
+    }
+}
+/* 1200–1499px : reduce nav link horizontal padding to fit within 1260px container */
+@media (min-width: 1200px) and (max-width: 1499.98px) {
+    .tgmenu__navbar-wrap ul li a {
+        padding-left: 14px !important;
+        padding-right: 14px !important;
+    }
+    .tgmenu__navbar-wrap ul.navigation {
+        margin-left: 20px !important;
+    }
+    .tgmenu__action > ul li {
+        margin-left: 14px;
+    }
+}
+/* 1500px+ : original spacing */
+@media (min-width: 1500px) {
     .tgmenu__navbar-wrap ul.navigation {
         margin-left: 40px !important;
         gap: 2px;
     }
 }
-@media (min-width: 1200px) and (max-width: 1399.98px) {
-    .tgmenu__navbar-wrap ul.navigation {
-        margin-left: 20px !important;
-    }
-    .tgmenu__action > ul li {
-        margin-left: 15px;
-    }
-}
 @media (max-width: 767.98px) {
     .tgmenu__action {
         display: none !important;
+    }
+}
+
+/* ─── Burger menu — flex item inside nav ─── */
+/* Override base-theme position:absolute so it sits in the flex row */
+.mobile-nav-toggler {
+    position: static !important;
+    top: auto !important;
+    right: auto !important;
+    transform: none !important;
+    flex-shrink: 0;
+}
+/* Visible as flex below xl (d-xl-none hides it at xl+) */
+@media (max-width: 1199.98px) {
+    .mobile-nav-toggler {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+}
+/* Below md: actions are hidden → burger needs to push to the right */
+@media (max-width: 767.98px) {
+    .mobile-nav-toggler {
+        margin-left: auto;
+    }
+}
+/* md → xl: actions still visible → burger sits right after them, small gap */
+@media (min-width: 768px) and (max-width: 1199.98px) {
+    .mobile-nav-toggler {
+        margin-left: 14px;
     }
 }
 

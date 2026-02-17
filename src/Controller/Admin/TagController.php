@@ -76,7 +76,7 @@ class TagController extends AbstractController
     }
 
     #[Route('/{id}/delete', name: 'delete', methods: ['POST'])]
-    #[IsGranted('ROLE_MANAGER')]
+    #[IsGranted('tags.manage')]
     public function delete(Tag $tag, Request $request): Response
     {
         if ($this->isCsrfTokenValid('delete_' . $tag->getId(), $request->request->get('_token'))) {

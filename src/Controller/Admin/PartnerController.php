@@ -34,7 +34,7 @@ class PartnerController extends AbstractController
     }
 
     #[Route('/new', name: 'new')]
-    #[IsGranted('ROLE_MANAGER')]
+    #[IsGranted('partners.manage')]
     public function new(Request $request): Response
     {
         if ($request->isMethod('POST')) {
@@ -59,7 +59,7 @@ class PartnerController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'edit')]
-    #[IsGranted('ROLE_MANAGER')]
+    #[IsGranted('partners.manage')]
     public function edit(Partner $partner, Request $request): Response
     {
         if ($request->isMethod('POST')) {
@@ -81,7 +81,7 @@ class PartnerController extends AbstractController
     }
 
     #[Route('/{id}/delete', name: 'delete', methods: ['POST'])]
-    #[IsGranted('ROLE_MANAGER')]
+    #[IsGranted('partners.manage')]
     public function delete(Partner $partner, Request $request): Response
     {
         if ($this->isCsrfTokenValid('delete_' . $partner->getId(), $request->request->get('_token'))) {

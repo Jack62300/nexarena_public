@@ -50,7 +50,7 @@ class ServerController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'edit')]
-    #[IsGranted('ROLE_MANAGER')]
+    #[IsGranted('servers.edit')]
     public function edit(Server $server, Request $request, CategoryRepository $categoryRepo): Response
     {
         if ($request->isMethod('POST')) {
@@ -73,7 +73,7 @@ class ServerController extends AbstractController
     }
 
     #[Route('/{id}/approve', name: 'approve', methods: ['POST'])]
-    #[IsGranted('ROLE_MANAGER')]
+    #[IsGranted('servers.edit')]
     public function approve(Server $server, Request $request): Response
     {
         if ($this->isCsrfTokenValid('approve_' . $server->getId(), $request->request->get('_token'))) {
@@ -98,7 +98,7 @@ class ServerController extends AbstractController
     }
 
     #[Route('/{id}/toggle-active', name: 'toggle_active', methods: ['POST'])]
-    #[IsGranted('ROLE_MANAGER')]
+    #[IsGranted('servers.edit')]
     public function toggleActive(Server $server, Request $request): Response
     {
         if ($this->isCsrfTokenValid('toggle_' . $server->getId(), $request->request->get('_token'))) {
@@ -112,7 +112,7 @@ class ServerController extends AbstractController
     }
 
     #[Route('/{id}/delete', name: 'delete', methods: ['POST'])]
-    #[IsGranted('ROLE_MANAGER')]
+    #[IsGranted('servers.delete')]
     public function delete(Server $server, Request $request): Response
     {
         if ($this->isCsrfTokenValid('delete_' . $server->getId(), $request->request->get('_token'))) {

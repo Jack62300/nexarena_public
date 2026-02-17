@@ -85,7 +85,7 @@ class BadgeController extends AbstractController
     }
 
     #[Route('/{id}/delete', name: 'delete', methods: ['POST'])]
-    #[IsGranted('ROLE_MANAGER')]
+    #[IsGranted('badges.manage')]
     public function delete(Badge $badge, Request $request): Response
     {
         if ($this->isCsrfTokenValid('delete_' . $badge->getId(), $request->request->get('_token'))) {
@@ -106,7 +106,7 @@ class BadgeController extends AbstractController
     }
 
     #[Route('/{id}/award', name: 'award', methods: ['POST'])]
-    #[IsGranted('ROLE_MANAGER')]
+    #[IsGranted('badges.manage')]
     public function award(Badge $badge, Request $request, UserRepository $userRepo, BadgeService $badgeService): Response
     {
         if (!$this->isCsrfTokenValid('badge_award_' . $badge->getId(), $request->request->get('_token'))) {
@@ -136,7 +136,7 @@ class BadgeController extends AbstractController
     }
 
     #[Route('/{id}/revoke/{userId}', name: 'revoke', methods: ['POST'])]
-    #[IsGranted('ROLE_MANAGER')]
+    #[IsGranted('badges.manage')]
     public function revoke(Badge $badge, int $userId, Request $request, UserRepository $userRepo, BadgeService $badgeService): Response
     {
         if (!$this->isCsrfTokenValid('badge_revoke_' . $badge->getId() . '_' . $userId, $request->request->get('_token'))) {

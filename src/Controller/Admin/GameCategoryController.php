@@ -82,7 +82,7 @@ class GameCategoryController extends AbstractController
     }
 
     #[Route('/{id}/delete', name: 'delete', methods: ['POST'])]
-    #[IsGranted('ROLE_MANAGER')]
+    #[IsGranted('categories.delete')]
     public function delete(GameCategory $category, Request $request): Response
     {
         if ($this->isCsrfTokenValid('delete_' . $category->getId(), $request->request->get('_token'))) {

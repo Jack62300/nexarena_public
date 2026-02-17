@@ -80,7 +80,7 @@ class ServerTypeController extends AbstractController
     }
 
     #[Route('/{id}/delete', name: 'delete', methods: ['POST'])]
-    #[IsGranted('ROLE_MANAGER')]
+    #[IsGranted('server_types.manage')]
     public function delete(ServerType $serverType, Request $request): Response
     {
         if ($this->isCsrfTokenValid('delete_' . $serverType->getId(), $request->request->get('_token'))) {

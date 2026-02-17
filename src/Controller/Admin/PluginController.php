@@ -79,7 +79,7 @@ class PluginController extends AbstractController
     }
 
     #[Route('/{id}/delete', name: 'delete', methods: ['POST'])]
-    #[IsGranted('ROLE_MANAGER')]
+    #[IsGranted('plugins.manage')]
     public function delete(Plugin $plugin, Request $request): Response
     {
         if ($this->isCsrfTokenValid('delete_' . $plugin->getId(), $request->request->get('_token'))) {
