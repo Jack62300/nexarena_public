@@ -117,48 +117,71 @@ class PremiumController extends AbstractController
     #[IsGranted('ROLE_USER')]
     public function captureOrder(Request $request): JsonResponse
     {
-        $data = json_decode($request->getContent(), true);
-        $orderId = $data['orderId'] ?? '';
-        $planId = (int) ($data['planId'] ?? 0);
+        try {
+            $data = json_decode($request->getContent(), true);
+            $orderId = $data['orderId'] ?? '';
+            $planId = (int) ($data['planId'] ?? 0);
 
-        if (!$orderId || !$planId) {
-            return new JsonResponse(['error' => 'Donnees manquantes.'], 400);
+            $this->logger->info('Premium: captureOrder request.', ['orderId' => $orderId, 'planId' => $planId]);
+
+            if (!$orderId || !$planId) {
+                $this->logger->warning('Premium: captureOrder missing data.', ['orderId' => $orderId, 'planId' => $planId]);
+                return new JsonResponse(['error' => 'Donnees manquantes.'], 400);
+            }
+
+            // Idempotency: don't double-credit
+            if ($this->premiumService->isOrderAlreadyCaptured($orderId)) {
+                $this->logger->info('Premium: Order already captured.', ['orderId' => $orderId]);
+                return new JsonResponse(['success' => true, 'message' => 'Deja traite.']);
+            }
+
+            $plan = $this->planRepo->find($planId);
+            if (!$plan) {
+                $this->logger->error('Premium: Plan not found.', ['planId' => $planId]);
+                return new JsonResponse(['error' => 'Plan introuvable.'], 400);
+            }
+
+            $this->logger->info('Premium: Calling PayPal captureOrder.', ['orderId' => $orderId]);
+            $capture = $this->paypal->captureOrder($orderId);
+
+            if (!$capture) {
+                $this->logger->error('Premium: PayPal captureOrder returned null.', ['orderId' => $orderId]);
+                return new JsonResponse(['error' => 'Erreur lors de la capture PayPal.'], 500);
+            }
+
+            $status = $capture['status'] ?? '';
+            $this->logger->info('Premium: PayPal capture status.', ['orderId' => $orderId, 'status' => $status]);
+
+            if ($status !== 'COMPLETED') {
+                $this->logger->warning('Premium: Payment not completed.', ['orderId' => $orderId, 'status' => $status]);
+                return new JsonResponse(['error' => 'Paiement non complete. Statut: ' . $status], 400);
+            }
+
+            /** @var User $user */
+            $user = $this->getUser();
+            $this->logger->info('Premium: Crediting tokens to user.', ['userId' => $user->getId(), 'orderId' => $orderId]);
+            $this->premiumService->creditTokensFromPurchase($user, $plan, $orderId, $status);
+
+            $this->webhookService->dispatch('payment.completed', [
+                'title' => 'Paiement complete',
+                'fields' => [
+                    ['name' => 'Utilisateur', 'value' => $user->getUsername(), 'inline' => true],
+                    ['name' => 'Plan', 'value' => $plan->getName(), 'inline' => true],
+                    ['name' => 'Montant', 'value' => $plan->getPrice() . ' ' . $plan->getCurrency(), 'inline' => true],
+                ],
+            ]);
+
+            $this->logger->info('Premium: Payment completed successfully.', ['orderId' => $orderId, 'userId' => $user->getId()]);
+            return new JsonResponse(['success' => true]);
+        } catch (\Throwable $e) {
+            $this->logger->error('Premium: Exception in captureOrder.', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return new JsonResponse(['error' => 'Erreur serveur: ' . $e->getMessage()], 500);
         }
-
-        // Idempotency: don't double-credit
-        if ($this->premiumService->isOrderAlreadyCaptured($orderId)) {
-            return new JsonResponse(['success' => true, 'message' => 'Deja traite.']);
-        }
-
-        $plan = $this->planRepo->find($planId);
-        if (!$plan) {
-            return new JsonResponse(['error' => 'Plan introuvable.'], 400);
-        }
-
-        $capture = $this->paypal->captureOrder($orderId);
-        if (!$capture) {
-            return new JsonResponse(['error' => 'Erreur lors de la capture PayPal.'], 500);
-        }
-
-        $status = $capture['status'] ?? '';
-        if ($status !== 'COMPLETED') {
-            return new JsonResponse(['error' => 'Paiement non complete. Statut: ' . $status], 400);
-        }
-
-        /** @var User $user */
-        $user = $this->getUser();
-        $this->premiumService->creditTokensFromPurchase($user, $plan, $orderId, $status);
-
-        $this->webhookService->dispatch('payment.completed', [
-            'title' => 'Paiement complete',
-            'fields' => [
-                ['name' => 'Utilisateur', 'value' => $user->getUsername(), 'inline' => true],
-                ['name' => 'Plan', 'value' => $plan->getName(), 'inline' => true],
-                ['name' => 'Montant', 'value' => $plan->getPrice() . ' ' . $plan->getCurrency(), 'inline' => true],
-            ],
-        ]);
-
-        return new JsonResponse(['success' => true]);
     }
 
     #[Route('/premium/paypal-webhook', name: 'premium_paypal_webhook', methods: ['POST'])]
