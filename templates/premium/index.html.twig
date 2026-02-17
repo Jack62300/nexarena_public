@@ -446,6 +446,7 @@
                     });
                 },
                 onApprove: function(data, actions) {
+                    console.log('[PayPal] onApprove called, orderID:', data.orderID);
                     return fetch('{{ path("premium_capture_order") }}', {
                         method: 'POST',
                         headers: {
@@ -456,20 +457,28 @@
                         body: JSON.stringify({ orderId: data.orderID, planId: currentPlanId })
                     })
                     .then(function(res) {
+                        console.log('[PayPal] captureOrder response status:', res.status);
                         if (!res.ok) {
                             return res.text().then(function(text) {
-                                console.error('captureOrder HTTP ' + res.status, text.substring(0, 300));
+                                console.error('[PayPal] captureOrder HTTP ' + res.status, text.substring(0, 300));
                                 throw new Error('Erreur serveur (' + res.status + ')');
                             });
                         }
                         return res.json();
                     })
                     .then(function(json) {
+                        console.log('[PayPal] captureOrder response:', json);
                         if (json.error) {
                             alert('Erreur: ' + json.error);
                         } else {
+                            console.log('[PayPal] Redirecting to success page...');
                             window.location.href = '{{ path("premium_success") }}';
                         }
+                    })
+                    .catch(function(err) {
+                        console.error('[PayPal] onApprove error:', err);
+                        alert('Erreur lors de la capture du paiement: ' + err.message);
+                        throw err;
                     });
                 },
                 onCancel: function() {
