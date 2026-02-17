@@ -3,6 +3,7 @@
 namespace App\EventListener;
 
 use App\Entity\User;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
@@ -10,16 +11,13 @@ use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
-/**
- * Requires 2FA to be enabled on the user's account to access /admin/*.
- * If 2FA is not enabled, redirects to the profile page with a flash message.
- */
 #[AsEventListener(event: KernelEvents::REQUEST, priority: 6)]
 class Admin2faListener
 {
     public function __construct(
         private TokenStorageInterface $tokenStorage,
         private UrlGeneratorInterface $urlGenerator,
+        #[Autowire('%kernel.environment%')]
         private string $kernelEnvironment,
     ) {
     }
@@ -30,13 +28,13 @@ class Admin2faListener
             return;
         }
 
-        $request = $event->getRequest();
-        $path = $request->getPathInfo();
-
         // Skip in dev environment
         if ($this->kernelEnvironment === 'dev') {
             return;
         }
+
+        $request = $event->getRequest();
+        $path = $request->getPathInfo();
 
         // Only apply to /admin routes
         if (!str_starts_with($path, '/admin')) {
@@ -53,20 +51,24 @@ class Admin2faListener
             return;
         }
 
-        // Check if user has ROLE_EDITEUR or higher (admin access)
-        $roles = $user->getRoles();
-        $adminRoles = ['ROLE_EDITEUR', 'ROLE_MANAGER', 'ROLE_RESPONSABLE', 'ROLE_DEVELOPPEUR', 'ROLE_FONDATEUR'];
-        $isAdmin = !empty(array_intersect($roles, $adminRoles));
+        // Roles autorisés admin
+        $adminRoles = [
+            'ROLE_EDITEUR',
+            'ROLE_MANAGER',
+            'ROLE_RESPONSABLE',
+            'ROLE_DEVELOPPEUR',
+            'ROLE_FONDATEUR'
+        ];
 
-        if (!$isAdmin) {
+        if (!array_intersect($user->getRoles(), $adminRoles)) {
             return;
         }
 
-        // If 2FA is not enabled, block admin access
+        // Bloque accès admin si 2FA désactivée
         if (!$user->isTwoFactorEnabled()) {
             $request->getSession()->getFlashBag()->add(
                 'error',
-                'Vous devez activer l\'authentification a deux facteurs (2FA) pour acceder au panel d\'administration.'
+                'Vous devez activer l\'authentification à deux facteurs (2FA) pour accéder au panel d\'administration.'
             );
 
             $event->setResponse(new RedirectResponse(
