@@ -21,6 +21,7 @@ use App\Repository\TagRepository;
 use App\Repository\TransactionRepository;
 use App\Repository\UserRepository;
 use App\Service\NetworkValidationService;
+use App\Service\NotificationService;
 use App\Service\PremiumService;
 use App\Service\ServerService;
 use App\Service\SlugService;
@@ -62,6 +63,7 @@ class UserServerController extends AbstractController
         private WebhookService $webhookService,
         private TagRepository $tagRepo,
         private NetworkValidationService $networkValidator,
+        private NotificationService $notificationService,
     ) {
     }
 
@@ -581,6 +583,16 @@ class UserServerController extends AbstractController
         $this->em->persist($collab);
         $this->em->flush();
 
+        $owner = $this->getUser();
+        $manageUrl = $this->generateUrl('user_servers_manage', ['id' => $server->getId()]);
+        $this->notificationService->create(
+            $targetUser,
+            'server_collab_added',
+            'Invitation à gérer un serveur',
+            $owner->getUsername() . ' vous a ajouté comme gestionnaire du serveur "' . $server->getName() . '".',
+            $manageUrl
+        );
+
         $this->addFlash('success', $targetUser->getUsername() . ' a ete ajoute comme collaborateur.');
         return $this->redirectToRoute('user_servers_manage', ['id' => $server->getId()]);
     }
@@ -602,8 +614,16 @@ class UserServerController extends AbstractController
             throw $this->createNotFoundException('Collaborateur introuvable.');
         }
 
+        $removedUser = $collab->getUser();
         $this->em->remove($collab);
         $this->em->flush();
+
+        $this->notificationService->create(
+            $removedUser,
+            'server_collab_removed',
+            'Accès retiré',
+            'Vous n\'êtes plus gestionnaire du serveur "' . $server->getName() . '".'
+        );
 
         $this->addFlash('success', 'Collaborateur retire.');
         return $this->redirectToRoute('user_servers_manage', ['id' => $server->getId()]);
