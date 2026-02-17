@@ -7,57 +7,70 @@
 {% endblock %}
 
 {% block body %}
+<section class="settings-page">
+    <div class="container">
 
-    {# breadcrumb-area #}
-    <section class="breadcrumb-area" data-background="{{ asset('assets/img/bg/breadcrumb_bg01.jpg') }}">
-        <div class="container">
-            <div class="breadcrumb__wrapper">
-                <div class="row">
-                    <div class="col-xl-6 col-lg-7">
-                        <div class="breadcrumb__content">
-                            <h2 class="title">Parametres</h2>
-                            <nav aria-label="breadcrumb">
-                                <ol class="breadcrumb">
-                                    <li class="breadcrumb-item"><a href="{{ path('app_home') }}">Accueil</a></li>
-                                    <li class="breadcrumb-item active" aria-current="page">Parametres</li>
-                                </ol>
-                            </nav>
-                        </div>
-                    </div>
-                    <div class="col-xl-6 col-lg-5 position-relative d-none d-lg-block">
-                        <div class="breadcrumb__img">
-                            <img src="{{ asset('assets/img/others/breadcrumb_img02.png') }}" alt="img">
-                        </div>
-                    </div>
+        {# ── Flash messages ── #}
+        {% for message in app.flashes('success') %}
+            <div class="profile-flash profile-flash--success"><i class="fas fa-check-circle"></i> {{ message }}</div>
+        {% endfor %}
+        {% for message in app.flashes('error') %}
+            <div class="profile-flash profile-flash--error"><i class="fas fa-exclamation-circle"></i> {{ message }}</div>
+        {% endfor %}
+
+        {# ── Header ── #}
+        <div class="settings-header">
+            <div class="settings-header__avatar">
+                {% if app.user.avatar starts with 'http' %}
+                    <img src="{{ app.user.avatar }}" alt="Avatar">
+                {% elseif app.user.avatar %}
+                    <img src="{{ asset('uploads/avatars/' ~ app.user.avatar) }}" alt="Avatar">
+                {% else %}
+                    <i class="fas fa-user"></i>
+                {% endif %}
+            </div>
+            <div class="settings-header__info">
+                <div class="settings-header__name">{{ app.user.username }}</div>
+                <div class="settings-header__meta">
+                    <span class="settings-header__meta-item"><i class="fas fa-envelope"></i> {{ app.user.email }}</span>
+                    {% if app.user.isTwoFactorEnabled %}
+                        <span class="settings-header__meta-item" style="color:#45f882;"><i class="fas fa-shield-alt"></i> 2FA actif</span>
+                    {% else %}
+                        <span class="settings-header__meta-item" style="color:#8b949e;"><i class="fas fa-shield-alt"></i> 2FA inactif</span>
+                    {% endif %}
                 </div>
             </div>
-        </div>
-    </section>
-
-    <section class="profile-page" data-background="{{ asset('assets/img/bg/team_bg.jpg') }}">
-        <div class="container">
-            <h2 class="profile-page__title"><span>Mes</span> parametres</h2>
-            <p class="profile-page__subtitle">Gerez votre compte, votre avatar et votre securite.</p>
-            <div style="margin-bottom:20px;">
-                <a href="{{ path('profile_show', {username: app.user.username}) }}" class="btn-action btn-action--primary" style="font-size:13px;padding:8px 16px;">
-                    <i class="fas fa-user"></i> Voir mon profil public
+            <div class="settings-header__actions">
+                <a href="{{ path('profile_show', {username: app.user.username}) }}" class="btn-action btn-action--outline">
+                    <i class="fas fa-user"></i> Mon profil
                 </a>
             </div>
+        </div>
 
-            {# Flash messages #}
-            {% for message in app.flashes('success') %}
-                <div class="profile-flash profile-flash--success"><i class="fas fa-check-circle"></i> {{ message }}</div>
-            {% endfor %}
-            {% for message in app.flashes('error') %}
-                <div class="profile-flash profile-flash--error"><i class="fas fa-exclamation-circle"></i> {{ message }}</div>
-            {% endfor %}
+        {# ── Tab navigation ── #}
+        <div class="settings-tabs">
+            <button type="button" class="settings-tabs__btn active" data-tab="profil" onclick="switchSettingsTab('profil')">
+                <i class="fas fa-user-circle"></i> Profil
+            </button>
+            <button type="button" class="settings-tabs__btn" data-tab="securite" onclick="switchSettingsTab('securite')">
+                <i class="fas fa-lock"></i> Securite
+            </button>
+            <button type="button" class="settings-tabs__btn" data-tab="twofa" onclick="switchSettingsTab('twofa')">
+                <i class="fas fa-shield-alt"></i> Authentification 2FA
+            </button>
+        </div>
 
-            <div class="row">
-                <div class="col-lg-6">
+        <div class="row g-4">
 
-                    {# ── Avatar Card ── #}
+            {# ══════════ MAIN COL ══════════ #}
+            <div class="col-lg-8">
+
+                {# ── PANEL: Profil ── #}
+                <div id="tabProfil" class="settings-panel active">
+
+                    {# Avatar #}
                     <div class="form-card">
-                        <h3 class="form-card__title"><i class="fas fa-camera"></i> Avatar</h3>
+                        <h3 class="form-card__title"><i class="fas fa-camera"></i> Photo de profil</h3>
                         <div class="avatar-upload">
                             <div class="avatar-preview" id="avatarPreview">
                                 {% if app.user.avatar starts with 'http' %}
@@ -73,13 +86,13 @@
                                     <input type="hidden" name="_token" value="{{ csrf_token('profile_avatar') }}">
                                     <input type="file" name="avatar" id="avatarInput" class="avatar-upload__input" accept="image/jpeg,image/png,image/gif,image/webp">
                                     <label for="avatarInput" class="avatar-upload__label"><i class="fas fa-upload"></i> Choisir une image</label>
-                                    <span class="avatar-upload__name" id="avatarFileName">JPG, PNG, GIF ou WebP - 2 Mo max</span>
+                                    <div class="avatar-upload__name" id="avatarFileName">JPG, PNG, GIF ou WebP — 2 Mo max</div>
                                 </form>
                             </div>
                         </div>
                     </div>
 
-                    {# ── Email Card ── #}
+                    {# Email #}
                     <div class="form-card">
                         <h3 class="form-card__title"><i class="fas fa-envelope"></i> Adresse email</h3>
                         <form action="{{ path('user_settings_email') }}" method="post">
@@ -93,59 +106,65 @@
                     </div>
 
                 </div>
-                <div class="col-lg-6">
 
-                    {# ── Password Card ── #}
+                {# ── PANEL: Securite ── #}
+                <div id="tabSecurite" class="settings-panel">
+
                     <div class="form-card">
-                        <h3 class="form-card__title"><i class="fas fa-lock"></i> Mot de passe</h3>
+                        <h3 class="form-card__title"><i class="fas fa-key"></i> Modifier le mot de passe</h3>
                         <form action="{{ path('user_settings_password') }}" method="post">
                             <input type="hidden" name="_token" value="{{ csrf_token('profile_password') }}">
                             {% if app.user.password %}
                                 <div class="form-group">
                                     <label for="currentPassword">Mot de passe actuel</label>
-                                    <input type="password" id="currentPassword" name="current_password" class="form-input" required>
+                                    <input type="password" id="currentPassword" name="current_password" class="form-input" required placeholder="••••••••••">
                                 </div>
                             {% endif %}
                             <div class="form-group">
                                 <label for="newPassword">Nouveau mot de passe</label>
-                                <input type="password" id="newPassword" name="new_password" class="form-input" required minlength="10">
+                                <input type="password" id="newPassword" name="new_password" class="form-input" required minlength="10" placeholder="••••••••••">
                                 <div class="form-hint">Minimum 10 caracteres</div>
                             </div>
                             <div class="form-group">
                                 <label for="confirmPassword">Confirmer le mot de passe</label>
-                                <input type="password" id="confirmPassword" name="confirm_password" class="form-input" required minlength="10">
+                                <input type="password" id="confirmPassword" name="confirm_password" class="form-input" required minlength="10" placeholder="••••••••••">
                             </div>
-                            <button type="submit" class="btn-action btn-action--primary"><i class="fas fa-save"></i> Modifier</button>
+                            <button type="submit" class="btn-action btn-action--primary"><i class="fas fa-save"></i> Modifier le mot de passe</button>
                         </form>
                     </div>
 
-                    {# ── 2FA Card ── #}
+                </div>
+
+                {# ── PANEL: 2FA ── #}
+                <div id="tabTwofa" class="settings-panel">
+
                     <div class="form-card">
-                        <h3 class="form-card__title"><i class="fas fa-shield-alt"></i> Authentification a deux facteurs (2FA)</h3>
+                        <h3 class="form-card__title"><i class="fas fa-shield-alt"></i> Authentification a deux facteurs</h3>
 
                         {% if app.user.isTwoFactorEnabled %}
                             <div class="twofa-status twofa-status--active">
                                 <i class="fas fa-check-circle"></i> 2FA active
                             </div>
-                            <p style="color:#8b949e;font-size:13px;margin-bottom:15px;">
-                                Votre compte est protege par l'authentification a deux facteurs via une application TOTP.
+                            <p style="color:#8b949e;font-size:13px;margin-bottom:20px;line-height:1.6;">
+                                Votre compte est protege par l'authentification a deux facteurs via une application TOTP (Google Authenticator, Authy, etc.).
                             </p>
                             <form action="{{ path('user_settings_2fa_disable') }}" method="post" onsubmit="return confirm('Etes-vous sur de vouloir desactiver le 2FA ?');">
                                 <input type="hidden" name="_token" value="{{ csrf_token('profile_2fa') }}">
                                 {% if app.user.password %}
-                                <div style="margin-bottom:12px;">
-                                    <label style="display:block;font-size:13px;color:#8b949e;margin-bottom:4px;">Mot de passe actuel</label>
-                                    <input type="password" name="password" required class="profile-input" placeholder="Confirmez votre mot de passe" style="max-width:300px;">
+                                <div class="form-group">
+                                    <label>Confirmez avec votre mot de passe</label>
+                                    <input type="password" name="password" required class="form-input" placeholder="Mot de passe actuel" style="max-width:320px;">
                                 </div>
                                 {% endif %}
                                 <button type="submit" class="btn-action btn-action--danger"><i class="fas fa-times"></i> Desactiver le 2FA</button>
                             </form>
+
                         {% else %}
                             <div class="twofa-status twofa-status--inactive">
                                 <i class="fas fa-times-circle"></i> 2FA desactive
                             </div>
-                            <p style="color:#8b949e;font-size:13px;margin-bottom:15px;">
-                                Protegez votre compte en activant l'authentification a deux facteurs avec une application comme Google Authenticator ou Authy.
+                            <p style="color:#8b949e;font-size:13px;margin-bottom:20px;line-height:1.6;">
+                                Protegez votre compte avec une couche de securite supplementaire. Une application comme <strong style="color:#e6edf3;">Google Authenticator</strong> ou <strong style="color:#e6edf3;">Authy</strong> sera necessaire.
                             </p>
                             <button type="button" class="btn-action btn-action--primary" id="btn2faEnable">
                                 <i class="fas fa-qrcode"></i> Activer le 2FA
@@ -155,7 +174,7 @@
                             <div class="twofa-setup" id="twofaSetup">
                                 <div class="twofa-qr" id="twofaQr"></div>
                                 <div class="twofa-secret" id="twofaSecret"></div>
-                                <p style="color:#8b949e;font-size:13px;text-align:center;margin-bottom:15px;">
+                                <p style="color:#8b949e;font-size:13px;text-align:center;margin-bottom:16px;">
                                     Scannez le QR code avec votre application, puis entrez le code a 6 chiffres pour confirmer.
                                 </p>
                                 <div class="twofa-confirm">
@@ -165,189 +184,259 @@
                                 <div class="twofa-msg twofa-msg--confirm" id="twofaConfirmMsg"></div>
                             </div>
                         {% endif %}
+
                     </div>
 
                 </div>
+
             </div>
 
-            {# ── Comptes liés Card ── #}
-            <div class="form-card" style="margin-top:24px;">
-                <h3 class="form-card__title"><i class="fas fa-link"></i> Comptes liés (OAuth)</h3>
-                <p style="color:#8b949e;font-size:13px;margin-bottom:20px;">
-                    Gérez les comptes externes connectés à votre profil. Déconnecter un compte supprime uniquement le lien — vous pouvez le reconnecter à tout moment.
-                </p>
+            {# ══════════ SIDEBAR ══════════ #}
+            <div class="col-lg-4">
 
-                {% set providers = [
-                    {key: 'discord', label: 'Discord',  icon: 'fab fa-discord',  color: '#5865f2', id: app.user.discordId},
-                    {key: 'google',  label: 'Google',   icon: 'fab fa-google',   color: '#ea4335', id: app.user.googleId},
-                    {key: 'twitch',  label: 'Twitch',   icon: 'fab fa-twitch',   color: '#9146ff', id: app.user.twitchId},
-                    {key: 'steam',   label: 'Steam',    icon: 'fab fa-steam',    color: '#1b2838', id: app.user.steamId},
-                ] %}
+                {# ── Comptes liés ── #}
+                <div class="settings-sidebar-card">
+                    <div class="settings-sidebar-card__title">
+                        <i class="fas fa-link"></i> Comptes lies
+                    </div>
 
-                <div style="display:flex;flex-direction:column;gap:12px;">
+                    {% set providers = [
+                        {key: 'discord', label: 'Discord', icon: 'fab fa-discord', color: '#5865f2', id: app.user.discordId},
+                        {key: 'google',  label: 'Google',  icon: 'fab fa-google',  color: '#ea4335', id: app.user.googleId},
+                        {key: 'twitch',  label: 'Twitch',  icon: 'fab fa-twitch',  color: '#9146ff', id: app.user.twitchId},
+                        {key: 'steam',   label: 'Steam',   icon: 'fab fa-steam',   color: '#c2a952', id: app.user.steamId},
+                    ] %}
+
                     {% for p in providers %}
-                        <div style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;">
-                            <div style="width:40px;height:40px;border-radius:10px;background:{{ p.color }};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                                <i class="{{ p.icon }}" style="color:#fff;font-size:18px;"></i>
+                        <div class="oauth-row">
+                            <div class="oauth-icon" style="background:{{ p.color }};opacity:{{ p.id ? '1' : '0.35' }};">
+                                <i class="{{ p.icon }}"></i>
                             </div>
-                            <div style="flex:1;min-width:0;">
-                                <div style="font-weight:600;color:#e6edf3;font-size:14px;">{{ p.label }}</div>
+                            <div class="oauth-info">
+                                <div class="oauth-info__name">{{ p.label }}</div>
                                 {% if p.id %}
-                                    <div style="font-size:12px;color:#45f882;margin-top:2px;"><i class="fas fa-check-circle"></i> Connecté</div>
+                                    <div class="oauth-info__status oauth-info__status--connected">
+                                        <i class="fas fa-check-circle"></i> Connecte
+                                    </div>
                                 {% else %}
-                                    <div style="font-size:12px;color:#8b949e;margin-top:2px;"><i class="fas fa-times-circle"></i> Non connecté</div>
+                                    <div class="oauth-info__status oauth-info__status--disconnected">
+                                        <i class="fas fa-times-circle"></i> Non connecte
+                                    </div>
                                 {% endif %}
                             </div>
                             {% if p.id %}
                                 <form method="post" action="{{ path('user_settings_oauth_disconnect', {provider: p.key}) }}"
-                                      onsubmit="return confirm('Déconnecter votre compte {{ p.label }} ?');">
+                                      onsubmit="return confirm('Deconnecter {{ p.label }} de votre compte ?');">
                                     <input type="hidden" name="_token" value="{{ csrf_token('oauth_disconnect_' ~ p.key) }}">
-                                    <button type="submit" style="padding:6px 14px;background:rgba(231,74,59,0.12);color:#e74a3b;border:1px solid rgba(231,74,59,0.25);border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;"
-                                            onmouseover="this.style.background='rgba(231,74,59,0.25)'" onmouseout="this.style.background='rgba(231,74,59,0.12)'">
-                                        <i class="fas fa-unlink"></i> Déconnecter
+                                    <button type="submit" class="oauth-disconnect-btn">
+                                        <i class="fas fa-unlink"></i>
                                     </button>
                                 </form>
                             {% endif %}
                         </div>
                     {% endfor %}
+
                 </div>
-            </div>
 
-        </div>
-    </section>
+                {# ── Infos du compte ── #}
+                <div class="settings-sidebar-card">
+                    <div class="settings-sidebar-card__title">
+                        <i class="fas fa-info-circle"></i> Mon compte
+                    </div>
 
+                    <div class="account-info-item">
+                        <i class="fas fa-user"></i>
+                        <span class="account-info-item__label">Pseudo</span>
+                        <span class="account-info-item__value">{{ app.user.username }}</span>
+                    </div>
+                    <div class="account-info-item">
+                        <i class="fas fa-envelope"></i>
+                        <span class="account-info-item__label">Email</span>
+                        <span class="account-info-item__value" style="font-size:11px;">{{ app.user.email }}</span>
+                    </div>
+                    <div class="account-info-item">
+                        <i class="fas fa-shield-alt"></i>
+                        <span class="account-info-item__label">2FA</span>
+                        <span class="account-info-item__value">
+                            {% if app.user.isTwoFactorEnabled %}
+                                <span style="color:#45f882;font-size:12px;"><i class="fas fa-check-circle"></i> Actif</span>
+                            {% else %}
+                                <span style="color:#8b949e;font-size:12px;"><i class="fas fa-times-circle"></i> Inactif</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="account-info-item">
+                        <i class="fas fa-key"></i>
+                        <span class="account-info-item__label">Mot de passe</span>
+                        <span class="account-info-item__value">
+                            {% if app.user.password %}
+                                <span style="color:#45f882;font-size:12px;"><i class="fas fa-check-circle"></i> Defini</span>
+                            {% else %}
+                                <span style="color:#f6c23e;font-size:12px;"><i class="fas fa-exclamation-circle"></i> Non defini</span>
+                            {% endif %}
+                        </span>
+                    </div>
+
+                </div>
+
+                {# ── Navigation rapide ── #}
+                <div class="settings-sidebar-card">
+                    <div class="settings-sidebar-card__title">
+                        <i class="fas fa-bolt"></i> Raccourcis
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:8px;">
+                        <a href="{{ path('user_servers_list') }}" class="btn-action btn-action--outline" style="justify-content:flex-start;">
+                            <i class="fas fa-server"></i> Mes serveurs
+                        </a>
+                        <a href="{{ path('user_servers_create') }}" class="btn-action btn-action--outline" style="justify-content:flex-start;">
+                            <i class="fas fa-plus-circle"></i> Ajouter un serveur
+                        </a>
+                        <a href="{{ path('user_recruitment_list') }}" class="btn-action btn-action--outline" style="justify-content:flex-start;">
+                            <i class="fas fa-users"></i> Mes recrutements
+                        </a>
+                        <a href="{{ path('profile_show', {username: app.user.username}) }}" class="btn-action btn-action--outline" style="justify-content:flex-start;">
+                            <i class="fas fa-user"></i> Mon profil public
+                        </a>
+                    </div>
+                </div>
+
+            </div>{# /col-lg-4 #}
+
+        </div>{# /row #}
+
+    </div>
+</section>
 {% endblock %}
 
 {% block javascripts %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Avatar file input - auto-submit on change
+document.addEventListener('DOMContentLoaded', function () {
+
+    // ── Tab switching ──
+    function switchSettingsTab(tab) {
+        document.querySelectorAll('.settings-panel').forEach(function(p) { p.classList.remove('active'); });
+        document.querySelectorAll('.settings-tabs__btn').forEach(function(b) { b.classList.remove('active'); });
+        document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+        document.querySelector('[data-tab="' + tab + '"]').classList.add('active');
+        history.replaceState(null, '', '#' + tab);
+    }
+    window.switchSettingsTab = switchSettingsTab;
+
+    // Restore tab from URL hash
+    var hash = location.hash.replace('#', '');
+    if (['profil','securite','twofa'].includes(hash)) {
+        switchSettingsTab(hash);
+    }
+
+    // ── Avatar ──
     var avatarInput = document.getElementById('avatarInput');
-    var avatarForm = document.getElementById('avatarForm');
+    var avatarForm  = document.getElementById('avatarForm');
     var avatarFileName = document.getElementById('avatarFileName');
-    var avatarPreview = document.getElementById('avatarPreview');
+    var avatarPreview  = document.getElementById('avatarPreview');
 
     if (avatarInput) {
-        avatarInput.addEventListener('change', function() {
+        avatarInput.addEventListener('change', function () {
             if (this.files && this.files[0]) {
                 avatarFileName.textContent = this.files[0].name;
-                // Preview
                 var reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = function (e) {
                     avatarPreview.innerHTML = '<img src="' + e.target.result + '" alt="Preview">';
                 };
                 reader.readAsDataURL(this.files[0]);
-                // Auto-submit
                 avatarForm.submit();
             }
         });
     }
 
-    // 2FA Enable
-    var btn2faEnable = document.getElementById('btn2faEnable');
-    var twofaSetup = document.getElementById('twofaSetup');
-    var twofaQr = document.getElementById('twofaQr');
-    var twofaSecret = document.getElementById('twofaSecret');
-    var twofaMsg = document.getElementById('twofaMsg');
+    // ── 2FA Enable ──
+    var btn2faEnable    = document.getElementById('btn2faEnable');
+    var twofaSetup      = document.getElementById('twofaSetup');
+    var twofaQr         = document.getElementById('twofaQr');
+    var twofaSecret     = document.getElementById('twofaSecret');
+    var twofaMsg        = document.getElementById('twofaMsg');
     var twofaConfirmMsg = document.getElementById('twofaConfirmMsg');
-    var btn2faConfirm = document.getElementById('btn2faConfirm');
-    var twofaCode = document.getElementById('twofaCode');
-    var csrfToken = '{{ csrf_token('profile_2fa') }}';
+    var btn2faConfirm   = document.getElementById('btn2faConfirm');
+    var twofaCode       = document.getElementById('twofaCode');
+    var csrfToken       = '{{ csrf_token('profile_2fa') }}';
 
     if (btn2faEnable) {
-        btn2faEnable.addEventListener('click', function() {
+        btn2faEnable.addEventListener('click', function () {
             btn2faEnable.disabled = true;
             btn2faEnable.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Chargement...';
             twofaMsg.className = 'twofa-msg';
             twofaMsg.textContent = '';
 
-            var formData = new FormData();
-            formData.append('_token', csrfToken);
+            var fd = new FormData();
+            fd.append('_token', csrfToken);
 
-            fetch('{{ path('user_settings_2fa_enable') }}', {
-                method: 'POST',
-                body: formData
-            })
-            .then(function(r) {
-                if (!r.ok) {
-                    return r.text().then(function(text) {
-                        try { var j = JSON.parse(text); throw new Error(j.error || 'Erreur serveur (' + r.status + ')'); }
-                        catch(e) { if (e.message) throw e; throw new Error('Erreur serveur (' + r.status + ')'); }
-                    });
-                }
-                return r.json();
-            })
-            .then(function(data) {
-                if (data.error) {
+            fetch('{{ path('user_settings_2fa_enable') }}', { method: 'POST', body: fd })
+                .then(function (r) {
+                    if (!r.ok) return r.json().then(function (j) { throw new Error(j.error || 'Erreur ' + r.status); });
+                    return r.json();
+                })
+                .then(function (data) {
+                    if (data.error) {
+                        twofaMsg.className = 'twofa-msg twofa-msg--error';
+                        twofaMsg.textContent = data.error;
+                        btn2faEnable.disabled = false;
+                        btn2faEnable.innerHTML = '<i class="fas fa-qrcode"></i> Activer le 2FA';
+                        return;
+                    }
+                    twofaQr.innerHTML = '<img src="' + data.qr + '" alt="QR Code">';
+                    twofaSecret.innerHTML = '<code>' + data.secret + '</code><small>Cle secrete manuelle si le QR ne fonctionne pas</small>';
+                    twofaSetup.classList.add('active');
+                    btn2faEnable.style.display = 'none';
+                    twofaCode.focus();
+                })
+                .catch(function (err) {
                     twofaMsg.className = 'twofa-msg twofa-msg--error';
-                    twofaMsg.textContent = data.error;
+                    twofaMsg.textContent = err.message || 'Une erreur est survenue.';
                     btn2faEnable.disabled = false;
                     btn2faEnable.innerHTML = '<i class="fas fa-qrcode"></i> Activer le 2FA';
-                    return;
-                }
-                twofaQr.innerHTML = '<img src="' + data.qr + '" alt="QR Code">';
-                twofaSecret.innerHTML = '<code>' + data.secret + '</code><small>Cle secrete manuelle (si le QR code ne fonctionne pas)</small>';
-                twofaSetup.classList.add('active');
-                btn2faEnable.style.display = 'none';
-                twofaCode.focus();
-            })
-            .catch(function(err) {
-                twofaMsg.className = 'twofa-msg twofa-msg--error';
-                twofaMsg.textContent = err.message || 'Une erreur est survenue.';
-                btn2faEnable.disabled = false;
-                btn2faEnable.innerHTML = '<i class="fas fa-qrcode"></i> Activer le 2FA';
-            });
+                });
         });
     }
 
     if (btn2faConfirm) {
-        btn2faConfirm.addEventListener('click', function() {
+        btn2faConfirm.addEventListener('click', function () {
             var code = twofaCode.value.trim();
             if (code.length !== 6) {
-                twofaConfirmMsg.className = 'twofa-msg twofa-msg--confirm twofa-msg--error';
+                twofaConfirmMsg.className = 'twofa-msg twofa-msg--error';
                 twofaConfirmMsg.textContent = 'Entrez un code a 6 chiffres.';
                 return;
             }
-
             btn2faConfirm.disabled = true;
+            var fd = new FormData();
+            fd.append('_token', csrfToken);
+            fd.append('code', code);
 
-            var formData = new FormData();
-            formData.append('_token', csrfToken);
-            formData.append('code', code);
-
-            fetch('{{ path('user_settings_2fa_confirm') }}', {
-                method: 'POST',
-                body: formData
-            })
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
-                if (data.error) {
-                    twofaConfirmMsg.className = 'twofa-msg twofa-msg--confirm twofa-msg--error';
-                    twofaConfirmMsg.textContent = data.error;
+            fetch('{{ path('user_settings_2fa_confirm') }}', { method: 'POST', body: fd })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (data.error) {
+                        twofaConfirmMsg.className = 'twofa-msg twofa-msg--error';
+                        twofaConfirmMsg.textContent = data.error;
+                        btn2faConfirm.disabled = false;
+                        return;
+                    }
+                    twofaConfirmMsg.className = 'twofa-msg twofa-msg--success';
+                    twofaConfirmMsg.textContent = data.message;
+                    setTimeout(function () { location.reload(); }, 1500);
+                })
+                .catch(function () {
+                    twofaConfirmMsg.className = 'twofa-msg twofa-msg--error';
+                    twofaConfirmMsg.textContent = 'Une erreur est survenue.';
                     btn2faConfirm.disabled = false;
-                    return;
-                }
-                twofaConfirmMsg.className = 'twofa-msg twofa-msg--confirm twofa-msg--success';
-                twofaConfirmMsg.textContent = data.message;
-                setTimeout(function() { location.reload(); }, 1500);
-            })
-            .catch(function() {
-                twofaConfirmMsg.className = 'twofa-msg twofa-msg--confirm twofa-msg--error';
-                twofaConfirmMsg.textContent = 'Une erreur est survenue.';
-                btn2faConfirm.disabled = false;
-            });
+                });
         });
 
-        // Allow Enter key on code input
         if (twofaCode) {
-            twofaCode.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    btn2faConfirm.click();
-                }
+            twofaCode.addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') { e.preventDefault(); btn2faConfirm.click(); }
             });
         }
     }
+
 });
 </script>
 {% endblock %}
