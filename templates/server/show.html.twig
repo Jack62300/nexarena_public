@@ -25,6 +25,97 @@
         opacity: {{ theme.overlay_opacity }};
     }
 </style>
+<style>
+.sv-donate-widget {
+    background: rgba(var(--sv-bg-card-rgb), 0.85);
+    border: 1px solid rgba(var(--sv-border-rgb), 0.25);
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 16px;
+}
+.sv-donate-widget--guest p {
+    font-size: 13px;
+    color: #8892a4;
+    margin: 8px 0 0;
+    text-align: center;
+}
+.sv-donate-widget--guest a {
+    color: var(--sv-accent);
+    text-decoration: none;
+}
+.sv-donate-widget__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--sv-accent);
+    margin-bottom: 14px;
+    letter-spacing: .5px;
+}
+.sv-donate-widget__fields {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.sv-donate-widget__field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #b0b8cc;
+    margin-bottom: 4px;
+}
+.sv-donate-widget__input {
+    width: 100%;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(var(--sv-border-rgb), 0.35);
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: #e0e6ff;
+    font-size: 14px;
+    outline: none;
+    transition: border-color .2s;
+}
+.sv-donate-widget__input:focus {
+    border-color: var(--sv-accent);
+}
+.sv-donate-widget__balance {
+    display: block;
+    font-size: 11px;
+    color: #6b7280;
+    margin-top: 3px;
+}
+.sv-donate-widget__warning {
+    background: rgba(255,100,0,0.1);
+    border: 1px solid rgba(255,100,0,0.3);
+    border-radius: 8px;
+    padding: 9px 12px;
+    margin-top: 14px;
+    font-size: 12px;
+    color: #f4a14a;
+}
+.sv-donate-widget__btn {
+    width: 100%;
+    margin-top: 14px;
+    background: var(--sv-accent);
+    color: #000;
+    font-weight: 700;
+    font-size: 14px;
+    border: none;
+    border-radius: 9px;
+    padding: 10px;
+    cursor: pointer;
+    transition: opacity .2s, transform .15s;
+}
+.sv-donate-widget__btn:hover:not(:disabled) {
+    opacity: .88;
+    transform: translateY(-1px);
+}
+.sv-donate-widget__btn:disabled {
+    opacity: .35;
+    cursor: not-allowed;
+}
+</style>
 {% endblock %}
 
 {% block body %}
@@ -392,6 +483,52 @@
                         <div class="sv-vote__msg" id="voteMessage"></div>
                     </div>
 
+                    {# Donation widget #}
+                    {% if app.user %}
+                        <div class="sv-donate-widget">
+                            <div class="sv-donate-widget__header">
+                                <i class="fas fa-hand-holding-heart"></i>
+                                <span>Soutenir ce serveur</span>
+                            </div>
+                            <form method="post" action="{{ path('server_donate', {slug: server.slug}) }}" id="donateForm">
+                                <input type="hidden" name="_token" value="{{ csrf_token('donate_' ~ server.id) }}">
+                                <div class="sv-donate-widget__fields">
+                                    <div class="sv-donate-widget__field">
+                                        <label for="donateNexbits">
+                                            <i class="fas fa-coins" style="color:#f6c23e;"></i> NexBits
+                                        </label>
+                                        <input type="number" id="donateNexbits" name="nexbits" min="0" max="{{ app.user.tokenBalance }}" value="0" class="sv-donate-widget__input" oninput="updateDonatePreview()">
+                                        <span class="sv-donate-widget__balance">Solde : {{ app.user.tokenBalance }} NexBits</span>
+                                    </div>
+                                    <div class="sv-donate-widget__field">
+                                        <label for="donateNexboost">
+                                            <i class="fas fa-rocket" style="color:#45f882;"></i> NexBoost
+                                        </label>
+                                        <input type="number" id="donateNexboost" name="nexboost" min="0" max="{{ app.user.boostTokenBalance }}" value="0" class="sv-donate-widget__input" oninput="updateDonatePreview()">
+                                        <span class="sv-donate-widget__balance">Solde : {{ app.user.boostTokenBalance }} NexBoost</span>
+                                    </div>
+                                </div>
+                                <div class="sv-donate-widget__warning">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    Ce don est <strong>definitif</strong> et <strong>non-remboursable</strong>.
+                                </div>
+                                <button type="button" class="sv-donate-widget__btn" onclick="openDonateModal()" id="donateTriggerBtn" disabled>
+                                    <i class="fas fa-hand-holding-heart"></i> Faire un don
+                                </button>
+                            </form>
+                        </div>
+                    {% else %}
+                        <div class="sv-donate-widget sv-donate-widget--guest">
+                            <div class="sv-donate-widget__header">
+                                <i class="fas fa-hand-holding-heart"></i>
+                                <span>Soutenir ce serveur</span>
+                            </div>
+                            <p class="sv-donate-widget__guest-msg">
+                                <a href="{{ path('app_login') }}">Connectez-vous</a> pour faire un don de NexBits ou NexBoost a ce serveur.
+                            </p>
+                        </div>
+                    {% endif %}
+
                     {# Social icons #}
                     {% set hasSocials = server.website or server.discordUrl or server.twitterUrl or server.youtubeUrl or server.instagramUrl or server.twitchChannel %}
                     {% if hasSocials %}
@@ -509,6 +646,34 @@
         </div>
     </div>
 </section>
+
+{# ===== DONATE MODAL ===== #}
+{% if app.user %}
+<div class="modal fade" id="donateModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background:#1a1c2e;border:1px solid rgba(var(--sv-accent-rgb),0.3);color:#e0e6ff;">
+            <div class="modal-header" style="border-bottom:1px solid rgba(var(--sv-accent-rgb),0.2);">
+                <h5 class="modal-title"><i class="fas fa-hand-holding-heart" style="color:var(--sv-accent);"></i>&nbsp; Confirmer le don</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Vous allez faire un don a <strong>{{ server.name }}</strong> :</p>
+                <ul id="donateModalSummary" style="font-size:15px;margin:12px 0;padding-left:20px;"></ul>
+                <div style="background:rgba(255,165,0,0.12);border:1px solid rgba(255,165,0,0.4);border-radius:8px;padding:12px 14px;margin-top:12px;">
+                    <i class="fas fa-exclamation-triangle" style="color:#f6a623;"></i>
+                    <strong style="color:#f6a623;"> Attention :</strong> Ce don est <strong>definitif</strong> et <strong>non-remboursable</strong>. Les tokens seront immediatement transferes au serveur.
+                </div>
+            </div>
+            <div class="modal-footer" style="border-top:1px solid rgba(var(--sv-accent-rgb),0.2);">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-sm" style="background:var(--sv-accent);color:#000;font-weight:600;" onclick="submitDonateForm()">
+                    <i class="fas fa-check"></i> Confirmer le don
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 
 {# ===== FLAG MODAL ===== #}
 {% if app.user and app.user.id == server.owner.id %}
@@ -1029,5 +1194,46 @@
         // Fingerprint unavailable, vote without it
     });
 })();
+
+// ===== DONATE WIDGET =====
+{% if app.user %}
+window.updateDonatePreview = function() {
+    var nexbits = parseInt(document.getElementById('donateNexbits').value) || 0;
+    var nexboost = parseInt(document.getElementById('donateNexboost').value) || 0;
+    var btn = document.getElementById('donateTriggerBtn');
+    if (btn) {
+        btn.disabled = (nexbits <= 0 && nexboost <= 0);
+    }
+};
+
+window.openDonateModal = function() {
+    var nexbits = parseInt(document.getElementById('donateNexbits').value) || 0;
+    var nexboost = parseInt(document.getElementById('donateNexboost').value) || 0;
+    if (nexbits <= 0 && nexboost <= 0) return;
+
+    var summary = document.getElementById('donateModalSummary');
+    summary.innerHTML = '';
+    if (nexbits > 0) {
+        var li = document.createElement('li');
+        li.innerHTML = '<strong>' + nexbits + '</strong> NexBits';
+        summary.appendChild(li);
+    }
+    if (nexboost > 0) {
+        var li2 = document.createElement('li');
+        li2.innerHTML = '<strong>' + nexboost + '</strong> NexBoost';
+        summary.appendChild(li2);
+    }
+
+    var modal = new bootstrap.Modal(document.getElementById('donateModal'));
+    modal.show();
+};
+
+window.submitDonateForm = function() {
+    var modalEl = document.getElementById('donateModal');
+    var bsModal = bootstrap.Modal.getInstance(modalEl);
+    if (bsModal) bsModal.hide();
+    document.getElementById('donateForm').submit();
+};
+{% endif %}
 </script>
 {% endblock %}

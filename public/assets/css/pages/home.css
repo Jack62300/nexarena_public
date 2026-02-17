@@ -505,8 +505,18 @@
 /* ============================================
    CATEGORIES — GAMING REDESIGN
    ============================================ */
+
+/* Section container — never overflow viewport */
+.nx-categories {
+    overflow-x: hidden;
+}
+.nx-categories > .container {
+    overflow-x: hidden;
+}
+
 .cat-group {
     margin-bottom: 50px;
+    min-width: 0; /* Prevent grid blowout in flex/grid context */
 }
 .cat-group:last-child { margin-bottom: 0; }
 
@@ -518,6 +528,8 @@
     border-radius: 16px;
     margin-bottom: 50px;
     position: relative;
+    overflow: hidden; /* Clip swiper overflow */
+    min-width: 0;     /* Prevent flex/grid blowout */
 }
 .cat-group--gaming {
     background: linear-gradient(135deg, rgba(69,248,130,0.04) 0%, rgba(69,248,130,0.01) 100%);
@@ -609,9 +621,16 @@
 /* Sub-category Swiper carousel */
 .cat-swiper {
     overflow: hidden;
+    width: 100%;    /* Ensure swiper never exceeds parent */
+    min-width: 0;
+}
+.cat-swiper .swiper-wrapper {
+    align-items: stretch;
 }
 .cat-swiper .swiper-slide {
     height: auto;
+    min-width: 0;
+    box-sizing: border-box;
 }
 .cat-swiper-pagination {
     margin-top: 18px;
@@ -717,9 +736,99 @@
 .cat-float-tip__stats-count { font-size: 14px; font-weight: 800; color: rgb(var(--tip-c)); }
 .cat-float-tip__stats-label { font-size: 11px; color: rgba(255,255,255,0.45); }
 
+/* ===== CATEGORIES — RESPONSIVE ===== */
+
+/* Tablet landscape (< 1200px) */
+@media (max-width: 1199.98px) {
+    .cat-group--gaming,
+    .cat-group--hosting,
+    .cat-group--vocal {
+        padding: 24px 22px;
+        margin-bottom: 40px;
+    }
+}
+
+/* Tablet portrait (< 992px) */
+@media (max-width: 991.98px) {
+    .cat-group--gaming,
+    .cat-group--hosting,
+    .cat-group--vocal {
+        padding: 20px 16px;
+        margin-bottom: 30px;
+        border-radius: 12px;
+    }
+    .cat-group__header {
+        gap: 12px;
+        margin-bottom: 18px;
+    }
+    .cat-group__badge {
+        padding: 7px 16px 7px 12px;
+        clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 50%, calc(100% - 12px) 100%, 0 100%, 0 0);
+        flex-shrink: 1;
+        min-width: 0;
+    }
+    .cat-group__badge span { font-size: 12px; letter-spacing: 1.5px; }
+    .cat-group__badge i { font-size: 14px; }
+}
+
+/* Mobile large (< 768px) */
+@media (max-width: 767.98px) {
+    .cat-group--gaming,
+    .cat-group--hosting,
+    .cat-group--vocal {
+        padding: 16px 12px;
+        margin-bottom: 22px;
+        border-radius: 10px;
+    }
+    .cat-group__header {
+        gap: 10px;
+        margin-bottom: 14px;
+        flex-wrap: nowrap;
+        overflow: hidden;
+    }
+    .cat-group__badge {
+        padding: 6px 14px 6px 10px;
+        clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 0 100%, 0 0);
+        flex-shrink: 1;
+        overflow: hidden;
+        max-width: 65%;
+    }
+    .cat-group__badge span {
+        font-size: 11px;
+        letter-spacing: 1px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .cat-group__badge i { font-size: 13px; }
+    .cat-swiper-pagination { margin-top: 14px; }
+}
+
+/* Mobile small (< 576px) */
 @media (max-width: 575.98px) {
-    .cat-group__badge span { font-size: 12px; letter-spacing: 1px; }
+    .cat-group--gaming,
+    .cat-group--hosting,
+    .cat-group--vocal {
+        padding: 14px 10px;
+        margin-bottom: 18px;
+        border-radius: 8px;
+    }
+    .cat-group__header {
+        margin-bottom: 12px;
+        gap: 8px;
+    }
+    .cat-group__badge {
+        padding: 5px 12px 5px 9px;
+        gap: 6px;
+        max-width: 60%;
+        clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 50%, calc(100% - 8px) 100%, 0 100%, 0 0);
+    }
+    .cat-group__badge span { font-size: 10px; letter-spacing: 0.8px; }
+    .cat-group__badge i { font-size: 12px; }
+    .cat-group { margin-bottom: 18px; }
     .cat-float-tip { display: none !important; }
+    .cat-swiper-pagination { margin-top: 12px; }
+    /* Streamers item compact on mobile */
+    .cat-swiper .streamers__content .name a { font-size: 12px; }
 }
 
 /* ============================================

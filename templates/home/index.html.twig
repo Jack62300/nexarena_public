@@ -355,18 +355,19 @@
         var slideCount = swiperEl.querySelectorAll('.swiper-slide').length;
 
         new Swiper(swiperEl, {
-            loop: slideCount > 5,
+            loop: slideCount > 4,
             slidesPerView: 5,
-            spaceBetween: 16,
+            spaceBetween: 14,
             observer: true,
             observeParents: true,
+            resistanceRatio: 0.85,
             breakpoints: {
-                1500: { slidesPerView: 5 },
-                1200: { slidesPerView: 4 },
-                992:  { slidesPerView: 4 },
-                768:  { slidesPerView: 3 },
-                576:  { slidesPerView: 2 },
-                0:    { slidesPerView: 1.5, centeredSlides: true, centeredSlidesBounds: true },
+                1400: { slidesPerView: 5, spaceBetween: 14 },
+                1200: { slidesPerView: 4, spaceBetween: 12 },
+                992:  { slidesPerView: 3, spaceBetween: 12 },
+                768:  { slidesPerView: 3, spaceBetween: 10 },
+                576:  { slidesPerView: 2, spaceBetween: 10 },
+                0:    { slidesPerView: 2, spaceBetween: 8 },
             },
             pagination: {
                 el: group.querySelector('.cat-swiper-dots'),

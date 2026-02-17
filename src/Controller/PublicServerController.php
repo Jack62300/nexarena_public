@@ -17,6 +17,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 class PublicServerController extends AbstractController
 {
@@ -216,5 +217,48 @@ class PublicServerController extends AbstractController
             'monthly_votes' => $server->getMonthlyVotes(),
             'total_votes' => $server->getTotalVotes(),
         ]);
+    }
+
+    #[Route('/serveur/{slug}/don', name: 'server_donate', methods: ['POST'], requirements: ['slug' => '[a-z0-9]+(?:-[a-z0-9]+)*'])]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
+    public function donate(string $slug, Request $request, ServerRepository $repo): Response
+    {
+        $server = $repo->findOneBy(['slug' => $slug, 'isActive' => true, 'isApproved' => true]);
+        if (!$server) {
+            throw $this->createNotFoundException('Serveur introuvable.');
+        }
+
+        /** @var \App\Entity\User $user */
+        $user = $this->getUser();
+
+        if (!$this->isCsrfTokenValid('donate_' . $server->getId(), $request->request->get('_token'))) {
+            $this->addFlash('error', 'Token CSRF invalide.');
+            return $this->redirectToRoute('server_show', ['slug' => $slug]);
+        }
+
+        $nexbits = max(0, (int) $request->request->get('nexbits', 0));
+        $nexboost = max(0, (int) $request->request->get('nexboost', 0));
+
+        if ($nexbits === 0 && $nexboost === 0) {
+            $this->addFlash('error', 'Vous devez donner au moins 1 NexBit ou 1 NexBoost.');
+            return $this->redirectToRoute('server_show', ['slug' => $slug]);
+        }
+
+        $result = $this->premiumService->donateToServer($user, $server, $nexbits, $nexboost);
+
+        if (!$result['success']) {
+            $this->addFlash('error', $result['error']);
+        } else {
+            $parts = [];
+            if ($nexbits > 0) {
+                $parts[] = $nexbits . ' NexBits';
+            }
+            if ($nexboost > 0) {
+                $parts[] = $nexboost . ' NexBoost';
+            }
+            $this->addFlash('success', 'Don de ' . implode(' et ', $parts) . ' envoye a ' . $server->getName() . '. Merci !');
+        }
+
+        return $this->redirectToRoute('server_show', ['slug' => $slug]);
     }
 }

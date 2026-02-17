@@ -67,6 +67,30 @@ class TransactionRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    /**
+     * @return array{nexbits: int, nexboost: int}
+     */
+    public function getSumDonationsByUserToday(User $user): array
+    {
+        $today = new \DateTimeImmutable('today midnight');
+
+        $result = $this->createQueryBuilder('t')
+            ->select('SUM(t.tokensAmount) AS nexbits, SUM(t.boostTokensAmount) AS nexboost')
+            ->where('t.type = :type')
+            ->andWhere('t.user = :user')
+            ->andWhere('t.createdAt >= :today')
+            ->setParameter('type', Transaction::TYPE_DEPOSIT)
+            ->setParameter('user', $user)
+            ->setParameter('today', $today)
+            ->getQuery()
+            ->getOneOrNullResult();
+
+        return [
+            'nexbits' => (int) ($result['nexbits'] ?? 0),
+            'nexboost' => (int) ($result['nexboost'] ?? 0),
+        ];
+    }
+
     public function findByPaypalOrderId(string $orderId): ?Transaction
     {
         return $this->createQueryBuilder('t')

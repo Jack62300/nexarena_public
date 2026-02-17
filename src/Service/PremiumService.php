@@ -651,6 +651,63 @@ class PremiumService
         return true;
     }
 
+    /**
+     * Public donation from any logged-in user to a server.
+     * Enforces daily per-user limits from settings.
+     *
+     * @return array{success: bool, error: ?string}
+     */
+    public function donateToServer(User $user, Server $server, int $nexbits, int $nexboost): array
+    {
+        if ($nexbits < 0 || $nexboost < 0) {
+            return ['success' => false, 'error' => 'Les montants ne peuvent pas etre negatifs.'];
+        }
+
+        if ($nexbits === 0 && $nexboost === 0) {
+            return ['success' => false, 'error' => 'Vous devez donner au moins 1 NexBit ou 1 NexBoost.'];
+        }
+
+        // Check user balance
+        if ($nexbits > 0 && !$user->hasEnoughTokens($nexbits)) {
+            return ['success' => false, 'error' => 'Vous n\'avez pas assez de NexBits. Solde : ' . $user->getTokenBalance() . ' NexBits.'];
+        }
+        if ($nexboost > 0 && !$user->hasEnoughBoostTokens($nexboost)) {
+            return ['success' => false, 'error' => 'Vous n\'avez pas assez de NexBoost. Solde : ' . $user->getBoostTokenBalance() . ' NexBoost.'];
+        }
+
+        // Check daily limits
+        $limitNexbits = $this->settings->getInt('donation_daily_limit_nexbits', 1000);
+        $limitNexboost = $this->settings->getInt('donation_daily_limit_nexboost', 10);
+        $today = $this->transactionRepo->getSumDonationsByUserToday($user);
+
+        if ($limitNexbits > 0 && $nexbits > 0) {
+            $remaining = $limitNexbits - $today['nexbits'];
+            if ($nexbits > $remaining) {
+                return ['success' => false, 'error' => sprintf(
+                    'Limite quotidienne de dons NexBits atteinte. Il vous reste %d NexBits a donner aujourd\'hui.',
+                    max(0, $remaining)
+                )];
+            }
+        }
+
+        if ($limitNexboost > 0 && $nexboost > 0) {
+            $remaining = $limitNexboost - $today['nexboost'];
+            if ($nexboost > $remaining) {
+                return ['success' => false, 'error' => sprintf(
+                    'Limite quotidienne de dons NexBoost atteinte. Il vous reste %d NexBoost a donner aujourd\'hui.',
+                    max(0, $remaining)
+                )];
+            }
+        }
+
+        $result = $this->depositToServer($user, $server, $nexbits, $nexboost);
+        if (!$result) {
+            return ['success' => false, 'error' => 'Le don a echoue. Verifiez votre solde.'];
+        }
+
+        return ['success' => true, 'error' => null];
+    }
+
     public function depositToServer(User $user, Server $server, int $nexbits, int $nexboost): bool
     {
         if ($nexbits < 0 || $nexboost < 0) {
