@@ -137,14 +137,25 @@ class ThemeController extends AbstractController
         return null;
     }
 
-    private function deleteExistingImage(string $key, string $type): void
+    private function deleteExistingImage(string $key, string $type): bool
     {
         $dir = $this->getThemeDir($key);
+        $deleted = false;
         foreach (['jpg', 'jpeg', 'png', 'webp', 'gif'] as $ext) {
             $path = $dir . '/' . $type . '.' . $ext;
             if (file_exists($path)) {
-                unlink($path);
+                if (is_writable($path)) {
+                    unlink($path);
+                    $deleted = true;
+                } else {
+                    // Try chmod before deleting (in case of permission mismatch)
+                    @chmod($path, 0664);
+                    if (@unlink($path)) {
+                        $deleted = true;
+                    }
+                }
             }
         }
+        return $deleted;
     }
 }

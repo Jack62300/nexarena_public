@@ -211,7 +211,7 @@
                                 <div class="theme-image-slot__label">{{ label }}</div>
                                 <div class="theme-image-slot__preview {{ theme_images[key][type] is null ? 'theme-image-slot__preview--empty' : '' }}">
                                     {% if theme_images[key][type] %}
-                                        <img src="{{ asset(theme_images[key][type]) }}" alt="{{ label }}">
+                                        <img src="{{ asset(theme_images[key][type]) }}?v={{ 'now'|date('U') }}" alt="{{ label }}">
                                     {% else %}
                                         <i class="fas fa-image"></i>
                                         <span>Aucune image</span>
