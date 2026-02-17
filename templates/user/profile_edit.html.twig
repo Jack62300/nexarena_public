@@ -22,6 +22,29 @@
 .game-row .btn-remove { background:none; border:none; color:#ff4757; cursor:pointer; font-size:16px; padding:4px 8px; }
 .btn-add-game { background:none; border:1px dashed rgba(255,255,255,0.15); color:#8b949e; padding:8px 14px; border-radius:8px; cursor:pointer; font-size:13px; transition:all .2s; }
 .btn-add-game:hover { color:#45f882; border-color:#45f882; }
+
+/* Avatar upload */
+.edit-avatar-wrap { display:flex; align-items:center; gap:24px; flex-wrap:wrap; }
+.edit-avatar-preview {
+    width:90px; height:90px; border-radius:50%;
+    border:3px solid rgba(69,248,130,0.3);
+    background:rgba(255,255,255,0.04);
+    display:flex; align-items:center; justify-content:center;
+    overflow:hidden; flex-shrink:0;
+}
+.edit-avatar-preview img { width:100%; height:100%; object-fit:cover; }
+.edit-avatar-preview i { font-size:34px; color:rgba(255,255,255,0.2); }
+.edit-avatar-label {
+    display:inline-flex; align-items:center; gap:7px;
+    padding:9px 18px;
+    background:rgba(69,248,130,0.08);
+    border:1px solid rgba(69,248,130,0.2);
+    border-radius:8px; color:#45f882;
+    font-size:13px; font-weight:600;
+    cursor:pointer; transition:all .2s;
+}
+.edit-avatar-label:hover { background:rgba(69,248,130,0.16); }
+.edit-avatar-hint { font-size:12px; color:#5a5c69; margin-top:6px; }
 </style>
 {% endblock %}
 
@@ -65,6 +88,32 @@
                     {% for message in app.flashes('error') %}
                         <div class="profile-flash profile-flash--error"><i class="fas fa-exclamation-circle"></i> {{ message }}</div>
                     {% endfor %}
+
+                    {# ── Avatar ── #}
+                    <div class="edit-card">
+                        <h3 class="edit-card__title"><i class="fas fa-camera"></i> Photo de profil</h3>
+                        <form action="{{ path('user_settings_avatar') }}" method="post" enctype="multipart/form-data" id="avatarForm">
+                            <input type="hidden" name="_token" value="{{ csrf_token('profile_avatar') }}">
+                            <input type="file" name="avatar" id="avatarInput" style="display:none;" accept="image/jpeg,image/png,image/gif,image/webp">
+                            <div class="edit-avatar-wrap">
+                                <div class="edit-avatar-preview" id="avatarPreview">
+                                    {% if app.user.avatar starts with 'http' %}
+                                        <img src="{{ app.user.avatar }}" alt="Avatar">
+                                    {% elseif app.user.avatar %}
+                                        <img src="{{ asset('uploads/avatars/' ~ app.user.avatar) }}" alt="Avatar">
+                                    {% else %}
+                                        <i class="fas fa-user"></i>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <label for="avatarInput" class="edit-avatar-label">
+                                        <i class="fas fa-upload"></i> Changer l'avatar
+                                    </label>
+                                    <div class="edit-avatar-hint" id="avatarFileName">JPG, PNG, GIF ou WebP — 2 Mo max</div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
 
                     <form method="post" action="{{ path('user_profile_edit') }}">
                         <input type="hidden" name="_token" value="{{ csrf_token('profile_edit') }}">
@@ -165,6 +214,25 @@
 <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Avatar upload — auto-submit on file pick
+    var avatarInput = document.getElementById('avatarInput');
+    var avatarForm  = document.getElementById('avatarForm');
+    var avatarPreview = document.getElementById('avatarPreview');
+    var avatarFileName = document.getElementById('avatarFileName');
+    if (avatarInput) {
+        avatarInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                avatarFileName.textContent = this.files[0].name;
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    avatarPreview.innerHTML = '<img src="' + e.target.result + '" alt="Preview">';
+                };
+                reader.readAsDataURL(this.files[0]);
+                avatarForm.submit();
+            }
+        });
+    }
+
     // Quill editor for bio
     var quill = new Quill('#bioEditor', {
         theme: 'snow',

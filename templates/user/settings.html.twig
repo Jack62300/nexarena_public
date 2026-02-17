@@ -41,6 +41,9 @@
                 </div>
             </div>
             <div class="settings-header__actions">
+                <a href="{{ path('user_profile_edit') }}" class="btn-action btn-action--outline">
+                    <i class="fas fa-pen"></i> Modifier le profil
+                </a>
                 <a href="{{ path('profile_show', {username: app.user.username}) }}" class="btn-action btn-action--outline">
                     <i class="fas fa-user"></i> Mon profil
                 </a>
@@ -67,30 +70,6 @@
 
                 {# ── PANEL: Profil ── #}
                 <div id="tabProfil" class="settings-panel active">
-
-                    {# Avatar #}
-                    <div class="form-card">
-                        <h3 class="form-card__title"><i class="fas fa-camera"></i> Photo de profil</h3>
-                        <div class="avatar-upload">
-                            <div class="avatar-preview" id="avatarPreview">
-                                {% if app.user.avatar starts with 'http' %}
-                                    <img src="{{ app.user.avatar }}" alt="Avatar">
-                                {% elseif app.user.avatar %}
-                                    <img src="{{ asset('uploads/avatars/' ~ app.user.avatar) }}" alt="Avatar">
-                                {% else %}
-                                    <i class="fas fa-user"></i>
-                                {% endif %}
-                            </div>
-                            <div>
-                                <form action="{{ path('user_settings_avatar') }}" method="post" enctype="multipart/form-data" id="avatarForm">
-                                    <input type="hidden" name="_token" value="{{ csrf_token('profile_avatar') }}">
-                                    <input type="file" name="avatar" id="avatarInput" class="avatar-upload__input" accept="image/jpeg,image/png,image/gif,image/webp">
-                                    <label for="avatarInput" class="avatar-upload__label"><i class="fas fa-upload"></i> Choisir une image</label>
-                                    <div class="avatar-upload__name" id="avatarFileName">JPG, PNG, GIF ou WebP — 2 Mo max</div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
 
                     {# Email #}
                     <div class="form-card">
@@ -326,26 +305,6 @@ document.addEventListener('DOMContentLoaded', function () {
     var hash = location.hash.replace('#', '');
     if (['profil','securite','twofa'].includes(hash)) {
         switchSettingsTab(hash);
-    }
-
-    // ── Avatar ──
-    var avatarInput = document.getElementById('avatarInput');
-    var avatarForm  = document.getElementById('avatarForm');
-    var avatarFileName = document.getElementById('avatarFileName');
-    var avatarPreview  = document.getElementById('avatarPreview');
-
-    if (avatarInput) {
-        avatarInput.addEventListener('change', function () {
-            if (this.files && this.files[0]) {
-                avatarFileName.textContent = this.files[0].name;
-                var reader = new FileReader();
-                reader.onload = function (e) {
-                    avatarPreview.innerHTML = '<img src="' + e.target.result + '" alt="Preview">';
-                };
-                reader.readAsDataURL(this.files[0]);
-                avatarForm.submit();
-            }
-        });
     }
 
     // ── 2FA Enable ──
