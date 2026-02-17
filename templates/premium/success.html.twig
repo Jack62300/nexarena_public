@@ -7,38 +7,59 @@
 {% endblock %}
 
 {% block body %}
+{% set isPending = app.request.query.get('pending') == '1' %}
 <section class="premium-success">
     <div class="container">
-        <div class="premium-success__check">
-            <i class="fas fa-check"></i>
-        </div>
-        <h1 class="premium-success__title">Paiement reussi !</h1>
-        <p class="premium-success__text">
-            Vos NexBits ont ete credites sur votre compte.<br>
-            Utilisez-les pour debloquer des fonctionnalites premium sur vos serveurs.
-        </p>
-
-        {% if app.user %}
-            <div class="premium-balance" style="margin-bottom:40px;">
-                <div class="premium-balance__card">
-                    <div class="premium-balance__icon premium-balance__icon--tokens">
-                        <i class="fas fa-coins"></i>
-                    </div>
-                    <div>
-                        <div class="premium-balance__label">NexBits</div>
-                        <div class="premium-balance__value">{{ app.user.tokenBalance }}</div>
-                    </div>
-                </div>
-                <div class="premium-balance__card">
-                    <div class="premium-balance__icon premium-balance__icon--boost">
-                        <i class="fas fa-bolt"></i>
-                    </div>
-                    <div>
-                        <div class="premium-balance__label">NexBoost</div>
-                        <div class="premium-balance__value">{{ app.user.boostTokenBalance }}</div>
-                    </div>
-                </div>
+        {% if isPending %}
+            <div class="premium-success__check" style="background: rgba(255,190,24,0.15); color: #ffbe18;">
+                <i class="fas fa-clock"></i>
             </div>
+            <h1 class="premium-success__title">Virement en cours de traitement</h1>
+            <p class="premium-success__text">
+                Votre virement bancaire a bien ete initie via PayPal.<br>
+                <strong>Vos NexBits seront credites automatiquement</strong> des que PayPal aura confirme la reception du virement.<br>
+                Cela peut prendre <strong>1 a 5 jours ouvrables</strong> selon votre banque.
+            </p>
+            <div style="background:rgba(255,190,24,0.08);border:1px solid rgba(255,190,24,0.3);border-radius:12px;padding:16px 24px;margin:24px auto;max-width:480px;text-align:left;">
+                <p style="margin:0 0 8px;color:#ffbe18;font-weight:600;"><i class="fas fa-info-circle"></i> Que se passe-t-il maintenant ?</p>
+                <ul style="margin:0;padding-left:20px;color:var(--text-secondary,#aaa);font-size:.9rem;line-height:1.7;">
+                    <li>PayPal traite votre virement bancaire</li>
+                    <li>Des que le paiement est confirme, vos tokens sont credites</li>
+                    <li>Vous recevrez une notification de PayPal</li>
+                </ul>
+            </div>
+        {% else %}
+            <div class="premium-success__check">
+                <i class="fas fa-check"></i>
+            </div>
+            <h1 class="premium-success__title">Paiement reussi !</h1>
+            <p class="premium-success__text">
+                Vos NexBits ont ete credites sur votre compte.<br>
+                Utilisez-les pour debloquer des fonctionnalites premium sur vos serveurs.
+            </p>
+
+            {% if app.user %}
+                <div class="premium-balance" style="margin-bottom:40px;">
+                    <div class="premium-balance__card">
+                        <div class="premium-balance__icon premium-balance__icon--tokens">
+                            <i class="fas fa-coins"></i>
+                        </div>
+                        <div>
+                            <div class="premium-balance__label">NexBits</div>
+                            <div class="premium-balance__value">{{ app.user.tokenBalance }}</div>
+                        </div>
+                    </div>
+                    <div class="premium-balance__card">
+                        <div class="premium-balance__icon premium-balance__icon--boost">
+                            <i class="fas fa-bolt"></i>
+                        </div>
+                        <div>
+                            <div class="premium-balance__label">NexBoost</div>
+                            <div class="premium-balance__value">{{ app.user.boostTokenBalance }}</div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
         {% endif %}
 
         <div class="premium-success__actions">

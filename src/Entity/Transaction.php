@@ -18,6 +18,9 @@ class Transaction
     public const TYPE_VOTE_REWARD = 'vote_reward';
     public const TYPE_DEPOSIT = 'deposit';
 
+    public const PAYPAL_STATUS_COMPLETED = 'COMPLETED';
+    public const PAYPAL_STATUS_PENDING = 'PENDING';
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -58,6 +61,12 @@ class Transaction
 
     #[ORM\Column(length: 500, nullable: true)]
     private ?string $description = null;
+
+    #[ORM\Column]
+    private bool $isCredited = false;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $creditedAt = null;
 
     #[ORM\Column]
     private ?\DateTimeImmutable $createdAt = null;
@@ -185,6 +194,28 @@ class Transaction
     public function setDescription(?string $description): static
     {
         $this->description = $description;
+        return $this;
+    }
+
+    public function isCredited(): bool
+    {
+        return $this->isCredited;
+    }
+
+    public function setIsCredited(bool $isCredited): static
+    {
+        $this->isCredited = $isCredited;
+        return $this;
+    }
+
+    public function getCreditedAt(): ?\DateTimeImmutable
+    {
+        return $this->creditedAt;
+    }
+
+    public function setCreditedAt(?\DateTimeImmutable $creditedAt): static
+    {
+        $this->creditedAt = $creditedAt;
         return $this;
     }
 

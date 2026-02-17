@@ -76,6 +76,35 @@ class TransactionRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
     }
 
+    public function findPendingByPaypalOrderId(string $orderId): ?Transaction
+    {
+        return $this->createQueryBuilder('t')
+            ->where('t.paypalOrderId = :orderId')
+            ->andWhere('t.isCredited = false')
+            ->andWhere('t.paypalStatus = :status')
+            ->setParameter('orderId', $orderId)
+            ->setParameter('status', Transaction::PAYPAL_STATUS_PENDING)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    /**
+     * @return Transaction[]
+     */
+    public function findPending(): array
+    {
+        return $this->createQueryBuilder('t')
+            ->leftJoin('t.user', 'u')
+            ->leftJoin('t.plan', 'p')
+            ->addSelect('u', 'p')
+            ->where('t.isCredited = false')
+            ->andWhere('t.type = :type')
+            ->setParameter('type', Transaction::TYPE_PURCHASE)
+            ->orderBy('t.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
     public function hasAnyPurchase(User $user): bool
     {
         return (int) $this->createQueryBuilder('t')

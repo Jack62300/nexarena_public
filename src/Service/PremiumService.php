@@ -157,8 +157,12 @@ class PremiumService
 
     public function creditTokensFromPurchase(User $user, PremiumPlan $plan, string $paypalOrderId, string $paypalStatus): Transaction
     {
-        $user->addTokens($plan->getTokensGiven());
-        $user->addBoostTokens($plan->getBoostTokensGiven());
+        $isPending = $paypalStatus === Transaction::PAYPAL_STATUS_PENDING;
+
+        if (!$isPending) {
+            $user->addTokens($plan->getTokensGiven());
+            $user->addBoostTokens($plan->getBoostTokensGiven());
+        }
 
         $tx = new Transaction();
         $tx->setUser($user);
@@ -170,12 +174,37 @@ class PremiumService
         $tx->setBoostTokensAmount($plan->getBoostTokensGiven());
         $tx->setPaypalOrderId($paypalOrderId);
         $tx->setPaypalStatus($paypalStatus);
-        $tx->setDescription('Achat du plan ' . $plan->getName());
+        $tx->setIsCredited(!$isPending);
+        $tx->setCreditedAt($isPending ? null : new \DateTimeImmutable());
+        $tx->setDescription('Achat du plan ' . $plan->getName() . ($isPending ? ' (virement en attente)' : ''));
 
         $this->em->persist($tx);
         $this->em->flush();
 
         return $tx;
+    }
+
+    public function completePendingTransaction(Transaction $tx): bool
+    {
+        if ($tx->isCredited()) {
+            return false;
+        }
+
+        $user = $tx->getUser();
+        if (!$user) {
+            return false;
+        }
+
+        $user->addTokens($tx->getTokensAmount());
+        $user->addBoostTokens($tx->getBoostTokensAmount());
+
+        $tx->setIsCredited(true);
+        $tx->setCreditedAt(new \DateTimeImmutable());
+        $tx->setPaypalStatus(Transaction::PAYPAL_STATUS_COMPLETED);
+
+        $this->em->flush();
+
+        return true;
     }
 
     public function isOrderAlreadyCaptured(string $paypalOrderId): bool

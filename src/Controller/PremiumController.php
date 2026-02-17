@@ -28,8 +28,8 @@ class PremiumController extends AbstractController
         private TransactionRepository $transactionRepo,
         private LoggerInterface $logger,
         private WebhookService $webhookService,
-    ) {
-    }
+    ) {}
+
 
     #[Route('/premium', name: 'premium_index')]
     public function index(): Response
@@ -152,27 +152,32 @@ class PremiumController extends AbstractController
             $status = $capture['status'] ?? '';
             $this->logger->info('Premium: PayPal capture status.', ['orderId' => $orderId, 'status' => $status]);
 
-            if ($status !== 'COMPLETED') {
+            if (!in_array($status, [Transaction::PAYPAL_STATUS_COMPLETED, Transaction::PAYPAL_STATUS_PENDING], true)) {
                 $this->logger->warning('Premium: Payment not completed.', ['orderId' => $orderId, 'status' => $status]);
                 return new JsonResponse(['error' => 'Paiement non complete. Statut: ' . $status], 400);
             }
 
             /** @var User $user */
             $user = $this->getUser();
-            $this->logger->info('Premium: Crediting tokens to user.', ['userId' => $user->getId(), 'orderId' => $orderId]);
+            $this->logger->info('Premium: Processing payment.', ['userId' => $user->getId(), 'orderId' => $orderId, 'status' => $status]);
             $this->premiumService->creditTokensFromPurchase($user, $plan, $orderId, $status);
 
-            $this->webhookService->dispatch('payment.completed', [
-                'title' => 'Paiement complete',
-                'fields' => [
-                    ['name' => 'Utilisateur', 'value' => $user->getUsername(), 'inline' => true],
-                    ['name' => 'Plan', 'value' => $plan->getName(), 'inline' => true],
-                    ['name' => 'Montant', 'value' => $plan->getPrice() . ' ' . $plan->getCurrency(), 'inline' => true],
-                ],
-            ]);
+            if ($status === Transaction::PAYPAL_STATUS_COMPLETED) {
+                $this->webhookService->dispatch('payment.completed', [
+                    'title' => 'Paiement complete',
+                    'fields' => [
+                        ['name' => 'Utilisateur', 'value' => $user->getUsername(), 'inline' => true],
+                        ['name' => 'Plan', 'value' => $plan->getName(), 'inline' => true],
+                        ['name' => 'Montant', 'value' => $plan->getPrice() . ' ' . $plan->getCurrency(), 'inline' => true],
+                    ],
+                ]);
+                $this->logger->info('Premium: Payment completed successfully.', ['orderId' => $orderId]);
+                return new JsonResponse(['success' => true]);
+            }
 
-            $this->logger->info('Premium: Payment completed successfully.', ['orderId' => $orderId, 'userId' => $user->getId()]);
-            return new JsonResponse(['success' => true]);
+            // PENDING (virement bancaire)
+            $this->logger->info('Premium: Payment pending (bank transfer).', ['orderId' => $orderId]);
+            return new JsonResponse(['success' => true, 'pending' => true]);
         } catch (\Throwable $e) {
             $this->logger->error('Premium: Exception in captureOrder.', [
                 'message' => $e->getMessage(),
@@ -199,6 +204,29 @@ class PremiumController extends AbstractController
 
         $event = json_decode($body, true);
         $eventType = $event['event_type'] ?? '';
+
+        // Virement bancaire confirmé → créditer les tokens
+        if ($eventType === 'PAYMENT.CAPTURE.COMPLETED') {
+            $resource = $event['resource'] ?? [];
+            $paypalOrderId = $resource['supplementary_data']['related_ids']['order_id'] ?? null;
+
+            if ($paypalOrderId) {
+                $pendingTx = $this->transactionRepo->findPendingByPaypalOrderId($paypalOrderId);
+                if ($pendingTx) {
+                    $completed = $this->premiumService->completePendingTransaction($pendingTx);
+                    if ($completed && $pendingTx->getUser()) {
+                        $this->webhookService->dispatch('payment.completed', [
+                            'title' => 'Virement bancaire confirme',
+                            'fields' => [
+                                ['name' => 'Utilisateur', 'value' => $pendingTx->getUser()->getUsername(), 'inline' => true],
+                                ['name' => 'Plan', 'value' => $pendingTx->getPlan()?->getName() ?? '-', 'inline' => true],
+                                ['name' => 'Montant', 'value' => $pendingTx->getAmount() . ' ' . $pendingTx->getCurrency(), 'inline' => true],
+                            ],
+                        ]);
+                    }
+                }
+            }
+        }
 
         if (in_array($eventType, ['PAYMENT.CAPTURE.REFUNDED', 'PAYMENT.CAPTURE.REVERSED', 'CUSTOMER.DISPUTE.CREATED'], true)) {
             $resource = $event['resource'] ?? [];

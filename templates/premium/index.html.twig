@@ -329,7 +329,7 @@
 {% set allPlans = defaultPlans|merge(customPlans) %}
 {% if app.user and allPlans|length > 0 %}
 {% if paypal_client_id %}
-<script src="https://www{% if is_sandbox %}.sandbox{% endif %}.paypal.com/sdk/js?client-id={{ paypal_client_id }}&currency={{ paypal_currency }}&disable-funding=credit,card,paylater&debug=true"></script>
+<script src="https://www{% if is_sandbox %}.sandbox{% endif %}.paypal.com/sdk/js?client-id={{ paypal_client_id }}&currency={{ paypal_currency }}&disable-funding=credit,card,paylater&enable-funding=sepa,giropay,mybank&debug=true"></script>
 {% endif %}
 <script>
 (function() {
@@ -470,6 +470,9 @@
                         console.log('[PayPal] captureOrder response:', json);
                         if (json.error) {
                             alert('Erreur: ' + json.error);
+                        } else if (json.pending) {
+                            console.log('[PayPal] Payment pending (bank transfer)...');
+                            window.location.href = '{{ path("premium_success") }}?pending=1';
                         } else {
                             console.log('[PayPal] Redirecting to success page...');
                             window.location.href = '{{ path("premium_success") }}';
