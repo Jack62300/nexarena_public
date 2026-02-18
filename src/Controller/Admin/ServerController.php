@@ -3,6 +3,7 @@
 namespace App\Controller\Admin;
 
 use App\Entity\Server;
+use App\Form\Admin\AdminServerFormType;
 use App\Repository\CategoryRepository;
 use App\Repository\ServerRepository;
 use App\Service\ServerService;
@@ -53,21 +54,20 @@ class ServerController extends AbstractController
     #[IsGranted('servers.edit')]
     public function edit(Server $server, Request $request, CategoryRepository $categoryRepo): Response
     {
-        if ($request->isMethod('POST')) {
-            if (!$this->isCsrfTokenValid('admin_server_form', $request->request->get('_token'))) {
-                $this->addFlash('error', 'Token CSRF invalide.');
-                return $this->redirectToRoute('admin_servers_edit', ['id' => $server->getId()]);
-            }
+        $form = $this->createForm(AdminServerFormType::class, $server);
+        $form->handleRequest($request);
 
-            $this->handleForm($server, $request);
+        if ($form->isSubmitted() && $form->isValid()) {
+            $server->setSlug($this->slugService->slugify($server->getName()));
             $this->em->flush();
 
-            $this->addFlash('success', 'Serveur modifie avec succes.');
+            $this->addFlash('success', 'Serveur modifié avec succès.');
             return $this->redirectToRoute('admin_servers_list');
         }
 
         return $this->render('admin/servers/edit.html.twig', [
             'server' => $server,
+            'form' => $form,
             'categories' => $categoryRepo->findBy([], ['position' => 'ASC']),
         ]);
     }
@@ -79,14 +79,14 @@ class ServerController extends AbstractController
         if ($this->isCsrfTokenValid('approve_' . $server->getId(), $request->request->get('_token'))) {
             $server->setIsApproved(!$server->isApproved());
             $this->em->flush();
-            $status = $server->isApproved() ? 'approuve' : 'desapprouve';
+            $status = $server->isApproved() ? 'approuvé' : 'désapprouvé';
 
             if ($server->isApproved()) {
                 $this->webhookService->dispatch('server.approved', [
-                    'title' => 'Serveur approuve',
+                    'title' => 'Serveur approuvé',
                     'fields' => [
                         ['name' => 'Serveur', 'value' => $server->getName(), 'inline' => true],
-                        ['name' => 'Approuve par', 'value' => $this->getUser()->getUsername(), 'inline' => true],
+                        ['name' => 'Approuvé par', 'value' => $this->getUser()->getUsername(), 'inline' => true],
                     ],
                 ]);
             }
@@ -104,7 +104,7 @@ class ServerController extends AbstractController
         if ($this->isCsrfTokenValid('toggle_' . $server->getId(), $request->request->get('_token'))) {
             $server->setIsActive(!$server->isActive());
             $this->em->flush();
-            $status = $server->isActive() ? 'active' : 'desactive';
+            $status = $server->isActive() ? 'activé' : 'désactivé';
             $this->addFlash('success', "Serveur {$status}.");
         }
 
@@ -130,33 +130,17 @@ class ServerController extends AbstractController
             $this->em->flush();
 
             $this->webhookService->dispatch('server.deleted', [
-                'title' => 'Serveur supprime',
+                'title' => 'Serveur supprimé',
                 'fields' => [
                     ['name' => 'Serveur', 'value' => $serverName, 'inline' => true],
-                    ['name' => 'Proprietaire', 'value' => $ownerName, 'inline' => true],
-                    ['name' => 'Supprime par', 'value' => $this->getUser()->getUsername(), 'inline' => true],
+                    ['name' => 'Propriétaire', 'value' => $ownerName, 'inline' => true],
+                    ['name' => 'Supprimé par', 'value' => $this->getUser()->getUsername(), 'inline' => true],
                 ],
             ]);
 
-            $this->addFlash('success', 'Serveur supprime.');
+            $this->addFlash('success', 'Serveur supprimé.');
         }
 
         return $this->redirectToRoute('admin_servers_list');
-    }
-
-    private function handleForm(Server $server, Request $request): void
-    {
-        $server->setName($request->request->get('name', ''));
-        $server->setSlug($this->slugService->slugify($request->request->get('name', '')));
-        $server->setShortDescription($request->request->get('short_description', ''));
-        $server->setIsActive($request->request->getBoolean('is_active'));
-        $server->setIsApproved($request->request->getBoolean('is_approved'));
-        $server->setIsPrivate($request->request->getBoolean('is_private'));
-        $server->setSlots((int) $request->request->get('slots', 0));
-        $server->setIp($request->request->get('ip') ?: null);
-        $server->setPort($request->request->get('port') ? (int) $request->request->get('port') : null);
-        $server->setWebsite($request->request->get('website') ?: null);
-        $server->setDiscordUrl($request->request->get('discord_url') ?: null);
-        $server->setTwitchChannel($request->request->get('twitch_channel') ?: null);
     }
 }

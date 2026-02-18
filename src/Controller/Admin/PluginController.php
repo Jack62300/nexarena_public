@@ -3,6 +3,7 @@
 namespace App\Controller\Admin;
 
 use App\Entity\Plugin;
+use App\Form\Admin\PluginFormType;
 use App\Repository\PluginRepository;
 use App\Service\SlugService;
 use App\Service\VirusTotalService;
@@ -36,45 +37,50 @@ class PluginController extends AbstractController
     #[Route('/new', name: 'new')]
     public function new(Request $request): Response
     {
-        if ($request->isMethod('POST')) {
-            if (!$this->isCsrfTokenValid('plugin_form', $request->request->get('_token'))) {
-                $this->addFlash('error', 'Token CSRF invalide.');
-                return $this->redirectToRoute('admin_plugins_new');
-            }
+        $plugin = new Plugin();
+        $form = $this->createForm(PluginFormType::class, $plugin);
+        $form->handleRequest($request);
 
-            $plugin = new Plugin();
-            $this->handleForm($plugin, $request);
+        if ($form->isSubmitted() && $form->isValid()) {
+            $plugin->setSlug($this->slugService->slugify($plugin->getName()));
+            $plugin->setUpdatedAt(new \DateTimeImmutable());
+
+            $this->handleFileUploads($plugin, $form);
 
             $this->em->persist($plugin);
             $this->em->flush();
 
-            $this->addFlash('success', 'Plugin cree avec succes.');
+            $this->addFlash('success', 'Plugin créé avec succès.');
             return $this->redirectToRoute('admin_plugins_list');
         }
 
         return $this->render('admin/plugins/form.html.twig', [
             'plugin' => null,
+            'form' => $form,
         ]);
     }
 
     #[Route('/{id}/edit', name: 'edit')]
     public function edit(Plugin $plugin, Request $request): Response
     {
-        if ($request->isMethod('POST')) {
-            if (!$this->isCsrfTokenValid('plugin_form', $request->request->get('_token'))) {
-                $this->addFlash('error', 'Token CSRF invalide.');
-                return $this->redirectToRoute('admin_plugins_edit', ['id' => $plugin->getId()]);
-            }
+        $form = $this->createForm(PluginFormType::class, $plugin);
+        $form->handleRequest($request);
 
-            $this->handleForm($plugin, $request);
+        if ($form->isSubmitted() && $form->isValid()) {
+            $plugin->setSlug($this->slugService->slugify($plugin->getName()));
+            $plugin->setUpdatedAt(new \DateTimeImmutable());
+
+            $this->handleFileUploads($plugin, $form);
+
             $this->em->flush();
 
-            $this->addFlash('success', 'Plugin modifie avec succes.');
+            $this->addFlash('success', 'Plugin modifié avec succès.');
             return $this->redirectToRoute('admin_plugins_list');
         }
 
         return $this->render('admin/plugins/form.html.twig', [
             'plugin' => $plugin,
+            'form' => $form,
         ]);
     }
 
@@ -83,7 +89,6 @@ class PluginController extends AbstractController
     public function delete(Plugin $plugin, Request $request): Response
     {
         if ($this->isCsrfTokenValid('delete_' . $plugin->getId(), $request->request->get('_token'))) {
-            // Delete associated files
             if ($plugin->getFileName()) {
                 $filePath = $this->projectDir . '/public/uploads/plugins/' . basename($plugin->getFileName());
                 if (file_exists($filePath)) {
@@ -99,7 +104,7 @@ class PluginController extends AbstractController
 
             $this->em->remove($plugin);
             $this->em->flush();
-            $this->addFlash('success', 'Plugin supprime.');
+            $this->addFlash('success', 'Plugin supprimé.');
         }
 
         return $this->redirectToRoute('admin_plugins_list');
@@ -115,7 +120,6 @@ class PluginController extends AbstractController
 
         $analysisId = $plugin->getVirusTotalAnalysisId();
         if (!$analysisId) {
-            // Try to re-scan the file
             if ($plugin->getFileName()) {
                 $filePath = $this->projectDir . '/public/uploads/plugins/' . $plugin->getFileName();
                 if (file_exists($filePath)) {
@@ -124,7 +128,7 @@ class PluginController extends AbstractController
                         $plugin->setVirusTotalAnalysisId($newAnalysisId);
                         $plugin->setVirusTotalStatus('pending');
                         $this->em->flush();
-                        $this->addFlash('success', 'Nouveau scan lance.');
+                        $this->addFlash('success', 'Nouveau scan lancé.');
                         return $this->redirectToRoute('admin_plugins_list');
                     }
                 }
@@ -137,31 +141,14 @@ class PluginController extends AbstractController
         $plugin->setVirusTotalStatus($result);
         $this->em->flush();
 
-        $this->addFlash('success', 'Statut mis a jour : ' . $result);
+        $this->addFlash('success', 'Statut mis à jour : ' . $result);
         return $this->redirectToRoute('admin_plugins_list');
     }
 
-    private function handleForm(Plugin $plugin, Request $request): void
+    private function handleFileUploads(Plugin $plugin, \Symfony\Component\Form\FormInterface $form): void
     {
-        $plugin->setName($request->request->get('name', ''));
-        $plugin->setSlug($this->slugService->slugify($request->request->get('name', '')));
-        $plugin->setDescription($request->request->get('description', ''));
-        $plugin->setLongDescription($request->request->get('long_description'));
-        $plugin->setPlatform($request->request->get('platform', ''));
-        $plugin->setCategory($request->request->get('category', ''));
-        $plugin->setVersion($request->request->get('version', ''));
-        $plugin->setIsActive($request->request->getBoolean('is_active'));
-        $plugin->setUpdatedAt(new \DateTimeImmutable());
-
-        // Handle ZIP upload
-        $zipFile = $request->files->get('zip_file');
+        $zipFile = $form->get('zipFile')->getData();
         if ($zipFile) {
-            $allowedZipMimes = ['application/zip', 'application/x-zip-compressed', 'application/octet-stream'];
-            if (!in_array($zipFile->getMimeType(), $allowedZipMimes, true) || $zipFile->getSize() > 50 * 1024 * 1024) {
-                return;
-            }
-
-            // Delete old file
             if ($plugin->getFileName()) {
                 $oldPath = $this->projectDir . '/public/uploads/plugins/' . basename($plugin->getFileName());
                 if (file_exists($oldPath)) {
@@ -180,7 +167,6 @@ class PluginController extends AbstractController
             $plugin->setFileName($newFilename);
             $plugin->setFileSize(filesize($uploadDir . '/' . $newFilename));
 
-            // Launch VirusTotal scan
             $analysisId = $this->virusTotalService->scanFile($uploadDir . '/' . $newFilename);
             if ($analysisId) {
                 $plugin->setVirusTotalAnalysisId($analysisId);
@@ -191,15 +177,8 @@ class PluginController extends AbstractController
             }
         }
 
-        // Handle icon upload
-        $iconFile = $request->files->get('icon_file');
+        $iconFile = $form->get('iconFile')->getData();
         if ($iconFile) {
-            $allowedIconMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-            if (!in_array($iconFile->getMimeType(), $allowedIconMimes, true) || $iconFile->getSize() > 2 * 1024 * 1024) {
-                return;
-            }
-
-            // Delete old icon
             if ($plugin->getIconFileName()) {
                 $oldIconPath = $this->projectDir . '/public/uploads/plugins/icons/' . basename($plugin->getIconFileName());
                 if (file_exists($oldIconPath)) {

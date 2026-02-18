@@ -3,6 +3,7 @@
 namespace App\Controller\Admin;
 
 use App\Entity\Badge;
+use App\Form\Admin\BadgeFormType;
 use App\Repository\BadgeRepository;
 use App\Repository\UserBadgeRepository;
 use App\Repository\UserRepository;
@@ -40,47 +41,107 @@ class BadgeController extends AbstractController
     #[Route('/new', name: 'new')]
     public function new(Request $request): Response
     {
-        if ($request->isMethod('POST')) {
-            if (!$this->isCsrfTokenValid('badge_form', $request->request->get('_token'))) {
-                $this->addFlash('error', 'Token CSRF invalide.');
-                return $this->redirectToRoute('admin_badges_new');
+        $badge = new Badge();
+        $form = $this->createForm(BadgeFormType::class, $badge);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $badge->setSlug($this->slugService->slugify($badge->getName()));
+
+            // Handle criteria (non-mapped fields)
+            $criteriaType = $form->get('criteriaType')->getData();
+            if ($criteriaType) {
+                $criteria = ['type' => $criteriaType];
+                if (!in_array($criteriaType, ['custom', 'premium_purchase'])) {
+                    $criteria['threshold'] = max(1, (int) $form->get('criteriaThreshold')->getData());
+                }
+                $badge->setCriteria($criteria);
+            } else {
+                $badge->setCriteria(null);
             }
 
-            $badge = new Badge();
-            $this->handleForm($badge, $request);
+            // Handle icon upload
+            $iconFile = $form->get('iconFile')->getData();
+            if ($iconFile) {
+                $dir = $this->projectDir . '/public/' . self::UPLOAD_DIR;
+                if (!is_dir($dir)) {
+                    mkdir($dir, 0775, true);
+                }
+                $filename = uniqid() . '.' . $iconFile->guessExtension();
+                $iconFile->move($dir, $filename);
+                $badge->setIconFileName($filename);
+            }
 
             $this->em->persist($badge);
             $this->em->flush();
 
-            $this->addFlash('success', 'Badge cree avec succes.');
+            $this->addFlash('success', 'Badge créé avec succès.');
             return $this->redirectToRoute('admin_badges_list');
         }
 
         return $this->render('admin/badges/form.html.twig', [
             'badge' => null,
             'awardedUsers' => [],
+            'form' => $form,
         ]);
     }
 
     #[Route('/{id}/edit', name: 'edit')]
     public function edit(Badge $badge, Request $request, UserBadgeRepository $ubRepo): Response
     {
-        if ($request->isMethod('POST')) {
-            if (!$this->isCsrfTokenValid('badge_form', $request->request->get('_token'))) {
-                $this->addFlash('error', 'Token CSRF invalide.');
-                return $this->redirectToRoute('admin_badges_edit', ['id' => $badge->getId()]);
+        $form = $this->createForm(BadgeFormType::class, $badge);
+
+        // Pre-populate non-mapped criteria fields
+        if ($badge->getCriteria()) {
+            $form->get('criteriaType')->setData($badge->getCriteria()['type'] ?? null);
+            $form->get('criteriaThreshold')->setData($badge->getCriteria()['threshold'] ?? 1);
+        }
+
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $badge->setSlug($this->slugService->slugify($badge->getName()));
+
+            // Handle criteria
+            $criteriaType = $form->get('criteriaType')->getData();
+            if ($criteriaType) {
+                $criteria = ['type' => $criteriaType];
+                if (!in_array($criteriaType, ['custom', 'premium_purchase'])) {
+                    $criteria['threshold'] = max(1, (int) $form->get('criteriaThreshold')->getData());
+                }
+                $badge->setCriteria($criteria);
+            } else {
+                $badge->setCriteria(null);
             }
 
-            $this->handleForm($badge, $request);
+            // Handle icon upload
+            $iconFile = $form->get('iconFile')->getData();
+            if ($iconFile) {
+                if ($badge->getIconFileName()) {
+                    $oldPath = $this->projectDir . '/public/' . self::UPLOAD_DIR . '/' . basename($badge->getIconFileName());
+                    if (file_exists($oldPath)) {
+                        unlink($oldPath);
+                    }
+                }
+                $dir = $this->projectDir . '/public/' . self::UPLOAD_DIR;
+                if (!is_dir($dir)) {
+                    mkdir($dir, 0775, true);
+                }
+                $filename = uniqid() . '.' . $iconFile->guessExtension();
+                $iconFile->move($dir, $filename);
+                $badge->setIconFileName($filename);
+            }
+
             $this->em->flush();
 
-            $this->addFlash('success', 'Badge modifie avec succes.');
+            $this->addFlash('success', 'Badge modifié avec succès.');
             return $this->redirectToRoute('admin_badges_list');
         }
 
         return $this->render('admin/badges/form.html.twig', [
             'badge' => $badge,
             'awardedUsers' => $ubRepo->findByBadge($badge),
+            'form' => $form,
         ]);
     }
 
@@ -89,7 +150,6 @@ class BadgeController extends AbstractController
     public function delete(Badge $badge, Request $request): Response
     {
         if ($this->isCsrfTokenValid('delete_' . $badge->getId(), $request->request->get('_token'))) {
-            // Delete icon file
             if ($badge->getIconFileName()) {
                 $path = $this->projectDir . '/public/' . self::UPLOAD_DIR . '/' . basename($badge->getIconFileName());
                 if (file_exists($path)) {
@@ -99,7 +159,7 @@ class BadgeController extends AbstractController
 
             $this->em->remove($badge);
             $this->em->flush();
-            $this->addFlash('success', 'Badge supprime.');
+            $this->addFlash('success', 'Badge supprimé.');
         }
 
         return $this->redirectToRoute('admin_badges_list');
@@ -116,7 +176,7 @@ class BadgeController extends AbstractController
 
         $username = trim((string) $request->request->get('username', ''));
         if (!$username) {
-            $this->addFlash('error', 'Nom d\'utilisateur requis.');
+            $this->addFlash('error', "Nom d'utilisateur requis.");
             return $this->redirectToRoute('admin_badges_edit', ['id' => $badge->getId()]);
         }
 
@@ -127,9 +187,9 @@ class BadgeController extends AbstractController
         }
 
         if ($badgeService->awardBadge($user, $badge)) {
-            $this->addFlash('success', 'Badge attribue a ' . $user->getUsername() . '.');
+            $this->addFlash('success', 'Badge attribué à ' . $user->getUsername() . '.');
         } else {
-            $this->addFlash('error', 'Cet utilisateur possede deja ce badge.');
+            $this->addFlash('error', 'Cet utilisateur possède déjà ce badge.');
         }
 
         return $this->redirectToRoute('admin_badges_edit', ['id' => $badge->getId()]);
@@ -147,59 +207,9 @@ class BadgeController extends AbstractController
         $user = $userRepo->find($userId);
         if ($user) {
             $badgeService->revokeBadge($user, $badge);
-            $this->addFlash('success', 'Badge revoque de ' . $user->getUsername() . '.');
+            $this->addFlash('success', 'Badge révoqué de ' . $user->getUsername() . '.');
         }
 
         return $this->redirectToRoute('admin_badges_edit', ['id' => $badge->getId()]);
-    }
-
-    private function handleForm(Badge $badge, Request $request): void
-    {
-        $name = trim((string) $request->request->get('name', ''));
-        $badge->setName($name);
-        $badge->setSlug($this->slugService->slugify($name));
-        $badge->setDescription(trim((string) $request->request->get('description', '')) ?: null);
-
-        $color = $request->request->get('color');
-        if ($color && preg_match('/^#[0-9a-fA-F]{6}$/', $color)) {
-            $badge->setColor($color);
-        } else {
-            $badge->setColor(null);
-        }
-
-        // Criteria
-        $criteriaType = $request->request->get('criteria_type');
-        if ($criteriaType) {
-            $criteria = ['type' => $criteriaType];
-            if (!in_array($criteriaType, ['custom', 'premium_purchase'])) {
-                $criteria['threshold'] = max(1, (int) $request->request->get('criteria_threshold', 1));
-            }
-            $badge->setCriteria($criteria);
-        } else {
-            $badge->setCriteria(null);
-        }
-
-        $badge->setIsActive($request->request->getBoolean('is_active'));
-
-        // Icon upload
-        $iconFile = $request->files->get('icon');
-        if ($iconFile && in_array($iconFile->getMimeType(), self::ALLOWED_MIMES) && $iconFile->getSize() <= 1024 * 1024) {
-            // Delete old icon
-            if ($badge->getIconFileName()) {
-                $oldPath = $this->projectDir . '/public/' . self::UPLOAD_DIR . '/' . basename($badge->getIconFileName());
-                if (file_exists($oldPath)) {
-                    unlink($oldPath);
-                }
-            }
-
-            $dir = $this->projectDir . '/public/' . self::UPLOAD_DIR;
-            if (!is_dir($dir)) {
-                mkdir($dir, 0775, true);
-            }
-
-            $filename = uniqid() . '.' . $iconFile->guessExtension();
-            $iconFile->move($dir, $filename);
-            $badge->setIconFileName($filename);
-        }
     }
 }

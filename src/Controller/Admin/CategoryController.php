@@ -3,11 +3,11 @@
 namespace App\Controller\Admin;
 
 use App\Entity\Category;
+use App\Form\Admin\CategoryFormType;
 use App\Repository\CategoryRepository;
 use App\Service\SlugService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -34,45 +34,72 @@ class CategoryController extends AbstractController
     #[Route('/new', name: 'new')]
     public function new(Request $request): Response
     {
-        if ($request->isMethod('POST')) {
-            if (!$this->isCsrfTokenValid('parent_category_form', $request->request->get('_token'))) {
-                $this->addFlash('error', 'Token CSRF invalide.');
-                return $this->redirectToRoute('admin_parent_categories_new');
-            }
+        $category = new Category();
+        $form = $this->createForm(CategoryFormType::class, $category);
+        $form->handleRequest($request);
 
-            $category = new Category();
-            $this->handleForm($category, $request);
+        if ($form->isSubmitted() && $form->isValid()) {
+            $category->setSlug($this->slugService->slugify($category->getName()));
+
+            $imageFile = $form->get('imageFile')->getData();
+            if ($imageFile) {
+                $filename = uniqid() . '.' . $imageFile->guessExtension();
+                $imageFile->move(
+                    $this->getParameter('kernel.project_dir') . '/public/uploads/categories',
+                    $filename,
+                );
+                $category->setImage($filename);
+            }
 
             $this->em->persist($category);
             $this->em->flush();
 
-            $this->addFlash('success', 'Categorie creee avec succes.');
+            $this->addFlash('success', 'Catégorie créée avec succès.');
             return $this->redirectToRoute('admin_parent_categories_list');
         }
 
         return $this->render('admin/parent_categories/form.html.twig', [
             'category' => null,
+            'form' => $form,
         ]);
     }
 
     #[Route('/{id}/edit', name: 'edit')]
     public function edit(Category $category, Request $request): Response
     {
-        if ($request->isMethod('POST')) {
-            if (!$this->isCsrfTokenValid('parent_category_form', $request->request->get('_token'))) {
-                $this->addFlash('error', 'Token CSRF invalide.');
-                return $this->redirectToRoute('admin_parent_categories_edit', ['id' => $category->getId()]);
+        $form = $this->createForm(CategoryFormType::class, $category);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $category->setSlug($this->slugService->slugify($category->getName()));
+
+            $imageFile = $form->get('imageFile')->getData();
+            if ($imageFile) {
+                $filename = uniqid() . '.' . $imageFile->guessExtension();
+                $imageFile->move(
+                    $this->getParameter('kernel.project_dir') . '/public/uploads/categories',
+                    $filename,
+                );
+
+                if ($category->getImage()) {
+                    $oldPath = $this->getParameter('kernel.project_dir') . '/public/uploads/categories/' . basename($category->getImage());
+                    if (file_exists($oldPath)) {
+                        unlink($oldPath);
+                    }
+                }
+
+                $category->setImage($filename);
             }
 
-            $this->handleForm($category, $request);
             $this->em->flush();
 
-            $this->addFlash('success', 'Categorie modifiee avec succes.');
+            $this->addFlash('success', 'Catégorie modifiée avec succès.');
             return $this->redirectToRoute('admin_parent_categories_list');
         }
 
         return $this->render('admin/parent_categories/form.html.twig', [
             'category' => $category,
+            'form' => $form,
         ]);
     }
 
@@ -81,7 +108,6 @@ class CategoryController extends AbstractController
     public function delete(Category $category, Request $request): Response
     {
         if ($this->isCsrfTokenValid('delete_' . $category->getId(), $request->request->get('_token'))) {
-            // Detach children (set category to null)
             foreach ($category->getGameCategories() as $gameCategory) {
                 $gameCategory->setCategory(null);
             }
@@ -95,46 +121,9 @@ class CategoryController extends AbstractController
 
             $this->em->remove($category);
             $this->em->flush();
-            $this->addFlash('success', 'Categorie supprimee.');
+            $this->addFlash('success', 'Catégorie supprimée.');
         }
 
         return $this->redirectToRoute('admin_parent_categories_list');
-    }
-
-    private function handleForm(Category $category, Request $request): void
-    {
-        $category->setName($request->request->get('name', ''));
-        $category->setSlug($this->slugService->slugify($request->request->get('name', '')));
-        $category->setIcon($request->request->get('icon', '') ?: null);
-        $category->setDescription($request->request->get('description', '') ?: null);
-        $category->setIsActive($request->request->getBoolean('is_active'));
-        $category->setPosition((int) $request->request->get('position', 0));
-        $queryType = $request->request->get('query_type', '') ?: null;
-        $category->setQueryType($queryType);
-
-        /** @var UploadedFile|null $file */
-        $file = $request->files->get('image');
-        if ($file) {
-            $allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
-            if (!in_array($file->getMimeType(), $allowedMimes, true) || $file->getSize() > 5 * 1024 * 1024) {
-                return;
-            }
-
-            $filename = uniqid() . '.' . $file->guessExtension();
-            $file->move(
-                $this->getParameter('kernel.project_dir') . '/public/uploads/categories',
-                $filename,
-            );
-
-            if ($category->getImage()) {
-                $dir = $this->getParameter('kernel.project_dir') . '/public/uploads/categories';
-                $oldPath = $dir . '/' . basename($category->getImage());
-                if (file_exists($oldPath)) {
-                    unlink($oldPath);
-                }
-            }
-
-            $category->setImage($filename);
-        }
     }
 }

@@ -36,7 +36,7 @@
             <div class="row justify-content-center">
                 <div class="col-xl-6 col-lg-8">
                     <div class="singUp-wrap">
-                        <h2 class="title">Creez votre compte</h2>
+                        <h2 class="title">Créez votre compte</h2>
                         <p>Rejoignez Nexarena pour ajouter vos serveurs au classement et voter pour vos favoris !</p>
 
                         {% for message in app.flashes('error') %}
@@ -79,28 +79,33 @@
                         </div>
 
                         {# Formulaire classique #}
-                        <form action="{{ path('app_register') }}" method="post" class="account__form">
-                            <input type="hidden" name="_csrf_token" value="{{ csrf_token('registration') }}">
+                        {{ form_start(form, {'attr': {'class': 'account__form'}}) }}
                             <div class="form-grp">
-                                <label for="username">Nom d'utilisateur</label>
-                                <input type="text" id="username" name="username" value="{{ last_username }}" placeholder="Nom d'utilisateur" required minlength="3">
+                                <label for="{{ form.username.vars.id }}">Nom d'utilisateur</label>
+                                {{ form_widget(form.username) }}
+                                {{ form_errors(form.username) }}
                             </div>
                             <div class="form-grp">
-                                <label for="email">Email</label>
-                                <input type="email" id="email" name="email" value="{{ last_email }}" placeholder="Adresse email" required>
+                                <label for="{{ form.email.vars.id }}">Email</label>
+                                {{ form_widget(form.email) }}
+                                {{ form_errors(form.email) }}
                             </div>
                             <div class="form-grp">
-                                <label for="password">Mot de passe</label>
-                                <input type="password" id="password" name="password" placeholder="Mot de passe (8 caracteres min.)" required minlength="8">
+                                <label for="{{ form.plainPassword.first.vars.id }}">Mot de passe</label>
+                                {{ form_widget(form.plainPassword.first, {'attr': {'placeholder': 'Mot de passe (10 caractères min.)'}}) }}
+                                {{ form_errors(form.plainPassword.first) }}
                             </div>
                             <div class="form-grp">
-                                <label for="confirm-password">Confirmer le mot de passe</label>
-                                <input type="password" id="confirm-password" name="confirm_password" placeholder="Confirmer le mot de passe" required>
+                                <label for="{{ form.plainPassword.second.vars.id }}">Confirmer le mot de passe</label>
+                                {{ form_widget(form.plainPassword.second) }}
+                                {{ form_errors(form.plainPassword.second) }}
+                                {{ form_errors(form.plainPassword) }}
                             </div>
                             <button type="submit" class="btn btn-two arrow-btn">S'inscrire</button>
-                        </form>
+                        {{ form_end(form) }}
+
                         <div class="account__switch">
-                            <p>Deja un compte ? <a href="{{ path('app_login') }}">Se connecter</a></p>
+                            <p>Déjà un compte ? <a href="{{ path('app_login') }}">Se connecter</a></p>
                         </div>
                     </div>
                 </div>

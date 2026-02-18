@@ -1,284 +1,613 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Modifier mon profil - {{ setting('site_name', 'Nexarena') }}{% endblock %}
+{% block title %}Modifier mon profil — {{ setting('site_name', 'Nexarena') }}{% endblock %}
 
 {% block stylesheets %}
 <link rel="stylesheet" href="{{ asset('assets/css/pages/profile.css') }}">
 <style>
-.edit-profile { padding: 80px 0; min-height: 60vh; }
-.edit-section { margin-bottom: 24px; }
-.edit-card { background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:12px; padding:24px; margin-bottom:20px; }
-.edit-card__title { font-size:16px; font-weight:600; color:#fff; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
-.edit-card__title i { color:#45f882; }
-.edit-input { width:100%; background:#1a1a2e; border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:10px 14px; color:#fff; font-size:14px; }
-.edit-input:focus { border-color:#45f882; outline:none; }
-.edit-label { display:block; font-size:13px; color:#8b949e; margin-bottom:6px; }
-.edit-group { margin-bottom:16px; }
-.edit-toggle { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
-.edit-toggle input[type="checkbox"] { accent-color:#45f882; width:18px; height:18px; cursor:pointer; }
-.edit-toggle label { font-size:13px; color:#c9d1d9; cursor:pointer; }
-.game-row { display:flex; gap:8px; margin-bottom:8px; align-items:center; }
-.game-row input { flex:1; }
-.game-row .btn-remove { background:none; border:none; color:#ff4757; cursor:pointer; font-size:16px; padding:4px 8px; }
-.btn-add-game { background:none; border:1px dashed rgba(255,255,255,0.15); color:#8b949e; padding:8px 14px; border-radius:8px; cursor:pointer; font-size:13px; transition:all .2s; }
-.btn-add-game:hover { color:#45f882; border-color:#45f882; }
+/* ───── Page ───── */
+.edit-page {
+    padding: 90px 0 80px;
+    min-height: 100vh;
+    background: #0a1018;
+}
 
-/* Avatar upload */
-.edit-avatar-wrap { display:flex; align-items:center; gap:24px; flex-wrap:wrap; }
-.edit-avatar-preview {
-    width:90px; height:90px; border-radius:50%;
-    border:3px solid rgba(69,248,130,0.3);
-    background:rgba(255,255,255,0.04);
-    display:flex; align-items:center; justify-content:center;
-    overflow:hidden; flex-shrink:0;
+/* ───── Hero ───── */
+.edit-hero {
+    background: linear-gradient(135deg, #0f1c2d 0%, #162231 60%, #0f1c2d 100%);
+    border: 1px solid #1e3048;
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 28px;
 }
-.edit-avatar-preview img { width:100%; height:100%; object-fit:cover; }
-.edit-avatar-preview i { font-size:34px; color:rgba(255,255,255,0.2); }
-.edit-avatar-label {
-    display:inline-flex; align-items:center; gap:7px;
-    padding:9px 18px;
-    background:rgba(69,248,130,0.08);
-    border:1px solid rgba(69,248,130,0.2);
-    border-radius:8px; color:#45f882;
-    font-size:13px; font-weight:600;
-    cursor:pointer; transition:all .2s;
+.edit-hero__bar {
+    height: 4px;
+    background: linear-gradient(90deg, #45f882 0%, #00c6ff 50%, #45f882 100%);
+    background-size: 200% 100%;
+    animation: ep-shimmer 3s linear infinite;
 }
-.edit-avatar-label:hover { background:rgba(69,248,130,0.16); }
-.edit-avatar-hint { font-size:12px; color:#5a5c69; margin-top:6px; }
+@keyframes ep-shimmer { 0%{background-position:0 0} 100%{background-position:200% 0} }
+.edit-hero__body {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 24px 28px;
+    flex-wrap: wrap;
+}
+.edit-hero__avatar {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    border: 3px solid rgba(69,248,130,0.35);
+    background: #0a1018;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden; flex-shrink: 0;
+    box-shadow: 0 0 20px rgba(69,248,130,0.12);
+    cursor: pointer;
+    position: relative;
+}
+.edit-hero__avatar img { width:100%; height:100%; object-fit:cover; }
+.edit-hero__avatar i { font-size:32px; color:rgba(255,255,255,0.2); }
+.edit-hero__avatar-overlay {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,0.55);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0;
+    transition: opacity .2s;
+}
+.edit-hero__avatar:hover .edit-hero__avatar-overlay { opacity: 1; }
+.edit-hero__avatar-overlay i { font-size: 20px; color: #45f882; }
+.edit-hero__info { flex: 1; min-width: 0; }
+.edit-hero__name {
+    font-size: 22px; font-weight: 800; color: #e6edf3;
+    margin-bottom: 4px;
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.edit-hero__subtitle { font-size: 13px; color: #8b949e; }
+.edit-hero__subtitle i { color: #45f882; margin-right: 4px; }
+.edit-hero__actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+/* ───── Section cards ───── */
+.ep-card {
+    background: #162231;
+    border: 1px solid #1e3048;
+    border-radius: 12px;
+    padding: 22px;
+    margin-bottom: 20px;
+}
+.ep-card:last-child { margin-bottom: 0; }
+.ep-card__title {
+    font-size: 13px; font-weight: 700;
+    color: #8b949e;
+    text-transform: uppercase; letter-spacing: 0.6px;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #1e3048;
+    display: flex; align-items: center; gap: 8px;
+}
+.ep-card__title i { color: #45f882; }
+
+/* ───── Form inputs ───── */
+.ep-group { margin-bottom: 18px; }
+.ep-group:last-child { margin-bottom: 0; }
+.ep-label {
+    display: block;
+    font-size: 12px; font-weight: 600;
+    color: #8b949e;
+    text-transform: uppercase; letter-spacing: 0.4px;
+    margin-bottom: 8px;
+}
+.ep-label i { margin-right: 5px; }
+.ep-input {
+    width: 100%;
+    background: #0d1b2d;
+    border: 1px solid #1e3048;
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: #e6edf3;
+    font-size: 14px;
+    transition: border-color .2s;
+}
+.ep-input:focus { border-color: #45f882; outline: none; }
+.ep-input::placeholder { color: #3d5068; }
+
+/* ───── Visibility toggles ───── */
+.ep-toggle {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px;
+    background: #0d1b2d;
+    border: 1px solid #1e3048;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: border-color .2s;
+}
+.ep-toggle:last-child { margin-bottom: 0; }
+.ep-toggle:hover { border-color: rgba(69,248,130,0.3); }
+.ep-toggle input[type="checkbox"] { accent-color: #45f882; width: 17px; height: 17px; cursor: pointer; flex-shrink: 0; }
+.ep-toggle-label { font-size: 13px; color: #c9d1d9; flex: 1; display: flex; align-items: center; gap: 7px; }
+.ep-toggle-label i { font-size: 13px; width: 16px; text-align: center; }
+.ep-toggle-hint { font-size: 11px; color: #3d5068; }
+
+/* ───── Game username rows ───── */
+.ep-game-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+.ep-game-row input { flex: 1; }
+.ep-game-row .ep-btn-rm {
+    background: none; border: none;
+    color: #c9314a; cursor: pointer;
+    padding: 8px 10px; border-radius: 6px;
+    transition: background .2s;
+}
+.ep-game-row .ep-btn-rm:hover { background: rgba(201,49,74,0.1); }
+.ep-btn-add {
+    background: none;
+    border: 1px dashed #1e3048;
+    color: #8b949e;
+    padding: 8px 14px; border-radius: 8px;
+    cursor: pointer; font-size: 13px;
+    transition: all .2s; margin-top: 4px;
+}
+.ep-btn-add:hover { color: #45f882; border-color: rgba(69,248,130,0.4); }
+
+/* ───── Avatar upload zone ───── */
+.ep-avatar-zone {
+    display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+}
+.ep-avatar-preview {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    border: 3px solid rgba(69,248,130,0.3);
+    background: #0a1018;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden; flex-shrink: 0;
+}
+.ep-avatar-preview img { width:100%; height:100%; object-fit:cover; }
+.ep-avatar-preview i { font-size:28px; color:rgba(255,255,255,0.15); }
+.ep-avatar-upload-btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 9px 18px;
+    background: rgba(69,248,130,0.07);
+    border: 1px solid rgba(69,248,130,0.2);
+    border-radius: 8px; color: #45f882;
+    font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: all .2s;
+}
+.ep-avatar-upload-btn:hover { background: rgba(69,248,130,0.14); border-color: rgba(69,248,130,0.4); }
+.ep-avatar-hint { font-size: 11px; color: #3d5068; margin-top: 5px; }
+
+/* ───── Sidebar ───── */
+.ep-sidebar-card {
+    background: #162231;
+    border: 1px solid #1e3048;
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 18px;
+}
+.ep-sidebar-card:last-child { margin-bottom: 0; }
+.ep-sidebar-title {
+    font-size: 12px; font-weight: 700;
+    color: #8b949e;
+    text-transform: uppercase; letter-spacing: 0.6px;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #1e3048;
+    display: flex; align-items: center; gap: 7px;
+}
+.ep-sidebar-title i { color: #45f882; }
+
+/* Preview items */
+.ep-preview-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 13px;
+}
+.ep-preview-item:last-child { border-bottom: none; padding-bottom: 0; }
+.ep-preview-item:first-child { padding-top: 0; }
+.ep-preview-icon {
+    width: 28px; height: 28px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.ep-preview-icon i { font-size: 12px; color: #fff; }
+.ep-preview-name { color: #e6edf3; font-weight: 500; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ep-preview-empty { color: #3d5068; font-size: 12px; font-style: italic; }
+
+/* Buttons */
+.ep-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 9px 18px; border-radius: 8px;
+    font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: all .2s;
+    border: none; text-decoration: none;
+}
+.ep-btn--primary { background: #45f882; color: #0a1018; }
+.ep-btn--primary:hover { background: #3de074; color: #0a1018; }
+.ep-btn--outline { background: transparent; color: #8b949e; border: 1px solid #1e3048; }
+.ep-btn--outline:hover { color: #e6edf3; border-color: #2d4a66; background: rgba(255,255,255,0.03); }
+
+/* Flash */
+.ep-flash {
+    display: flex; align-items: center; gap: 8px;
+    padding: 12px 18px; border-radius: 8px;
+    margin-bottom: 20px; font-size: 14px; font-weight: 500;
+}
+.ep-flash--success { background: rgba(69,248,130,0.08); border: 1px solid rgba(69,248,130,0.2); color: #45f882; }
+.ep-flash--error   { background: rgba(220,53,69,0.08);  border: 1px solid rgba(220,53,69,0.2);  color: #dc3545; }
+
+/* Bio editor override */
+.ql-toolbar.ql-snow { background: #0d1b2d; border-color: #1e3048 !important; border-radius: 8px 8px 0 0; }
+.ql-container.ql-snow { background: #0d1b2d; border-color: #1e3048 !important; border-radius: 0 0 8px 8px; min-height: 140px; }
+.ql-editor { color: #e6edf3; font-size: 14px; min-height: 140px; }
+.ql-editor.ql-blank::before { color: #3d5068; font-style: normal; }
+.ql-snow .ql-stroke { stroke: #8b949e; }
+.ql-snow .ql-fill { fill: #8b949e; }
+.ql-snow .ql-picker { color: #8b949e; }
+.ql-snow .ql-picker-options { background: #162231; border-color: #1e3048; }
+.ql-snow.ql-toolbar button:hover .ql-stroke,
+.ql-snow.ql-toolbar button.ql-active .ql-stroke { stroke: #45f882; }
+
+@media (max-width: 767px) {
+    .edit-hero__body { padding: 18px; gap: 16px; }
+    .edit-hero__actions { width: 100%; }
+}
+
+#bioEditor .ql-editor.ql-blank::before {
+    color: #3d5068;          /* blanc */
+    opacity: 1;           /* important sinon Quill met une opacité */
+}
 </style>
 {% endblock %}
 
 {% block body %}
+<section class="edit-page">
+    <div class="container">
 
-    {# breadcrumb-area #}
-    <section class="breadcrumb-area" data-background="{{ asset('assets/img/bg/breadcrumb_bg01.jpg') }}">
-        <div class="container">
-            <div class="breadcrumb__wrapper">
-                <div class="row">
-                    <div class="col-xl-6 col-lg-7">
-                        <div class="breadcrumb__content">
-                            <h2 class="title">Modifier mon profil</h2>
-                            <nav aria-label="breadcrumb">
-                                <ol class="breadcrumb">
-                                    <li class="breadcrumb-item"><a href="{{ path('app_home') }}">Accueil</a></li>
-                                    <li class="breadcrumb-item"><a href="{{ path('profile_show', {username: app.user.username}) }}">Mon profil</a></li>
-                                    <li class="breadcrumb-item active" aria-current="page">Modifier</li>
-                                </ol>
-                            </nav>
+        {# Flash messages #}
+        {% for msg in app.flashes('success') %}
+            <div class="ep-flash ep-flash--success"><i class="fas fa-check-circle"></i> {{ msg }}</div>
+        {% endfor %}
+        {% for msg in app.flashes('error') %}
+            <div class="ep-flash ep-flash--error"><i class="fas fa-exclamation-circle"></i> {{ msg }}</div>
+        {% endfor %}
+
+        {# ── Hero ── #}
+        <div class="edit-hero">
+            <div class="edit-hero__bar"></div>
+            <div class="edit-hero__body">
+                {# Avatar cliquable → ouvre le sélecteur de fichier #}
+                <label for="avatarInput" style="cursor:pointer;">
+                    <div class="edit-hero__avatar">
+                        <div id="heroAvatarPreview" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;border-radius:50%;overflow:hidden;">
+                            {% if app.user.avatar starts with 'http' %}
+                                <img src="{{ app.user.avatar }}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;">
+                            {% elseif app.user.avatar %}
+                                <img src="{{ asset('uploads/avatars/' ~ app.user.avatar) }}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;">
+                            {% else %}
+                                <i class="fas fa-user" style="font-size:32px;color:rgba(255,255,255,0.2);"></i>
+                            {% endif %}
+                        </div>
+                        <div class="edit-hero__avatar-overlay">
+                            <i class="fas fa-camera"></i>
                         </div>
                     </div>
-                    <div class="col-xl-6 col-lg-5 position-relative d-none d-lg-block">
-                        <div class="breadcrumb__img">
-                            <img src="{{ asset('assets/img/others/breadcrumb_img02.png') }}" alt="img">
-                        </div>
+                </label>
+
+                <div class="edit-hero__info">
+                    <div class="edit-hero__name">
+                        {{ app.user.username }}
+                        {% if app.user.isTwoFactorEnabled %}
+                            <span style="font-size:11px;padding:3px 9px;border-radius:4px;background:rgba(69,248,130,0.1);color:#45f882;border:1px solid rgba(69,248,130,0.2);font-weight:600;">
+                                <i class="fas fa-shield-alt"></i> 2FA
+                            </span>
+                        {% endif %}
                     </div>
+                    <div class="edit-hero__subtitle">
+                        <i class="fas fa-pen"></i> Modifier mon profil
+                        <span style="margin:0 8px;opacity:.3;">·</span>
+                        <i class="fas fa-calendar-alt" style="color:#8b949e;"></i>
+                        <span style="color:#8b949e;"> Membre depuis {{ app.user.createdAt ? app.user.createdAt|date('d/m/Y') : 'N/A' }}</span>
+                    </div>
+                </div>
+
+                <div class="edit-hero__actions">
+                    <a href="{{ path('profile_show', {username: app.user.username}) }}" class="ep-btn ep-btn--outline">
+                        <i class="fas fa-eye"></i> Mon profil
+                    </a>
+                    <a href="{{ path('user_settings') }}" class="ep-btn ep-btn--outline">
+                        <i class="fas fa-cog"></i>
+                    </a>
                 </div>
             </div>
         </div>
-    </section>
 
-    <section class="edit-profile" data-background="{{ asset('assets/img/bg/team_bg.jpg') }}">
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-lg-8">
+        {# ── Avatar form (invisible, soumis automatiquement) ── #}
+        <form action="{{ path('user_settings_avatar') }}" method="post" enctype="multipart/form-data" id="avatarForm">
+            <input type="hidden" name="_token" value="{{ csrf_token('profile_avatar') }}">
+            <input type="file" name="avatar" id="avatarInput" style="display:none;" accept="image/jpeg,image/png,image/gif,image/webp">
+        </form>
 
-                    {% for message in app.flashes('success') %}
-                        <div class="profile-flash profile-flash--success"><i class="fas fa-check-circle"></i> {{ message }}</div>
-                    {% endfor %}
-                    {% for message in app.flashes('error') %}
-                        <div class="profile-flash profile-flash--error"><i class="fas fa-exclamation-circle"></i> {{ message }}</div>
-                    {% endfor %}
+        <div class="row g-4">
 
-                    {# ── Avatar ── #}
-                    <div class="edit-card">
-                        <h3 class="edit-card__title"><i class="fas fa-camera"></i> Photo de profil</h3>
-                        <form action="{{ path('user_settings_avatar') }}" method="post" enctype="multipart/form-data" id="avatarForm">
-                            <input type="hidden" name="_token" value="{{ csrf_token('profile_avatar') }}">
-                            <input type="file" name="avatar" id="avatarInput" style="display:none;" accept="image/jpeg,image/png,image/gif,image/webp">
-                            <div class="edit-avatar-wrap">
-                                <div class="edit-avatar-preview" id="avatarPreview">
-                                    {% if app.user.avatar starts with 'http' %}
-                                        <img src="{{ app.user.avatar }}" alt="Avatar">
-                                    {% elseif app.user.avatar %}
-                                        <img src="{{ asset('uploads/avatars/' ~ app.user.avatar) }}" alt="Avatar">
-                                    {% else %}
-                                        <i class="fas fa-user"></i>
-                                    {% endif %}
-                                </div>
-                                <div>
-                                    <label for="avatarInput" class="edit-avatar-label">
-                                        <i class="fas fa-upload"></i> Changer l'avatar
-                                    </label>
-                                    <div class="edit-avatar-hint" id="avatarFileName">JPG, PNG, GIF ou WebP — 2 Mo max</div>
-                                </div>
-                            </div>
-                        </form>
+            {# ══════════ COLONNE PRINCIPALE ══════════ #}
+            <div class="col-lg-8">
+
+                <form method="post" action="{{ path('user_profile_edit') }}" id="editForm">
+                    <input type="hidden" name="_token" value="{{ csrf_token('profile_edit') }}">
+
+                    {# ── Bio ── #}
+                    <div class="ep-card">
+                        <div class="ep-card__title"><i class="fas fa-quote-left"></i> Présentation</div>
+                        <div class="ep-group">
+                            <div id="bioEditor"></div>
+                            <textarea name="bio" id="bioContent" style="display:none;">{{ app.user.bio|default('') }}</textarea>
+                        </div>
                     </div>
 
-                    <form method="post" action="{{ path('user_profile_edit') }}">
-                        <input type="hidden" name="_token" value="{{ csrf_token('profile_edit') }}">
+                    {# ── Réseaux & pseudos ── #}
+                    <div class="ep-card">
+                        <div class="ep-card__title"><i class="fas fa-link"></i> Réseaux & pseudos</div>
 
-                        {# ── Bio ── #}
-                        <div class="edit-card">
-                            <h3 class="edit-card__title"><i class="fas fa-quote-left"></i> Presentation</h3>
-                            <div class="edit-group">
-                                <div id="bioEditor" style="min-height:150px;background:#1a1a2e;border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;"></div>
-                                <textarea name="bio" id="bioContent" style="display:none;">{{ app.user.bio|default('') }}</textarea>
-                            </div>
+                        <div class="ep-group">
+                            <label class="ep-label"><i class="fab fa-discord" style="color:#5865f2;"></i> Discord</label>
+                            <input type="text" name="discord_username" class="ep-input" value="{{ app.user.discordUsername }}" maxlength="100" placeholder="MonPseudo#1234">
                         </div>
 
-                        {# ── Pseudos sociaux ── #}
-                        <div class="edit-card">
-                            <h3 class="edit-card__title"><i class="fas fa-link"></i> Reseaux & pseudos</h3>
-
-                            <div class="edit-group">
-                                <label class="edit-label"><i class="fab fa-discord" style="color:#5865f2;"></i> Pseudo Discord</label>
-                                <input type="text" name="discord_username" class="edit-input" value="{{ app.user.discordUsername }}" maxlength="100" placeholder="Ex: MonPseudo#1234">
-                            </div>
-
-                            <div class="edit-group">
-                                <label class="edit-label"><i class="fab fa-steam" style="color:#1b2838;"></i> Pseudo Steam</label>
-                                <input type="text" name="steam_username" class="edit-input" value="{{ app.user.steamUsername }}" maxlength="100" placeholder="Ex: SteamUser123">
-                            </div>
-
-                            <div class="edit-group">
-                                <label class="edit-label"><i class="fab fa-twitch" style="color:#9146ff;"></i> Pseudo Twitch</label>
-                                <input type="text" name="twitch_username" class="edit-input" value="{{ app.user.twitchUsername }}" maxlength="100" placeholder="Ex: TwitchStreamer">
-                            </div>
-
-                            <div class="edit-group">
-                                <label class="edit-label"><i class="fas fa-gamepad" style="color:#45f882;"></i> Pseudos de jeux</label>
-                                <div id="gameUsernamesContainer">
-                                    {% if app.user.gameUsernames %}
-                                        {% for game, name in app.user.gameUsernames %}
-                                            <div class="game-row">
-                                                <input type="text" name="game_usernames[{{ game }}]" class="edit-input" value="{{ name }}" placeholder="Pseudo" maxlength="100" data-game="{{ game }}">
-                                                <input type="text" class="edit-input" value="{{ game }}" placeholder="Nom du jeu" maxlength="50" style="max-width:160px;" onchange="updateGameKey(this)">
-                                                <button type="button" class="btn-remove" onclick="this.closest('.game-row').remove();"><i class="fas fa-trash"></i></button>
-                                            </div>
-                                        {% endfor %}
-                                    {% endif %}
-                                </div>
-                                <button type="button" class="btn-add-game" id="btnAddGame"><i class="fas fa-plus"></i> Ajouter un jeu</button>
-                            </div>
+                        <div class="ep-group">
+                            <label class="ep-label"><i class="fab fa-steam" style="color:#c2a952;"></i> Steam</label>
+                            <input type="text" name="steam_username" class="ep-input" value="{{ app.user.steamUsername }}" maxlength="100" placeholder="SteamUser123">
                         </div>
 
-                        {# ── Visibilite ── #}
-                        <div class="edit-card">
-                            <h3 class="edit-card__title"><i class="fas fa-eye"></i> Visibilite du profil</h3>
-                            <p style="font-size:13px;color:#8b949e;margin-bottom:16px;">Choisissez quelles informations sont visibles sur votre profil public.</p>
-
-                            {% set vis = app.user.profileVisibility %}
-
-                            <div class="edit-toggle">
-                                <input type="checkbox" name="vis_email" value="1" id="visEmail" {{ vis.email|default(false) ? 'checked' : '' }}>
-                                <label for="visEmail"><i class="fas fa-envelope" style="color:#f0a030;"></i> Adresse email</label>
-                            </div>
-                            <div class="edit-toggle">
-                                <input type="checkbox" name="vis_discord" value="1" id="visDiscord" {{ vis.discord|default(false) ? 'checked' : '' }}>
-                                <label for="visDiscord"><i class="fab fa-discord" style="color:#5865f2;"></i> Pseudo Discord</label>
-                            </div>
-                            <div class="edit-toggle">
-                                <input type="checkbox" name="vis_steam" value="1" id="visSteam" {{ vis.steam|default(false) ? 'checked' : '' }}>
-                                <label for="visSteam"><i class="fab fa-steam"></i> Pseudo Steam</label>
-                            </div>
-                            <div class="edit-toggle">
-                                <input type="checkbox" name="vis_twitch" value="1" id="visTwitch" {{ vis.twitch|default(false) ? 'checked' : '' }}>
-                                <label for="visTwitch"><i class="fab fa-twitch" style="color:#9146ff;"></i> Pseudo Twitch</label>
-                            </div>
-                            <div class="edit-toggle">
-                                <input type="checkbox" name="vis_games" value="1" id="visGames" {{ vis.games|default(false) ? 'checked' : '' }}>
-                                <label for="visGames"><i class="fas fa-gamepad" style="color:#45f882;"></i> Pseudos de jeux</label>
-                            </div>
-                            <div class="edit-toggle">
-                                <input type="checkbox" name="vis_servers" value="1" id="visServers" {{ vis.servers|default(true) ? 'checked' : '' }}>
-                                <label for="visServers"><i class="fas fa-server" style="color:#45f882;"></i> Mes serveurs</label>
-                            </div>
+                        <div class="ep-group">
+                            <label class="ep-label"><i class="fab fa-twitch" style="color:#9146ff;"></i> Twitch</label>
+                            <input type="text" name="twitch_username" class="ep-input" value="{{ app.user.twitchUsername }}" maxlength="100" placeholder="TwitchStreamer">
                         </div>
 
-                        <div style="display:flex;gap:12px;">
-                            <button type="submit" class="btn-action btn-action--primary"><i class="fas fa-save"></i> Enregistrer</button>
-                            <a href="{{ path('profile_show', {username: app.user.username}) }}" class="btn-action" style="background:#2a2a3e;color:#8b949e;">Annuler</a>
+                        <div class="ep-group" style="margin-bottom:0;">
+                            <label class="ep-label"><i class="fas fa-gamepad" style="color:#45f882;"></i> Pseudos de jeux</label>
+                            <div id="gameUsernamesContainer">
+                                {% if app.user.gameUsernames %}
+                                    {% for game, name in app.user.gameUsernames %}
+                                        <div class="ep-game-row">
+                                            <input type="text" name="game_usernames[{{ game }}]" class="ep-input" value="{{ name }}" placeholder="Pseudo" maxlength="100" data-game="{{ game }}">
+                                            <input type="text" class="ep-input" value="{{ game }}" placeholder="Nom du jeu" maxlength="50" style="max-width:160px;" onchange="updateGameKey(this)">
+                                            <button type="button" class="ep-btn-rm" onclick="this.closest('.ep-game-row').remove();">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                            <button type="button" class="ep-btn-add" id="btnAddGame">
+                                <i class="fas fa-plus"></i> Ajouter un jeu
+                            </button>
                         </div>
-                    </form>
+                    </div>
 
-                </div>
+                    {# ── Visibilité ── #}
+                    <div class="ep-card">
+                        <div class="ep-card__title"><i class="fas fa-eye"></i> Visibilité du profil</div>
+                        <p style="font-size:13px;color:#8b949e;margin-bottom:16px;line-height:1.6;">
+                            Choisissez quelles informations sont visibles sur votre profil public.
+                        </p>
+
+                        {% set vis = app.user.profileVisibility %}
+
+                        <label class="ep-toggle">
+                            <input type="checkbox" name="vis_discord" value="1" id="visDiscord" {{ vis.discord|default(false) ? 'checked' : '' }}>
+                            <span class="ep-toggle-label"><i class="fab fa-discord" style="color:#5865f2;"></i> Pseudo Discord</span>
+                            <span class="ep-toggle-hint">Public</span>
+                        </label>
+                        <label class="ep-toggle">
+                            <input type="checkbox" name="vis_steam" value="1" id="visSteam" {{ vis.steam|default(false) ? 'checked' : '' }}>
+                            <span class="ep-toggle-label"><i class="fab fa-steam" style="color:#c2a952;"></i> Pseudo Steam</span>
+                            <span class="ep-toggle-hint">Public</span>
+                        </label>
+                        <label class="ep-toggle">
+                            <input type="checkbox" name="vis_twitch" value="1" id="visTwitch" {{ vis.twitch|default(false) ? 'checked' : '' }}>
+                            <span class="ep-toggle-label"><i class="fab fa-twitch" style="color:#9146ff;"></i> Pseudo Twitch</span>
+                            <span class="ep-toggle-hint">Public</span>
+                        </label>
+                        <label class="ep-toggle">
+                            <input type="checkbox" name="vis_email" value="1" id="visEmail" {{ vis.email|default(false) ? 'checked' : '' }}>
+                            <span class="ep-toggle-label"><i class="fas fa-envelope" style="color:#f0a030;"></i> Adresse email</span>
+                            <span class="ep-toggle-hint">Public</span>
+                        </label>
+                        <label class="ep-toggle">
+                            <input type="checkbox" name="vis_games" value="1" id="visGames" {{ vis.games|default(false) ? 'checked' : '' }}>
+                            <span class="ep-toggle-label"><i class="fas fa-gamepad" style="color:#45f882;"></i> Pseudos de jeux</span>
+                            <span class="ep-toggle-hint">Public</span>
+                        </label>
+                        <label class="ep-toggle">
+                            <input type="checkbox" name="vis_servers" value="1" id="visServers" {{ vis.servers|default(true) ? 'checked' : '' }}>
+                            <span class="ep-toggle-label"><i class="fas fa-server" style="color:#45f882;"></i> Mes serveurs</span>
+                            <span class="ep-toggle-hint">Public</span>
+                        </label>
+                    </div>
+
+                    {# ── Actions ── #}
+                    <div style="display:flex;gap:12px;padding-top:4px;">
+                        <button type="submit" class="ep-btn ep-btn--primary">
+                            <i class="fas fa-save"></i> Enregistrer les modifications
+                        </button>
+                        <a href="{{ path('profile_show', {username: app.user.username}) }}" class="ep-btn ep-btn--outline">
+                            Annuler
+                        </a>
+                    </div>
+
+                </form>
+
             </div>
-        </div>
-    </section>
 
+            {# ══════════ SIDEBAR ══════════ #}
+            <div class="col-lg-4">
+
+                {# ── Aperçu des réseaux ── #}
+                <div class="ep-sidebar-card">
+                    <div class="ep-sidebar-title"><i class="fas fa-plug"></i> Réseaux connectés</div>
+
+                    {% if app.user.discordUsername %}
+                        <div class="ep-preview-item">
+                            <div class="ep-preview-icon" style="background:#5865f2;"><i class="fab fa-discord"></i></div>
+                            <span class="ep-preview-name">{{ app.user.discordUsername }}</span>
+                        </div>
+                    {% else %}
+                        <div class="ep-preview-item">
+                            <div class="ep-preview-icon" style="background:rgba(88,101,242,0.2);"><i class="fab fa-discord" style="color:#5865f2;opacity:.5;"></i></div>
+                            <span class="ep-preview-empty">Discord non renseigné</span>
+                        </div>
+                    {% endif %}
+
+                    {% if app.user.steamUsername %}
+                        <div class="ep-preview-item">
+                            <div class="ep-preview-icon" style="background:#2a475e;"><i class="fab fa-steam"></i></div>
+                            <span class="ep-preview-name">{{ app.user.steamUsername }}</span>
+                        </div>
+                    {% else %}
+                        <div class="ep-preview-item">
+                            <div class="ep-preview-icon" style="background:rgba(42,71,94,0.3);"><i class="fab fa-steam" style="color:#c2a952;opacity:.5;"></i></div>
+                            <span class="ep-preview-empty">Steam non renseigné</span>
+                        </div>
+                    {% endif %}
+
+                    {% if app.user.twitchUsername %}
+                        <div class="ep-preview-item">
+                            <div class="ep-preview-icon" style="background:#9146ff;"><i class="fab fa-twitch"></i></div>
+                            <span class="ep-preview-name">{{ app.user.twitchUsername }}</span>
+                        </div>
+                    {% else %}
+                        <div class="ep-preview-item">
+                            <div class="ep-preview-icon" style="background:rgba(145,70,255,0.2);"><i class="fab fa-twitch" style="color:#9146ff;opacity:.5;"></i></div>
+                            <span class="ep-preview-empty">Twitch non renseigné</span>
+                        </div>
+                    {% endif %}
+                </div>
+
+                {# ── Photo de profil ── #}
+                <div class="ep-sidebar-card">
+                    <div class="ep-sidebar-title"><i class="fas fa-camera"></i> Photo de profil</div>
+                    <div class="ep-avatar-zone">
+                        <div class="ep-avatar-preview" id="sideAvatarPreview">
+                            {% if app.user.avatar starts with 'http' %}
+                                <img src="{{ app.user.avatar }}" alt="Avatar">
+                            {% elseif app.user.avatar %}
+                                <img src="{{ asset('uploads/avatars/' ~ app.user.avatar) }}" alt="Avatar">
+                            {% else %}
+                                <i class="fas fa-user"></i>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <label for="avatarInput" class="ep-avatar-upload-btn">
+                                <i class="fas fa-upload"></i> Changer
+                            </label>
+                            <div class="ep-avatar-hint" id="avatarFileName">JPG, PNG, GIF, WebP — 2 Mo max</div>
+                        </div>
+                    </div>
+                </div>
+
+                {# ── Raccourcis ── #}
+                <div class="ep-sidebar-card">
+                    <div class="ep-sidebar-title"><i class="fas fa-bolt"></i> Raccourcis</div>
+                    <div style="display:flex;flex-direction:column;gap:8px;">
+                        <a href="{{ path('profile_show', {username: app.user.username}) }}" class="ep-btn ep-btn--primary" style="justify-content:flex-start;">
+                            <i class="fas fa-user"></i> Voir mon profil public
+                        </a>
+                        <a href="{{ path('user_settings') }}" class="ep-btn ep-btn--outline" style="justify-content:flex-start;">
+                            <i class="fas fa-lock"></i> Sécurité & 2FA
+                        </a>
+                        <a href="{{ path('user_servers_list') }}" class="ep-btn ep-btn--outline" style="justify-content:flex-start;">
+                            <i class="fas fa-server"></i> Mes serveurs
+                        </a>
+                        <a href="{{ path('user_recruitment_list') }}" class="ep-btn ep-btn--outline" style="justify-content:flex-start;">
+                            <i class="fas fa-users"></i> Mes recrutements
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</section>
 {% endblock %}
 
 {% block javascripts %}
 <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Avatar upload — auto-submit on file pick
-    var avatarInput = document.getElementById('avatarInput');
-    var avatarForm  = document.getElementById('avatarForm');
-    var avatarPreview = document.getElementById('avatarPreview');
+document.addEventListener('DOMContentLoaded', function () {
+
+    // ── Avatar — preview + auto-submit ──
+    var avatarInput   = document.getElementById('avatarInput');
+    var avatarForm    = document.getElementById('avatarForm');
+    var heroPreview   = document.getElementById('heroAvatarPreview');
+    var sidePreview   = document.getElementById('sideAvatarPreview');
     var avatarFileName = document.getElementById('avatarFileName');
+
     if (avatarInput) {
-        avatarInput.addEventListener('change', function() {
-            if (this.files && this.files[0]) {
-                avatarFileName.textContent = this.files[0].name;
-                var reader = new FileReader();
-                reader.onload = function(e) {
-                    avatarPreview.innerHTML = '<img src="' + e.target.result + '" alt="Preview">';
-                };
-                reader.readAsDataURL(this.files[0]);
-                avatarForm.submit();
-            }
+        avatarInput.addEventListener('change', function () {
+            if (!this.files || !this.files[0]) return;
+            var file = this.files[0];
+            avatarFileName.textContent = file.name;
+
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                var img = '<img src="' + e.target.result + '" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+                heroPreview.innerHTML = img;
+                sidePreview.innerHTML = '<img src="' + e.target.result + '" alt="Avatar" style="width:100%;height:100%;object-fit:cover;">';
+            };
+            reader.readAsDataURL(file);
+            avatarForm.submit();
         });
     }
 
-    // Quill editor for bio
+    // ── Quill bio editor ──
     var quill = new Quill('#bioEditor', {
         theme: 'snow',
-        placeholder: 'Presentez-vous en quelques mots...',
+        placeholder: 'Présentez-vous en quelques mots...',
         modules: {
             toolbar: [
                 ['bold', 'italic', 'underline'],
-                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                [{ list: 'ordered' }, { list: 'bullet' }],
                 ['link'],
                 ['clean']
             ]
         }
     });
 
-    // Load existing bio
     var bioContent = document.getElementById('bioContent');
     if (bioContent.value) {
         quill.root.innerHTML = bioContent.value;
     }
 
-    // Sync on form submit
-    quill.root.closest('form').addEventListener('submit', function() {
+    document.getElementById('editForm').addEventListener('submit', function () {
         var html = quill.root.innerHTML;
         bioContent.value = (html === '<p><br></p>') ? '' : html;
     });
 
-    // Add game username row
+    // ── Game username rows ──
     var container = document.getElementById('gameUsernamesContainer');
-    document.getElementById('btnAddGame').addEventListener('click', function() {
+    document.getElementById('btnAddGame').addEventListener('click', function () {
         var idx = Date.now();
         var row = document.createElement('div');
-        row.className = 'game-row';
-        row.innerHTML = '<input type="text" name="game_usernames[game_' + idx + ']" class="edit-input" placeholder="Pseudo" maxlength="100">' +
-            '<input type="text" class="edit-input" placeholder="Nom du jeu" maxlength="50" style="max-width:160px;" onchange="updateGameKey(this)">' +
-            '<button type="button" class="btn-remove" onclick="this.closest(\'.game-row\').remove();"><i class="fas fa-trash"></i></button>';
+        row.className = 'ep-game-row';
+        row.innerHTML =
+            '<input type="text" name="game_usernames[game_' + idx + ']" class="ep-input" placeholder="Pseudo" maxlength="100">' +
+            '<input type="text" class="ep-input" placeholder="Nom du jeu" maxlength="50" style="max-width:160px;" onchange="updateGameKey(this)">' +
+            '<button type="button" class="ep-btn-rm" onclick="this.closest(\'.ep-game-row\').remove();">' +
+                '<i class="fas fa-trash-alt"></i>' +
+            '</button>';
         container.appendChild(row);
+        row.querySelector('input').focus();
     });
 });
 
 function updateGameKey(input) {
-    var nameInput = input.closest('.game-row').querySelector('input[name^="game_usernames"]');
+    var nameInput = input.closest('.ep-game-row').querySelector('input[name^="game_usernames"]');
     var gameName = input.value.trim().replace(/[^a-zA-Z0-9_\- ]/g, '').substring(0, 50);
-    if (gameName) {
-        var value = nameInput.value;
+    if (gameName && nameInput) {
+        var val = nameInput.value;
         nameInput.name = 'game_usernames[' + gameName + ']';
-        nameInput.value = value;
+        nameInput.value = val;
     }
 }
 </script>

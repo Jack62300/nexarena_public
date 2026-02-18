@@ -3,7 +3,7 @@
 namespace App\Controller\Admin;
 
 use App\Entity\ServerType;
-use App\Repository\CategoryRepository;
+use App\Form\Admin\ServerTypeFormType;
 use App\Repository\ServerTypeRepository;
 use App\Service\SlugService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -24,58 +24,53 @@ class ServerTypeController extends AbstractController
     }
 
     #[Route('', name: 'list')]
-    public function list(ServerTypeRepository $repo, CategoryRepository $categoryRepo): Response
+    public function list(ServerTypeRepository $repo): Response
     {
         return $this->render('admin/server_types/list.html.twig', [
             'serverTypes' => $repo->findBy([], ['position' => 'ASC']),
-            'categories' => $categoryRepo->findBy([], ['position' => 'ASC']),
         ]);
     }
 
     #[Route('/new', name: 'new')]
-    public function new(Request $request, CategoryRepository $categoryRepo): Response
+    public function new(Request $request): Response
     {
-        if ($request->isMethod('POST')) {
-            if (!$this->isCsrfTokenValid('server_type_form', $request->request->get('_token'))) {
-                $this->addFlash('error', 'Token CSRF invalide.');
-                return $this->redirectToRoute('admin_server_types_new');
-            }
+        $serverType = new ServerType();
+        $form = $this->createForm(ServerTypeFormType::class, $serverType);
+        $form->handleRequest($request);
 
-            $serverType = new ServerType();
-            $this->handleForm($serverType, $request);
+        if ($form->isSubmitted() && $form->isValid()) {
+            $serverType->setSlug($this->slugService->slugify($serverType->getName()));
 
             $this->em->persist($serverType);
             $this->em->flush();
 
-            $this->addFlash('success', 'Type de serveur cree avec succes.');
+            $this->addFlash('success', 'Type de serveur créé avec succès.');
             return $this->redirectToRoute('admin_server_types_list');
         }
 
         return $this->render('admin/server_types/form.html.twig', [
             'serverType' => null,
-            'categories' => $categoryRepo->findBy([], ['position' => 'ASC']),
+            'form' => $form,
         ]);
     }
 
     #[Route('/{id}/edit', name: 'edit')]
-    public function edit(ServerType $serverType, Request $request, CategoryRepository $categoryRepo): Response
+    public function edit(ServerType $serverType, Request $request): Response
     {
-        if ($request->isMethod('POST')) {
-            if (!$this->isCsrfTokenValid('server_type_form', $request->request->get('_token'))) {
-                $this->addFlash('error', 'Token CSRF invalide.');
-                return $this->redirectToRoute('admin_server_types_edit', ['id' => $serverType->getId()]);
-            }
+        $form = $this->createForm(ServerTypeFormType::class, $serverType);
+        $form->handleRequest($request);
 
-            $this->handleForm($serverType, $request);
+        if ($form->isSubmitted() && $form->isValid()) {
+            $serverType->setSlug($this->slugService->slugify($serverType->getName()));
             $this->em->flush();
 
-            $this->addFlash('success', 'Type de serveur modifie avec succes.');
+            $this->addFlash('success', 'Type de serveur modifié avec succès.');
             return $this->redirectToRoute('admin_server_types_list');
         }
 
         return $this->render('admin/server_types/form.html.twig', [
             'serverType' => $serverType,
-            'categories' => $categoryRepo->findBy([], ['position' => 'ASC']),
+            'form' => $form,
         ]);
     }
 
@@ -86,24 +81,9 @@ class ServerTypeController extends AbstractController
         if ($this->isCsrfTokenValid('delete_' . $serverType->getId(), $request->request->get('_token'))) {
             $this->em->remove($serverType);
             $this->em->flush();
-            $this->addFlash('success', 'Type de serveur supprime.');
+            $this->addFlash('success', 'Type de serveur supprimé.');
         }
 
         return $this->redirectToRoute('admin_server_types_list');
-    }
-
-    private function handleForm(ServerType $serverType, Request $request): void
-    {
-        $name = $request->request->get('name', '');
-        $serverType->setName($name);
-        $serverType->setSlug($this->slugService->slugify($name));
-        $serverType->setIsActive($request->request->getBoolean('is_active'));
-        $serverType->setPosition((int) $request->request->get('position', 0));
-
-        $categoryId = $request->request->get('category_id');
-        if ($categoryId) {
-            $category = $this->em->getRepository(\App\Entity\Category::class)->find((int) $categoryId);
-            $serverType->setCategory($category);
-        }
     }
 }

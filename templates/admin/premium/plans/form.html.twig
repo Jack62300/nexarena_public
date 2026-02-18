@@ -24,140 +24,122 @@
         font-size: 14px;
         transition: border-color 0.2s;
     }
-    .form-control-admin:focus {
-        outline: none;
-        border-color: var(--accent);
-    }
-    .form-check-admin {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        cursor: pointer;
-    }
-    .form-check-admin input[type="checkbox"] {
-        width: 18px;
-        height: 18px;
-        accent-color: var(--accent);
-    }
-    .icon-preview {
-        display: inline-block;
-        padding: 8px;
-        background: rgba(255,255,255,0.05);
-        border-radius: 8px;
-        margin-bottom: 10px;
-    }
-    .icon-preview img {
-        height: 48px;
-        width: auto;
-    }
-    .form-row {
-        display: flex;
-        gap: 20px;
-    }
-    .form-row .form-group {
-        flex: 1;
-    }
+    .form-control-admin:focus { outline: none; border-color: var(--accent); }
+    textarea.form-control-admin { resize: vertical; }
+    .form-check-admin { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+    .form-check-admin input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); }
+    .icon-preview { width: 64px; height: 64px; object-fit: contain; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 8px; }
+    .info-box { background: rgba(69,248,130,0.07); border: 1px solid rgba(69,248,130,0.2); border-radius: 8px; padding: 12px 16px; font-size: 13px; color: var(--text-secondary); margin-bottom: 15px; }
 {% endblock %}
 
 {% block admin_body %}
-    <div>
+    <div style="max-width:800px;">
         <div class="admin-table">
             <div class="admin-table__header">
-                <h3>{{ plan ? 'Modifier le plan premium' : 'Creer un plan premium' }}</h3>
+                <h3>{{ plan ? 'Modifier le plan' : 'Nouveau plan premium' }}</h3>
                 <a href="{{ path('admin_premium_plans_list') }}" class="btn-admin btn-admin--outline btn-admin--sm">
                     <i class="fas fa-arrow-left"></i> Retour
                 </a>
             </div>
             <div style="padding:25px;">
-                <form method="post" enctype="multipart/form-data">
-                    <input type="hidden" name="_token" value="{{ csrf_token('premium_plan_form') }}">
+                {{ form_start(form, {'attr': {'enctype': 'multipart/form-data'}}) }}
 
                     <div class="form-group">
-                        <label for="name">Nom du plan</label>
-                        <input type="text" id="name" name="name" class="form-control-admin" value="{{ plan ? plan.name : '' }}" required placeholder="Ex: Pack Starter, Pack Pro...">
+                        <label for="{{ form.name.vars.id }}">Nom du plan</label>
+                        {{ form_widget(form.name, {'attr': {'class': 'form-control-admin'}}) }}
+                        {{ form_errors(form.name) }}
                     </div>
 
                     <div class="form-group">
-                        <label for="description">Description</label>
-                        <textarea id="description" name="description" class="form-control-admin" rows="3" required placeholder="Description affichee sur la page premium">{{ plan ? plan.description : '' }}</textarea>
+                        <label for="{{ form.description.vars.id }}">Description</label>
+                        {{ form_widget(form.description, {'attr': {'class': 'form-control-admin', 'rows': 4}}) }}
+                        {{ form_errors(form.description) }}
                     </div>
 
-                    <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border-color);border-radius:8px;padding:16px;margin-bottom:20px;">
-                        <div style="font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">
-                            <i class="fas fa-info-circle" style="color:var(--accent);"></i> Renseignez au moins un prix. Laissez a 0 pour desactiver un mode de paiement.
-                        </div>
-                        <div class="form-row">
+                    <div class="info-box">
+                        <i class="fas fa-info-circle"></i>
+                        Vous devez renseigner au moins un prix (PayPal ou NexBits).
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-4">
                             <div class="form-group">
-                                <label for="price"><i class="fab fa-paypal" style="color:#0070ba;"></i> Prix PayPal</label>
-                                <input type="number" id="price" name="price" class="form-control-admin" value="{{ plan ? plan.price : '0.00' }}" step="0.01" min="0">
-                                <small style="color:var(--text-secondary);font-size:12px;">0 = pas de paiement PayPal</small>
-                            </div>
-                            <div class="form-group">
-                                <label for="currency">Devise</label>
-                                <select id="currency" name="currency" class="form-control-admin">
-                                    <option value="EUR" {{ (plan and plan.currency == 'EUR') or not plan ? 'selected' : '' }}>EUR</option>
-                                    <option value="USD" {{ plan and plan.currency == 'USD' ? 'selected' : '' }}>USD</option>
-                                    <option value="GBP" {{ plan and plan.currency == 'GBP' ? 'selected' : '' }}>GBP</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="nexbits_price"><i class="fas fa-coins" style="color:#ffd700;"></i> Prix en NexBits</label>
-                                <input type="number" id="nexbits_price" name="nexbits_price" class="form-control-admin" value="{{ plan ? plan.nexbitsPrice : 0 }}" min="0">
-                                <small style="color:var(--text-secondary);font-size:12px;">0 = pas de paiement en NexBits</small>
+                                <label for="{{ form.price.vars.id }}">Prix PayPal</label>
+                                {{ form_widget(form.price, {'attr': {'class': 'form-control-admin', 'placeholder': '0.00'}}) }}
+                                {{ form_errors(form.price) }}
                             </div>
                         </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="{{ form.currency.vars.id }}">Devise</label>
+                                {{ form_widget(form.currency, {'attr': {'class': 'form-control-admin'}}) }}
+                                {{ form_errors(form.currency) }}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="{{ form.nexbitsPrice.vars.id }}">Prix NexBits</label>
+                                {{ form_widget(form.nexbitsPrice, {'attr': {'class': 'form-control-admin', 'placeholder': '0'}}) }}
+                                {{ form_errors(form.nexbitsPrice) }}
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="tokens_given"><i class="fas fa-coins" style="color:#ffd700;"></i> NexBits donnes</label>
-                            <input type="number" id="tokens_given" name="tokens_given" class="form-control-admin" value="{{ plan ? plan.tokensGiven : 0 }}" min="0" required>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.tokensGiven.vars.id }}">NexBits offerts</label>
+                                {{ form_widget(form.tokensGiven, {'attr': {'class': 'form-control-admin'}}) }}
+                                {{ form_errors(form.tokensGiven) }}
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="boost_tokens_given"><i class="fas fa-bolt" style="color:#ff6b35;"></i> NexBoost donnes</label>
-                            <input type="number" id="boost_tokens_given" name="boost_tokens_given" class="form-control-admin" value="{{ plan ? plan.boostTokensGiven : 0 }}" min="0" required>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.boostTokensGiven.vars.id }}">NexBoost offerts</label>
+                                {{ form_widget(form.boostTokensGiven, {'attr': {'class': 'form-control-admin'}}) }}
+                                {{ form_errors(form.boostTokensGiven) }}
+                            </div>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label for="plan_type">Type de plan</label>
-                        <select id="plan_type" name="plan_type" class="form-control-admin">
-                            <option value="default" {{ (plan and plan.planType == 'custom') ? '' : 'selected' }}>Par defaut (Pack de recharge)</option>
-                            <option value="custom" {{ plan and plan.planType == 'custom' ? 'selected' : '' }}>Personnalise (Offre speciale)</option>
-                        </select>
-                        <small style="color:var(--text-secondary);font-size:12px;">"Par defaut" = affiches dans les packs de recharge. "Personnalise" = affiches dans une section separee.</small>
+                        <label for="{{ form.planType.vars.id }}">Type de plan</label>
+                        {{ form_widget(form.planType, {'attr': {'class': 'form-control-admin'}}) }}
+                        {{ form_errors(form.planType) }}
                     </div>
 
                     <div class="form-group">
-                        <label for="icon">Icone du plan</label>
+                        <label for="{{ form.iconFile.vars.id }}">Icône</label>
                         {% if plan and plan.iconFileName %}
-                            <div class="icon-preview">
-                                <img src="{{ asset('uploads/plans/' ~ plan.iconFileName) }}" alt="{{ plan.name }}">
-                            </div>
+                            <img src="{{ asset('uploads/plans/' ~ plan.iconFileName) }}" alt="" class="icon-preview">
                         {% endif %}
-                        <input type="file" id="icon" name="icon" class="form-control-admin" accept="image/*">
-                        <small style="color:var(--text-secondary);font-size:12px;">PNG, JPG, SVG ou WebP.</small>
+                        {{ form_widget(form.iconFile, {'attr': {'style': 'color:var(--text-secondary);'}}) }}
+                        {{ form_errors(form.iconFile) }}
+                        <div style="font-size:11px;color:var(--text-secondary);margin-top:4px;">PNG, JPG, GIF, SVG ou WebP - 2 Mo max</div>
                     </div>
 
                     <div class="form-group">
-                        <label for="position">Position (ordre d'affichage)</label>
-                        <input type="number" id="position" name="position" class="form-control-admin" value="{{ plan ? plan.position : 0 }}" min="0">
+                        <label for="{{ form.position.vars.id }}">Position</label>
+                        {{ form_widget(form.position, {'attr': {'class': 'form-control-admin'}}) }}
+                        {{ form_errors(form.position) }}
                     </div>
 
                     <div class="form-group">
                         <label class="form-check-admin">
-                            <input type="checkbox" name="is_active" value="1" {{ (plan is null or plan.isActive) ? 'checked' : '' }}>
-                            Actif
+                            {{ form_widget(form.isActive) }}
+                            Plan actif
                         </label>
+                        {{ form_errors(form.isActive) }}
                     </div>
 
                     <div style="display:flex;gap:10px;padding-top:10px;">
                         <button type="submit" class="btn-admin btn-admin--primary">
-                            <i class="fas fa-save"></i> {{ plan ? 'Enregistrer' : 'Creer' }}
+                            <i class="fas fa-save"></i> {{ plan ? 'Enregistrer' : 'Créer' }}
                         </button>
                         <a href="{{ path('admin_premium_plans_list') }}" class="btn-admin btn-admin--outline">Annuler</a>
                     </div>
-                </form>
+
+                {{ form_end(form) }}
             </div>
         </div>
     </div>

@@ -24,43 +24,13 @@
         font-size: 14px;
         transition: border-color 0.2s;
     }
-    .form-control-admin:focus {
-        outline: none;
-        border-color: var(--accent);
-    }
+    .form-control-admin:focus { outline: none; border-color: var(--accent); }
     textarea.form-control-admin { min-height: 80px; resize: vertical; }
-    .form-check-admin {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        cursor: pointer;
-    }
-    .form-check-admin input[type="checkbox"] {
-        width: 18px;
-        height: 18px;
-        accent-color: var(--accent);
-    }
-    .info-card {
-        background: var(--bg-darker);
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        padding: 16px;
-        margin-bottom: 20px;
-    }
-    .info-card h5 {
-        font-size: 13px;
-        color: var(--text-secondary);
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        margin-bottom: 12px;
-    }
-    .info-row {
-        display: flex;
-        justify-content: space-between;
-        padding: 6px 0;
-        font-size: 13px;
-        border-bottom: 1px solid var(--border-color);
-    }
+    .form-check-admin { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+    .form-check-admin input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); }
+    .info-card { background: var(--bg-darker); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; margin-bottom: 20px; }
+    .info-card h5 { font-size: 13px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+    .info-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; border-bottom: 1px solid var(--border-color); }
     .info-row:last-child { border-bottom: none; }
     .info-row span:first-child { color: var(--text-secondary); }
 {% endblock %}
@@ -76,36 +46,40 @@
                     </a>
                 </div>
                 <div style="padding:25px;">
-                    <form method="post">
-                        <input type="hidden" name="_token" value="{{ csrf_token('admin_server_form') }}">
+                    {{ form_start(form) }}
 
                         <div class="form-group">
-                            <label for="name">Nom du serveur</label>
-                            <input type="text" id="name" name="name" class="form-control-admin" value="{{ server.name }}" required>
+                            <label for="{{ form.name.vars.id }}">Nom du serveur</label>
+                            {{ form_widget(form.name, {'attr': {'class': 'form-control-admin'}}) }}
+                            {{ form_errors(form.name) }}
                         </div>
 
                         <div class="form-group">
-                            <label for="short_description">Description courte</label>
-                            <input type="text" id="short_description" name="short_description" class="form-control-admin" value="{{ server.shortDescription }}" maxlength="255">
+                            <label for="{{ form.shortDescription.vars.id }}">Description courte</label>
+                            {{ form_widget(form.shortDescription, {'attr': {'class': 'form-control-admin', 'maxlength': 255}}) }}
+                            {{ form_errors(form.shortDescription) }}
                         </div>
 
                         <div class="row g-3">
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label for="ip">Adresse IP</label>
-                                    <input type="text" id="ip" name="ip" class="form-control-admin" value="{{ server.ip }}">
+                                    <label for="{{ form.ip.vars.id }}">Adresse IP</label>
+                                    {{ form_widget(form.ip, {'attr': {'class': 'form-control-admin'}}) }}
+                                    {{ form_errors(form.ip) }}
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label for="port">Port</label>
-                                    <input type="number" id="port" name="port" class="form-control-admin" value="{{ server.port }}">
+                                    <label for="{{ form.port.vars.id }}">Port</label>
+                                    {{ form_widget(form.port, {'attr': {'class': 'form-control-admin'}}) }}
+                                    {{ form_errors(form.port) }}
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label for="slots">Slots</label>
-                                    <input type="number" id="slots" name="slots" class="form-control-admin" value="{{ server.slots }}" min="0">
+                                    <label for="{{ form.slots.vars.id }}">Slots</label>
+                                    {{ form_widget(form.slots, {'attr': {'class': 'form-control-admin'}}) }}
+                                    {{ form_errors(form.slots) }}
                                 </div>
                             </div>
                         </div>
@@ -113,46 +87,52 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="website">Site web</label>
-                                    <input type="url" id="website" name="website" class="form-control-admin" value="{{ server.website }}">
+                                    <label for="{{ form.website.vars.id }}">Site web</label>
+                                    {{ form_widget(form.website, {'attr': {'class': 'form-control-admin'}}) }}
+                                    {{ form_errors(form.website) }}
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="discord_url">Discord</label>
-                                    <input type="url" id="discord_url" name="discord_url" class="form-control-admin" value="{{ server.discordUrl }}">
+                                    <label for="{{ form.discordUrl.vars.id }}">Discord</label>
+                                    {{ form_widget(form.discordUrl, {'attr': {'class': 'form-control-admin'}}) }}
+                                    {{ form_errors(form.discordUrl) }}
                                 </div>
                             </div>
                         </div>
 
                         <div class="form-group">
-                            <label for="twitch_channel">Chaine Twitch</label>
-                            <input type="text" id="twitch_channel" name="twitch_channel" class="form-control-admin" value="{{ server.twitchChannel }}" placeholder="nom_de_la_chaine">
+                            <label for="{{ form.twitchChannel.vars.id }}">Chaîne Twitch</label>
+                            {{ form_widget(form.twitchChannel, {'attr': {'class': 'form-control-admin', 'placeholder': 'nom_de_la_chaine'}}) }}
+                            {{ form_errors(form.twitchChannel) }}
                         </div>
 
                         <div class="row g-3">
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label class="form-check-admin">
-                                        <input type="checkbox" name="is_active" value="1" {{ server.isActive ? 'checked' : '' }}>
+                                        {{ form_widget(form.isActive) }}
                                         Serveur actif
                                     </label>
+                                    {{ form_errors(form.isActive) }}
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label class="form-check-admin">
-                                        <input type="checkbox" name="is_approved" value="1" {{ server.isApproved ? 'checked' : '' }}>
-                                        Approuve
+                                        {{ form_widget(form.isApproved) }}
+                                        Approuvé
                                     </label>
+                                    {{ form_errors(form.isApproved) }}
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label class="form-check-admin">
-                                        <input type="checkbox" name="is_private" value="1" {{ server.isPrivate ? 'checked' : '' }}>
-                                        Serveur prive
+                                        {{ form_widget(form.isPrivate) }}
+                                        Serveur privé
                                     </label>
+                                    {{ form_errors(form.isPrivate) }}
                                 </div>
                             </div>
                         </div>
@@ -163,7 +143,8 @@
                             </button>
                             <a href="{{ path('admin_servers_list') }}" class="btn-admin btn-admin--outline">Annuler</a>
                         </div>
-                    </form>
+
+                    {{ form_end(form) }}
                 </div>
             </div>
         </div>
@@ -176,15 +157,15 @@
                     <span>#{{ server.id }}</span>
                 </div>
                 <div class="info-row">
-                    <span>Proprietaire</span>
+                    <span>Propriétaire</span>
                     <span>{{ server.owner ? server.owner.username : '—' }}</span>
                 </div>
                 <div class="info-row">
-                    <span>Categorie</span>
+                    <span>Catégorie</span>
                     <span>{{ server.category ? server.category.name : '—' }}</span>
                 </div>
                 <div class="info-row">
-                    <span>Sous-categorie</span>
+                    <span>Sous-catégorie</span>
                     <span>{{ server.gameCategory ? server.gameCategory.name : '—' }}</span>
                 </div>
                 <div class="info-row">
@@ -192,11 +173,11 @@
                     <span>{{ server.serverType ? server.serverType.name : '—' }}</span>
                 </div>
                 <div class="info-row">
-                    <span>Cree le</span>
+                    <span>Créé le</span>
                     <span>{{ server.createdAt ? server.createdAt|date('d/m/Y H:i') : '—' }}</span>
                 </div>
                 <div class="info-row">
-                    <span>Modifie le</span>
+                    <span>Modifié le</span>
                     <span>{{ server.updatedAt ? server.updatedAt|date('d/m/Y H:i') : '—' }}</span>
                 </div>
             </div>
@@ -215,16 +196,16 @@
                     <span>Webhook</span>
                     <span>
                         {% if server.webhookEnabled %}
-                            <span style="color:var(--success);">Active</span>
+                            <span style="color:var(--success);">Activé</span>
                         {% else %}
-                            <span style="color:var(--text-secondary);">Desactive</span>
+                            <span style="color:var(--text-secondary);">Désactivé</span>
                         {% endif %}
                     </span>
                 </div>
             </div>
 
             <div class="info-card">
-                <h5>Cle API</h5>
+                <h5>Clé API</h5>
                 <div style="font-family:monospace;font-size:11px;word-break:break-all;color:var(--accent);padding:8px;background:var(--bg-dark);border-radius:4px;">
                     {{ server.apiToken }}
                 </div>

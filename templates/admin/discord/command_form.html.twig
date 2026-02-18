@@ -1,7 +1,7 @@
 {% extends 'admin/base.html.twig' %}
 
-{% block page_title %}{{ command is defined and command ? 'Modifier la commande' : 'Nouvelle commande' }}{% endblock %}
-{% block title %}Nexarena Admin - {{ command is defined and command ? 'Modifier' : 'Nouvelle' }} commande Discord{% endblock %}
+{% block page_title %}{{ command ? 'Modifier la commande' : 'Nouvelle commande' }}{% endblock %}
+{% block title %}Nexarena Admin - {{ command ? 'Modifier' : 'Nouvelle' }} commande Discord{% endblock %}
 
 {% block admin_css %}
     .form-group { margin-bottom: 20px; }
@@ -62,14 +62,13 @@
     <div style="max-width:800px;">
         <div class="admin-table">
             <div class="admin-table__header">
-                <h3>{{ command is defined and command ? 'Modifier la commande' : 'Nouvelle commande' }}</h3>
+                <h3>{{ command ? 'Modifier la commande' : 'Nouvelle commande' }}</h3>
                 <a href="{{ path('admin_discord_commands') }}" class="btn-admin btn-admin--outline btn-admin--sm">
                     <i class="fas fa-arrow-left"></i> Retour
                 </a>
             </div>
             <div style="padding:25px;">
-                <form method="post" action="{{ command is defined and command ? path('admin_discord_command_edit', {id: command.id}) : path('admin_discord_command_new') }}">
-                    <input type="hidden" name="_token" value="{{ csrf_token('discord_command') }}">
+                {{ form_start(form) }}
 
                     {# Base fields #}
                     <div class="form-section-title">
@@ -77,19 +76,22 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="name">Nom de la commande</label>
-                        <input type="text" id="name" name="name" class="form-control-admin" value="{{ command is defined and command ? command.name : '' }}" required placeholder="ma-commande" pattern="[a-z0-9\-]+" maxlength="32" style="font-family:monospace;">
-                        <div style="font-size:11px;color:var(--text-secondary);margin-top:4px;">Minuscules, chiffres et tirets uniquement. Sera utilise comme /nom.</div>
+                        <label for="{{ form.name.vars.id }}">Nom de la commande</label>
+                        {{ form_widget(form.name, {'attr': {'class': 'form-control-admin', 'pattern': '[a-z0-9\\-_]+', 'maxlength': 32, 'style': 'font-family:monospace;'}}) }}
+                        {{ form_errors(form.name) }}
+                        <div style="font-size:11px;color:var(--text-secondary);margin-top:4px;">Minuscules, chiffres, tirets et underscores uniquement. Sera utilisé comme /nom.</div>
                     </div>
 
                     <div class="form-group">
-                        <label for="description">Description</label>
-                        <input type="text" id="description" name="description" class="form-control-admin" value="{{ command is defined and command ? command.description : '' }}" required placeholder="Description affichee dans Discord" maxlength="100">
+                        <label for="{{ form.description.vars.id }}">Description</label>
+                        {{ form_widget(form.description, {'attr': {'class': 'form-control-admin', 'placeholder': 'Description affichée dans Discord', 'maxlength': 100}}) }}
+                        {{ form_errors(form.description) }}
                     </div>
 
                     <div class="form-group">
-                        <label for="response">Reponse texte</label>
-                        <textarea id="response" name="response" class="form-control-admin" placeholder="Texte de la reponse...">{{ command is defined and command ? command.response : '' }}</textarea>
+                        <label for="{{ form.response.vars.id }}">Réponse texte</label>
+                        {{ form_widget(form.response, {'attr': {'class': 'form-control-admin', 'placeholder': 'Texte de la réponse...'}}) }}
+                        {{ form_errors(form.response) }}
                     </div>
 
                     {# Embed fields #}
@@ -98,47 +100,53 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="embed_title">Titre de l'embed</label>
-                        <input type="text" id="embed_title" name="embed_title" class="form-control-admin" value="{{ command is defined and command ? command.embedTitle : '' }}" placeholder="Titre de l'embed Discord" maxlength="256">
+                        <label for="{{ form.embedTitle.vars.id }}">Titre de l'embed</label>
+                        {{ form_widget(form.embedTitle, {'attr': {'class': 'form-control-admin', 'placeholder': "Titre de l'embed Discord", 'maxlength': 256}}) }}
+                        {{ form_errors(form.embedTitle) }}
                     </div>
 
                     <div class="form-group">
-                        <label for="embed_description">Description de l'embed</label>
-                        <textarea id="embed_description" name="embed_description" class="form-control-admin" placeholder="Contenu de l'embed...">{{ command is defined and command ? command.embedDescription : '' }}</textarea>
+                        <label for="{{ form.embedDescription.vars.id }}">Description de l'embed</label>
+                        {{ form_widget(form.embedDescription, {'attr': {'class': 'form-control-admin', 'placeholder': "Contenu de l'embed..."}}) }}
+                        {{ form_errors(form.embedDescription) }}
                     </div>
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="embed_color">Couleur de l'embed</label>
-                            <input type="color" id="embed_color" name="embed_color" value="{{ command is defined and command and command.embedColor ? command.embedColor : '#45f882' }}" style="width:60px;height:40px;border:1px solid var(--border-color);border-radius:6px;background:var(--bg-darker);cursor:pointer;">
+                            <label for="{{ form.embedColor.vars.id }}">Couleur de l'embed</label>
+                            {{ form_widget(form.embedColor, {'attr': {'type': 'color', 'style': 'width:60px;height:40px;border:1px solid var(--border-color);border-radius:6px;background:var(--bg-darker);cursor:pointer;'}}) }}
+                            {{ form_errors(form.embedColor) }}
                         </div>
                         <div class="form-group">
-                            <label for="embed_image">Image de l'embed (URL)</label>
-                            <input type="url" id="embed_image" name="embed_image" class="form-control-admin" value="{{ command is defined and command ? command.embedImage : '' }}" placeholder="https://example.com/image.png">
+                            <label for="{{ form.embedImage.vars.id }}">Image de l'embed (URL)</label>
+                            {{ form_widget(form.embedImage, {'attr': {'class': 'form-control-admin', 'placeholder': 'https://example.com/image.png'}}) }}
+                            {{ form_errors(form.embedImage) }}
                         </div>
                     </div>
 
                     {# Settings #}
                     <div class="form-section-title" style="margin-top:30px;">
-                        <i class="fas fa-cog" style="color:var(--text-secondary);font-size:12px;"></i> Parametres
+                        <i class="fas fa-cog" style="color:var(--text-secondary);font-size:12px;"></i> Paramètres
                     </div>
 
                     <div class="form-group">
-                        <label for="required_role">Role requis (ID Discord)</label>
-                        <input type="text" id="required_role" name="required_role" class="form-control-admin" value="{{ command is defined and command ? command.requiredRole : '' }}" placeholder="Laisser vide pour aucune restriction" style="font-family:monospace;">
+                        <label for="{{ form.requiredRole.vars.id }}">Rôle requis (ID Discord)</label>
+                        {{ form_widget(form.requiredRole, {'attr': {'class': 'form-control-admin', 'placeholder': 'Laisser vide pour aucune restriction', 'style': 'font-family:monospace;'}}) }}
+                        {{ form_errors(form.requiredRole) }}
                     </div>
 
                     <div class="form-group">
                         <label class="form-check-admin">
-                            <input type="checkbox" name="is_active" value="1" {{ (command is not defined or command is null or command.isActive) ? 'checked' : '' }}>
+                            {{ form_widget(form.isActive) }}
                             Commande active
                         </label>
+                        {{ form_errors(form.isActive) }}
                     </div>
 
                     {# Note #}
                     <div style="padding:12px 16px;font-size:12px;color:var(--text-secondary);background:rgba(246,194,62,0.06);border:1px solid rgba(246,194,62,0.15);border-radius:6px;display:flex;align-items:center;gap:10px;margin-bottom:20px;">
                         <i class="fas fa-exclamation-triangle" style="color:#f6c23e;"></i>
-                        Noms reserves : <code style="background:var(--bg-darker);padding:1px 5px;border-radius:3px;font-size:11px;">setup</code>,
+                        Noms réservés : <code style="background:var(--bg-darker);padding:1px 5px;border-radius:3px;font-size:11px;">setup</code>,
                         <code style="background:var(--bg-darker);padding:1px 5px;border-radius:3px;font-size:11px;">warn</code>,
                         <code style="background:var(--bg-darker);padding:1px 5px;border-radius:3px;font-size:11px;">mute</code>,
                         <code style="background:var(--bg-darker);padding:1px 5px;border-radius:3px;font-size:11px;">kick</code>,
@@ -149,11 +157,12 @@
 
                     <div style="display:flex;gap:10px;padding-top:10px;">
                         <button type="submit" class="btn-admin btn-admin--primary">
-                            <i class="fas fa-save"></i> {{ command is defined and command ? 'Enregistrer' : 'Creer' }}
+                            <i class="fas fa-save"></i> {{ command ? 'Enregistrer' : 'Créer' }}
                         </button>
                         <a href="{{ path('admin_discord_commands') }}" class="btn-admin btn-admin--outline">Annuler</a>
                     </div>
-                </form>
+
+                {{ form_end(form) }}
             </div>
         </div>
     </div>

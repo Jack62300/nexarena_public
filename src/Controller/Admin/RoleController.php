@@ -3,6 +3,7 @@
 namespace App\Controller\Admin;
 
 use App\Entity\Role;
+use App\Form\Admin\RoleFormType;
 use App\Repository\PermissionRepository;
 use App\Repository\RoleRepository;
 use App\Repository\UserRepository;
@@ -38,32 +39,19 @@ class RoleController extends AbstractController
     #[IsGranted('roles.create')]
     public function new(Request $request): Response
     {
-        if ($request->isMethod('POST')) {
-            if (!$this->isCsrfTokenValid('role_form', $request->request->get('_token'))) {
-                $this->addFlash('error', 'Token CSRF invalide.');
-                return $this->redirectToRoute('admin_roles_new');
-            }
+        $role = new Role();
+        $form = $this->createForm(RoleFormType::class, $role);
+        $form->handleRequest($request);
 
-            $name = trim($request->request->get('name', ''));
-            if (empty($name)) {
-                $this->addFlash('error', 'Le nom du role est requis.');
-                return $this->redirectToRoute('admin_roles_new');
-            }
+        if ($form->isSubmitted() && $form->isValid()) {
+            $technicalName = $this->generateTechnicalName($role->getName());
 
-            $technicalName = $this->generateTechnicalName($name);
-
-            // Check uniqueness
             if ($this->roleRepo->findOneBy(['technicalName' => $technicalName])) {
-                $this->addFlash('error', "Un role avec le nom technique '$technicalName' existe deja.");
+                $this->addFlash('error', "Un rôle avec le nom technique '$technicalName' existe déjà.");
                 return $this->redirectToRoute('admin_roles_new');
             }
 
-            $role = new Role();
-            $role->setName($name);
             $role->setTechnicalName($technicalName);
-            $role->setColor($request->request->get('color', '#5a5c69'));
-            $role->setPosition((int) $request->request->get('position', 5));
-            $role->setDescription($request->request->get('description', ''));
             $role->setIsSystem(false);
 
             $this->assignPermissions($role, $request->request->all('permissions'));
@@ -71,12 +59,13 @@ class RoleController extends AbstractController
             $this->em->persist($role);
             $this->em->flush();
 
-            $this->addFlash('success', "Role '$name' cree avec succes.");
+            $this->addFlash('success', "Rôle '{$role->getName()}' créé avec succès.");
             return $this->redirectToRoute('admin_roles_index');
         }
 
         return $this->render('admin/roles/form.html.twig', [
             'role' => null,
+            'form' => $form,
             'permissions_by_category' => $this->permissionRepo->findAllGroupedByCategory(),
         ]);
     }
@@ -85,34 +74,22 @@ class RoleController extends AbstractController
     #[IsGranted('roles.edit')]
     public function edit(Role $role, Request $request): Response
     {
-        if ($request->isMethod('POST')) {
-            if (!$this->isCsrfTokenValid('role_form', $request->request->get('_token'))) {
-                $this->addFlash('error', 'Token CSRF invalide.');
-                return $this->redirectToRoute('admin_roles_edit', ['id' => $role->getId()]);
-            }
+        $form = $this->createForm(RoleFormType::class, $role, [
+            'is_system' => $role->isSystem(),
+        ]);
+        $form->handleRequest($request);
 
-            // System roles: only allow editing color, description, and permissions
-            if (!$role->isSystem()) {
-                $name = trim($request->request->get('name', ''));
-                if (!empty($name)) {
-                    $role->setName($name);
-                }
-                $role->setPosition((int) $request->request->get('position', $role->getPosition()));
-            }
-
-            $role->setColor($request->request->get('color', $role->getColor()));
-            $role->setDescription($request->request->get('description', ''));
-
+        if ($form->isSubmitted() && $form->isValid()) {
             $this->assignPermissions($role, $request->request->all('permissions'));
-
             $this->em->flush();
 
-            $this->addFlash('success', "Role '{$role->getName()}' modifie avec succes.");
+            $this->addFlash('success', "Rôle '{$role->getName()}' modifié avec succès.");
             return $this->redirectToRoute('admin_roles_index');
         }
 
         return $this->render('admin/roles/form.html.twig', [
             'role' => $role,
+            'form' => $form,
             'permissions_by_category' => $this->permissionRepo->findAllGroupedByCategory(),
         ]);
     }
@@ -126,11 +103,10 @@ class RoleController extends AbstractController
         }
 
         if ($role->isSystem()) {
-            $this->addFlash('error', 'Les roles systeme ne peuvent pas etre supprimes.');
+            $this->addFlash('error', 'Les rôles système ne peuvent pas être supprimés.');
             return $this->redirectToRoute('admin_roles_index');
         }
 
-        // Check if users have this role
         $users = $userRepo->findAll();
         $affectedUsers = 0;
         foreach ($users as $user) {
@@ -144,9 +120,9 @@ class RoleController extends AbstractController
         $this->em->remove($role);
         $this->em->flush();
 
-        $message = "Role '{$role->getName()}' supprime.";
+        $message = "Rôle '{$role->getName()}' supprimé.";
         if ($affectedUsers > 0) {
-            $message .= " $affectedUsers utilisateur(s) mis a jour.";
+            $message .= " $affectedUsers utilisateur(s) mis à jour.";
         }
         $this->addFlash('success', $message);
 

@@ -143,17 +143,14 @@
                     </div>
                 {% endif %}
 
-                <form method="post">
-                    <input type="hidden" name="_token" value="{{ csrf_token('role_form') }}">
+                {{ form_start(form) }}
 
                     <div class="row g-3">
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label for="name">Nom du role</label>
-                                <input type="text" id="name" name="name" class="form-control-admin"
-                                       value="{{ role ? role.name : '' }}"
-                                       {{ role and role.isSystem ? 'disabled' : '' }}
-                                       required placeholder="Ex: Moderateur">
+                                <label for="{{ form.name.vars.id }}">Nom du role</label>
+                                {{ form_widget(form.name, {'attr': {'class': 'form-control-admin', 'placeholder': 'Ex: Modérateur'}}) }}
+                                {{ form_errors(form.name) }}
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -174,24 +171,22 @@
                     <div class="row g-3">
                         <div class="col-md-4">
                             <div class="form-group">
-                                <label for="color">Couleur</label>
+                                <label for="{{ form.color.vars.id }}">Couleur</label>
                                 <div class="color-input-wrapper">
-                                    <input type="color" id="color" name="color"
-                                           value="{{ role ? role.color : '#5a5c69' }}"
-                                           onchange="updatePreview(this.value)">
+                                    {{ form_widget(form.color, {'attr': {'id': 'colorInput', 'type': 'color', 'style': 'width:50px;height:38px;border:1px solid var(--border-color);border-radius:6px;background:var(--bg-darker);cursor:pointer;padding:2px;'}}) }}
                                     <span class="color-preview" id="colorPreview"
                                           style="background:{{ (role ? role.color : '#5a5c69') }}22;color:{{ role ? role.color : '#5a5c69' }};border:1px solid {{ (role ? role.color : '#5a5c69') }}44;">
                                         Apercu
                                     </span>
                                 </div>
+                                {{ form_errors(form.color) }}
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
-                                <label for="position">Position (hierarchie)</label>
-                                <input type="number" id="position" name="position" class="form-control-admin"
-                                       value="{{ role ? role.position : 5 }}" min="0" max="100"
-                                       {{ role and role.isSystem ? 'disabled' : '' }}>
+                                <label for="{{ form.position.vars.id }}">Position (hierarchie)</label>
+                                {{ form_widget(form.position, {'attr': {'class': 'form-control-admin', 'min': 0, 'max': 100}}) }}
+                                {{ form_errors(form.position) }}
                                 <small style="color:var(--text-secondary);font-size:11px;margin-top:4px;display:block;">
                                     Plus le nombre est eleve, plus le role est haut dans la hierarchie
                                 </small>
@@ -199,9 +194,9 @@
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
-                                <label for="description">Description</label>
-                                <input type="text" id="description" name="description" class="form-control-admin"
-                                       value="{{ role ? role.description : '' }}" placeholder="Description courte">
+                                <label for="{{ form.description.vars.id }}">Description</label>
+                                {{ form_widget(form.description, {'attr': {'class': 'form-control-admin', 'placeholder': 'Description courte'}}) }}
+                                {{ form_errors(form.description) }}
                             </div>
                         </div>
                     </div>
@@ -242,7 +237,8 @@
                         </button>
                         <a href="{{ path('admin_roles_index') }}" class="btn-admin btn-admin--outline">Annuler</a>
                     </div>
-                </form>
+
+                {{ form_end(form) }}
             </div>
         </div>
     </div>
@@ -255,6 +251,13 @@
             el.style.background = color + '22';
             el.style.color = color;
             el.style.borderColor = color + '44';
+        }
+
+        var colorInput = document.getElementById('colorInput');
+        if (colorInput) {
+            colorInput.addEventListener('input', function() {
+                updatePreview(this.value);
+            });
         }
 
         function toggleCategory(category, state) {

@@ -5,6 +5,7 @@ namespace App\Controller\Admin;
 use App\Entity\BannedWord;
 use App\Entity\DiscordAnnouncement;
 use App\Entity\DiscordCommand;
+use App\Form\Admin\DiscordCommandFormType;
 use App\Repository\BannedWordRepository;
 use App\Repository\DiscordAnnouncementRepository;
 use App\Repository\DiscordCommandRepository;
@@ -284,12 +285,29 @@ class DiscordController extends AbstractController
     #[Route('/commands/new', name: 'command_new')]
     public function commandNew(Request $request): Response
     {
-        if ($request->isMethod('POST')) {
-            return $this->handleCommandForm($request, new DiscordCommand());
+        $command = new DiscordCommand();
+        $form = $this->createForm(DiscordCommandFormType::class, $command);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            if (in_array($command->getName(), self::RESERVED_COMMAND_NAMES, true)) {
+                $this->addFlash('error', "Le nom \"{$command->getName()}\" est réservé.");
+                return $this->render('admin/discord/command_form.html.twig', [
+                    'command' => null,
+                    'form' => $form,
+                ]);
+            }
+
+            $this->em->persist($command);
+            $this->em->flush();
+
+            $this->addFlash('success', "Commande /{$command->getName()} enregistrée.");
+            return $this->redirectToRoute('admin_discord_commands');
         }
 
         return $this->render('admin/discord/command_form.html.twig', [
             'command' => null,
+            'form' => $form,
         ]);
     }
 
@@ -301,12 +319,28 @@ class DiscordController extends AbstractController
             throw $this->createNotFoundException('Commande introuvable.');
         }
 
-        if ($request->isMethod('POST')) {
-            return $this->handleCommandForm($request, $command);
+        $form = $this->createForm(DiscordCommandFormType::class, $command);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            if (in_array($command->getName(), self::RESERVED_COMMAND_NAMES, true)) {
+                $this->addFlash('error', "Le nom \"{$command->getName()}\" est réservé.");
+                return $this->render('admin/discord/command_form.html.twig', [
+                    'command' => $command,
+                    'form' => $form,
+                ]);
+            }
+
+            $command->setUpdatedAt(new \DateTimeImmutable());
+            $this->em->flush();
+
+            $this->addFlash('success', "Commande /{$command->getName()} enregistrée.");
+            return $this->redirectToRoute('admin_discord_commands');
         }
 
         return $this->render('admin/discord/command_form.html.twig', [
             'command' => $command,
+            'form' => $form,
         ]);
     }
 
@@ -322,50 +356,9 @@ class DiscordController extends AbstractController
         if ($cmd) {
             $this->em->remove($cmd);
             $this->em->flush();
-            $this->addFlash('success', "Commande /{$cmd->getName()} supprimee.");
+            $this->addFlash('success', "Commande /{$cmd->getName()} supprimée.");
         }
 
-        return $this->redirectToRoute('admin_discord_commands');
-    }
-
-    private function handleCommandForm(Request $request, DiscordCommand $command): Response
-    {
-        if (!$this->isCsrfTokenValid('discord_command', $request->request->get('_token'))) {
-            $this->addFlash('error', 'Token CSRF invalide.');
-            return $this->redirectToRoute('admin_discord_commands');
-        }
-
-        $name = strtolower(trim($request->request->get('name', '')));
-        $name = preg_replace('/[^a-z0-9_-]/', '', $name);
-
-        if ($name === '' || strlen($name) > 32) {
-            $this->addFlash('error', 'Nom invalide (1-32 caracteres, a-z, 0-9, _, -).');
-            return $this->redirectToRoute('admin_discord_commands');
-        }
-
-        if (in_array($name, self::RESERVED_COMMAND_NAMES, true)) {
-            $this->addFlash('error', "Le nom \"$name\" est reserve.");
-            return $this->redirectToRoute('admin_discord_commands');
-        }
-
-        $command->setName($name);
-        $command->setDescription(mb_substr(trim($request->request->get('description', '')), 0, 100) ?: 'Commande custom');
-        $command->setResponse($request->request->get('response') ?: null);
-        $command->setEmbedTitle($request->request->get('embed_title') ?: null);
-        $command->setEmbedDescription($request->request->get('embed_description') ?: null);
-        $command->setEmbedColor($request->request->get('embed_color') ?: null);
-        $command->setEmbedImage($request->request->get('embed_image') ?: null);
-        $command->setRequiredRole($request->request->get('required_role') ?: null);
-        $command->setIsActive($request->request->getBoolean('is_active', true));
-
-        if ($command->getId()) {
-            $command->setUpdatedAt(new \DateTimeImmutable());
-        }
-
-        $this->em->persist($command);
-        $this->em->flush();
-
-        $this->addFlash('success', "Commande /{$command->getName()} enregistree.");
         return $this->redirectToRoute('admin_discord_commands');
     }
 

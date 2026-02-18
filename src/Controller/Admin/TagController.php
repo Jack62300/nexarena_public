@@ -3,6 +3,7 @@
 namespace App\Controller\Admin;
 
 use App\Entity\Tag;
+use App\Form\Admin\TagFormType;
 use App\Repository\TagRepository;
 use App\Service\SlugService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -33,45 +34,43 @@ class TagController extends AbstractController
     #[Route('/new', name: 'new')]
     public function new(Request $request): Response
     {
-        if ($request->isMethod('POST')) {
-            if (!$this->isCsrfTokenValid('tag_form', $request->request->get('_token'))) {
-                $this->addFlash('error', 'Token CSRF invalide.');
-                return $this->redirectToRoute('admin_tags_new');
-            }
+        $tag = new Tag();
+        $form = $this->createForm(TagFormType::class, $tag);
+        $form->handleRequest($request);
 
-            $tag = new Tag();
-            $this->handleForm($tag, $request);
+        if ($form->isSubmitted() && $form->isValid()) {
+            $tag->setSlug($this->slugService->slugify($tag->getName()));
 
             $this->em->persist($tag);
             $this->em->flush();
 
-            $this->addFlash('success', 'Tag cree avec succes.');
+            $this->addFlash('success', 'Tag créé avec succès.');
             return $this->redirectToRoute('admin_tags_list');
         }
 
         return $this->render('admin/tags/form.html.twig', [
             'tag' => null,
+            'form' => $form,
         ]);
     }
 
     #[Route('/{id}/edit', name: 'edit')]
     public function edit(Tag $tag, Request $request): Response
     {
-        if ($request->isMethod('POST')) {
-            if (!$this->isCsrfTokenValid('tag_form', $request->request->get('_token'))) {
-                $this->addFlash('error', 'Token CSRF invalide.');
-                return $this->redirectToRoute('admin_tags_edit', ['id' => $tag->getId()]);
-            }
+        $form = $this->createForm(TagFormType::class, $tag);
+        $form->handleRequest($request);
 
-            $this->handleForm($tag, $request);
+        if ($form->isSubmitted() && $form->isValid()) {
+            $tag->setSlug($this->slugService->slugify($tag->getName()));
             $this->em->flush();
 
-            $this->addFlash('success', 'Tag modifie avec succes.');
+            $this->addFlash('success', 'Tag modifié avec succès.');
             return $this->redirectToRoute('admin_tags_list');
         }
 
         return $this->render('admin/tags/form.html.twig', [
             'tag' => $tag,
+            'form' => $form,
         ]);
     }
 
@@ -82,26 +81,9 @@ class TagController extends AbstractController
         if ($this->isCsrfTokenValid('delete_' . $tag->getId(), $request->request->get('_token'))) {
             $this->em->remove($tag);
             $this->em->flush();
-            $this->addFlash('success', 'Tag supprime.');
+            $this->addFlash('success', 'Tag supprimé.');
         }
 
         return $this->redirectToRoute('admin_tags_list');
-    }
-
-    private function handleForm(Tag $tag, Request $request): void
-    {
-        $name = trim((string) $request->request->get('name', ''));
-        $tag->setName($name);
-        $tag->setSlug($this->slugService->slugify($name));
-
-        $color = $request->request->get('color') ?: null;
-        if ($color && preg_match('/^#[0-9a-fA-F]{6}$/', $color)) {
-            $tag->setColor($color);
-        } else {
-            $tag->setColor(null);
-        }
-
-        $tag->setPosition((int) $request->request->get('position', 0));
-        $tag->setIsActive($request->request->getBoolean('is_active'));
     }
 }

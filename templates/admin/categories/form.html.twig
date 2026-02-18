@@ -1,7 +1,7 @@
 {% extends 'admin/base.html.twig' %}
 
-{% block page_title %}{{ category ? 'Modifier la sous-categorie' : 'Nouvelle sous-categorie' }}{% endblock %}
-{% block title %}Nexarena Admin - {{ category ? 'Modifier' : 'Nouvelle' }} sous-categorie{% endblock %}
+{% block page_title %}{{ category ? 'Modifier la sous-catégorie' : 'Nouvelle sous-catégorie' }}{% endblock %}
+{% block title %}Nexarena Admin - {{ category ? 'Modifier' : 'Nouvelle' }} sous-catégorie{% endblock %}
 
 {% block admin_css %}
     .form-group { margin-bottom: 20px; }
@@ -24,13 +24,7 @@
         font-size: 14px;
         transition: border-color 0.2s;
     }
-    .form-control-admin:focus {
-        outline: none;
-        border-color: var(--accent);
-    }
-    select.form-control-admin {
-        appearance: auto;
-    }
+    .form-control-admin:focus { outline: none; border-color: var(--accent); }
     textarea.form-control-admin { min-height: 120px; resize: vertical; }
     .form-check-admin {
         display: flex;
@@ -50,85 +44,91 @@
         margin-top: 10px;
         object-fit: cover;
     }
+    .color-row { display: flex; align-items: center; gap: 12px; }
+    .color-swatch {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        border: 1px solid rgba(255,255,255,0.1);
+        flex-shrink: 0;
+    }
 {% endblock %}
 
 {% block admin_body %}
     <div style="max-width:800px;">
         <div class="admin-table">
             <div class="admin-table__header">
-                <h3>{{ category ? 'Modifier la sous-categorie' : 'Creer une sous-categorie' }}</h3>
+                <h3>{{ category ? 'Modifier la sous-catégorie' : 'Créer une sous-catégorie' }}</h3>
                 <a href="{{ path('admin_categories_list') }}" class="btn-admin btn-admin--outline btn-admin--sm">
                     <i class="fas fa-arrow-left"></i> Retour
                 </a>
             </div>
             <div style="padding:25px;">
-                <form method="post" enctype="multipart/form-data">
-                    <input type="hidden" name="_token" value="{{ csrf_token('category_form') }}">
+                {{ form_start(form, {'attr': {'enctype': 'multipart/form-data'}}) }}
 
                     <div class="form-group">
-                        <label for="category_id">Categorie parente</label>
-                        <select id="category_id" name="category_id" class="form-control-admin">
-                            <option value="">-- Aucune --</option>
-                            {% for parent in parentCategories %}
-                                <option value="{{ parent.id }}"
-                                    {{ (category and category.category and category.category.id == parent.id) ? 'selected' : '' }}>
-                                    {{ parent.name }}
-                                </option>
-                            {% endfor %}
-                        </select>
+                        <label for="{{ form.category.vars.id }}">Catégorie parente</label>
+                        {{ form_widget(form.category, {'attr': {'class': 'form-control-admin'}}) }}
+                        {{ form_errors(form.category) }}
                     </div>
 
                     <div class="form-group">
-                        <label for="name">Nom</label>
-                        <input type="text" id="name" name="name" class="form-control-admin" value="{{ category ? category.name : '' }}" required>
+                        <label for="{{ form.name.vars.id }}">Nom</label>
+                        {{ form_widget(form.name, {'attr': {'class': 'form-control-admin'}}) }}
+                        {{ form_errors(form.name) }}
                     </div>
 
                     <div class="form-group">
-                        <label for="description">Description</label>
-                        <textarea id="description" name="description" class="form-control-admin">{{ category ? category.description : '' }}</textarea>
+                        <label for="{{ form.description.vars.id }}">Description</label>
+                        {{ form_widget(form.description, {'attr': {'class': 'form-control-admin'}}) }}
+                        {{ form_errors(form.description) }}
                     </div>
 
                     <div class="row g-3">
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <div class="form-group">
-                                <label for="image">Image</label>
-                                <input type="file" id="image" name="image" class="form-control-admin" accept="image/*">
-                                {% if category and category.image %}
-                                    <img src="{{ asset('uploads/categories/' ~ category.image) }}" alt="" class="image-preview">
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label for="color">Couleur</label>
-                                <div style="display:flex;align-items:center;gap:10px;">
-                                    <input type="color" id="color" name="color" value="{{ category and category.color ? category.color : '#45f882' }}" style="width:50px;height:38px;padding:2px;background:var(--bg-darker);border:1px solid var(--border-color);border-radius:6px;cursor:pointer;">
-                                    <input type="text" id="colorHex" class="form-control-admin" value="{{ category and category.color ? category.color : '' }}" placeholder="#45f882" maxlength="7" style="flex:1;">
+                                <label for="{{ form.color.vars.id }}">Couleur</label>
+                                <div class="color-row">
+                                    <input type="color" id="colorPicker" value="{{ category and category.color ? category.color : '#45f882' }}" style="width:60px;height:40px;border:1px solid var(--border-color);border-radius:6px;background:var(--bg-darker);cursor:pointer;">
+                                    {{ form_widget(form.color, {'attr': {'id': 'colorHex', 'class': 'form-control-admin', 'placeholder': '#45f882', 'style': 'flex:1;'}}) }}
                                 </div>
+                                {{ form_errors(form.color) }}
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <div class="form-group">
-                                <label for="position">Position (ordre d'affichage)</label>
-                                <input type="number" id="position" name="position" class="form-control-admin" value="{{ category ? category.position : 0 }}" min="0">
+                                <label for="{{ form.position.vars.id }}">Position</label>
+                                {{ form_widget(form.position, {'attr': {'class': 'form-control-admin'}}) }}
+                                {{ form_errors(form.position) }}
                             </div>
                         </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.imageFile.vars.id }}">Image</label>
+                        {{ form_widget(form.imageFile, {'attr': {'class': 'form-control-admin'}}) }}
+                        {{ form_errors(form.imageFile) }}
+                        {% if category and category.image %}
+                            <img src="{{ asset('uploads/categories/' ~ category.image) }}" alt="" class="image-preview">
+                        {% endif %}
                     </div>
 
                     <div class="form-group">
                         <label class="form-check-admin">
-                            <input type="checkbox" name="is_active" value="1" {{ (category is null or category.isActive) ? 'checked' : '' }}>
-                            Sous-categorie active
+                            {{ form_widget(form.isActive) }}
+                            Catégorie active
                         </label>
+                        {{ form_errors(form.isActive) }}
                     </div>
 
                     <div style="display:flex;gap:10px;padding-top:10px;">
                         <button type="submit" class="btn-admin btn-admin--primary">
-                            <i class="fas fa-save"></i> {{ category ? 'Enregistrer' : 'Creer' }}
+                            <i class="fas fa-save"></i> {{ category ? 'Enregistrer' : 'Créer' }}
                         </button>
                         <a href="{{ path('admin_categories_list') }}" class="btn-admin btn-admin--outline">Annuler</a>
                     </div>
-                </form>
+
+                {{ form_end(form) }}
             </div>
         </div>
     </div>
@@ -136,11 +136,19 @@
 
 {% block admin_js %}
 <script>
-(function(){
-    const picker = document.getElementById('color');
-    const hex = document.getElementById('colorHex');
-    picker.addEventListener('input', function(){ hex.value = this.value; });
-    hex.addEventListener('input', function(){ if (/^#[0-9a-fA-F]{6}$/.test(this.value)) picker.value = this.value; });
+(function() {
+    var colorPicker = document.getElementById('colorPicker');
+    var colorHex = document.getElementById('colorHex');
+    if (!colorPicker || !colorHex) return;
+
+    colorPicker.addEventListener('input', function() {
+        colorHex.value = colorPicker.value;
+    });
+    colorHex.addEventListener('input', function() {
+        if (/^#[0-9a-fA-F]{6}$/.test(colorHex.value)) {
+            colorPicker.value = colorHex.value;
+        }
+    });
 })();
 </script>
 {% endblock %}

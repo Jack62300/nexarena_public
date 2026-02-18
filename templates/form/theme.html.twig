@@ -1,0 +1,13 @@
+{# Minimal form theme for Nexarena admin/public forms #}
+
+{% block form_errors %}
+    {% if errors|length > 0 %}
+        <ul style="list-style:none;margin:5px 0 0;padding:0;">
+            {% for error in errors %}
+                <li style="font-size:12px;color:#e74c3c;display:flex;align-items:center;gap:5px;margin-top:3px;">
+                    <i class="fas fa-exclamation-circle"></i> {{ error.message }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+{% endblock %}

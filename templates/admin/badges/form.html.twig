@@ -24,10 +24,7 @@
         font-size: 14px;
         transition: border-color 0.2s;
     }
-    .form-control-admin:focus {
-        outline: none;
-        border-color: var(--accent);
-    }
+    .form-control-admin:focus { outline: none; border-color: var(--accent); }
     .form-check-admin {
         display: flex;
         align-items: center;
@@ -39,18 +36,8 @@
         height: 18px;
         accent-color: var(--accent);
     }
-    .color-preview {
-        display: inline-flex;
-        align-items: center;
-        gap: 12px;
-        margin-top: 8px;
-    }
-    .color-preview__swatch {
-        width: 36px;
-        height: 36px;
-        border-radius: 8px;
-        border: 1px solid rgba(255,255,255,0.1);
-    }
+    .color-preview { display: inline-flex; align-items: center; gap: 12px; margin-top: 8px; }
+    .color-preview__swatch { width: 36px; height: 36px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); }
     .awarded-users { margin-top: 30px; }
     .awarded-user { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--border-color); }
     .awarded-user:last-child { border-bottom:none; }
@@ -67,71 +54,71 @@
                 </a>
             </div>
             <div style="padding:25px;">
-                <form method="post" enctype="multipart/form-data">
-                    <input type="hidden" name="_token" value="{{ csrf_token('badge_form') }}">
+                {{ form_start(form, {'attr': {'enctype': 'multipart/form-data'}}) }}
 
                     <div class="form-group">
-                        <label for="name">Nom</label>
-                        <input type="text" id="name" name="name" class="form-control-admin" value="{{ badge ? badge.name : '' }}" required placeholder="Ex: Veteran, Contributeur..." maxlength="100">
+                        <label for="{{ form.name.vars.id }}">Nom</label>
+                        {{ form_widget(form.name, {'attr': {'class': 'form-control-admin', 'placeholder': 'Ex: Veteran, Contributeur...'}}) }}
+                        {{ form_errors(form.name) }}
                     </div>
 
                     <div class="form-group">
-                        <label for="description">Description</label>
-                        <textarea id="description" name="description" class="form-control-admin" rows="3" placeholder="Description du badge...">{{ badge ? badge.description : '' }}</textarea>
+                        <label for="{{ form.description.vars.id }}">Description</label>
+                        {{ form_widget(form.description, {'attr': {'class': 'form-control-admin', 'rows': 3, 'placeholder': 'Description du badge...'}}) }}
+                        {{ form_errors(form.description) }}
                     </div>
 
                     <div class="form-group">
-                        <label for="icon">Icone</label>
+                        <label for="{{ form.iconFile.vars.id }}">Icône</label>
                         {% if badge and badge.iconFileName %}
                             <div style="margin-bottom:8px;">
                                 <img src="{{ asset('uploads/badges/' ~ badge.iconFileName) }}" alt="" style="width:48px;height:48px;object-fit:contain;border-radius:8px;border:1px solid var(--border-color);">
                             </div>
                         {% endif %}
-                        <input type="file" id="icon" name="icon" accept="image/*" style="color:var(--text-secondary);">
+                        {{ form_widget(form.iconFile, {'attr': {'style': 'color:var(--text-secondary);'}}) }}
+                        {{ form_errors(form.iconFile) }}
                         <div style="font-size:11px;color:var(--text-secondary);margin-top:4px;">PNG, JPG, SVG ou WebP - 1 Mo max</div>
                     </div>
 
                     <div class="form-group">
-                        <label for="color">Couleur</label>
-                        <input type="color" id="color" name="color" value="{{ badge and badge.color ? badge.color : '#45f882' }}" style="width:60px;height:40px;border:1px solid var(--border-color);border-radius:6px;background:var(--bg-darker);cursor:pointer;">
+                        <label for="{{ form.color.vars.id }}">Couleur</label>
+                        <input type="color" id="colorPicker" value="{{ badge and badge.color ? badge.color : '#45f882' }}" style="width:60px;height:40px;border:1px solid var(--border-color);border-radius:6px;background:var(--bg-darker);cursor:pointer;">
+                        {{ form_widget(form.color, {'attr': {'id': 'colorHex', 'class': 'form-control-admin', 'style': 'display:inline-block;width:auto;margin-left:10px;', 'placeholder': '#45f882'}}) }}
+                        {{ form_errors(form.color) }}
                         <div class="color-preview">
                             <div class="color-preview__swatch" id="colorSwatch" style="background:{{ badge and badge.color ? badge.color : '#45f882' }};"></div>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label for="criteria_type">Type de critere</label>
-                        <select id="criteria_type" name="criteria_type" class="form-control-admin">
-                            <option value="">-- Aucun critere --</option>
-                            <option value="vote_count" {{ badge and badge.criteria.type|default('') == 'vote_count' ? 'selected' : '' }}>Nombre de votes recus</option>
-                            <option value="server_count" {{ badge and badge.criteria.type|default('') == 'server_count' ? 'selected' : '' }}>Nombre de serveurs</option>
-                            <option value="account_age" {{ badge and badge.criteria.type|default('') == 'account_age' ? 'selected' : '' }}>Age du compte (jours)</option>
-                            <option value="comment_count" {{ badge and badge.criteria.type|default('') == 'comment_count' ? 'selected' : '' }}>Nombre de commentaires</option>
-                            <option value="premium_purchase" {{ badge and badge.criteria.type|default('') == 'premium_purchase' ? 'selected' : '' }}>Achat premium effectue</option>
-                            <option value="custom" {{ badge and badge.criteria.type|default('') == 'custom' ? 'selected' : '' }}>Manuel (attribution admin)</option>
-                        </select>
+                        <label for="{{ form.criteriaType.vars.id }}">Type de critère</label>
+                        {{ form_widget(form.criteriaType, {'attr': {'class': 'form-control-admin', 'id': 'criteriaTypeSelect'}}) }}
+                        {{ form_errors(form.criteriaType) }}
                     </div>
 
                     <div class="form-group" id="thresholdGroup">
-                        <label for="criteria_threshold">Seuil</label>
-                        <input type="number" id="criteria_threshold" name="criteria_threshold" class="form-control-admin" value="{{ badge ? badge.criteria.threshold|default(1) : 1 }}" min="1" style="max-width:200px;">
+                        <label for="{{ form.criteriaThreshold.vars.id }}">Seuil</label>
+                        {{ form_widget(form.criteriaThreshold, {'attr': {'class': 'form-control-admin', 'style': 'max-width:200px;'}}) }}
+                        {{ form_errors(form.criteriaThreshold) }}
                         <div style="font-size:11px;color:var(--text-secondary);margin-top:4px;">Valeur minimale pour obtenir le badge</div>
                     </div>
 
                     <div class="form-group">
                         <label class="form-check-admin">
-                            <input type="checkbox" name="is_active" value="1" {{ (badge is null or badge.isActive) ? 'checked' : '' }}>
+                            {{ form_widget(form.isActive) }}
                             Actif
                         </label>
+                        {{ form_errors(form.isActive) }}
                     </div>
 
                     <div style="display:flex;gap:10px;padding-top:10px;">
                         <button type="submit" class="btn-admin btn-admin--primary">
-                            <i class="fas fa-save"></i> {{ badge ? 'Enregistrer' : 'Creer' }}
+                            <i class="fas fa-save"></i> {{ badge ? 'Enregistrer' : 'Créer' }}
                         </button>
                         <a href="{{ path('admin_badges_list') }}" class="btn-admin btn-admin--outline">Annuler</a>
                     </div>
-                </form>
+
+                {{ form_end(form) }}
 
                 {# ── Awarded Users (edit mode only) ── #}
                 {% if badge %}
@@ -153,7 +140,7 @@
                                 <span style="color:var(--text-primary);font-weight:600;">{{ ub.user.username }}</span>
                                 <span style="color:var(--text-secondary);font-size:12px;">{{ ub.awardedAt|date('d/m/Y H:i') }}</span>
                                 {% if is_granted('ROLE_MANAGER') %}
-                                    <form method="post" action="{{ path('admin_badges_revoke', {id: badge.id, userId: ub.user.id}) }}" style="margin-left:auto;" onsubmit="return confirm('Revoquer ce badge ?');">
+                                    <form method="post" action="{{ path('admin_badges_revoke', {id: badge.id, userId: ub.user.id}) }}" style="margin-left:auto;" onsubmit="return confirm('Révoquer ce badge ?');">
                                         <input type="hidden" name="_token" value="{{ csrf_token('badge_revoke_' ~ badge.id ~ '_' ~ ub.user.id) }}">
                                         <button type="submit" class="btn-admin btn-admin--sm" style="background:var(--danger);color:#fff;border:none;">
                                             <i class="fas fa-times"></i>
@@ -174,21 +161,34 @@
 {% block admin_js %}
 <script>
 (function() {
-    var colorInput = document.getElementById('color');
+    var colorPicker = document.getElementById('colorPicker');
+    var colorHex = document.getElementById('colorHex');
     var swatch = document.getElementById('colorSwatch');
-    var criteriaType = document.getElementById('criteria_type');
+    var criteriaType = document.getElementById('criteriaTypeSelect');
     var thresholdGroup = document.getElementById('thresholdGroup');
 
-    colorInput.addEventListener('input', function() {
-        swatch.style.background = colorInput.value;
-    });
+    if (colorPicker && colorHex) {
+        colorPicker.addEventListener('input', function() {
+            colorHex.value = colorPicker.value;
+            swatch.style.background = colorPicker.value;
+        });
+        colorHex.addEventListener('input', function() {
+            if (/^#[0-9a-fA-F]{6}$/.test(colorHex.value)) {
+                colorPicker.value = colorHex.value;
+                swatch.style.background = colorHex.value;
+            }
+        });
+    }
 
     function toggleThreshold() {
+        if (!criteriaType) return;
         var val = criteriaType.value;
         thresholdGroup.style.display = (val === '' || val === 'custom' || val === 'premium_purchase') ? 'none' : 'block';
     }
-    criteriaType.addEventListener('change', toggleThreshold);
-    toggleThreshold();
+    if (criteriaType) {
+        criteriaType.addEventListener('change', toggleThreshold);
+        toggleThreshold();
+    }
 })();
 </script>
 {% endblock %}

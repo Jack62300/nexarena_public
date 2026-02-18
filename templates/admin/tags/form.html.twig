@@ -72,44 +72,48 @@
                 </a>
             </div>
             <div style="padding:25px;">
-                <form method="post">
-                    <input type="hidden" name="_token" value="{{ csrf_token('tag_form') }}">
+                {{ form_start(form) }}
 
                     <div class="form-group">
-                        <label for="name">Nom</label>
-                        <input type="text" id="name" name="name" class="form-control-admin" value="{{ tag ? tag.name : '' }}" required placeholder="Ex: PvP, ESX, QBCore..." maxlength="50">
+                        <label for="{{ form.name.vars.id }}">Nom</label>
+                        {{ form_widget(form.name, {'attr': {'class': 'form-control-admin', 'maxlength': 30, 'placeholder': 'Ex: PvP, ESX, QBCore...'}}) }}
+                        {{ form_errors(form.name) }}
                     </div>
 
                     <div class="form-group">
-                        <label for="color">Couleur</label>
-                        <input type="color" id="color" name="color" value="{{ tag and tag.color ? tag.color : '#45f882' }}" style="width:60px;height:40px;border:1px solid var(--border-color);border-radius:6px;background:var(--bg-darker);cursor:pointer;">
-                        <div class="color-preview" id="colorPreview">
+                        <label for="{{ form.color.vars.id }}">Couleur</label>
+                        {{ form_widget(form.color, {'attr': {'id': 'colorInput', 'type': 'color', 'style': 'width:60px;height:40px;border:1px solid var(--border-color);border-radius:6px;background:var(--bg-darker);cursor:pointer;'}}) }}
+                        {{ form_errors(form.color) }}
+                        <div class="color-preview">
                             <div class="color-preview__swatch" id="colorSwatch" style="background:{{ tag and tag.color ? tag.color : '#45f882' }};"></div>
                             <span class="color-preview__tag" id="colorTag" style="background:{{ tag and tag.color ? tag.color : '#45f882' }}20;color:{{ tag and tag.color ? tag.color : '#45f882' }};border:1px solid {{ tag and tag.color ? tag.color : '#45f882' }}40;">
-                                <i class="fas fa-hashtag"></i> Apercu
+                                <i class="fas fa-hashtag"></i> Aperçu
                             </span>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label for="position">Position (ordre d'affichage)</label>
-                        <input type="number" id="position" name="position" class="form-control-admin" value="{{ tag ? tag.position : 0 }}" min="0">
+                        <label for="{{ form.position.vars.id }}">Position (ordre d'affichage)</label>
+                        {{ form_widget(form.position, {'attr': {'class': 'form-control-admin'}}) }}
+                        {{ form_errors(form.position) }}
                     </div>
 
                     <div class="form-group">
                         <label class="form-check-admin">
-                            <input type="checkbox" name="is_active" value="1" {{ (tag is null or tag.isActive) ? 'checked' : '' }}>
+                            {{ form_widget(form.isActive) }}
                             Actif
                         </label>
+                        {{ form_errors(form.isActive) }}
                     </div>
 
                     <div style="display:flex;gap:10px;padding-top:10px;">
                         <button type="submit" class="btn-admin btn-admin--primary">
-                            <i class="fas fa-save"></i> {{ tag ? 'Enregistrer' : 'Creer' }}
+                            <i class="fas fa-save"></i> {{ tag ? 'Enregistrer' : 'Créer' }}
                         </button>
                         <a href="{{ path('admin_tags_list') }}" class="btn-admin btn-admin--outline">Annuler</a>
                     </div>
-                </form>
+
+                {{ form_end(form) }}
             </div>
         </div>
     </div>
@@ -118,16 +122,17 @@
 {% block admin_js %}
 <script>
 (function() {
-    var colorInput = document.getElementById('color');
+    var colorInput = document.getElementById('colorInput');
     var swatch = document.getElementById('colorSwatch');
-    var tag = document.getElementById('colorTag');
+    var tagEl = document.getElementById('colorTag');
+    if (!colorInput) return;
 
     colorInput.addEventListener('input', function() {
         var c = colorInput.value;
         swatch.style.background = c;
-        tag.style.background = c + '20';
-        tag.style.color = c;
-        tag.style.borderColor = c + '40';
+        tagEl.style.background = c + '20';
+        tagEl.style.color = c;
+        tagEl.style.borderColor = c + '40';
     });
 })();
 </script>

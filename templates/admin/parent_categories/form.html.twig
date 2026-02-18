@@ -1,7 +1,7 @@
 {% extends 'admin/base.html.twig' %}
 
-{% block page_title %}{{ category ? 'Modifier la categorie' : 'Nouvelle categorie' }}{% endblock %}
-{% block title %}Nexarena Admin - {{ category ? 'Modifier' : 'Nouvelle' }} categorie{% endblock %}
+{% block page_title %}{{ category ? 'Modifier la catégorie' : 'Nouvelle catégorie' }}{% endblock %}
+{% block title %}Nexarena Admin - {{ category ? 'Modifier' : 'Nouvelle' }} catégorie{% endblock %}
 
 {% block admin_css %}
     .form-group { margin-bottom: 20px; }
@@ -65,42 +65,42 @@
     <div style="max-width:800px;">
         <div class="admin-table">
             <div class="admin-table__header">
-                <h3>{{ category ? 'Modifier la categorie' : 'Creer une categorie' }}</h3>
+                <h3>{{ category ? 'Modifier la catégorie' : 'Créer une catégorie' }}</h3>
                 <a href="{{ path('admin_parent_categories_list') }}" class="btn-admin btn-admin--outline btn-admin--sm">
                     <i class="fas fa-arrow-left"></i> Retour
                 </a>
             </div>
             <div style="padding:25px;">
-                <form method="post" enctype="multipart/form-data">
-                    <input type="hidden" name="_token" value="{{ csrf_token('parent_category_form') }}">
+                {{ form_start(form, {'attr': {'enctype': 'multipart/form-data'}}) }}
 
                     <div class="form-group">
-                        <label for="name">Nom</label>
-                        <input type="text" id="name" name="name" class="form-control-admin" value="{{ category ? category.name : '' }}" required>
+                        <label for="{{ form.name.vars.id }}">Nom</label>
+                        {{ form_widget(form.name, {'attr': {'class': 'form-control-admin'}}) }}
+                        {{ form_errors(form.name) }}
                     </div>
 
                     <div class="form-group">
-                        <label for="icon">Icone FontAwesome</label>
-                        <input type="text" id="icon" name="icon" class="form-control-admin"
-                               value="{{ category ? category.icon : '' }}"
-                               placeholder="fas fa-server"
-                               oninput="document.getElementById('icon-preview').className = this.value">
+                        <label for="{{ form.icon.vars.id }}">Icône FontAwesome</label>
+                        {{ form_widget(form.icon, {'attr': {'class': 'form-control-admin', 'placeholder': 'fas fa-server', 'oninput': "document.getElementById('icon-preview').className = this.value"}}) }}
+                        {{ form_errors(form.icon) }}
                         <div class="icon-preview-box">
                             <i id="icon-preview" class="{{ category and category.icon ? category.icon : 'fas fa-server' }}"></i>
-                            <span>Apercu</span>
+                            <span>Aperçu</span>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label for="description">Description</label>
-                        <textarea id="description" name="description" class="form-control-admin">{{ category ? category.description : '' }}</textarea>
+                        <label for="{{ form.description.vars.id }}">Description</label>
+                        {{ form_widget(form.description, {'attr': {'class': 'form-control-admin'}}) }}
+                        {{ form_errors(form.description) }}
                     </div>
 
                     <div class="row g-3">
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label for="image">Image</label>
-                                <input type="file" id="image" name="image" class="form-control-admin" accept="image/*">
+                                <label for="{{ form.imageFile.vars.id }}">Image</label>
+                                {{ form_widget(form.imageFile, {'attr': {'class': 'form-control-admin'}}) }}
+                                {{ form_errors(form.imageFile) }}
                                 {% if category and category.image %}
                                     <img src="{{ asset('uploads/categories/' ~ category.image) }}" alt="" class="image-preview">
                                 {% endif %}
@@ -108,39 +108,38 @@
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label for="position">Position (ordre d'affichage)</label>
-                                <input type="number" id="position" name="position" class="form-control-admin" value="{{ category ? category.position : 0 }}" min="0">
+                                <label for="{{ form.position.vars.id }}">Position (ordre d'affichage)</label>
+                                {{ form_widget(form.position, {'attr': {'class': 'form-control-admin'}}) }}
+                                {{ form_errors(form.position) }}
                             </div>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label for="query_type">Protocole de requete serveur</label>
-                        <select id="query_type" name="query_type" class="form-control-admin">
-                            <option value="">Aucun (pas de query)</option>
-                            <option value="cfx" {{ category and category.queryType == 'cfx' ? 'selected' : '' }}>FiveM / RedM (CFX)</option>
-                            <option value="source" {{ category and category.queryType == 'source' ? 'selected' : '' }}>Source Engine (Rust, CS2, GMod, ARK, DayZ...)</option>
-                            <option value="minecraft" {{ category and category.queryType == 'minecraft' ? 'selected' : '' }}>Minecraft</option>
-                        </select>
+                        <label for="{{ form.queryType.vars.id }}">Protocole de requête serveur</label>
+                        {{ form_widget(form.queryType, {'attr': {'class': 'form-control-admin'}}) }}
+                        {{ form_errors(form.queryType) }}
                         <div style="font-size:12px;color:var(--text-secondary);margin-top:6px;">
-                            Permet de recuperer les joueurs connectes et le statut des serveurs de cette categorie.
+                            Permet de récupérer les joueurs connectés et le statut des serveurs de cette catégorie.
                         </div>
                     </div>
 
                     <div class="form-group">
                         <label class="form-check-admin">
-                            <input type="checkbox" name="is_active" value="1" {{ (category is null or category.isActive) ? 'checked' : '' }}>
-                            Categorie active
+                            {{ form_widget(form.isActive) }}
+                            Catégorie active
                         </label>
+                        {{ form_errors(form.isActive) }}
                     </div>
 
                     <div style="display:flex;gap:10px;padding-top:10px;">
                         <button type="submit" class="btn-admin btn-admin--primary">
-                            <i class="fas fa-save"></i> {{ category ? 'Enregistrer' : 'Creer' }}
+                            <i class="fas fa-save"></i> {{ category ? 'Enregistrer' : 'Créer' }}
                         </button>
                         <a href="{{ path('admin_parent_categories_list') }}" class="btn-admin btn-admin--outline">Annuler</a>
                     </div>
-                </form>
+
+                {{ form_end(form) }}
             </div>
         </div>
     </div>
