@@ -13,6 +13,7 @@ use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use App\Service\WebhookService;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -28,6 +29,7 @@ class RegistrationController extends AbstractController
         CacheItemPoolInterface $cache,
         SettingsService $settings,
         MailerService $mailerService,
+        LoggerInterface $logger,
     ): Response {
         if ($this->getUser()) {
             return $this->redirectToRoute('app_home');
@@ -89,8 +91,11 @@ class RegistrationController extends AbstractController
             if ($requireVerification) {
                 try {
                     $mailerService->sendEmailVerification($user);
-                } catch (\Throwable) {
-                    // Do not block registration on mailer failure
+                } catch (\Throwable $e) {
+                    $logger->error('Mailer: sendEmailVerification failed.', [
+                        'user' => $user->getEmail(),
+                        'error' => $e->getMessage(),
+                    ]);
                 }
                 $this->addFlash('success', 'Votre compte a été créé ! Vérifiez votre boîte mail pour activer votre compte.');
                 return $this->redirectToRoute('app_register_email_sent');

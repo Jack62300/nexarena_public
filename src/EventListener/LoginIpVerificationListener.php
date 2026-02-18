@@ -6,6 +6,7 @@ use App\Entity\User;
 use App\Service\MailerService;
 use App\Service\SettingsService;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -21,6 +22,7 @@ class LoginIpVerificationListener
         private MailerService $mailer,
         private UrlGeneratorInterface $urlGenerator,
         private RequestStack $requestStack,
+        private LoggerInterface $logger,
     ) {}
 
     public function __invoke(LoginSuccessEvent $event): void
@@ -69,8 +71,12 @@ class LoginIpVerificationListener
 
         try {
             $this->mailer->sendDeviceVerification($user, $currentIp);
-        } catch (\Throwable) {
-            // Fail silently — user still gets blocked
+        } catch (\Throwable $e) {
+            $this->logger->error('Mailer: sendDeviceVerification failed.', [
+                'user' => $user->getEmail(),
+                'ip' => $currentIp,
+                'error' => $e->getMessage(),
+            ]);
         }
 
         $redirectUrl = $this->urlGenerator->generate('app_device_verify_pending');

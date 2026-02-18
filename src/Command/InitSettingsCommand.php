@@ -26,7 +26,7 @@ class InitSettingsCommand extends Command
         ['key' => 'site_description', 'value' => 'Classement et listing de serveurs prives de jeux videos', 'type' => 'textarea', 'label' => 'Description du site', 'description' => 'Description courte du site utilisee dans le footer et les meta', 'category' => 'general', 'position' => 1],
         ['key' => 'site_logo', 'value' => 'assets/img/logo/logo.svg', 'type' => 'image', 'label' => 'Logo du site', 'description' => 'Logo affiche dans le header (recommande: SVG ou PNG transparent, 200x50px)', 'category' => 'general', 'position' => 2],
         ['key' => 'site_favicon', 'value' => 'assets/img/logo/icon.svg', 'type' => 'image', 'label' => 'Favicon', 'description' => 'Icone affichee dans l\'onglet du navigateur (recommande: SVG ou PNG 32x32px)', 'category' => 'general', 'position' => 3],
-        ['key' => 'site_email', 'value' => 'contact@nexarena.com', 'type' => 'text', 'label' => 'Email de contact', 'description' => 'Adresse email affichee pour le contact', 'category' => 'general', 'position' => 4],
+        ['key' => 'site_email', 'value' => 'contact@nexarena.fr', 'type' => 'text', 'label' => 'Email de contact', 'description' => 'Adresse email affichee pour le contact', 'category' => 'general', 'position' => 4],
         ['key' => 'site_accent_color', 'value' => '#45f882', 'type' => 'color', 'label' => 'Couleur principale', 'description' => 'Couleur d\'accent du site (boutons, liens, etc.)', 'category' => 'general', 'position' => 5],
         ['key' => 'maintenance_mode', 'value' => '0', 'type' => 'boolean', 'label' => 'Mode maintenance', 'description' => 'Activer le mode maintenance (seuls les admins peuvent acceder au site)', 'category' => 'general', 'position' => 6],
 
