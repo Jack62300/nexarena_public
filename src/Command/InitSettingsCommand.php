@@ -118,6 +118,7 @@ class InitSettingsCommand extends Command
         // ========== SECURITE ==========
         ['key' => 'security_max_upload_size', 'value' => '5', 'type' => 'number', 'label' => 'Taille max upload (Mo)', 'description' => 'Taille maximale des fichiers uploades en megaoctets (images, bannieres)', 'category' => 'securite', 'position' => 0],
         ['key' => 'security_allowed_origins', 'value' => '', 'type' => 'textarea', 'label' => 'Origines autorisees (CORS)', 'description' => 'Domaines autorises pour les requetes cross-origin (un par ligne). Laissez vide pour tout autoriser.', 'category' => 'securite', 'position' => 1],
+        ['key' => 'login_ip_verification_enabled', 'value' => '0', 'type' => 'boolean', 'label' => 'Verification IP a la connexion', 'description' => 'Si activee, toute connexion depuis une IP inconnue necessite une validation par email avant d\'acceder au site.', 'category' => 'securite', 'position' => 2],
 
         // ========== PAIEMENT ==========
         ['key' => 'paypal_client_id', 'value' => '', 'type' => 'secret', 'label' => 'PayPal Client ID', 'description' => 'Client ID de l\'application PayPal (developer.paypal.com)', 'category' => 'paiement', 'position' => 0],

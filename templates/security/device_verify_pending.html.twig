@@ -1,0 +1,137 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Validation d'appareil — {{ setting('site_name') }}{% endblock %}
+
+{% block body %}
+<section class="breadcrumb-area" data-background="{{ asset('assets/img/bg/breadcrumb_bg01.jpg') }}">
+    <div class="container">
+        <div class="breadcrumb__wrapper">
+            <div class="row">
+                <div class="col-xl-6 col-lg-7">
+                    <div class="breadcrumb__content">
+                        <h2 class="title">Validation d'appareil</h2>
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb">
+                                <li class="breadcrumb-item"><a href="{{ path('app_home') }}">Accueil</a></li>
+                                <li class="breadcrumb-item active">Validation</li>
+                            </ol>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="device-verify-section py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6 col-md-8">
+                <div class="dv-card text-center">
+                    <div class="dv-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h2>Connexion depuis un nouvel appareil</h2>
+                    <p class="dv-lead">Nous avons détecté une connexion depuis une adresse IP inconnue. Pour protéger votre compte, un email de confirmation a été envoyé à votre adresse.</p>
+
+                    <div class="dv-alert">
+                        <i class="fas fa-lock me-2"></i>
+                        <strong>Accès bloqué</strong> — Vous ne pourrez vous connecter qu'après avoir validé votre appareil via le lien envoyé par email.
+                    </div>
+
+                    <div class="dv-steps">
+                        <div class="dv-step">
+                            <span class="step-icon"><i class="fas fa-envelope"></i></span>
+                            <div>
+                                <strong>Consultez votre email</strong>
+                                <span>Un message de sécurité vous a été envoyé</span>
+                            </div>
+                        </div>
+                        <div class="dv-step">
+                            <span class="step-icon"><i class="fas fa-mouse-pointer"></i></span>
+                            <div>
+                                <strong>Cliquez sur le lien</strong>
+                                <span>« Valider cet appareil » dans l'email</span>
+                            </div>
+                        </div>
+                        <div class="dv-step">
+                            <span class="step-icon"><i class="fas fa-sign-in-alt"></i></span>
+                            <div>
+                                <strong>Reconnectez-vous</strong>
+                                <span>Votre appareil sera mémorisé pour la suite</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dv-notice">
+                        <i class="fas fa-info-circle"></i>
+                        Le lien est valable <strong>1 heure</strong>. Vérifiez aussi vos spams si vous ne trouvez pas l'email.
+                    </div>
+
+                    <a href="{{ path('app_login') }}" class="btn btn-link mt-4">
+                        <i class="fas fa-arrow-left me-1"></i> Retour à la connexion
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+.device-verify-section { min-height: 70vh; display: flex; align-items: center; }
+.dv-card {
+    background: #0d1b2d;
+    border: 1px solid rgba(255,107,53,0.2);
+    border-radius: 20px;
+    padding: 48px 40px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+}
+.dv-icon {
+    width: 90px; height: 90px;
+    background: rgba(255,107,53,0.1);
+    border: 2px solid rgba(255,107,53,0.3);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 28px;
+}
+.dv-icon i { font-size: 38px; color: #ff6b35; }
+.dv-card h2 { font-size: 24px; font-weight: 700; color: #fff; margin-bottom: 14px; }
+.dv-lead { color: rgba(200,214,232,0.7); font-size: 15px; line-height: 1.7; margin-bottom: 28px; }
+.dv-alert {
+    background: rgba(255,107,53,0.08);
+    border: 1px solid rgba(255,107,53,0.25);
+    border-radius: 10px;
+    padding: 14px 18px;
+    font-size: 14px; color: rgba(255,200,180,0.9);
+    margin-bottom: 28px;
+}
+.dv-steps { text-align: left; margin-bottom: 28px; display: flex; flex-direction: column; gap: 12px; }
+.dv-step {
+    display: flex; align-items: flex-start; gap: 16px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 10px;
+    padding: 14px 16px;
+}
+.step-icon {
+    width: 36px; height: 36px;
+    background: rgba(69,248,130,0.1);
+    border: 1px solid rgba(69,248,130,0.2);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    color: #45f882; font-size: 14px;
+    flex-shrink: 0; margin-top: 2px;
+}
+.dv-step div { display: flex; flex-direction: column; gap: 3px; }
+.dv-step strong { font-size: 14px; color: #fff; }
+.dv-step span { font-size: 12px; color: rgba(200,214,232,0.55); }
+.dv-notice {
+    background: rgba(69,248,130,0.05);
+    border: 1px solid rgba(69,248,130,0.12);
+    border-radius: 10px;
+    padding: 13px 16px;
+    font-size: 13px; color: rgba(200,214,232,0.6);
+}
+.dv-notice i { color: #45f882; margin-right: 6px; }
+</style>
+{% endblock %}

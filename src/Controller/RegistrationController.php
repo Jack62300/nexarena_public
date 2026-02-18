@@ -4,6 +4,8 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Form\RegistrationFormType;
+use App\Service\MailerService;
+use App\Service\SettingsService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Cache\CacheItemPoolInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -24,6 +26,8 @@ class RegistrationController extends AbstractController
         Security $security,
         WebhookService $webhookService,
         CacheItemPoolInterface $cache,
+        SettingsService $settings,
+        MailerService $mailerService,
     ): Response {
         if ($this->getUser()) {
             return $this->redirectToRoute('app_home');
@@ -59,10 +63,17 @@ class RegistrationController extends AbstractController
                 return $this->render('security/register.html.twig', ['form' => $form]);
             }
 
+            $requireVerification = $settings->get('register_require_email_verification', false);
+
             $user = new User();
             $user->setUsername($username);
             $user->setEmail($email);
             $user->setPassword($passwordHasher->hashPassword($user, $plainPassword));
+
+            if ($requireVerification) {
+                $user->setIsEmailVerified(false);
+                $user->setEmailVerificationToken(bin2hex(random_bytes(32)));
+            }
 
             $em->persist($user);
             $em->flush();
@@ -74,6 +85,16 @@ class RegistrationController extends AbstractController
                     ['name' => 'Email', 'value' => $user->getEmail(), 'inline' => true],
                 ],
             ]);
+
+            if ($requireVerification) {
+                try {
+                    $mailerService->sendEmailVerification($user);
+                } catch (\Throwable) {
+                    // Do not block registration on mailer failure
+                }
+                $this->addFlash('success', 'Votre compte a été créé ! Vérifiez votre boîte mail pour activer votre compte.');
+                return $this->redirectToRoute('app_register_email_sent');
+            }
 
             $request->getSession()->migrate(true);
             $security->login($user, 'form_login', 'main');

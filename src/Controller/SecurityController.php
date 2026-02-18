@@ -2,7 +2,11 @@
 
 namespace App\Controller;
 
+use App\Entity\User;
+use App\Repository\UserRepository;
+use App\Service\MailerService;
 use App\Service\SettingsService;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -17,7 +21,6 @@ class SecurityController extends AbstractController
             return $this->redirectToRoute('app_home');
         }
 
-        // Pendant la maintenance, pas de connexion par formulaire
         if ($settings->getBool('maintenance_mode', false)) {
             return $this->redirectToRoute('app_maintenance');
         }
@@ -35,5 +38,104 @@ class SecurityController extends AbstractController
     public function logout(): void
     {
         // Intercepte par le firewall
+    }
+
+    // ─── Email verification ───────────────────────────────────────────────────
+
+    #[Route('/inscription/email-envoye', name: 'app_register_email_sent')]
+    public function emailSent(): Response
+    {
+        return $this->render('security/email_sent.html.twig');
+    }
+
+    #[Route('/inscription/verifier-email/{token}', name: 'app_verify_email')]
+    public function verifyEmail(
+        string $token,
+        UserRepository $userRepo,
+        EntityManagerInterface $em,
+    ): Response {
+        $user = $userRepo->findOneBy(['emailVerificationToken' => $token]);
+
+        if (!$user) {
+            $this->addFlash('error', 'Lien de vérification invalide ou expiré.');
+            return $this->redirectToRoute('app_login');
+        }
+
+        $user->setIsEmailVerified(true);
+        $user->setEmailVerificationToken(null);
+        $em->flush();
+
+        $this->addFlash('success', 'Votre adresse email a été vérifiée ! Vous pouvez maintenant vous connecter.');
+        return $this->redirectToRoute('app_login');
+    }
+
+    #[Route('/inscription/renvoyer-email', name: 'app_resend_verification_email', methods: ['POST'])]
+    public function resendVerificationEmail(
+        \Symfony\Component\HttpFoundation\Request $request,
+        UserRepository $userRepo,
+        EntityManagerInterface $em,
+        MailerService $mailerService,
+    ): Response {
+        $email = $request->request->get('email');
+        if (!$email) {
+            return $this->redirectToRoute('app_register_email_sent');
+        }
+
+        $user = $userRepo->findOneBy(['email' => $email]);
+        if ($user && !$user->isEmailVerified()) {
+            $user->setEmailVerificationToken(bin2hex(random_bytes(32)));
+            $em->flush();
+            try {
+                $mailerService->sendEmailVerification($user);
+            } catch (\Throwable) {}
+        }
+
+        $this->addFlash('success', 'Si un compte existe avec cet email, un nouveau lien a été envoyé.');
+        return $this->redirectToRoute('app_register_email_sent');
+    }
+
+    // ─── Device/IP verification ───────────────────────────────────────────────
+
+    #[Route('/appareil/validation-en-attente', name: 'app_device_verify_pending')]
+    public function deviceVerifyPending(): Response
+    {
+        return $this->render('security/device_verify_pending.html.twig');
+    }
+
+    #[Route('/appareil/valider/{token}', name: 'app_verify_device')]
+    public function verifyDevice(
+        string $token,
+        UserRepository $userRepo,
+        EntityManagerInterface $em,
+    ): Response {
+        $user = $userRepo->findOneBy(['deviceVerificationToken' => $token]);
+
+        if (!$user) {
+            $this->addFlash('error', 'Lien de validation d\'appareil invalide ou expiré.');
+            return $this->redirectToRoute('app_login');
+        }
+
+        $expiry = $user->getDeviceVerificationTokenExpiry();
+        if (!$expiry || $expiry < new \DateTimeImmutable()) {
+            $this->addFlash('error', 'Ce lien de validation a expiré. Veuillez vous reconnecter pour en recevoir un nouveau.');
+            $user->setDeviceVerificationToken(null);
+            $user->setDeviceVerificationTokenExpiry(null);
+            $user->setPendingDeviceIp(null);
+            $em->flush();
+            return $this->redirectToRoute('app_login');
+        }
+
+        $ip = $user->getPendingDeviceIp();
+        if ($ip) {
+            $user->addTrustedIp($ip);
+        }
+
+        $user->setDeviceVerificationToken(null);
+        $user->setDeviceVerificationTokenExpiry(null);
+        $user->setPendingDeviceIp(null);
+        $em->flush();
+
+        $this->addFlash('success', 'Appareil validé ! Vous pouvez maintenant vous connecter.');
+        return $this->redirectToRoute('app_login');
     }
 }
