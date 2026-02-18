@@ -152,7 +152,7 @@
                             {% endif %}
                         </td>
                         <td style="color:var(--text-secondary);font-size:13px;">
-                            {{ server.createdAt ? server.createdAt|date('d/m/Y') : '—' }}
+                            {{ server.createdAt ? server.createdAt|time_ago('d/m/Y') : '—' }}
                         </td>
                         <td>
                             <div style="display:flex;gap:6px;flex-wrap:wrap;">

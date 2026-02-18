@@ -157,6 +157,36 @@ class PremiumService
         return true;
     }
 
+    public function purchaseWithServerNexbits(User $user, Server $server, PremiumPlan $plan): bool
+    {
+        $cost = $plan->getNexbitsPrice();
+        if ($cost <= 0) {
+            return false;
+        }
+
+        if (!$server->hasEnoughTokens($cost)) {
+            return false;
+        }
+
+        $server->removeTokens($cost);
+        $server->addTokens($plan->getTokensGiven());
+        $server->addBoostTokens($plan->getBoostTokensGiven());
+
+        $tx = new Transaction();
+        $tx->setUser($user);
+        $tx->setServer($server);
+        $tx->setPlan($plan);
+        $tx->setType(Transaction::TYPE_SPEND);
+        $tx->setTokensAmount($plan->getTokensGiven() - $cost);
+        $tx->setBoostTokensAmount($plan->getBoostTokensGiven());
+        $tx->setDescription('Achat du plan ' . $plan->getName() . ' pour ' . $server->getName() . ' (NexBits serveur)');
+
+        $this->em->persist($tx);
+        $this->em->flush();
+
+        return true;
+    }
+
     public function creditTokensFromPurchase(User $user, PremiumPlan $plan, string $paypalOrderId, string $paypalStatus): Transaction
     {
         $isPending = $paypalStatus === Transaction::PAYPAL_STATUS_PENDING;

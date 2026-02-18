@@ -41,7 +41,7 @@
                                 <span class="status-dot status-dot--inactive"></span>Brouillon
                             {% endif %}
                         </td>
-                        <td style="color:var(--text-secondary);">{{ article.createdAt|date('d/m/Y H:i') }}</td>
+                        <td style="color:var(--text-secondary);">{{ article.createdAt|time_ago }}</td>
                         <td>
                             <div style="display:flex;gap:8px;">
                                 <a href="{{ path('admin_articles_edit', {id: article.id}) }}" class="btn-admin btn-admin--outline btn-admin--sm">

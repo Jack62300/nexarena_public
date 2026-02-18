@@ -2,9 +2,11 @@
 
 namespace App\Controller;
 
+use App\Entity\Server;
 use App\Entity\Transaction;
 use App\Entity\User;
 use App\Repository\PremiumPlanRepository;
+use App\Repository\ServerRepository;
 use App\Repository\TransactionRepository;
 use App\Service\PayPalService;
 use App\Service\PremiumService;
@@ -26,6 +28,7 @@ class PremiumController extends AbstractController
         private PremiumService $premiumService,
         private PremiumPlanRepository $planRepo,
         private TransactionRepository $transactionRepo,
+        private ServerRepository $serverRepo,
         private LoggerInterface $logger,
         private WebhookService $webhookService,
     ) {}
@@ -34,12 +37,17 @@ class PremiumController extends AbstractController
     #[Route('/premium', name: 'premium_index')]
     public function index(): Response
     {
+        /** @var User|null $user */
+        $user = $this->getUser();
+        $userServers = $user ? $this->serverRepo->findByOwner($user) : [];
+
         return $this->render('premium/index.html.twig', [
             'defaultPlans' => $this->planRepo->findActiveByType('default'),
             'customPlans' => $this->planRepo->findActiveByType('custom'),
             'paypal_client_id' => $this->paypal->getClientId(),
             'paypal_currency' => $this->paypal->getCurrency(),
             'is_sandbox' => $this->paypal->isSandbox(),
+            'userServers' => $userServers,
         ]);
     }
 
@@ -49,6 +57,7 @@ class PremiumController extends AbstractController
     {
         $data = json_decode($request->getContent(), true);
         $planId = (int) ($data['planId'] ?? 0);
+        $serverId = isset($data['serverId']) ? (int) $data['serverId'] : null;
 
         $plan = $this->planRepo->find($planId);
         if (!$plan || !$plan->isActive()) {
@@ -62,6 +71,36 @@ class PremiumController extends AbstractController
         /** @var User $user */
         $user = $this->getUser();
 
+        // Server source: deduct from server balance
+        if ($serverId !== null) {
+            $server = $this->serverRepo->find($serverId);
+            if (!$server || $server->getOwner() !== $user) {
+                return new JsonResponse(['error' => 'Serveur introuvable ou non autorise.'], 403);
+            }
+
+            if (!$server->hasEnoughTokens($plan->getNexbitsPrice())) {
+                return new JsonResponse(['error' => 'NexBits du serveur insuffisants. Solde : ' . $server->getTokenBalance() . ' NexBits, requis : ' . $plan->getNexbitsPrice() . '.'], 400);
+            }
+
+            $success = $this->premiumService->purchaseWithServerNexbits($user, $server, $plan);
+            if (!$success) {
+                return new JsonResponse(['error' => 'Erreur lors de l\'achat. Veuillez reessayer.'], 500);
+            }
+
+            $this->webhookService->dispatch('payment.completed', [
+                'title' => 'Achat Premium (NexBits serveur)',
+                'fields' => [
+                    ['name' => 'Utilisateur', 'value' => $user->getUsername(), 'inline' => true],
+                    ['name' => 'Serveur', 'value' => $server->getName(), 'inline' => true],
+                    ['name' => 'Plan', 'value' => $plan->getName(), 'inline' => true],
+                    ['name' => 'Cout', 'value' => $plan->getNexbitsPrice() . ' NexBits', 'inline' => true],
+                ],
+            ]);
+
+            return new JsonResponse(['success' => true, 'source' => 'server']);
+        }
+
+        // Personal source: deduct from user balance
         if (!$user->hasEnoughTokens($plan->getNexbitsPrice())) {
             return new JsonResponse(['error' => 'NexBits insuffisants. Vous avez ' . $user->getTokenBalance() . ' NexBits, il en faut ' . $plan->getNexbitsPrice() . '.'], 400);
         }
@@ -80,7 +119,7 @@ class PremiumController extends AbstractController
             ],
         ]);
 
-        return new JsonResponse(['success' => true]);
+        return new JsonResponse(['success' => true, 'source' => 'personal']);
     }
 
     #[Route('/premium/create-order', name: 'premium_create_order', methods: ['POST'])]

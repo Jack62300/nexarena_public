@@ -28,7 +28,7 @@
 
                 <div class="mas-sh__info">
                     <h2>{{ listing.title }}</h2>
-                    <p><a href="{{ path('server_show', {slug: listing.server.slug}) }}">{{ listing.server.name }}</a> &middot; Soumise le {{ application.createdAt|date('d/m/Y a H:i') }}</p>
+                    <p><a href="{{ path('server_show', {slug: listing.server.slug}) }}">{{ listing.server.name }}</a> &middot; Soumise le {{ application.createdAt|time_ago }}</p>
                 </div>
 
                 {% if application.status == 'accepted' %}

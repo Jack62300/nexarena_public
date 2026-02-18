@@ -40,7 +40,7 @@
                             <i class="fas fa-circle"></i> {{ app.listing.server.name }}
                         </div>
                         <div class="mal-card__footer">
-                            <span class="mal-card__date"><i class="far fa-clock"></i> {{ app.createdAt|date('d/m/Y H:i') }}</span>
+                            <span class="mal-card__date"><i class="far fa-clock"></i> {{ app.createdAt|time_ago }}</span>
                             <span class="mal-card__view">Voir <i class="fas fa-arrow-right"></i></span>
                         </div>
                     </a>

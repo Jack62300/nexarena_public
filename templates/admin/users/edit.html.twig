@@ -100,7 +100,7 @@
                         <div style="font-weight:600;font-size:16px;">{{ user.username }}</div>
                         <div style="color:var(--text-secondary);font-size:13px;">{{ user.email }}</div>
                         <div style="color:var(--text-secondary);font-size:12px;margin-top:4px;">
-                            Inscrit le {{ user.createdAt|date('d/m/Y a H:i') }}
+                            Inscrit le {{ user.createdAt|time_ago }}
                         </div>
                     </div>
                 </div>

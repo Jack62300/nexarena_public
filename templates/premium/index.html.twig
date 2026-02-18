@@ -338,15 +338,38 @@
         {# NexBits tab content #}
         <div class="pp-modal__tab-content" id="ppTabNexbits" style="display:none;">
             <div class="pp-modal__amount" id="ppNexbitsPrice"></div>
+
+            {% if userServers|length > 0 %}
+            {# Source selector #}
+            <div class="pp-source-selector">
+                <div class="pp-source-option pp-source-option--active" data-source="personal" onclick="selectSource('personal')">
+                    <i class="fas fa-user"></i>
+                    <div>
+                        <div class="pp-source-option__label">Personnel</div>
+                        <div class="pp-source-option__balance"><i class="fas fa-coins" style="color:#ffd700;font-size:11px;"></i> {{ app.user.tokenBalance }} NexBits</div>
+                    </div>
+                </div>
+                {% for server in userServers %}
+                <div class="pp-source-option" data-source="server" data-server-id="{{ server.id }}" data-server-balance="{{ server.tokenBalance }}" data-server-name="{{ server.name }}" onclick="selectSource('server', this)">
+                    <i class="fas fa-server"></i>
+                    <div>
+                        <div class="pp-source-option__label">{{ server.name }}</div>
+                        <div class="pp-source-option__balance"><i class="fas fa-coins" style="color:#ffd700;font-size:11px;"></i> {{ server.tokenBalance }} NexBits</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
             <div class="pp-modal__nexbits-balance">
-                Votre solde : <i class="fas fa-coins" style="color:#ffd700;"></i> <strong id="ppUserBalance">{{ app.user.tokenBalance }}</strong> NexBits
+                Solde disponible : <i class="fas fa-coins" style="color:#ffd700;"></i> <strong id="ppActiveBalance">{{ app.user.tokenBalance }}</strong> NexBits
             </div>
             <button type="button" class="pp-modal__nexbits-btn" id="ppNexbitsBtn" onclick="buyWithNexbits()">
                 <i class="fas fa-coins"></i> <span id="ppNexbitsBtnLabel">Payer</span>
             </button>
             <div class="pp-modal__nexbits-error" id="ppNexbitsError" style="display:none;"></div>
             <div class="pp-modal__secure">
-                <i class="fas fa-lock"></i> Debit instantane de votre solde NexBits
+                <i class="fas fa-lock"></i> Debit instantane du solde NexBits selectionne
             </div>
         </div>
     </div>
@@ -367,8 +390,45 @@
 (function() {
     var currentPlanId = null;
     var currentNexbitsPrice = 0;
+    var currentServerId = null;
+    var currentSourceBalance = {{ app.user ? app.user.tokenBalance : 0 }};
     var buttonsRendered = {};
     var buying = false;
+
+    window.selectSource = function(type, el) {
+        document.querySelectorAll('.pp-source-option').forEach(function(o) {
+            o.classList.remove('pp-source-option--active');
+        });
+
+        if (type === 'personal') {
+            document.querySelector('.pp-source-option[data-source="personal"]').classList.add('pp-source-option--active');
+            currentServerId = null;
+            currentSourceBalance = {{ app.user ? app.user.tokenBalance : 0 }};
+        } else {
+            el.classList.add('pp-source-option--active');
+            currentServerId = parseInt(el.getAttribute('data-server-id'));
+            currentSourceBalance = parseInt(el.getAttribute('data-server-balance'));
+        }
+
+        document.getElementById('ppActiveBalance').textContent = currentSourceBalance;
+        updateNexbitsBtn();
+    };
+
+    function updateNexbitsBtn() {
+        var btn = document.getElementById('ppNexbitsBtn');
+        var errorEl = document.getElementById('ppNexbitsError');
+        if (!btn) return;
+        if (currentSourceBalance < currentNexbitsPrice) {
+            btn.disabled = true;
+            btn.classList.add('pp-modal__nexbits-btn--disabled');
+            errorEl.textContent = 'Solde insuffisant. Il manque ' + (currentNexbitsPrice - currentSourceBalance) + ' NexBits.';
+            errorEl.style.display = '';
+        } else {
+            btn.disabled = false;
+            btn.classList.remove('pp-modal__nexbits-btn--disabled');
+            errorEl.style.display = 'none';
+        }
+    }
 
     window.openPayment = function(btn) {
         var planId = btn.getAttribute('data-plan-id');
@@ -410,19 +470,19 @@
         if (hasNexbits) {
             document.getElementById('ppNexbitsPrice').innerHTML = nexbitsPrice + ' <span>NexBits</span>';
             document.getElementById('ppNexbitsBtnLabel').textContent = 'Payer ' + nexbitsPrice + ' NexBits';
-            document.getElementById('ppNexbitsError').style.display = 'none';
 
-            var balance = parseInt(document.getElementById('ppUserBalance').textContent);
-            var nbBtn = document.getElementById('ppNexbitsBtn');
-            if (balance < nexbitsPrice) {
-                nbBtn.disabled = true;
-                nbBtn.classList.add('pp-modal__nexbits-btn--disabled');
-                document.getElementById('ppNexbitsError').textContent = 'Solde insuffisant. Il vous manque ' + (nexbitsPrice - balance) + ' NexBits.';
-                document.getElementById('ppNexbitsError').style.display = '';
-            } else {
-                nbBtn.disabled = false;
-                nbBtn.classList.remove('pp-modal__nexbits-btn--disabled');
-            }
+            // Reset source to personal on each modal open
+            currentServerId = null;
+            currentSourceBalance = {{ app.user ? app.user.tokenBalance : 0 }};
+            document.querySelectorAll('.pp-source-option').forEach(function(o) {
+                o.classList.remove('pp-source-option--active');
+            });
+            var personalOpt = document.querySelector('.pp-source-option[data-source="personal"]');
+            if (personalOpt) personalOpt.classList.add('pp-source-option--active');
+            var balEl = document.getElementById('ppActiveBalance');
+            if (balEl) balEl.textContent = currentSourceBalance;
+
+            updateNexbitsBtn();
         }
 
         // Show the right tab first: PayPal if available, otherwise NexBits
@@ -548,6 +608,11 @@
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Traitement...';
         errorEl.style.display = 'none';
 
+        var payload = { planId: currentPlanId };
+        if (currentServerId !== null) {
+            payload.serverId = currentServerId;
+        }
+
         fetch('{{ path("premium_buy_nexbits") }}', {
             method: 'POST',
             headers: {
@@ -555,7 +620,7 @@
                 'X-Requested-With': 'XMLHttpRequest'
             },
             credentials: 'same-origin',
-            body: JSON.stringify({ planId: currentPlanId })
+            body: JSON.stringify(payload)
         })
         .then(function(res) { return res.json(); })
         .then(function(json) {

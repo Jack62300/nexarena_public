@@ -111,7 +111,7 @@
                                             <span class="dash-badge dash-badge--muted">Brouillon</span>
                                         {% endif %}
                                     </td>
-                                    <td class="dash-table__muted">{{ article.createdAt|date('d/m/Y H:i') }}</td>
+                                    <td class="dash-table__muted">{{ article.createdAt|time_ago }}</td>
                                     <td>
                                         <a href="{{ path('admin_articles_edit', {id: article.id}) }}" class="dash-card__link" style="font-size:13px;">
                                             <i class="fas fa-edit"></i> Modifier
@@ -164,7 +164,7 @@
                                         </div>
                                     </td>
                                     <td>{{ role_badge(user.roles)|raw }}</td>
-                                    <td class="dash-table__muted">{{ user.createdAt|date('d/m/Y') }}</td>
+                                    <td class="dash-table__muted">{{ user.createdAt|time_ago('d/m/Y') }}</td>
                                     <td>
                                         {% if user.googleId %}<i class="fab fa-google" style="color:#ea4335;" title="Google"></i> {% endif %}
                                         {% if user.discordId %}<i class="fab fa-discord" style="color:#5865f2;" title="Discord"></i> {% endif %}
@@ -214,7 +214,7 @@
                                     </td>
                                     <td class="dash-table__muted">{{ tx.plan ? tx.plan.name : '-' }}</td>
                                     <td><span class="dash-amount">{{ tx.amount }} {{ tx.currency }}</span></td>
-                                    <td class="dash-table__muted">{{ tx.createdAt|date('d/m H:i') }}</td>
+                                    <td class="dash-table__muted">{{ tx.createdAt|time_ago('d/m H:i') }}</td>
                                 </tr>
                             {% else %}
                                 <tr><td colspan="4" class="dash-table__empty">Aucune transaction.</td></tr>

@@ -145,7 +145,7 @@
                                 </div>
                             {% endif %}
                             <div class="sv-card__stat">
-                                <span class="sv-card__stat-value">{{ server.createdAt ? server.createdAt|date('d/m/y') : '-' }}</span>
+                                <span class="sv-card__stat-value">{{ server.createdAt ? server.createdAt|time_ago('d/m/Y') : '-' }}</span>
                                 <span class="sv-card__stat-label">Cree le</span>
                             </div>
                         </div>
@@ -259,7 +259,7 @@
                                     <span class="sv-card__stat-label">Slots</span>
                                 </div>
                                 <div class="sv-card__stat">
-                                    <span class="sv-card__stat-value">{{ server.createdAt ? server.createdAt|date('d/m/y') : '-' }}</span>
+                                    <span class="sv-card__stat-value">{{ server.createdAt ? server.createdAt|time_ago('d/m/Y') : '-' }}</span>
                                     <span class="sv-card__stat-label">Cree le</span>
                                 </div>
                             </div>

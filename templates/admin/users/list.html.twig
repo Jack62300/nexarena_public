@@ -38,7 +38,7 @@
                         </td>
                         <td style="color:var(--text-secondary);">{{ user.email }}</td>
                         <td>{{ role_badge(user.roles)|raw }}</td>
-                        <td style="color:var(--text-secondary);">{{ user.createdAt|date('d/m/Y H:i') }}</td>
+                        <td style="color:var(--text-secondary);">{{ user.createdAt|time_ago }}</td>
                         <td>
                             {% if user.googleId %}
                                 <i class="fab fa-google" style="color:#ea4335;" title="Google"></i>

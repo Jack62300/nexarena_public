@@ -174,11 +174,11 @@
                 </div>
                 <div class="info-row">
                     <span>Créé le</span>
-                    <span>{{ server.createdAt ? server.createdAt|date('d/m/Y H:i') : '—' }}</span>
+                    <span>{{ server.createdAt ? server.createdAt|time_ago : '—' }}</span>
                 </div>
                 <div class="info-row">
                     <span>Modifié le</span>
-                    <span>{{ server.updatedAt ? server.updatedAt|date('d/m/Y H:i') : '—' }}</span>
+                    <span>{{ server.updatedAt ? server.updatedAt|time_ago : '—' }}</span>
                 </div>
             </div>
 

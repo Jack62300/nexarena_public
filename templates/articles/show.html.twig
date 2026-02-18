@@ -26,11 +26,11 @@
                     {# Meta #}
                     <div class="nx-art-meta">
                         <span class="nx-art-meta__item">
-                            <i class="far fa-calendar-alt"></i> {{ article.createdAt|date('d M Y') }}
+                            <i class="far fa-calendar-alt"></i> {{ article.createdAt|time_ago('d M Y') }}
                         </span>
                         {% if article.updatedAt %}
                             <span class="nx-art-meta__item">
-                                <i class="fas fa-sync-alt"></i> Mis a jour le {{ article.updatedAt|date('d/m/Y') }}
+                                <i class="fas fa-sync-alt"></i> Mis a jour le {{ article.updatedAt|time_ago('d/m/Y') }}
                             </span>
                         {% endif %}
                     </div>

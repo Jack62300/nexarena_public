@@ -32,7 +32,7 @@
 
             {% if application.reviewedBy %}
                 <div class="appd-review-info">
-                    <p>Traite par <strong style="color:#fff;">{{ application.reviewedBy.username }}</strong> le {{ application.reviewedAt|date('d/m/Y a H:i') }}</p>
+                    <p>Traite par <strong style="color:#fff;">{{ application.reviewedBy.username }}</strong> le {{ application.reviewedAt|time_ago }}</p>
                     {% if application.statusComment %}
                         <div class="comment">{{ application.statusComment }}</div>
                     {% endif %}
@@ -92,7 +92,7 @@
                 </div>
                 <div class="appd-info-item">
                     <label>Date de candidature</label>
-                    <span>{{ application.createdAt|date('d/m/Y a H:i') }}</span>
+                    <span>{{ application.createdAt|time_ago }}</span>
                 </div>
             </div>
         </div>

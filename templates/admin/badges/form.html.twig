@@ -138,7 +138,7 @@
                         {% for ub in awardedUsers %}
                             <div class="awarded-user">
                                 <span style="color:var(--text-primary);font-weight:600;">{{ ub.user.username }}</span>
-                                <span style="color:var(--text-secondary);font-size:12px;">{{ ub.awardedAt|date('d/m/Y H:i') }}</span>
+                                <span style="color:var(--text-secondary);font-size:12px;">{{ ub.awardedAt|time_ago }}</span>
                                 {% if is_granted('ROLE_MANAGER') %}
                                     <form method="post" action="{{ path('admin_badges_revoke', {id: badge.id, userId: ub.user.id}) }}" style="margin-left:auto;" onsubmit="return confirm('Révoquer ce badge ?');">
                                         <input type="hidden" name="_token" value="{{ csrf_token('badge_revoke_' ~ badge.id ~ '_' ~ ub.user.id) }}">

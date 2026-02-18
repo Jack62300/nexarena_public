@@ -19,7 +19,7 @@
                     <div style="display:flex;align-items:center;gap:12px;color:var(--text-secondary);font-size:13px;">
                         <span><i class="fas fa-server"></i> {{ listing.server.name }}</span>
                         <span><i class="fas fa-user"></i> {{ listing.author.username }}</span>
-                        <span><i class="fas fa-calendar"></i> {{ listing.createdAt|date('d/m/Y H:i') }}</span>
+                        <span><i class="fas fa-calendar"></i> {{ listing.createdAt|time_ago }}</span>
                     </div>
                 </div>
                 <div>
@@ -108,7 +108,7 @@
                 {% if listing.approvedAt %}
                     <div style="display:flex;justify-content:space-between;">
                         <span style="color:var(--text-secondary);">Approuvee le</span>
-                        <span>{{ listing.approvedAt|date('d/m/Y H:i') }}</span>
+                        <span>{{ listing.approvedAt|time_ago }}</span>
                     </div>
                 {% endif %}
             </div>

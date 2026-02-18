@@ -305,7 +305,7 @@
                         {% endif %}
                     </div>
                     <div class="pub-hero__meta">
-                        <span class="pub-hero__meta-item"><i class="fas fa-calendar-alt"></i> Membre depuis {{ profileUser.createdAt ? profileUser.createdAt|date('d/m/Y') : 'N/A' }}</span>
+                        <span class="pub-hero__meta-item"><i class="fas fa-calendar-alt"></i> Membre depuis {{ profileUser.createdAt ? profileUser.createdAt|time_ago('d/m/Y') : 'N/A' }}</span>
                         {% if profileUser.discordUsername and profileUser.isFieldVisible('discord') %}
                             <span class="pub-hero__meta-item" style="color:#5865f2;"><i class="fab fa-discord"></i> {{ profileUser.discordUsername }}</span>
                         {% endif %}
@@ -419,7 +419,7 @@
                                         </div>
                                         <div>
                                             <div class="pub-badge__name">{{ ub.badge.name }}</div>
-                                            <div class="pub-badge__date">{{ ub.awardedAt|date('d/m/Y') }}</div>
+                                            <div class="pub-badge__date">{{ ub.awardedAt|time_ago('d/m/Y') }}</div>
                                         </div>
                                     </div>
                                 {% endfor %}

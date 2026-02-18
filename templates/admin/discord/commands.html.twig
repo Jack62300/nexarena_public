@@ -50,7 +50,7 @@
                         <span class="dc-ticket-status dc-ticket-status--closed">Inactif</span>
                     {% endif %}
                 </td>
-                <td style="color:var(--text-secondary);font-size:12px;">{{ cmd.createdAt|date('d/m/Y H:i') }}</td>
+                <td style="color:var(--text-secondary);font-size:12px;">{{ cmd.createdAt|time_ago }}</td>
                 <td>
                     <div style="display:flex;gap:6px;">
                         <a href="{{ path('admin_discord_command_edit', {id: cmd.id}) }}" class="btn-admin btn-admin--outline btn-admin--sm" title="Modifier">

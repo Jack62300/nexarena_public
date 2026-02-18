@@ -628,6 +628,61 @@
     text-align: center;
 }
 
+/* --- Source selector --- */
+.pp-source-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.pp-source-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    background: rgba(255,255,255,0.03);
+}
+
+.pp-source-option:hover {
+    border-color: rgba(255,215,0,0.3);
+    background: rgba(255,215,0,0.04);
+}
+
+.pp-source-option--active {
+    border-color: rgba(255,215,0,0.5);
+    background: rgba(255,215,0,0.07);
+}
+
+.pp-source-option > i {
+    font-size: 16px;
+    color: #8b949e;
+    flex-shrink: 0;
+    width: 20px;
+    text-align: center;
+}
+
+.pp-source-option--active > i {
+    color: #ffd700;
+}
+
+.pp-source-option__label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #e4e6eb;
+    line-height: 1.2;
+}
+
+.pp-source-option__balance {
+    font-size: 11px;
+    color: #8b949e;
+    margin-top: 2px;
+}
+
 /* --- NexBits tab content --- */
 .pp-modal__nexbits-balance {
     font-size: 14px;

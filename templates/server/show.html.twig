@@ -195,6 +195,12 @@
                 {% if server.shortDescription %}
                     <p class="sv-hero__short">{{ server.shortDescription }}</p>
                 {% endif %}
+                <div class="sv-hero__dates">
+                    <span><i class="fas fa-calendar-plus"></i> Créé {{ server.createdAt|time_ago }}</span>
+                    {% if server.updatedAt and server.updatedAt != server.createdAt %}
+                        <span><i class="fas fa-pencil-alt"></i> Modifié {{ server.updatedAt|time_ago }}</span>
+                    {% endif %}
+                </div>
             </div>
 
         </div>
@@ -303,7 +309,7 @@
                                     <div class="sv-comment__body">
                                         <div class="sv-comment__header">
                                             <span class="sv-comment__author">{{ comment.author.username }}</span>
-                                            <span class="sv-comment__date">{{ comment.createdAt|date('d/m/Y H:i') }}</span>
+                                            <span class="sv-comment__date">{{ comment.createdAt|time_ago }}</span>
                                             {% if comment.isFlagged %}
                                                 <span class="sv-comment__flagged-badge"><i class="fas fa-flag"></i> Signale</span>
                                             {% endif %}

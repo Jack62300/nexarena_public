@@ -39,7 +39,7 @@
                 <td style="font-size:16px;">{{ rr.emoji }}</td>
                 <td style="font-family:monospace;font-size:12px;color:var(--text-secondary);">{{ rr.roleId }}</td>
                 <td style="color:var(--text-primary);font-size:13px;">{{ rr.label ?? '-' }}</td>
-                <td style="color:var(--text-secondary);font-size:12px;">{{ rr.createdAt|date('d/m/Y H:i') }}</td>
+                <td style="color:var(--text-secondary);font-size:12px;">{{ rr.createdAt|time_ago }}</td>
                 <td>
                     <form action="{{ path('admin_discord_reaction_role_delete', {id: rr.id}) }}" method="post" style="display:inline;" onsubmit="return confirm('Supprimer ce reaction role ?')">
                         <input type="hidden" name="_token" value="{{ csrf_token('rr_delete_' ~ rr.id) }}">

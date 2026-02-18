@@ -216,7 +216,7 @@
                                     <div style="font-size:12px;color:#8b949e;">
                                         Integration active
                                         {% if twitch_sub %}
-                                            — Expire le {{ twitch_sub.expiresAt|date('d/m/Y') }}
+                                            — Expire le {{ twitch_sub.expiresAt|time_ago('d/m/Y') }}
                                             ({{ twitch_sub.daysRemaining }} jour{{ twitch_sub.daysRemaining > 1 ? 's' : '' }})
                                         {% endif %}
                                     </div>
@@ -475,7 +475,7 @@
                                 <div class="comment-body">
                                     <div class="comment-header">
                                         <span class="comment-author">{{ comment.author.username }}</span>
-                                        <span class="comment-date">{{ comment.createdAt|date('d/m/Y H:i') }}</span>
+                                        <span class="comment-date">{{ comment.createdAt|time_ago }}</span>
                                         {% if comment.isFlagged %}
                                             <span class="comment-flagged-badge"><i class="fas fa-flag"></i> Signale</span>
                                         {% endif %}
@@ -531,7 +531,7 @@
                                             <span style="font-size:11px;padding:2px 8px;border-radius:8px;background:rgba(54,185,204,0.12);color:#36b9cc;border:1px solid rgba(54,185,204,0.2);font-weight:600;"><i class="fas fa-lock" style="margin-right:2px;"></i> Membres</span>
                                         {% endif %}
                                         <span style="font-size:11px;color:#5a5c69;">{{ listing.formFields|length }} champ{{ listing.formFields|length > 1 ? 's' : '' }}</span>
-                                        <span style="font-size:11px;color:#5a5c69;">{{ listing.createdAt|date('d/m/Y') }}</span>
+                                        <span style="font-size:11px;color:#5a5c69;">{{ listing.createdAt|time_ago('d/m/Y') }}</span>
                                     </div>
                                 </div>
                                 <div style="display:flex;gap:6px;flex-shrink:0;">
@@ -886,8 +886,8 @@
                                                     {% endif %}
                                                 </td>
                                                 <td style="padding:10px;text-align:center;color:#ffd700;font-weight:700;">#{{ booking.position }}</td>
-                                                <td style="padding:10px;color:#e4e6eb;">{{ booking.startsAt|date('d/m/Y H:i') }}</td>
-                                                <td style="padding:10px;color:#e4e6eb;">{{ booking.endsAt|date('d/m/Y H:i') }}</td>
+                                                <td style="padding:10px;color:#e4e6eb;">{{ booking.startsAt|time_ago }}</td>
+                                                <td style="padding:10px;color:#e4e6eb;">{{ booking.endsAt|time_ago }}</td>
                                                 <td style="padding:10px;text-align:center;color:#ff6b35;font-weight:600;">{{ booking.boostTokensUsed }} <i class="fas fa-bolt" style="font-size:10px;"></i></td>
                                                 <td style="padding:10px;text-align:center;">
                                                     {% if status == 'active' %}
@@ -952,7 +952,7 @@
                                         {% for tx in server_transactions %}
                                             <tr style="border-bottom:1px solid #1e3048;">
                                                 <td style="padding:10px;color:#8b949e;font-family:monospace;font-size:12px;">#{{ tx.id }}</td>
-                                                <td style="padding:10px;color:#e4e6eb;white-space:nowrap;">{{ tx.createdAt|date('d/m/Y H:i') }}</td>
+                                                <td style="padding:10px;color:#e4e6eb;white-space:nowrap;">{{ tx.createdAt|time_ago }}</td>
                                                 <td style="padding:10px;text-align:center;">
                                                     {% if tx.type == 'deposit' %}
                                                         <span style="font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(28,200,138,0.12);color:#1cc88a;border:1px solid rgba(28,200,138,0.2);font-weight:600;">Depot</span>
@@ -1204,7 +1204,7 @@
                         {% endif %}
                         <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #1e3048;">
                             <span style="color:#8b949e;">Cree le</span>
-                            <span style="color:#fff;">{{ server.createdAt|date('d/m/Y') }}</span>
+                            <span style="color:#fff;">{{ server.createdAt|time_ago('d/m/Y') }}</span>
                         </div>
                         <div style="display:flex;justify-content:space-between;padding:6px 0;">
                             <span style="color:#8b949e;">Slug</span>
@@ -1261,7 +1261,7 @@
                                     </div>
                                     <div class="collab-item__info">
                                         <div class="collab-item__name">{{ collab.user.username }}</div>
-                                        <div class="collab-item__date">Ajoute le {{ collab.addedAt|date('d/m/Y') }}</div>
+                                        <div class="collab-item__date">Ajoute le {{ collab.addedAt|time_ago('d/m/Y') }}</div>
                                     </div>
                                     <form method="post" action="{{ path('user_servers_collab_remove', {id: server.id, collabId: collab.id}) }}" onsubmit="return confirm('Retirer ce collaborateur ?');" style="margin:0;">
                                         <input type="hidden" name="_token" value="{{ csrf_token('collab_remove_' ~ collab.id) }}">

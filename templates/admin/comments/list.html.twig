@@ -68,7 +68,7 @@
                                 {{ comment.flagReason ?? '-' }}
                             </div>
                         </td>
-                        <td style="white-space:nowrap;">{{ comment.flaggedAt ? comment.flaggedAt|date('d/m/Y H:i') : '-' }}</td>
+                        <td style="white-space:nowrap;">{{ comment.flaggedAt ? comment.flaggedAt|time_ago : '-' }}</td>
                         <td style="white-space:nowrap;">
                             <div style="display:flex;gap:6px;">
                                 <form method="post" action="{{ path('admin_comments_approve_delete', {id: comment.id}) }}" style="display:inline;" onsubmit="return confirm('Supprimer ce commentaire ?');">
@@ -162,7 +162,7 @@
                                 <span class="role-badge" style="background:#1cc88a22;color:#1cc88a;border:1px solid #1cc88a44;">Visible</span>
                             {% endif %}
                         </td>
-                        <td style="white-space:nowrap;">{{ comment.createdAt|date('d/m/Y H:i') }}</td>
+                        <td style="white-space:nowrap;">{{ comment.createdAt|time_ago }}</td>
                         <td>
                             {% if not comment.isDeleted %}
                                 <form method="post" action="{{ path('admin_comments_delete', {id: comment.id}) }}" style="display:inline;" onsubmit="return confirm('Supprimer definitivement ce commentaire ?');">

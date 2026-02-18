@@ -69,7 +69,7 @@
                     {% endif %}
 
                     <div class="recruit-card__meta">
-                        <span><i class="fas fa-calendar"></i> {{ listing.createdAt|date('d/m/Y') }}</span>
+                        <span><i class="fas fa-calendar"></i> {{ listing.createdAt|time_ago('d/m/Y') }}</span>
                         <span><i class="fas fa-clipboard-list"></i> {{ listing.formFields|length }} champ{{ listing.formFields|length > 1 ? 's' : '' }}</span>
                         <span><i class="fas fa-users"></i> {{ listing.applications|length }} candidature{{ listing.applications|length > 1 ? 's' : '' }}</span>
                         {% if listing.isPubliclyVisible %}

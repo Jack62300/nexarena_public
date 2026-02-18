@@ -73,7 +73,7 @@
                                 <h3 class="rci-card__title">{{ listing.title }}</h3>
                                 <div class="rci-card__desc">{{ listing.description|striptags }}</div>
                                 <div class="rci-card__footer">
-                                    <span class="rci-card__date"><i class="far fa-clock"></i> {{ listing.createdAt|date('d/m/Y') }}</span>
+                                    <span class="rci-card__date"><i class="far fa-clock"></i> {{ listing.createdAt|time_ago('d/m/Y') }}</span>
                                     <span class="rci-card__cta"><i class="fas fa-arrow-right"></i> Postuler</span>
                                 </div>
                             </div>

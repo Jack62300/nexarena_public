@@ -44,7 +44,7 @@
                     <h1 class="rcs-title">{{ listing.title }}</h1>
                     <div class="rcs-meta">
                         <span class="rcs-meta__item"><i class="fas fa-user"></i> {{ listing.author.username }}</span>
-                        <span class="rcs-meta__item"><i class="far fa-calendar"></i> {{ listing.createdAt|date('d/m/Y') }}</span>
+                        <span class="rcs-meta__item"><i class="far fa-calendar"></i> {{ listing.createdAt|time_ago('d/m/Y') }}</span>
                         <span class="rcs-meta__item"><i class="fas fa-clipboard-list"></i> {{ listing.formFields|length }} question{{ listing.formFields|length > 1 ? 's' : '' }}</span>
                     </div>
                 </div>

@@ -34,7 +34,7 @@
                 <div style="flex:1;min-width:0;">
                     <div style="font-weight:600;color:#fff;">{{ promo.channelName }}</div>
                     <div style="font-size:12px;color:rgba(255,255,255,0.5);">
-                        {{ promo.startDate|date('d/m/Y') }} - {{ promo.endDate|date('d/m/Y') }}
+                        {{ promo.startDate|time_ago('d/m/Y') }} - {{ promo.endDate|time_ago('d/m/Y') }}
                         {% if promo.server %} &bull; {{ promo.server.name }}{% endif %}
                     </div>
                 </div>

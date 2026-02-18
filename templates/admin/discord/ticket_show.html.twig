@@ -32,12 +32,12 @@
     </div>
     <div class="dc-info-item">
         <div class="dc-info-item__label">Ouvert le</div>
-        <div class="dc-info-item__value">{{ ticket.createdAt|date('d/m/Y H:i') }}</div>
+        <div class="dc-info-item__value">{{ ticket.createdAt|time_ago }}</div>
     </div>
     {% if ticket.closedAt %}
     <div class="dc-info-item">
         <div class="dc-info-item__label">Ferme le</div>
-        <div class="dc-info-item__value">{{ ticket.closedAt|date('d/m/Y H:i') }} par {{ ticket.closedBy }}</div>
+        <div class="dc-info-item__value">{{ ticket.closedAt|time_ago }} par {{ ticket.closedBy }}</div>
     </div>
     {% endif %}
 </div>
@@ -69,7 +69,7 @@
                     <div class="dc-msg__head">
                         <span class="dc-msg__author">{{ msg.authorUsername }}</span>
                         {% if msg.authorIsStaff %}<span class="dc-msg__badge">Staff</span>{% endif %}
-                        <span class="dc-msg__time">{{ msg.createdAt|date('d/m/Y H:i:s') }}</span>
+                        <span class="dc-msg__time">{{ msg.createdAt|time_ago('d/m/Y H:i:s') }}</span>
                     </div>
                     <div class="dc-msg__text">{{ msg.content }}</div>
                 </div>

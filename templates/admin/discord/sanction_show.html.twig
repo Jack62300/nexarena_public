@@ -48,11 +48,11 @@
     </div>
     <div class="dc-info-item">
         <div class="dc-info-item__label">Date</div>
-        <div class="dc-info-item__value">{{ sanction.createdAt|date('d/m/Y H:i') }}</div>
+        <div class="dc-info-item__value">{{ sanction.createdAt|time_ago }}</div>
     </div>
     <div class="dc-info-item">
         <div class="dc-info-item__label">Expiration</div>
-        <div class="dc-info-item__value">{{ sanction.expiresAt ? sanction.expiresAt|date('d/m/Y H:i') : 'Permanente' }}</div>
+        <div class="dc-info-item__value">{{ sanction.expiresAt ? sanction.expiresAt|time_ago : 'Permanente' }}</div>
     </div>
     <div class="dc-info-item">
         <div class="dc-info-item__label">Statut</div>
@@ -88,7 +88,7 @@
     <div style="padding:16px 22px;font-size:13px;color:var(--text-secondary);background:rgba(255,255,255,0.02);display:flex;align-items:center;gap:10px;">
         <i class="fas fa-undo" style="color:var(--text-secondary);"></i>
         Revoquee par <strong style="color:var(--text-primary);margin:0 4px;">{{ sanction.revokedBy }}</strong>
-        le {{ sanction.revokedAt|date('d/m/Y H:i') }}
+        le {{ sanction.revokedAt|time_ago }}
     </div>
 </div>
 {% else %}

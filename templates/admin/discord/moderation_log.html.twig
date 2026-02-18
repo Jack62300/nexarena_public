@@ -86,7 +86,7 @@
                 {% for log in logs %}
                 <tr class="dc-modlog-row" onclick="this.classList.toggle('dc-modlog-row--expanded')">
                     <td class="dc-modlog-date">
-                        {{ log.createdAt|date('d/m H:i') }}
+                        {{ log.createdAt|time_ago('d/m H:i') }}
                     </td>
                     <td>
                         <span class="dc-modlog-user">{{ log.discordUsername }}</span>
