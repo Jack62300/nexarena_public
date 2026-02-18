@@ -40,7 +40,7 @@ class HomeController extends AbstractController
         $bannerSlides = json_decode($settingsService->get('banner_slides', '[]'), true) ?: [];
 
         return $this->render('home/index.html.twig', [
-            'categories' => $categoryRepository->findMostActiveWithGameCategories(10),
+            'popularCategories' => $gameCategoryRepository->findMostActive(10),
             'gameCategories' => $gameCategoryRepository->findAllActive(),
             'premiumPositions' => $premiumPositions,
             'adminFeaturedServers' => $adminFeaturedServers,

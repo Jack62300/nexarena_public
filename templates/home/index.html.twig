@@ -172,164 +172,162 @@
        CATEGORIES (own background — match_bg.jpg)
        Same pattern as index-2: upcoming-match section
        ============================================================ #}
-    <section id="categories" class="nx-categories section-pt-120 section-pb-85" data-background="{{ asset('assets/img/bg/match_bg.jpg') }}">
+    <section id="categories" class="nx-popular-cats section-pt-120 section-pb-85" data-background="{{ asset('assets/img/bg/match_bg.jpg') }}">
         <div class="container">
             <div class="row justify-content-center">
-                <div class="col-xl-6 col-lg-7 col-md-10">
+                <div class="col-xl-6 col-lg-8">
                     <div class="section__title text-center mb-60">
-                        <span class="sub-title tg__animate-text">Explorez nos classements</span>
-                        <h3 class="title">Nos categories</h3>
+                        <span class="sub-title tg__animate-text">
+                            <i class="fas fa-fire me-1"></i> Top {{ popularCategories|length }}
+                        </span>
+                        <h3 class="title">Catégories Populaires</h3>
+                        <p class="pop-cats__subtitle">Les univers les plus actifs sur la plateforme en ce moment</p>
                     </div>
                 </div>
             </div>
 
-            {% for parentCategory in categories %}
-                {% set activeGames = [] %}
-                {% for game in parentCategory.gameCategories %}
-                    {% if game.isActive %}
-                        {% set activeGames = activeGames|merge([game]) %}
-                    {% endif %}
+            <div class="pop-cats-grid">
+                {% for game in popularCategories %}
+                    {% set rank = loop.index %}
+                    {% set gcImg = game.image ? asset('uploads/categories/' ~ game.image) : (game.category.image ? asset('uploads/categories/' ~ game.category.image) : null) %}
+                    {% set sCount = serverCounts[game.id] ?? 0 %}
+                    {% set rankClass = rank == 1 ? 'pop-cat--gold' : (rank == 2 ? 'pop-cat--silver' : (rank == 3 ? 'pop-cat--bronze' : '')) %}
+                    <a href="{{ path('ranking_game_category', {slug: game.slug}) }}" class="pop-cat {{ rankClass }}">
+                        <div class="pop-cat__rank">
+                            {% if rank == 1 %}
+                                <i class="fas fa-crown"></i>
+                            {% elseif rank <= 3 %}
+                                <span>#{{ rank }}</span>
+                            {% else %}
+                                <span>#{{ rank }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="pop-cat__img">
+                            {% if gcImg %}
+                                <img src="{{ gcImg }}" alt="{{ game.name }}">
+                            {% else %}
+                                <div class="pop-cat__placeholder">
+                                    <i class="{{ game.category.icon ?? 'fas fa-gamepad' }}"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="pop-cat__body">
+                            <div class="pop-cat__parent">
+                                <i class="{{ game.category.icon ?? 'fas fa-gamepad' }}"></i>
+                                {{ game.category.name }}
+                            </div>
+                            <h4 class="pop-cat__name">{{ game.name }}</h4>
+                            <div class="pop-cat__count">
+                                <i class="fas fa-server"></i>
+                                {{ sCount }} serveur{{ sCount > 1 ? 's' : '' }}
+                            </div>
+                        </div>
+                        {% if rank <= 3 %}
+                            <div class="pop-cat__glow"></div>
+                        {% endif %}
+                    </a>
+                {% else %}
+                    <p class="text-center text-muted w-100">Aucune catégorie active pour l'instant.</p>
                 {% endfor %}
-                {% if activeGames|length > 0 %}
-                    {% set catType = 'gaming' %}
-                    {% set pIcon = parentCategory.icon|default('') %}
-                    {% if 'server' in pIcon or 'cloud' in pIcon or 'database' in pIcon or 'hdd' in pIcon %}
-                        {% set catType = 'hosting' %}
-                    {% elseif 'headset' in pIcon or 'microphone' in pIcon or 'volume' in pIcon or 'comment' in pIcon %}
-                        {% set catType = 'vocal' %}
-                    {% endif %}
-
-                    <div class="cat-group cat-group--{{ catType }}" id="categories-{{ parentCategory.slug }}">
-                        <div class="cat-group__header">
-                            <div class="cat-group__badge">
-                                <i class="{{ parentCategory.icon ?? 'fas fa-gamepad' }}"></i>
-                                <span>{{ parentCategory.name }}</span>
-                            </div>
-                            <div class="cat-group__line"></div>
-                        </div>
-                        <div class="swiper-container cat-swiper">
-                            <div class="swiper-wrapper">
-                                {% for game in activeGames %}
-                                    {% set gcImg = game.image ? asset('uploads/categories/' ~ game.image) : (parentCategory.image ? asset('uploads/categories/' ~ parentCategory.image) : null) %}
-                                    {% set sCount = serverCounts[game.id] ?? 0 %}
-                                    <div class="swiper-slide">
-                                        <div class="streamers__item"
-                                             data-tip-name="{{ game.name }}"
-                                             data-tip-desc="{{ game.description|default('') }}"
-                                             data-tip-count="{{ sCount }}"
-                                             data-tip-img="{{ gcImg ?? '' }}"
-                                             data-tip-color="{{ game.color ? game.color|hex_to_rgb : '69,248,130' }}">
-                                            <div class="streamers__thumb">
-                                                <a href="{{ path('ranking_game_category', {slug: game.slug}) }}">
-                                                    {% if gcImg %}
-                                                        <img src="{{ gcImg }}" alt="{{ game.name }}">
-                                                    {% else %}
-                                                        <div class="cat-slide-placeholder">
-                                                            <i class="{{ parentCategory.icon ?? 'fas fa-gamepad' }}"></i>
-                                                        </div>
-                                                    {% endif %}
-                                                </a>
-                                            </div>
-                                            <div class="streamers__content">
-                                                <h4 class="name"><a href="{{ path('ranking_game_category', {slug: game.slug}) }}">{{ game.name }}</a></h4>
-                                            </div>
-                                        </div>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        <div class="streamers__pagination cat-swiper-pagination">
-                            <div class="cat-swiper-prev streamers__pagination-arrow"><i class="fas fa-angle-left"></i></div>
-                            <div class="cat-swiper-dots streamers__pagination-dots"></div>
-                            <div class="cat-swiper-next streamers__pagination-arrow"><i class="fas fa-angle-right"></i></div>
-                        </div>
-                    </div>
-                {% endif %}
-            {% endfor %}
+            </div>
         </div>
     </section>
 
     {# ============================================================
-       PARTENAIRES & SERVICES (social-bg style)
-       Same pattern as index-2: social__area section
+       ECOSYSTEM — PARTENAIRES & SERVICES (gaming redesign)
        ============================================================ #}
     {% if partners|length > 0 or services|length > 0 %}
-    <section class="nx-partners section-pt-120 section-pb-120">
+    <section class="nx-eco section-pt-90 section-pb-90">
+        <div class="nx-eco__bg-grid"></div>
         <div class="container">
-            <div class="nx-partners-zone">
-                <div class="nx-pz-header">
-                    <div class="nx-pz-header__tag"><i class="fas fa-handshake"></i> Ecosysteme</div>
-                    <h3 class="nx-pz-header__title">Nos partenaires & services</h3>
-                    <p class="nx-pz-header__sub">Ils nous font confiance et accompagnent la communaute Nexarena</p>
+
+            {# ---- Header ---- #}
+            <div class="nx-eco__head">
+                <div class="nx-eco__eyebrow">
+                    <span class="nx-eco__eyebrow-line"></span>
+                    <i class="fas fa-network-wired nx-eco__eyebrow-icon"></i>
+                    <span class="nx-eco__eyebrow-text">ECOSYSTEM</span>
+                    <i class="fas fa-network-wired nx-eco__eyebrow-icon"></i>
+                    <span class="nx-eco__eyebrow-line nx-eco__eyebrow-line--r"></span>
                 </div>
+                <h2 class="nx-eco__title">Partenaires <span class="nx-eco__title-amp">&amp;</span> Services</h2>
+                <p class="nx-eco__sub">Ils nous font confiance et accompagnent la communauté Nexarena</p>
+            </div>
 
-                <div class="nx-pz-grid {{ (partners|length == 0 or services|length == 0) ? 'nx-pz-grid--single' : '' }}">
-                    {% if partners|length > 0 %}
-                        <div class="nx-pz-col nx-pz-col--partners">
-                            <div class="nx-pz-col__label">
-                                <div class="nx-pz-col__label-icon"><i class="fas fa-handshake"></i></div>
-                                <span class="nx-pz-col__label-text">Partenaires</span>
-                                <span class="nx-pz-col__label-count">{{ partners|length }}</span>
-                            </div>
-                            <div class="nx-pz-items">
-                                {% for p in partners %}
-                                    <a href="{{ p.url }}" class="nx-pz-item" target="_blank" rel="noopener" title="{{ p.name }}">
-                                        <div class="nx-pz-item__logo">
-                                            {% if p.logoFileName %}
-                                                <img src="{{ asset('uploads/partners/' ~ p.logoFileName) }}" alt="{{ p.name }}">
-                                            {% else %}
-                                                <i class="fas fa-globe"></i>
-                                            {% endif %}
-                                        </div>
-                                        <span class="nx-pz-item__name">{{ p.name }}</span>
-                                    </a>
-                                {% endfor %}
+            {# ---- Partenaires strip ---- #}
+            {% if partners|length > 0 %}
+            <div class="nx-eco-strip nx-eco-strip--green">
+                <div class="nx-eco-strip__label">
+                    <div class="nx-eco-strip__label-bar"></div>
+                    <div class="nx-eco-strip__label-icon"><i class="fas fa-handshake"></i></div>
+                    <div class="nx-eco-strip__label-text">
+                        <span class="nx-eco-strip__label-sup">OFFICIELS</span>
+                        <span class="nx-eco-strip__label-main">Partenaires</span>
+                    </div>
+                    <span class="nx-eco-strip__label-count">{{ partners|length }}</span>
+                </div>
+                <div class="nx-eco-strip__logos">
+                    {% for p in partners %}
+                    <a href="{{ p.url }}" class="nx-eco-card" target="_blank" rel="noopener" title="{{ p.name }}">
+                        <div class="nx-eco-card__inner">
+                            <div class="nx-eco-card__img">
+                                {% if p.logoFileName %}
+                                    <img src="{{ asset('uploads/partners/' ~ p.logoFileName) }}" alt="{{ p.name }}">
+                                {% else %}
+                                    <i class="fas fa-globe"></i>
+                                {% endif %}
                             </div>
                         </div>
-                    {% endif %}
-
-                    {% if services|length > 0 %}
-                        <div class="nx-pz-col nx-pz-col--services">
-                            <div class="nx-pz-col__label">
-                                <div class="nx-pz-col__label-icon"><i class="fas fa-satellite-dish"></i></div>
-                                <span class="nx-pz-col__label-text">Services suivis</span>
-                                <span class="nx-pz-col__label-count">{{ services|length }}</span>
-                            </div>
-                            <div class="nx-pz-items">
-                                {% for s in services %}
-                                    <a href="{{ s.url }}" class="nx-pz-item" target="_blank" rel="noopener" title="{{ s.name }}">
-                                        <div class="nx-pz-item__logo">
-                                            {% if s.logoFileName %}
-                                                <img src="{{ asset('uploads/partners/' ~ s.logoFileName) }}" alt="{{ s.name }}">
-                                            {% else %}
-                                                <i class="fas fa-server"></i>
-                                            {% endif %}
-                                        </div>
-                                        <span class="nx-pz-item__name">{{ s.name }}</span>
-                                    </a>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    {% endif %}
+                        <span class="nx-eco-card__name">{{ p.name }}</span>
+                    </a>
+                    {% endfor %}
                 </div>
             </div>
+            {% endif %}
+
+            {# ---- Separator ---- #}
+            {% if partners|length > 0 and services|length > 0 %}
+            <div class="nx-eco-sep">
+                <span class="nx-eco-sep__line"></span>
+                <span class="nx-eco-sep__diamond"></span>
+                <span class="nx-eco-sep__line"></span>
+            </div>
+            {% endif %}
+
+            {# ---- Services strip ---- #}
+            {% if services|length > 0 %}
+            <div class="nx-eco-strip nx-eco-strip--blue">
+                <div class="nx-eco-strip__label">
+                    <div class="nx-eco-strip__label-bar"></div>
+                    <div class="nx-eco-strip__label-icon"><i class="fas fa-satellite-dish"></i></div>
+                    <div class="nx-eco-strip__label-text">
+                        <span class="nx-eco-strip__label-sup">SUIVIS</span>
+                        <span class="nx-eco-strip__label-main">Services</span>
+                    </div>
+                    <span class="nx-eco-strip__label-count">{{ services|length }}</span>
+                </div>
+                <div class="nx-eco-strip__logos">
+                    {% for s in services %}
+                    <a href="{{ s.url }}" class="nx-eco-card nx-eco-card--service" target="_blank" rel="noopener" title="{{ s.name }}">
+                        <div class="nx-eco-card__inner">
+                            <div class="nx-eco-card__img">
+                                {% if s.logoFileName %}
+                                    <img src="{{ asset('uploads/partners/' ~ s.logoFileName) }}" alt="{{ s.name }}">
+                                {% else %}
+                                    <i class="fas fa-server"></i>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <span class="nx-eco-card__name">{{ s.name }}</span>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
         </div>
     </section>
     {% endif %}
-
-    {# ===== FLOATING TOOLTIP ===== #}
-    <div class="cat-float-tip" id="catFloatTip">
-        <div class="cat-float-tip__head">
-            <div class="cat-float-tip__icon"><img id="tipImg" src="" alt=""></div>
-            <div class="cat-float-tip__name" id="tipName"></div>
-        </div>
-        <div class="cat-float-tip__desc" id="tipDesc"></div>
-        <div class="cat-float-tip__stats">
-            <i class="fas fa-server"></i>
-            <span class="cat-float-tip__stats-count" id="tipCount"></span>
-            <span class="cat-float-tip__stats-label" id="tipLabel"></span>
-        </div>
-    </div>
 
 {% endblock %}
 
@@ -348,96 +346,6 @@
         }, 5000);
     }
 
-    /* ===== Category Swiper Carousels ===== */
-    document.querySelectorAll('.cat-swiper').forEach(function(swiperEl) {
-        var group = swiperEl.closest('.cat-group');
-        if (!group) return;
-        var slideCount = swiperEl.querySelectorAll('.swiper-slide').length;
-
-        new Swiper(swiperEl, {
-            loop: slideCount > 4,
-            slidesPerView: 5,
-            spaceBetween: 14,
-            observer: true,
-            observeParents: true,
-            resistanceRatio: 0.85,
-            breakpoints: {
-                1400: { slidesPerView: 5, spaceBetween: 14 },
-                1200: { slidesPerView: 4, spaceBetween: 12 },
-                992:  { slidesPerView: 3, spaceBetween: 12 },
-                768:  { slidesPerView: 3, spaceBetween: 10 },
-                576:  { slidesPerView: 2, spaceBetween: 10 },
-                0:    { slidesPerView: 2, spaceBetween: 8 },
-            },
-            pagination: {
-                el: group.querySelector('.cat-swiper-dots'),
-                clickable: true,
-            },
-            navigation: {
-                nextEl: group.querySelector('.cat-swiper-next'),
-                prevEl: group.querySelector('.cat-swiper-prev'),
-            },
-        });
-    });
-
-    /* ===== Floating tooltip ===== */
-    var tip = document.getElementById('catFloatTip');
-    if (!tip) return;
-    var tipImg = document.getElementById('tipImg');
-    var tipName = document.getElementById('tipName');
-    var tipDesc = document.getElementById('tipDesc');
-    var tipCount = document.getElementById('tipCount');
-    var tipLabel = document.getElementById('tipLabel');
-    var hideTimer;
-
-    document.querySelectorAll('.cat-swiper .streamers__item[data-tip-name]').forEach(function(tile){
-        tile.addEventListener('mouseenter', function(){
-            clearTimeout(hideTimer);
-            var name = tile.dataset.tipName;
-            var desc = tile.dataset.tipDesc;
-            var count = parseInt(tile.dataset.tipCount) || 0;
-            var img = tile.dataset.tipImg;
-            var color = tile.dataset.tipColor || '69,248,130';
-
-            tipName.textContent = name;
-            tipDesc.textContent = desc;
-            tipDesc.style.display = desc ? '' : 'none';
-            tipCount.textContent = count;
-            tipLabel.textContent = count !== 1 ? 'serveurs actifs' : 'serveur actif';
-            tip.style.setProperty('--tip-c', color);
-
-            if (img) {
-                tipImg.src = img;
-                tipImg.parentElement.style.display = '';
-            } else {
-                tipImg.parentElement.style.display = 'none';
-            }
-
-            var rect = tile.getBoundingClientRect();
-            var tipW = 270;
-            tip.style.visibility = 'hidden';
-            tip.style.display = 'block';
-            tip.classList.remove('is-visible');
-            var tipH = tip.offsetHeight;
-            tip.style.visibility = '';
-
-            var left = rect.left + rect.width / 2 - tipW / 2;
-            if (left < 8) left = 8;
-            if (left + tipW > window.innerWidth - 8) left = window.innerWidth - tipW - 8;
-
-            var top = rect.top - tipH - 10 + window.scrollY;
-            tip.style.position = 'absolute';
-            tip.style.left = left + 'px';
-            tip.style.top = top + 'px';
-            tip.classList.add('is-visible');
-        });
-
-        tile.addEventListener('mouseleave', function(){
-            hideTimer = setTimeout(function(){
-                tip.classList.remove('is-visible');
-            }, 80);
-        });
-    });
 })();
 </script>
 {% endblock %}
