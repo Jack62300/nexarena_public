@@ -4,6 +4,12 @@ framework:
     assets:
         version: '1.0.0'
 
+    # Trusted proxies: allows getClientIp() to return the real visitor IP
+    # when behind Nginx, Apache, Cloudflare or any reverse proxy.
+    # 'REMOTE_ADDR' = trust the immediate upstream server (Nginx on same host)
+    trusted_proxies: '%env(default::TRUSTED_PROXIES)%'
+    trusted_headers: ['x-forwarded-for', 'x-forwarded-host', 'x-forwarded-proto', 'x-forwarded-port', 'x-forwarded-prefix']
+
     # Note that the session will be started ONLY if you read or write from it.
     session:
         cookie_secure: auto
