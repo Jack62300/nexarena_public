@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Site en maintenance — {{ setting('site_name', 'Nexarena') }}{% endblock %}
+{% block title %}Maintenance — {{ setting('site_name', 'Nexarena') }}{% endblock %}
 
 {% block stylesheets %}
 <style>
@@ -8,276 +8,362 @@
 
 body {
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    background: #0a0f16;
+    background: #060b12;
     color: #e4e6eb;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 20px;
+    padding: 24px;
     position: relative;
     overflow: hidden;
 }
 
-/* Animated background grid */
-body::before {
-    content: '';
+/* ── Background layers ── */
+.maint-bg {
     position: fixed;
     inset: 0;
-    background-image:
-        linear-gradient(rgba(69,248,130,0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(69,248,130,0.03) 1px, transparent 1px);
-    background-size: 40px 40px;
     pointer-events: none;
     z-index: 0;
 }
-
-/* Glow blobs */
-body::after {
-    content: '';
-    position: fixed;
-    top: -200px;
+.maint-bg__grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(69,248,130,.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(69,248,130,.04) 1px, transparent 1px);
+    background-size: 48px 48px;
+}
+.maint-bg__glow-top {
+    position: absolute;
+    top: -160px;
     left: 50%;
     transform: translateX(-50%);
-    width: 600px;
-    height: 400px;
-    background: radial-gradient(ellipse, rgba(69,248,130,0.06) 0%, transparent 70%);
-    pointer-events: none;
-    z-index: 0;
+    width: 700px;
+    height: 420px;
+    background: radial-gradient(ellipse, rgba(69,248,130,.07) 0%, transparent 65%);
+}
+.maint-bg__glow-bl {
+    position: absolute;
+    bottom: -120px;
+    left: -80px;
+    width: 420px;
+    height: 320px;
+    background: radial-gradient(ellipse, rgba(88,101,242,.06) 0%, transparent 65%);
+}
+.maint-bg__glow-tr {
+    position: absolute;
+    top: 60px;
+    right: -60px;
+    width: 340px;
+    height: 260px;
+    background: radial-gradient(ellipse, rgba(69,248,130,.04) 0%, transparent 65%);
 }
 
-.maintenance-wrap {
+/* ── Card ── */
+.maint-card {
     position: relative;
     z-index: 1;
-    text-align: center;
-    max-width: 520px;
     width: 100%;
-}
-
-/* Logo */
-.maintenance-logo {
-    margin-bottom: 40px;
-}
-.maintenance-logo img {
-    height: 44px;
-    filter: drop-shadow(0 0 12px rgba(69,248,130,0.3));
-}
-.maintenance-logo span {
-    font-size: 22px;
-    font-weight: 800;
-    color: #45f882;
-    letter-spacing: -0.5px;
-}
-
-/* Icon */
-.maintenance-icon {
-    width: 90px;
-    height: 90px;
+    max-width: 480px;
+    background: rgba(255,255,255,.03);
+    border: 1px solid rgba(255,255,255,.07);
     border-radius: 24px;
-    background: rgba(69,248,130,0.08);
-    border: 1px solid rgba(69,248,130,0.2);
+    padding: 44px 40px 40px;
+    backdrop-filter: blur(12px);
+    box-shadow:
+        0 0 0 1px rgba(69,248,130,.04),
+        0 24px 64px rgba(0,0,0,.45),
+        inset 0 1px 0 rgba(255,255,255,.05);
+}
+
+/* ── Logo ── */
+.maint-logo {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 40px;
-    margin: 0 auto 28px;
-    animation: pulse-icon 3s ease-in-out infinite;
-}
-
-@keyframes pulse-icon {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(69,248,130,0.2); }
-    50% { box-shadow: 0 0 0 16px rgba(69,248,130,0); }
-}
-
-.maintenance-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 5px 14px;
-    background: rgba(246,194,62,0.1);
-    border: 1px solid rgba(246,194,62,0.25);
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-    color: #f6c23e;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 20px;
-}
-.maintenance-badge::before {
-    content: '';
-    width: 6px;
-    height: 6px;
-    background: #f6c23e;
-    border-radius: 50%;
-    animation: blink 1.2s ease-in-out infinite;
-}
-@keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.2; }
-}
-
-.maintenance-title {
-    font-size: 32px;
-    font-weight: 800;
-    color: #fff;
-    line-height: 1.15;
-    margin-bottom: 14px;
-    letter-spacing: -0.5px;
-}
-
-.maintenance-desc {
-    font-size: 15px;
-    color: #8b949e;
-    line-height: 1.6;
+    gap: 10px;
     margin-bottom: 36px;
 }
+.maint-logo img {
+    height: 36px;
+    filter: drop-shadow(0 0 10px rgba(69,248,130,.35));
+}
+.maint-logo__name {
+    font-size: 20px;
+    font-weight: 800;
+    color: #45f882;
+    letter-spacing: -.5px;
+}
 
-/* Flash messages */
-.maint-flash {
-    padding: 12px 18px;
-    border-radius: 10px;
-    font-size: 14px;
-    margin-bottom: 20px;
+/* ── Status indicator ── */
+.maint-status {
     display: flex;
     align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 28px;
+}
+.maint-status__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #f6c23e;
+    flex-shrink: 0;
+    animation: pulse-dot 1.4s ease-in-out infinite;
+}
+@keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: .5; transform: scale(.8); }
+}
+.maint-status__text {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #f6c23e;
+}
+
+/* ── Icon ── */
+.maint-icon-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+}
+.maint-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, rgba(69,248,130,.12), rgba(69,248,130,.04));
+    border: 1px solid rgba(69,248,130,.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    animation: icon-float 4s ease-in-out infinite;
+    box-shadow: 0 0 32px rgba(69,248,130,.1);
+}
+@keyframes icon-float {
+    0%, 100% { transform: translateY(0); box-shadow: 0 0 32px rgba(69,248,130,.1); }
+    50% { transform: translateY(-5px); box-shadow: 0 8px 40px rgba(69,248,130,.18); }
+}
+
+/* ── Heading ── */
+.maint-title {
+    font-size: 26px;
+    font-weight: 800;
+    color: #fff;
+    text-align: center;
+    letter-spacing: -.5px;
+    line-height: 1.2;
+    margin-bottom: 12px;
+}
+.maint-title span { color: #45f882; }
+
+.maint-desc {
+    font-size: 14px;
+    color: #6b7280;
+    text-align: center;
+    line-height: 1.65;
+    margin-bottom: 32px;
+}
+
+/* ── Flash messages ── */
+.maint-flash {
+    padding: 11px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: flex-start;
     gap: 10px;
     text-align: left;
 }
-.maint-flash--error {
-    background: rgba(231,74,59,0.1);
-    border: 1px solid rgba(231,74,59,0.25);
-    color: #ff6b6b;
+.maint-flash i { margin-top: 1px; flex-shrink: 0; }
+.maint-flash--error  { background: rgba(231,74,59,.1);   border: 1px solid rgba(231,74,59,.2);  color: #ff6b6b; }
+.maint-flash--success{ background: rgba(28,200,138,.1);  border: 1px solid rgba(28,200,138,.2); color: #1cc88a; }
+.maint-flash--info   { background: rgba(54,185,204,.1);  border: 1px solid rgba(54,185,204,.2); color: #36b9cc; }
+.maint-flash--warning{ background: rgba(246,194,62,.1);  border: 1px solid rgba(246,194,62,.2); color: #f6c23e; }
+
+/* ── Separator ── */
+.maint-sep {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
 }
-.maint-flash--success {
-    background: rgba(28,200,138,0.1);
-    border: 1px solid rgba(28,200,138,0.25);
-    color: #1cc88a;
+.maint-sep::before, .maint-sep::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(255,255,255,.07);
 }
-.maint-flash--info {
-    background: rgba(54,185,204,0.1);
-    border: 1px solid rgba(54,185,204,0.25);
-    color: #36b9cc;
+.maint-sep__label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #374151;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    white-space: nowrap;
 }
 
-/* Discord button */
+/* ── Discord button ── */
 .btn-discord {
-    display: inline-flex;
+    display: flex;
     align-items: center;
     justify-content: center;
     gap: 10px;
-    padding: 14px 28px;
-    background: #5865f2;
+    width: 100%;
+    padding: 13px 20px;
+    background: linear-gradient(135deg, #5865f2, #4752c4);
     color: #fff;
     border-radius: 12px;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 700;
     text-decoration: none;
     border: none;
     cursor: pointer;
-    transition: all 0.2s;
-    box-shadow: 0 4px 20px rgba(88,101,242,0.35);
+    transition: all .2s;
+    box-shadow: 0 4px 20px rgba(88,101,242,.3);
+    letter-spacing: .1px;
 }
 .btn-discord:hover {
-    background: #4752c4;
+    background: linear-gradient(135deg, #4752c4, #3a45b0);
     transform: translateY(-1px);
-    box-shadow: 0 6px 24px rgba(88,101,242,0.45);
+    box-shadow: 0 8px 28px rgba(88,101,242,.4);
     color: #fff;
 }
-.btn-discord i { font-size: 18px; }
+.btn-discord:active { transform: translateY(0); }
+.btn-discord i { font-size: 17px; }
 
-/* Divider */
-.maint-divider {
+/* ── Access note ── */
+.maint-note {
     display: flex;
     align-items: center;
-    gap: 14px;
-    margin: 20px 0 16px;
-    color: #4a5568;
+    justify-content: center;
+    gap: 7px;
+    margin-top: 20px;
     font-size: 12px;
+    color: #374151;
 }
-.maint-divider::before, .maint-divider::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: #1e3048;
-}
+.maint-note i { font-size: 11px; }
 
-.maint-note {
-    font-size: 12px;
-    color: #4a5568;
-}
-
-/* Footer */
+/* ── Footer ── */
 .maint-footer {
-    position: fixed;
-    bottom: 24px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 12px;
-    color: #4a5568;
+    position: relative;
     z-index: 1;
-    white-space: nowrap;
+    margin-top: 28px;
+    text-align: center;
+    font-size: 12px;
+    color: #1f2937;
+}
+
+/* ── Progress bar (decorative) ── */
+.maint-progress {
+    height: 3px;
+    background: rgba(255,255,255,.05);
+    border-radius: 99px;
+    margin-bottom: 32px;
+    overflow: hidden;
+}
+.maint-progress__bar {
+    height: 100%;
+    width: 60%;
+    background: linear-gradient(90deg, #45f882, #22c55e);
+    border-radius: 99px;
+    animation: progress-anim 3s ease-in-out infinite alternate;
+}
+@keyframes progress-anim {
+    0%   { width: 35%; opacity: .7; }
+    100% { width: 75%; opacity: 1; }
+}
+
+/* ── Responsive ── */
+@media (max-width: 520px) {
+    .maint-card { padding: 32px 24px 28px; border-radius: 18px; }
+    .maint-title { font-size: 22px; }
 }
 </style>
 {% endblock %}
 
 {% block body %}
-<div class="maintenance-wrap">
+
+<div class="maint-bg">
+    <div class="maint-bg__grid"></div>
+    <div class="maint-bg__glow-top"></div>
+    <div class="maint-bg__glow-bl"></div>
+    <div class="maint-bg__glow-tr"></div>
+</div>
+
+<div class="maint-card">
 
     {# Logo #}
-    <div class="maintenance-logo">
+    <div class="maint-logo">
         {% set logo = setting('site_logo', '') %}
         {% if logo %}
             <img src="{{ asset(logo) }}" alt="{{ setting('site_name', 'Nexarena') }}">
         {% else %}
-            <span>{{ setting('site_name', 'Nexarena') }}</span>
+            <span class="maint-logo__name">{{ setting('site_name', 'Nexarena') }}</span>
         {% endif %}
+    </div>
+
+    {# Status indicator #}
+    <div class="maint-status">
+        <span class="maint-status__dot"></span>
+        <span class="maint-status__text">Maintenance en cours</span>
     </div>
 
     {# Flash messages #}
     {% for type, messages in app.flashes %}
         {% for message in messages %}
             <div class="maint-flash maint-flash--{{ type }}">
-                <i class="fas fa-{{ type == 'error' ? 'exclamation-circle' : (type == 'success' ? 'check-circle' : 'info-circle') }}"></i>
-                {{ message }}
+                <i class="fas fa-{{ type == 'error' ? 'exclamation-circle' : (type == 'success' ? 'check-circle' : (type == 'warning' ? 'exclamation-triangle' : 'info-circle')) }}"></i>
+                <span>{{ message }}</span>
             </div>
         {% endfor %}
     {% endfor %}
 
     {# Icon #}
-    <div class="maintenance-icon">🔧</div>
-
-    <div class="maintenance-badge">
-        Maintenance en cours
+    <div class="maint-icon-wrap">
+        <div class="maint-icon">⚙️</div>
     </div>
 
-    <h1 class="maintenance-title">Site temporairement<br>indisponible</h1>
+    {# Heading #}
+    <h1 class="maint-title">Site temporairement<br><span>indisponible</span></h1>
 
-    <p class="maintenance-desc">
-        Nous effectuons des operations de maintenance pour ameliorer
-        votre experience. Le site sera de retour tres prochainement.<br>
-        Merci pour votre patience.
+    <p class="maint-desc">
+        Nous apportons des améliorations pour vous offrir une<br>
+        meilleure expérience. Merci de votre patience.
     </p>
 
-    {# Discord OAuth admin login #}
+    {# Progress bar (decorative) #}
+    <div class="maint-progress">
+        <div class="maint-progress__bar"></div>
+    </div>
+
+    {# Discord login #}
+    <div class="maint-sep">
+        <span class="maint-sep__label">Accès administrateur</span>
+    </div>
+
     <a href="{{ path('app_oauth_connect', {provider: 'discord'}) }}" class="btn-discord">
         <i class="fab fa-discord"></i>
-        Connexion administrateur via Discord
+        Se connecter via Discord
     </a>
 
-    <div class="maint-divider">Acces reserve aux administrateurs</div>
-
-    <p class="maint-note">
-        <i class="fas fa-lock" style="margin-right:4px;"></i>
-        Seuls les membres de l'equipe peuvent acceder au site pendant la maintenance.
-    </p>
+    <div class="maint-note">
+        <i class="fas fa-shield-alt"></i>
+        Réservé aux membres de l'équipe
+    </div>
 
 </div>
 
 <div class="maint-footer">
-    &copy; {{ 'now'|date('Y') }} {{ setting('site_name', 'Nexarena') }} — Maintenance
+    &copy; {{ 'now'|date('Y') }} {{ setting('site_name', 'Nexarena') }}
 </div>
+
 {% endblock %}
 
 {% block javascripts %}{% endblock %}
