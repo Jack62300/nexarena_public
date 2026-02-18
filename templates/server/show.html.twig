@@ -476,13 +476,23 @@
                         <div class="sv-vote__label">Votes ce mois</div>
                         <div class="sv-vote__count" id="monthlyVotes">{{ server.monthlyVotes }}</div>
                         <div class="sv-vote__total" id="totalVotes">{{ server.totalVotes }} au total</div>
-                        <a href="{{ path('vote_initiate_discord', {slug: server.slug}) }}" class="sv-vote__btn sv-vote__btn--discord" id="voteBtnDiscord">
-                            <i class="fab fa-discord"></i> <span>Voter via Discord</span>
-                        </a>
+                        <form method="post" action="{{ path('vote_prepare', {slug: server.slug}) }}" id="voteFormDiscord">
+                            <input type="hidden" name="provider" value="discord">
+                            <input type="hidden" name="fp" id="fpDiscord" value="">
+                            <input type="hidden" name="_token" value="{{ csrf_token('vote_prepare_' ~ server.slug) }}">
+                            <button type="submit" class="sv-vote__btn sv-vote__btn--discord" id="voteBtnDiscord">
+                                <i class="fab fa-discord"></i> <span>Voter via Discord</span>
+                            </button>
+                        </form>
                         <div class="sv-vote__sep">ou</div>
-                        <a href="{{ path('vote_initiate_steam', {slug: server.slug}) }}" class="sv-vote__btn sv-vote__btn--steam" id="voteBtnSteam">
-                            <i class="fab fa-steam"></i> <span>Voter via Steam</span>
-                        </a>
+                        <form method="post" action="{{ path('vote_prepare', {slug: server.slug}) }}" id="voteFormSteam">
+                            <input type="hidden" name="provider" value="steam">
+                            <input type="hidden" name="fp" id="fpSteam" value="">
+                            <input type="hidden" name="_token" value="{{ csrf_token('vote_prepare_' ~ server.slug) }}">
+                            <button type="submit" class="sv-vote__btn sv-vote__btn--steam" id="voteBtnSteam">
+                                <i class="fab fa-steam"></i> <span>Voter via Steam</span>
+                            </button>
+                        </form>
                         <div class="sv-vote__timer" id="voteTimer">
                             <i class="fas fa-clock"></i> <span id="cooldownText">--:--</span>
                         </div>
@@ -706,12 +716,22 @@
             <div class="sv-mobile-vote__label">votes ce mois</div>
         </div>
         <div class="sv-mobile-vote__btns">
-            <a href="{{ path('vote_initiate_discord', {slug: server.slug}) }}" class="sv-mobile-vote__btn sv-mobile-vote__btn--discord" id="voteBtnDiscordMobile">
-                <i class="fab fa-discord"></i> Discord
-            </a>
-            <a href="{{ path('vote_initiate_steam', {slug: server.slug}) }}" class="sv-mobile-vote__btn sv-mobile-vote__btn--steam" id="voteBtnSteamMobile">
-                <i class="fab fa-steam"></i> Steam
-            </a>
+            <form method="post" action="{{ path('vote_prepare', {slug: server.slug}) }}" id="voteFormDiscordMobile">
+                <input type="hidden" name="provider" value="discord">
+                <input type="hidden" name="fp" id="fpDiscordMobile" value="">
+                <input type="hidden" name="_token" value="{{ csrf_token('vote_prepare_' ~ server.slug) }}">
+                <button type="submit" class="sv-mobile-vote__btn sv-mobile-vote__btn--discord" id="voteBtnDiscordMobile">
+                    <i class="fab fa-discord"></i> Discord
+                </button>
+            </form>
+            <form method="post" action="{{ path('vote_prepare', {slug: server.slug}) }}" id="voteFormSteamMobile">
+                <input type="hidden" name="provider" value="steam">
+                <input type="hidden" name="fp" id="fpSteamMobile" value="">
+                <input type="hidden" name="_token" value="{{ csrf_token('vote_prepare_' ~ server.slug) }}">
+                <button type="submit" class="sv-mobile-vote__btn sv-mobile-vote__btn--steam" id="voteBtnSteamMobile">
+                    <i class="fab fa-steam"></i> Steam
+                </button>
+            </form>
         </div>
     </div>
 </div>
@@ -1189,12 +1209,10 @@
     }
 
     computeFingerprint().then(function(fp) {
-        // Append fingerprint to all vote links
-        var voteLinks = document.querySelectorAll('a[href*="/vote/"][href*="/discord"], a[href*="/vote/"][href*="/steam"]');
-        voteLinks.forEach(function(link) {
-            var url = new URL(link.href);
-            url.searchParams.set('fp', fp);
-            link.href = url.toString();
+        // Populate hidden fp inputs in vote forms
+        ['fpDiscord','fpSteam','fpDiscordMobile','fpSteamMobile'].forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) el.value = fp;
         });
     }).catch(function() {
         // Fingerprint unavailable, vote without it

@@ -76,6 +76,20 @@ class GameCategoryFormType extends AbstractType
                 ],
                 'attr' => ['accept' => 'image/*'],
             ])
+            ->add('iconFile', FileType::class, [
+                'label' => false,
+                'mapped' => false,
+                'required' => false,
+                'constraints' => [
+                    new Assert\File([
+                        'maxSize' => '2M',
+                        'mimeTypes' => ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'],
+                        'mimeTypesMessage' => 'Format non autorisé. Utilisez JPEG, PNG, GIF, WebP ou SVG.',
+                        'maxSizeMessage' => "L'icône ne doit pas dépasser 2 Mo.",
+                    ]),
+                ],
+                'attr' => ['accept' => 'image/*'],
+            ])
         ;
     }
 

@@ -43,14 +43,20 @@ class GameCategoryController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $category->setSlug($this->slugService->slugify($category->getName()));
 
+            $uploadDir = $this->getParameter('kernel.project_dir') . '/public/uploads/categories';
+
             $imageFile = $form->get('imageFile')->getData();
             if ($imageFile) {
                 $filename = uniqid() . '.' . $imageFile->guessExtension();
-                $imageFile->move(
-                    $this->getParameter('kernel.project_dir') . '/public/uploads/categories',
-                    $filename,
-                );
+                $imageFile->move($uploadDir, $filename);
                 $category->setImage($filename);
+            }
+
+            $iconFile = $form->get('iconFile')->getData();
+            if ($iconFile) {
+                $filename = uniqid() . '.' . $iconFile->guessExtension();
+                $iconFile->move($uploadDir, $filename);
+                $category->setIcon($filename);
             }
 
             $this->em->persist($category);
@@ -75,22 +81,28 @@ class GameCategoryController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $category->setSlug($this->slugService->slugify($category->getName()));
 
+            $uploadDir = $this->getParameter('kernel.project_dir') . '/public/uploads/categories';
+
             $imageFile = $form->get('imageFile')->getData();
             if ($imageFile) {
-                $filename = uniqid() . '.' . $imageFile->guessExtension();
-                $imageFile->move(
-                    $this->getParameter('kernel.project_dir') . '/public/uploads/categories',
-                    $filename,
-                );
-
                 if ($category->getImage()) {
-                    $oldPath = $this->getParameter('kernel.project_dir') . '/public/uploads/categories/' . basename($category->getImage());
-                    if (file_exists($oldPath)) {
-                        unlink($oldPath);
-                    }
+                    $old = $uploadDir . '/' . basename($category->getImage());
+                    if (file_exists($old)) unlink($old);
                 }
-
+                $filename = uniqid() . '.' . $imageFile->guessExtension();
+                $imageFile->move($uploadDir, $filename);
                 $category->setImage($filename);
+            }
+
+            $iconFile = $form->get('iconFile')->getData();
+            if ($iconFile) {
+                if ($category->getIcon()) {
+                    $old = $uploadDir . '/' . basename($category->getIcon());
+                    if (file_exists($old)) unlink($old);
+                }
+                $filename = uniqid() . '.' . $iconFile->guessExtension();
+                $iconFile->move($uploadDir, $filename);
+                $category->setIcon($filename);
             }
 
             $this->em->flush();
@@ -110,10 +122,11 @@ class GameCategoryController extends AbstractController
     public function delete(GameCategory $category, Request $request): Response
     {
         if ($this->isCsrfTokenValid('delete_' . $category->getId(), $request->request->get('_token'))) {
-            if ($category->getImage()) {
-                $path = $this->getParameter('kernel.project_dir') . '/public/uploads/categories/' . basename($category->getImage());
-                if (file_exists($path)) {
-                    unlink($path);
+            $uploadDir = $this->getParameter('kernel.project_dir') . '/public/uploads/categories';
+            foreach (['getImage', 'getIcon'] as $getter) {
+                if ($category->$getter()) {
+                    $path = $uploadDir . '/' . basename($category->$getter());
+                    if (file_exists($path)) unlink($path);
                 }
             }
             $this->em->remove($category);

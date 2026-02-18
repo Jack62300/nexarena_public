@@ -60,7 +60,16 @@
                                     <img src="{{ asset('uploads/categories/' ~ category.image) }}" alt="{{ gc.name }}">
                                 {% else %}
                                     <div class="nx-cat-card__placeholder">
-                                        <i class="{{ category.icon ?? 'fas fa-gamepad' }}"></i>
+                                        {% if gc.icon %}
+                                            <img src="{{ asset('uploads/categories/' ~ gc.icon) }}" alt="{{ gc.name }}" style="width:48px;height:48px;object-fit:contain;opacity:0.5;">
+                                        {% else %}
+                                            <i class="{{ category.icon ?? 'fas fa-gamepad' }}"></i>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                                {% if gc.icon %}
+                                    <div class="nx-cat-card__icon-badge">
+                                        <img src="{{ asset('uploads/categories/' ~ gc.icon) }}" alt="">
                                     </div>
                                 {% endif %}
                             </div>

@@ -22,7 +22,9 @@
             <div class="nx-rk-header__content">
                 <div class="nx-rk-header__left">
                     <div class="nx-rk-header__icon">
-                        {% if gameCategory and gameCategory.image %}
+                        {% if gameCategory and gameCategory.icon %}
+                            <img src="{{ asset('uploads/categories/' ~ gameCategory.icon) }}" alt="{{ gameCategory.name }}">
+                        {% elseif gameCategory and gameCategory.image %}
                             <img src="{{ asset('uploads/categories/' ~ gameCategory.image) }}" alt="{{ gameCategory.name }}">
                         {% elseif parentCategory and parentCategory.image %}
                             <img src="{{ asset('uploads/categories/' ~ parentCategory.image) }}" alt="{{ parentCategory.name }}">

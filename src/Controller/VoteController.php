@@ -198,6 +198,41 @@ class VoteController extends AbstractController
         return $this->redirectToRoute('server_show', ['slug' => $slug]);
     }
 
+    /**
+     * Gate route — validates CSRF and sets a one-use session authorization marker.
+     * The initiate routes only work if this route has been called first.
+     */
+    #[Route('/vote/{slug}/prepare', name: 'vote_prepare', methods: ['POST'], requirements: ['slug' => '[a-z0-9]+(?:-[a-z0-9]+)*'])]
+    public function prepare(string $slug, Request $request): Response
+    {
+        $server = $this->findServer($slug);
+        if (!$server) {
+            throw $this->createNotFoundException('Serveur introuvable.');
+        }
+
+        if (!$this->isCsrfTokenValid('vote_prepare_' . $slug, $request->request->get('_token'))) {
+            $this->addFlash('error', 'Token de sécurité invalide. Rechargez la page et réessayez.');
+            return $this->redirectToRoute('server_show', ['slug' => $slug]);
+        }
+
+        $provider = $request->request->get('provider');
+        if (!in_array($provider, ['discord', 'steam'], true)) {
+            $this->addFlash('error', 'Fournisseur de vote invalide.');
+            return $this->redirectToRoute('server_show', ['slug' => $slug]);
+        }
+
+        // Store fingerprint in session (came from hidden form field)
+        $fingerprint = $request->request->get('fp', '');
+        if ($fingerprint && $this->antiBotService->validateFingerprint($fingerprint)) {
+            $request->getSession()->set('vote_fingerprint', $fingerprint);
+        }
+
+        // One-use authorization marker consumed by the initiate route
+        $request->getSession()->set('vote_authorized', true);
+
+        return $this->redirectToRoute('vote_initiate_' . $provider, ['slug' => $slug]);
+    }
+
     #[Route('/vote/{slug}/discord', name: 'vote_initiate_discord', requirements: ['slug' => '[a-z0-9]+(?:-[a-z0-9]+)*'])]
     public function initiateDiscord(string $slug, Request $request): Response
     {
@@ -206,11 +241,12 @@ class VoteController extends AbstractController
             throw $this->createNotFoundException('Serveur introuvable.');
         }
 
-        // Store fingerprint in session
-        $fingerprint = $request->query->get('fp');
-        if ($fingerprint && $this->antiBotService->validateFingerprint($fingerprint)) {
-            $request->getSession()->set('vote_fingerprint', $fingerprint);
+        // Block direct URL access — must come through vote_prepare
+        if (!$request->getSession()->get('vote_authorized')) {
+            $this->addFlash('error', 'Accès direct non autorisé. Utilisez le bouton "Voter" sur la page du serveur.');
+            return $this->redirectToRoute('server_show', ['slug' => $slug]);
         }
+        $request->getSession()->remove('vote_authorized');
 
         $state = bin2hex(random_bytes(16));
         $request->getSession()->set('vote_slug', $slug);
@@ -238,11 +274,12 @@ class VoteController extends AbstractController
             throw $this->createNotFoundException('Serveur introuvable.');
         }
 
-        // Store fingerprint in session
-        $fingerprint = $request->query->get('fp');
-        if ($fingerprint && $this->antiBotService->validateFingerprint($fingerprint)) {
-            $request->getSession()->set('vote_fingerprint', $fingerprint);
+        // Block direct URL access — must come through vote_prepare
+        if (!$request->getSession()->get('vote_authorized')) {
+            $this->addFlash('error', 'Accès direct non autorisé. Utilisez le bouton "Voter" sur la page du serveur.');
+            return $this->redirectToRoute('server_show', ['slug' => $slug]);
         }
+        $request->getSession()->remove('vote_authorized');
 
         $request->getSession()->set('vote_slug', $slug);
         $request->getSession()->set('vote_provider', 'steam');

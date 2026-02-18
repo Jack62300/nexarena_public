@@ -44,6 +44,35 @@
         margin-top: 10px;
         object-fit: cover;
     }
+    .icon-preview {
+        width: 64px;
+        height: 64px;
+        border-radius: 8px;
+        margin-top: 10px;
+        object-fit: contain;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+        padding: 4px;
+    }
+    .upload-hint {
+        font-size: 11px;
+        color: var(--text-secondary);
+        margin-top: 5px;
+    }
+    .upload-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+    }
+    .upload-badge--green { background: rgba(69,248,130,0.1); color: #45f882; border: 1px solid rgba(69,248,130,0.2); }
+    .upload-badge--blue  { background: rgba(79,195,247,0.1); color: #4fc3f7; border: 1px solid rgba(79,195,247,0.2); }
     .color-row { display: flex; align-items: center; gap: 12px; }
     .color-swatch {
         width: 36px;
@@ -104,13 +133,39 @@
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label for="{{ form.imageFile.vars.id }}">Image</label>
-                        {{ form_widget(form.imageFile, {'attr': {'class': 'form-control-admin'}}) }}
-                        {{ form_errors(form.imageFile) }}
-                        {% if category and category.image %}
-                            <img src="{{ asset('uploads/categories/' ~ category.image) }}" alt="" class="image-preview">
-                        {% endif %}
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.imageFile.vars.id }}">
+                                    Image — page d'accueil (top 10)
+                                </label>
+                                <div class="upload-badge upload-badge--green">
+                                    <i class="fas fa-home"></i> Pop-cats homepage
+                                </div>
+                                {{ form_widget(form.imageFile, {'attr': {'class': 'form-control-admin'}}) }}
+                                {{ form_errors(form.imageFile) }}
+                                <div class="upload-hint">Format portrait recommandé (3:4) — JPEG, PNG, WebP, SVG — max 5 Mo</div>
+                                {% if category and category.image %}
+                                    <img src="{{ asset('uploads/categories/' ~ category.image) }}" alt="" class="image-preview">
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.iconFile.vars.id }}">
+                                    Icône — page de classement
+                                </label>
+                                <div class="upload-badge upload-badge--blue">
+                                    <i class="fas fa-trophy"></i> Page ranking
+                                </div>
+                                {{ form_widget(form.iconFile, {'attr': {'class': 'form-control-admin'}}) }}
+                                {{ form_errors(form.iconFile) }}
+                                <div class="upload-hint">Format carré recommandé (logo) — JPEG, PNG, WebP, SVG — max 2 Mo</div>
+                                {% if category and category.icon %}
+                                    <img src="{{ asset('uploads/categories/' ~ category.icon) }}" alt="" class="icon-preview">
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
 
                     <div class="form-group">

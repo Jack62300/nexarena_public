@@ -58,11 +58,11 @@ class RegistrationController extends AbstractController
             $email = $form->get('email')->getData();
             $plainPassword = $form->get('plainPassword')->getData();
 
-            // Email already in use?
+            // Email already in use? Don't reveal this to prevent user enumeration.
             $existingUser = $em->getRepository(User::class)->findOneBy(['email' => $email]);
             if ($existingUser) {
-                $this->addFlash('error', 'Un compte existe déjà avec cette adresse email.');
-                return $this->render('security/register.html.twig', ['form' => $form]);
+                $this->addFlash('success', 'Si cette adresse email est valide et disponible, votre compte a été créé.');
+                return $this->redirectToRoute('app_register');
             }
 
             $requireVerification = $settings->get('register_require_email_verification', false);

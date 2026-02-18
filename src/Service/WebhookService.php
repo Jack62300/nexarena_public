@@ -16,6 +16,7 @@ class WebhookService
         private HttpClientInterface $httpClient,
         private SettingsService $settings,
         private AdminWebhookRepository $adminWebhookRepo,
+        private NetworkValidationService $networkValidation,
     ) {
     }
 
@@ -29,6 +30,18 @@ class WebhookService
         if (!$url) {
             return;
         }
+
+        // Re-validate and resolve hostname to mitigate DNS rebinding.
+        if (!$this->networkValidation->isValidWebhookUrl($url)) {
+            return;
+        }
+        $parsed = parse_url($url);
+        $host = $parsed['host'] ?? '';
+        $resolvedIps = gethostbynamel($host);
+        if (!$resolvedIps) {
+            return;
+        }
+        $pinnedIp = $resolvedIps[0];
 
         $payload = [
             'event' => 'vote',
@@ -59,6 +72,7 @@ class WebhookService
                 'json' => $payload,
                 'headers' => $headers,
                 'timeout' => 5,
+                'resolve' => [$host => $pinnedIp],
             ]);
         } catch (\Throwable) {
         }
@@ -108,6 +122,11 @@ class WebhookService
         }
 
         $payload = $this->formatDiscordEmbed($eventType, $embedData);
+
+        // Discord webhook limit is 8 MB; reject oversized payloads early.
+        if (strlen((string) json_encode($payload)) > 8_000_000) {
+            return;
+        }
 
         try {
             $this->httpClient->request('POST', $webhook->getWebhookUrl(), [
