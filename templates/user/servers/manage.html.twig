@@ -70,6 +70,11 @@
                 <i class="fas fa-crown" style="color:#ffd700;"></i> Premium
             </button>
             {% endif %}
+            {% if is_owner %}
+            <button type="button" class="manage-tabs__btn" data-tab="stats" onclick="switchManageTab('stats')">
+                <i class="fas fa-chart-line" style="color:#36b9cc;"></i> Stats
+            </button>
+            {% endif %}
         </div>
 
         <div class="row g-4">
@@ -1000,6 +1005,159 @@
                     </div>
                 </div>
                 {% endif %}
+
+                {# ========== TAB: STATS ========== #}
+                {% if is_owner %}
+                <div id="tabStats" class="manage-tab-panel">
+                    {% if is_stats_gated and not has_stats %}
+                    {# ── VERROUILLE ── #}
+                    <div class="manage-card" style="text-align:center;padding:40px 20px;">
+                        <i class="fas fa-lock" style="font-size:48px;color:#36b9cc;margin-bottom:16px;display:block;"></i>
+                        <h4 style="color:#fff;margin-bottom:8px;">Statistiques avancees</h4>
+                        <p style="color:#8b949e;font-size:14px;margin-bottom:8px;">
+                            Debloque les graphiques complets sur 30 jours :
+                        </p>
+                        <ul style="color:#8b949e;font-size:13px;list-style:none;padding:0;margin-bottom:20px;">
+                            <li><i class="fas fa-chart-line" style="color:#36b9cc;margin-right:6px;"></i> Vues et votes quotidiens (30 j)</li>
+                            <li><i class="fas fa-clock" style="color:#36b9cc;margin-right:6px;"></i> Repartition horaire des votes</li>
+                            <li><i class="fab fa-discord" style="color:#36b9cc;margin-right:6px;"></i> Votes par plateforme (Discord / Steam)</li>
+                        </ul>
+                        <div style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-bottom:20px;">
+                            <div style="padding:10px 18px;background:rgba(54,185,204,0.08);border:1px solid rgba(54,185,204,0.2);border-radius:8px;">
+                                <i class="fas fa-coins" style="color:#36b9cc;"></i>
+                                <span style="color:#fff;font-weight:700;margin-left:6px;">{{ stats_cost }}</span>
+                                <span style="color:#8b949e;font-size:12px;"> NexBits</span>
+                            </div>
+                            <div style="padding:10px 18px;background:rgba(255,190,24,0.08);border:1px solid rgba(255,190,24,0.2);border-radius:8px;">
+                                <span style="color:#8b949e;font-size:12px;">Solde serveur : </span>
+                                <span style="color:#ffd700;font-weight:700;">{{ server.tokenBalance }}</span>
+                                <span style="color:#8b949e;font-size:12px;"> NexBits</span>
+                            </div>
+                        </div>
+                        {% if server.tokenBalance >= stats_cost %}
+                        <form method="post" action="{{ path('user_servers_stats_unlock', {id: server.id}) }}">
+                            <input type="hidden" name="_token" value="{{ csrf_token('stats_unlock_' ~ server.id) }}">
+                            <button type="submit" class="btn-action btn-action--primary" style="background:linear-gradient(135deg,#36b9cc,#1a7a8a);color:#fff;border:none;margin:0 auto;">
+                                <i class="fas fa-unlock"></i> Debloquer pour {{ stats_cost }} NexBits
+                            </button>
+                        </form>
+                        {% else %}
+                        <p style="color:#e74a3b;font-size:13px;margin:0;">
+                            <i class="fas fa-exclamation-circle"></i> Solde insuffisant. Deposez des NexBits depuis l'onglet <strong style="cursor:pointer;" onclick="switchManageTab('premium')">Premium</strong>.
+                        </p>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    {# ── DEBLOQUE ── #}
+
+                    {# KPI cards #}
+                    <div class="manage-card">
+                        <h4 class="manage-card__title"><i class="fas fa-chart-line" style="color:#36b9cc;"></i> Statistiques — 30 derniers jours</h4>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:0;">
+                            <div style="padding:14px;background:rgba(54,185,204,0.08);border:1px solid rgba(54,185,204,0.2);border-radius:10px;text-align:center;">
+                                <div style="font-size:26px;font-weight:800;color:#36b9cc;">{{ stats_data.monthly_views }}</div>
+                                <div style="font-size:12px;color:#8b949e;margin-top:4px;">Vues / mois</div>
+                            </div>
+                            <div style="padding:14px;background:rgba(69,248,130,0.08);border:1px solid rgba(69,248,130,0.2);border-radius:10px;text-align:center;">
+                                <div style="font-size:26px;font-weight:800;color:#45f882;">{{ stats_data.monthly_votes }}</div>
+                                <div style="font-size:12px;color:#8b949e;margin-top:4px;">Votes / mois</div>
+                            </div>
+                            <div style="padding:14px;background:rgba(255,190,24,0.08);border:1px solid rgba(255,190,24,0.2);border-radius:10px;text-align:center;">
+                                <div style="font-size:26px;font-weight:800;color:#ffd700;">{{ stats_data.total_clicks }}</div>
+                                <div style="font-size:12px;color:#8b949e;margin-top:4px;">Clics total</div>
+                            </div>
+                            <div style="padding:14px;background:rgba(255,107,53,0.08);border:1px solid rgba(255,107,53,0.2);border-radius:10px;text-align:center;">
+                                <div style="font-size:26px;font-weight:800;color:#ff6b35;">{{ stats_data.total_votes }}</div>
+                                <div style="font-size:12px;color:#8b949e;margin-top:4px;">Votes total</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {# Dual line chart: views + votes over 30 days #}
+                    <div class="manage-card">
+                        <h4 class="manage-card__title"><i class="fas fa-chart-area" style="color:#36b9cc;"></i> Vues &amp; Votes quotidiens</h4>
+                        <canvas id="chartDailyStats" height="120"></canvas>
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                        {# Doughnut: providers #}
+                        <div class="manage-card">
+                            <h4 class="manage-card__title" style="font-size:13px;"><i class="fas fa-pie-chart" style="color:#36b9cc;"></i> Providers</h4>
+                            <canvas id="chartProviders" height="180"></canvas>
+                        </div>
+                        {# Bar: hours #}
+                        <div class="manage-card" style="grid-column:1/-1;">
+                            <h4 class="manage-card__title" style="font-size:13px;"><i class="fas fa-clock" style="color:#36b9cc;"></i> Votes par heure (0–23h)</h4>
+                            <canvas id="chartHours" height="100"></canvas>
+                        </div>
+                    </div>
+
+                    {# Chart.js CDN + init #}
+                    <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+                    <script>
+                    (function() {
+                        var baseOpts = {
+                            responsive: true,
+                            animation: { duration: 600 },
+                            plugins: { legend: { labels: { color: '#8b949e', font: { size: 12 } } } }
+                        };
+                        var gridColor  = 'rgba(255,255,255,0.05)';
+                        var tickColor  = '#8b949e';
+                        var scalesXY   = {
+                            x: { ticks: { color: tickColor, font: { size: 11 } }, grid: { color: gridColor } },
+                            y: { ticks: { color: tickColor, font: { size: 11 } }, grid: { color: gridColor }, beginAtZero: true }
+                        };
+
+                        // ── Daily views + votes ──
+                        var dailyData = {{ stats_data.daily_views|json_encode|raw }};
+                        var votesData = {{ stats_data.daily_votes|json_encode|raw }};
+                        var labels30  = dailyData.map(function(r){ return r.date.slice(5); });
+                        new Chart(document.getElementById('chartDailyStats'), {
+                            type: 'line',
+                            data: {
+                                labels: labels30,
+                                datasets: [
+                                    { label: 'Vues',  data: dailyData.map(function(r){ return r.views; }),
+                                      borderColor: '#36b9cc', backgroundColor: 'rgba(54,185,204,0.12)',
+                                      tension: 0.3, fill: true, pointRadius: 2 },
+                                    { label: 'Votes', data: votesData.map(function(r){ return r.votes; }),
+                                      borderColor: '#45f882', backgroundColor: 'rgba(69,248,130,0.10)',
+                                      tension: 0.3, fill: true, pointRadius: 2 }
+                                ]
+                            },
+                            options: Object.assign({}, baseOpts, { scales: scalesXY })
+                        });
+
+                        // ── Provider doughnut ──
+                        var provData = {{ stats_data.vote_providers|json_encode|raw }};
+                        var provColors = ['#5865f2','#b5bac1','#36b9cc','#45f882','#ffd700','#ff6b35'];
+                        new Chart(document.getElementById('chartProviders'), {
+                            type: 'doughnut',
+                            data: {
+                                labels: provData.map(function(r){ return r.provider === 'unknown' ? 'Autre' : r.provider.charAt(0).toUpperCase() + r.provider.slice(1); }),
+                                datasets: [{ data: provData.map(function(r){ return r.votes; }),
+                                    backgroundColor: provColors, borderWidth: 0 }]
+                            },
+                            options: Object.assign({}, baseOpts, { cutout: '65%' })
+                        });
+
+                        // ── Hourly bar ──
+                        var hourData = {{ stats_data.vote_hours|json_encode|raw }};
+                        new Chart(document.getElementById('chartHours'), {
+                            type: 'bar',
+                            data: {
+                                labels: hourData.map(function(r){ return r.hour + 'h'; }),
+                                datasets: [{ label: 'Votes', data: hourData.map(function(r){ return r.votes; }),
+                                    backgroundColor: 'rgba(54,185,204,0.6)', borderColor: '#36b9cc', borderWidth: 1 }]
+                            },
+                            options: Object.assign({}, baseOpts, { scales: scalesXY, plugins: { legend: { display: false } } })
+                        });
+                    })();
+                    </script>
+                    {% endif %}
+                </div>
+                {% endif %}
+
             </div>
 
             <div class="col-lg-4">

@@ -4,7 +4,9 @@ namespace App\Controller;
 
 use App\Entity\Comment;
 use App\Entity\Server;
+use App\Entity\ServerDailyStat;
 use App\Repository\CommentRepository;
+use App\Repository\ServerDailyStatRepository;
 use App\Repository\ServerRepository;
 use App\Service\PremiumService;
 use App\Service\StatusService;
@@ -28,6 +30,7 @@ class PublicServerController extends AbstractController
         private WebhookService $webhookService,
         private TwitchService $twitchService,
         private PremiumService $premiumService,
+        private ServerDailyStatRepository $dailyStatRepo,
     ) {
     }
 
@@ -41,6 +44,17 @@ class PublicServerController extends AbstractController
 
         // Increment click count
         $server->incrementClickCount();
+
+        // Track daily page views
+        $today = new \DateTimeImmutable('today');
+        $todayStat = $this->dailyStatRepo->findByServerAndDate($server, $today);
+        if (!$todayStat) {
+            $todayStat = new ServerDailyStat();
+            $todayStat->setServer($server)->setStatDate($today);
+            $this->em->persist($todayStat);
+        }
+        $todayStat->incrementPageViews();
+
         $this->em->flush();
 
         $similarServers = [];

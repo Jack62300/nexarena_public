@@ -349,6 +349,99 @@ class VoteRepository extends ServiceEntityRepository
     }
 
     /**
+     * Votes grouped by date for last 30 days.
+     * Returns all dates filled with 0 if missing.
+     * @return array<array{date: string, votes: int}>
+     */
+    public function getDailyVotesForRange(Server $server, \DateTime $from, \DateTime $to): array
+    {
+        $conn = $this->getEntityManager()->getConnection();
+        $sql = 'SELECT DATE(v.voted_at) AS date, COUNT(v.id) AS cnt
+                FROM vote v
+                WHERE v.server_id = :server AND v.voted_at BETWEEN :from AND :to
+                GROUP BY DATE(v.voted_at)
+                ORDER BY DATE(v.voted_at) ASC';
+
+        $rows = $conn->fetchAllAssociative($sql, [
+            'server' => $server->getId(),
+            'from'   => $from->format('Y-m-d H:i:s'),
+            'to'     => $to->format('Y-m-d H:i:s'),
+        ]);
+
+        $indexed = [];
+        foreach ($rows as $row) {
+            $indexed[$row['date']] = (int) $row['cnt'];
+        }
+
+        $result = [];
+        $current = clone $from;
+        while ($current <= $to) {
+            $key = $current->format('Y-m-d');
+            $result[] = ['date' => $key, 'votes' => $indexed[$key] ?? 0];
+            $current->modify('+1 day');
+        }
+
+        return $result;
+    }
+
+    /**
+     * Votes grouped by hour (0-23) for the given period.
+     * @return array<array{hour: int, votes: int}>
+     */
+    public function getVotesByHour(Server $server, \DateTime $from): array
+    {
+        $conn = $this->getEntityManager()->getConnection();
+        $sql = 'SELECT HOUR(v.voted_at) AS h, COUNT(v.id) AS cnt
+                FROM vote v
+                WHERE v.server_id = :server AND v.voted_at >= :from
+                GROUP BY HOUR(v.voted_at)
+                ORDER BY h ASC';
+
+        $rows = $conn->fetchAllAssociative($sql, [
+            'server' => $server->getId(),
+            'from'   => $from->format('Y-m-d H:i:s'),
+        ]);
+
+        $indexed = [];
+        foreach ($rows as $row) {
+            $indexed[(int) $row['h']] = (int) $row['cnt'];
+        }
+
+        $result = [];
+        for ($h = 0; $h <= 23; $h++) {
+            $result[] = ['hour' => $h, 'votes' => $indexed[$h] ?? 0];
+        }
+
+        return $result;
+    }
+
+    /**
+     * Votes grouped by provider (discord/steam/null) for the given period.
+     * @return array<array{provider: string, votes: int}>
+     */
+    public function getVotesByProvider(Server $server, \DateTime $from): array
+    {
+        $conn = $this->getEntityManager()->getConnection();
+        $sql = 'SELECT COALESCE(v.vote_provider, \'unknown\') AS p, COUNT(v.id) AS cnt
+                FROM vote v
+                WHERE v.server_id = :server AND v.voted_at >= :from
+                GROUP BY v.vote_provider
+                ORDER BY cnt DESC';
+
+        $rows = $conn->fetchAllAssociative($sql, [
+            'server' => $server->getId(),
+            'from'   => $from->format('Y-m-d H:i:s'),
+        ]);
+
+        $result = [];
+        foreach ($rows as $row) {
+            $result[] = ['provider' => $row['p'], 'votes' => (int) $row['cnt']];
+        }
+
+        return $result;
+    }
+
+    /**
      * @return Vote[]
      */
     public function findForAdminList(?Server $server = null, int $limit = 100): array

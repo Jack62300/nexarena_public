@@ -48,6 +48,7 @@ class PremiumService
             'widget' => $this->settings->getBool('premium_widget_gate_enabled', true),
             'recruitment' => $this->settings->getBool('premium_recruitment_gate_enabled', true),
             'twitch_live' => $this->settings->getBool('premium_twitch_live_gate_enabled', true),
+            'stats' => $this->settings->getBool('premium_stats_gate_enabled', true),
             default => true,
         };
     }
@@ -57,6 +58,7 @@ class PremiumService
         return match ($feature) {
             ServerPremiumFeature::FEATURE_THEME => $this->settings->getInt('premium_theme_cost', 50),
             ServerPremiumFeature::FEATURE_WIDGET => $this->settings->getInt('premium_widget_cost', 50),
+            ServerPremiumFeature::FEATURE_STATS => $this->settings->getInt('premium_stats_cost', 100),
             default => 0,
         };
     }

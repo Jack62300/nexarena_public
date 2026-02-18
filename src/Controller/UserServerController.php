@@ -11,15 +11,19 @@ use App\Entity\ServerType;
 use App\Entity\FeaturedBooking;
 use App\Entity\Transaction;
 use App\Entity\Tag;
+use App\Entity\ServerPremiumFeature;
 use App\Repository\CategoryRepository;
 use App\Repository\CommentRepository;
 use App\Repository\FeaturedBookingRepository;
 use App\Repository\RecruitmentListingRepository;
 use App\Repository\ServerCollaboratorRepository;
+use App\Repository\ServerDailyStatRepository;
 use App\Repository\ServerRepository;
 use App\Repository\TagRepository;
 use App\Repository\TransactionRepository;
 use App\Repository\UserRepository;
+use App\Repository\VoteRepository;
+use App\Service\SettingsService;
 use App\Service\NetworkValidationService;
 use App\Service\NotificationService;
 use App\Service\PremiumService;
@@ -64,6 +68,9 @@ class UserServerController extends AbstractController
         private TagRepository $tagRepo,
         private NetworkValidationService $networkValidator,
         private NotificationService $notificationService,
+        private ServerDailyStatRepository $dailyStatRepo,
+        private VoteRepository $voteRepo,
+        private SettingsService $settingsService,
     ) {
     }
 
@@ -325,6 +332,28 @@ class UserServerController extends AbstractController
         $twitchSub = $this->premiumService->getTwitchSubscription($server);
         $twitchLiveGated = $this->premiumService->isFeatureGated('twitch_live');
 
+        // Stats tab
+        $statsGated = $this->settingsService->getBool('premium_stats_gate_enabled', true);
+        $hasStats = !$statsGated || $this->premiumService->hasServerFeature($server, ServerPremiumFeature::FEATURE_STATS);
+        $statsCost = (int) $this->settingsService->get('premium_stats_cost', '100');
+        $statsData = [];
+        if ($isOwner && $hasStats) {
+            $from = new \DateTime('-29 days 00:00:00');
+            $to   = new \DateTime('today 23:59:59');
+            $daily = $this->dailyStatRepo->getDailyViewsForRange($server, $from, $to);
+            $votes = $this->voteRepo->getDailyVotesForRange($server, $from, $to);
+            $statsData = [
+                'daily_views'    => $daily,
+                'daily_votes'    => $votes,
+                'vote_hours'     => $this->voteRepo->getVotesByHour($server, $from),
+                'vote_providers' => $this->voteRepo->getVotesByProvider($server, $from),
+                'monthly_views'  => array_sum(array_column($daily, 'views')),
+                'monthly_votes'  => $server->getMonthlyVotes(),
+                'total_clicks'   => $server->getClickCount(),
+                'total_votes'    => $server->getTotalVotes(),
+            ];
+        }
+
         return $this->render('user/servers/manage.html.twig', [
             'server' => $server,
             'comments' => $comments,
@@ -355,6 +384,10 @@ class UserServerController extends AbstractController
             'twitch_live_gated' => $twitchLiveGated,
             'twitch_live_cost_tokens' => $this->premiumService->getTwitchLiveMonthlyTokenCost(),
             'twitch_live_cost_eur' => $this->premiumService->getTwitchLiveMonthlyEurPrice(),
+            'has_stats' => $hasStats,
+            'is_stats_gated' => $statsGated,
+            'stats_cost' => $statsCost,
+            'stats_data' => $statsData,
         ]);
     }
 
@@ -449,6 +482,30 @@ class UserServerController extends AbstractController
         }
 
         return $this->redirectToRoute('user_servers_manage', ['id' => $server->getId()]);
+    }
+
+    #[Route('/serveur/{id}/gestion/stats/debloquer', name: 'user_servers_stats_unlock', methods: ['POST'])]
+    public function unlockStats(Server $server, Request $request): Response
+    {
+        if (!$this->isOwner($server)) {
+            throw $this->createAccessDeniedException();
+        }
+
+        if (!$this->isCsrfTokenValid('stats_unlock_' . $server->getId(), $request->request->get('_token'))) {
+            $this->addFlash('error', 'Token CSRF invalide.');
+            return $this->redirectToRoute('user_servers_manage', ['id' => $server->getId()]);
+        }
+
+        $user = $this->getUser();
+        $result = $this->premiumService->unlockFeature($server, $user, ServerPremiumFeature::FEATURE_STATS);
+
+        if ($result) {
+            $this->addFlash('success', 'Statistiques avancees debloquees avec succes !');
+        } else {
+            $this->addFlash('error', 'NexBits insuffisants sur le serveur. Deposez des NexBits depuis l\'onglet Premium.');
+        }
+
+        return $this->redirectToRoute('user_servers_manage', ['id' => $server->getId(), '_fragment' => 'stats']);
     }
 
     #[Route('/serveur/{id}/twitch-subscribe', name: 'user_servers_twitch_subscribe', methods: ['POST'])]

@@ -14,6 +14,7 @@ class ServerPremiumFeature
     public const FEATURE_THEME = 'theme';
     public const FEATURE_WIDGET = 'widget';
     public const FEATURE_TWITCH_LIVE = 'twitch_live';
+    public const FEATURE_STATS = 'stats';
 
     #[ORM\Id]
     #[ORM\GeneratedValue]
