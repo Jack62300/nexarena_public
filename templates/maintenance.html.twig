@@ -1,0 +1,283 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Site en maintenance — {{ setting('site_name', 'Nexarena') }}{% endblock %}
+
+{% block stylesheets %}
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: #0a0f16;
+    color: #e4e6eb;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Animated background grid */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(69,248,130,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(69,248,130,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Glow blobs */
+body::after {
+    content: '';
+    position: fixed;
+    top: -200px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    height: 400px;
+    background: radial-gradient(ellipse, rgba(69,248,130,0.06) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.maintenance-wrap {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    max-width: 520px;
+    width: 100%;
+}
+
+/* Logo */
+.maintenance-logo {
+    margin-bottom: 40px;
+}
+.maintenance-logo img {
+    height: 44px;
+    filter: drop-shadow(0 0 12px rgba(69,248,130,0.3));
+}
+.maintenance-logo span {
+    font-size: 22px;
+    font-weight: 800;
+    color: #45f882;
+    letter-spacing: -0.5px;
+}
+
+/* Icon */
+.maintenance-icon {
+    width: 90px;
+    height: 90px;
+    border-radius: 24px;
+    background: rgba(69,248,130,0.08);
+    border: 1px solid rgba(69,248,130,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    margin: 0 auto 28px;
+    animation: pulse-icon 3s ease-in-out infinite;
+}
+
+@keyframes pulse-icon {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(69,248,130,0.2); }
+    50% { box-shadow: 0 0 0 16px rgba(69,248,130,0); }
+}
+
+.maintenance-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 14px;
+    background: rgba(246,194,62,0.1);
+    border: 1px solid rgba(246,194,62,0.25);
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #f6c23e;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 20px;
+}
+.maintenance-badge::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: #f6c23e;
+    border-radius: 50%;
+    animation: blink 1.2s ease-in-out infinite;
+}
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.2; }
+}
+
+.maintenance-title {
+    font-size: 32px;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.15;
+    margin-bottom: 14px;
+    letter-spacing: -0.5px;
+}
+
+.maintenance-desc {
+    font-size: 15px;
+    color: #8b949e;
+    line-height: 1.6;
+    margin-bottom: 36px;
+}
+
+/* Flash messages */
+.maint-flash {
+    padding: 12px 18px;
+    border-radius: 10px;
+    font-size: 14px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-align: left;
+}
+.maint-flash--error {
+    background: rgba(231,74,59,0.1);
+    border: 1px solid rgba(231,74,59,0.25);
+    color: #ff6b6b;
+}
+.maint-flash--success {
+    background: rgba(28,200,138,0.1);
+    border: 1px solid rgba(28,200,138,0.25);
+    color: #1cc88a;
+}
+.maint-flash--info {
+    background: rgba(54,185,204,0.1);
+    border: 1px solid rgba(54,185,204,0.25);
+    color: #36b9cc;
+}
+
+/* Discord button */
+.btn-discord {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 14px 28px;
+    background: #5865f2;
+    color: #fff;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 20px rgba(88,101,242,0.35);
+}
+.btn-discord:hover {
+    background: #4752c4;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 24px rgba(88,101,242,0.45);
+    color: #fff;
+}
+.btn-discord i { font-size: 18px; }
+
+/* Divider */
+.maint-divider {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 20px 0 16px;
+    color: #4a5568;
+    font-size: 12px;
+}
+.maint-divider::before, .maint-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #1e3048;
+}
+
+.maint-note {
+    font-size: 12px;
+    color: #4a5568;
+}
+
+/* Footer */
+.maint-footer {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    color: #4a5568;
+    z-index: 1;
+    white-space: nowrap;
+}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="maintenance-wrap">
+
+    {# Logo #}
+    <div class="maintenance-logo">
+        {% set logo = setting('site_logo', '') %}
+        {% if logo %}
+            <img src="{{ asset(logo) }}" alt="{{ setting('site_name', 'Nexarena') }}">
+        {% else %}
+            <span>{{ setting('site_name', 'Nexarena') }}</span>
+        {% endif %}
+    </div>
+
+    {# Flash messages #}
+    {% for type, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="maint-flash maint-flash--{{ type }}">
+                <i class="fas fa-{{ type == 'error' ? 'exclamation-circle' : (type == 'success' ? 'check-circle' : 'info-circle') }}"></i>
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endfor %}
+
+    {# Icon #}
+    <div class="maintenance-icon">🔧</div>
+
+    <div class="maintenance-badge">
+        Maintenance en cours
+    </div>
+
+    <h1 class="maintenance-title">Site temporairement<br>indisponible</h1>
+
+    <p class="maintenance-desc">
+        Nous effectuons des operations de maintenance pour ameliorer
+        votre experience. Le site sera de retour tres prochainement.<br>
+        Merci pour votre patience.
+    </p>
+
+    {# Discord OAuth admin login #}
+    <a href="{{ path('app_oauth_connect', {provider: 'discord'}) }}" class="btn-discord">
+        <i class="fab fa-discord"></i>
+        Connexion administrateur via Discord
+    </a>
+
+    <div class="maint-divider">Acces reserve aux administrateurs</div>
+
+    <p class="maint-note">
+        <i class="fas fa-lock" style="margin-right:4px;"></i>
+        Seuls les membres de l'equipe peuvent acceder au site pendant la maintenance.
+    </p>
+
+</div>
+
+<div class="maint-footer">
+    &copy; {{ 'now'|date('Y') }} {{ setting('site_name', 'Nexarena') }} — Maintenance
+</div>
+{% endblock %}
+
+{% block javascripts %}{% endblock %}

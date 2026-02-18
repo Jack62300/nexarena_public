@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Repository\UserRepository;
 use App\Service\OAuthRegistrationService;
+use App\Service\SettingsService;
 use KnpU\OAuth2ClientBundle\Client\ClientRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
@@ -13,6 +14,19 @@ use Symfony\Component\Routing\Attribute\Route;
 
 class OAuthController extends AbstractController
 {
+    /** Rôles considérés comme "admin" (ROLE_EDITEUR et supérieurs via hiérarchie). */
+    private const ADMIN_ROLES = [
+        'ROLE_EDITEUR',
+        'ROLE_MANAGER',
+        'ROLE_RESPONSABLE',
+        'ROLE_DEVELOPPEUR',
+        'ROLE_FONDATEUR',
+    ];
+
+    public function __construct(private SettingsService $settings)
+    {
+    }
+
     private const SCOPES = [
         'google' => ['email', 'profile'],
         'discord' => ['identify', 'email'],
@@ -51,12 +65,26 @@ class OAuthController extends AbstractController
 
             [$oauthId, $email, $username, $avatar] = $this->extractUserData($provider, $resourceOwner);
 
+            $maintenance = $this->settings->getBool('maintenance_mode', false);
+
             // Utilisateur existant avec cet OAuth ID → login direct
             $existingUser = $userRepository->findByOAuthId($provider, $oauthId);
             if ($existingUser) {
+                // Pendant la maintenance, seuls les admins peuvent se connecter
+                if ($maintenance && !$this->userHasAdminRole($existingUser)) {
+                    $this->addFlash('error', 'Le site est actuellement en maintenance. Seuls les administrateurs peuvent se connecter.');
+                    return $this->redirectToRoute('app_maintenance');
+                }
+
                 $request->getSession()->migrate(true);
                 $security->login($existingUser, 'form_login', 'main');
                 return $this->redirectToRoute('app_home');
+            }
+
+            // Maintenance active → nouvelles inscriptions bloquées
+            if ($maintenance) {
+                $this->addFlash('error', 'Les inscriptions sont desactivees pendant la maintenance.');
+                return $this->redirectToRoute('app_maintenance');
             }
 
             // Pas d'email fourni → demander l'email
@@ -90,6 +118,12 @@ class OAuthController extends AbstractController
         OAuthRegistrationService $oauthService,
         Security $security,
     ): Response {
+        // Inscriptions bloquées pendant la maintenance
+        if ($this->settings->getBool('maintenance_mode', false)) {
+            $this->addFlash('error', 'Les inscriptions sont desactivees pendant la maintenance.');
+            return $this->redirectToRoute('app_maintenance');
+        }
+
         $session = $request->getSession();
         $pending = $session->get('_oauth_pending');
 
@@ -133,6 +167,12 @@ class OAuthController extends AbstractController
             'pending' => $pending,
             'last_email' => '',
         ]);
+    }
+
+    private function userHasAdminRole(object $user): bool
+    {
+        $userRoles = $user->getRoles();
+        return !empty(array_intersect(self::ADMIN_ROLES, $userRoles));
     }
 
     private function extractUserData(string $provider, $resourceOwner): array

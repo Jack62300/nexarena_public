@@ -1,430 +1,847 @@
 {% extends 'admin/base.html.twig' %}
 
-{% block page_title %}Parametres{% endblock %}
-{% block title %}Nexarena Admin - Parametres{% endblock %}
+{% block page_title %}Configuration{% endblock %}
+{% block title %}Nexarena Admin — Configuration{% endblock %}
 
 {% block admin_css %}
-    .settings-tabs {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-    }
-    .settings-tab {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 10px 16px;
-        border-radius: 8px;
-        color: var(--text-secondary);
-        transition: all 0.2s;
-        font-size: 14px;
-        cursor: pointer;
-        text-decoration: none;
-        border: none;
-        background: none;
-        width: 100%;
-        text-align: left;
-    }
-    .settings-tab:hover {
-        background: var(--bg-card-hover);
-        color: var(--text-primary);
-    }
-    .settings-tab.active {
-        background: var(--accent);
-        color: #fff;
-    }
-    .settings-tab i {
-        width: 20px;
-        text-align: center;
-        font-size: 13px;
-    }
-    .settings-tab__count {
-        margin-left: auto;
-        font-size: 11px;
-        opacity: 0.6;
-    }
-    .setting-group { margin-bottom: 22px; }
-    .setting-group__label {
-        display: block;
-        margin-bottom: 6px;
-        font-size: 13px;
-        font-weight: 600;
-        color: var(--text-primary);
-    }
-    .setting-group__desc {
-        font-size: 12px;
-        color: var(--text-secondary);
-        margin-bottom: 8px;
-    }
-    .setting-input {
-        width: 100%;
-        padding: 10px 14px;
-        background: var(--bg-darker);
-        border: 1px solid var(--border-color);
-        border-radius: 6px;
-        color: var(--text-primary);
-        font-size: 14px;
-        transition: border-color 0.2s;
-    }
-    .setting-input:focus {
-        outline: none;
-        border-color: var(--accent);
-    }
-    textarea.setting-input {
-        min-height: 80px;
-        resize: vertical;
-    }
-    .setting-toggle {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 12px 16px;
-        background: var(--bg-darker);
-        border: 1px solid var(--border-color);
-        border-radius: 6px;
-        cursor: pointer;
-    }
-    .setting-toggle:hover {
-        border-color: var(--accent);
-    }
-    .setting-toggle input[type="checkbox"] {
-        width: 20px;
-        height: 20px;
-        accent-color: var(--accent);
-        flex-shrink: 0;
-    }
-    .setting-toggle__text {
-        flex: 1;
-    }
-    .setting-image-preview {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        margin-bottom: 8px;
-    }
-    .setting-image-preview img {
-        max-width: 200px;
-        max-height: 80px;
-        border-radius: 6px;
-        border: 1px solid var(--border-color);
-        object-fit: contain;
-        background: var(--bg-darker);
-        padding: 5px;
-    }
-    .setting-image-preview .no-image {
-        width: 100px;
-        height: 60px;
-        border-radius: 6px;
-        background: var(--bg-darker);
-        border: 1px dashed var(--border-color);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--text-secondary);
-        font-size: 20px;
-    }
-    .setting-color-wrapper {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-    .setting-color-wrapper input[type="color"] {
-        width: 50px;
-        height: 38px;
-        border: 1px solid var(--border-color);
-        border-radius: 6px;
-        background: var(--bg-darker);
-        cursor: pointer;
-        padding: 2px;
-    }
-    .setting-color-wrapper .color-hex {
-        font-family: monospace;
-        font-size: 14px;
-        color: var(--text-secondary);
-    }
-    .remove-image-check {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 12px;
-        color: var(--danger);
-        margin-top: 6px;
-        cursor: pointer;
-    }
-    .remove-image-check input { accent-color: var(--danger); }
+/* ============================================================
+   SETTINGS PAGE — REFONTE
+   ============================================================ */
 
-    /* Quill Editor */
-    .quill-editor-wrap { margin-bottom: 4px; }
-    .quill-editor {
-        background: var(--bg-darker);
-        border: 1px solid var(--border-color);
-        border-radius: 0 0 6px 6px;
-        color: var(--text-primary);
-        min-height: 250px;
-        font-size: 14px;
-    }
-    .quill-editor .ql-editor { min-height: 250px; }
-    .ql-toolbar.ql-snow {
-        border: 1px solid var(--border-color) !important;
-        border-radius: 6px 6px 0 0 !important;
-        background: var(--bg-card) !important;
-    }
-    .ql-container.ql-snow {
-        border: 1px solid var(--border-color) !important;
-        border-top: none !important;
-        border-radius: 0 0 6px 6px !important;
-    }
-    .ql-toolbar .ql-stroke { stroke: var(--text-secondary) !important; }
-    .ql-toolbar .ql-fill { fill: var(--text-secondary) !important; }
-    .ql-toolbar .ql-picker-label { color: var(--text-secondary) !important; }
-    .ql-toolbar button:hover .ql-stroke,
-    .ql-toolbar .ql-active .ql-stroke { stroke: var(--accent) !important; }
-    .ql-toolbar button:hover .ql-fill,
-    .ql-toolbar .ql-active .ql-fill { fill: var(--accent) !important; }
-    .ql-snow .ql-picker-options {
-        background: var(--bg-card) !important;
-        border-color: var(--border-color) !important;
-    }
-    .ql-snow .ql-picker-item { color: var(--text-primary) !important; }
+/* ── Nav pills scrollable ── */
+.cfg-nav {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 0 0 4px;
+    scrollbar-width: none;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+}
+.cfg-nav::-webkit-scrollbar { display: none; }
+
+.cfg-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 16px;
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+    text-decoration: none;
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    transition: all 0.18s;
+    flex-shrink: 0;
+}
+.cfg-pill:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(69,248,130,0.06);
+}
+.cfg-pill.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #0a1018;
+    font-weight: 700;
+    box-shadow: 0 0 14px rgba(69,248,130,0.25);
+}
+.cfg-pill i { font-size: 12px; }
+.cfg-pill__count {
+    background: rgba(0,0,0,0.15);
+    padding: 1px 6px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 700;
+}
+.cfg-pill.active .cfg-pill__count {
+    background: rgba(0,0,0,0.2);
+}
+
+/* ── Page header ── */
+.cfg-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+.cfg-header__title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.cfg-header__icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: rgba(69,248,130,0.1);
+    border: 1px solid rgba(69,248,130,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: var(--accent);
+    flex-shrink: 0;
+}
+.cfg-header__name {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.1;
+}
+.cfg-header__sub {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+
+/* ── Setting card ── */
+.cfg-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 16px;
+}
+.cfg-card__header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,255,255,0.02);
+}
+.cfg-card__header-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+}
+.cfg-card__header-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.cfg-card__body { padding: 0; }
+
+/* ── Setting row ── */
+.cfg-row {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 0;
+    border-bottom: 1px solid rgba(30,48,72,0.6);
+    align-items: start;
+    transition: background 0.15s;
+}
+.cfg-row:last-child { border-bottom: none; }
+.cfg-row:hover { background: rgba(255,255,255,0.015); }
+
+.cfg-row__meta {
+    padding: 18px 20px;
+    border-right: 1px solid rgba(30,48,72,0.6);
+}
+.cfg-row__label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+    line-height: 1.3;
+}
+.cfg-row__desc {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+.cfg-row__field {
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+}
+
+/* ── Inputs ── */
+.cfg-input {
+    width: 100%;
+    padding: 9px 14px;
+    background: var(--bg-darker);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 13px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+}
+.cfg-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(69,248,130,0.1);
+}
+textarea.cfg-input {
+    min-height: 80px;
+    resize: vertical;
+    padding: 10px 14px;
+    align-self: flex-start;
+}
+input[type="number"].cfg-input {
+    max-width: 160px;
+}
+.cfg-input-wrap {
+    position: relative;
+    width: 100%;
+}
+.cfg-input-wrap .cfg-input { padding-right: 40px; }
+.cfg-input-wrap__suffix {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    font-size: 12px;
+    pointer-events: none;
+}
+
+/* ── Secret field ── */
+.cfg-secret-wrap {
+    position: relative;
+    width: 100%;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+.cfg-secret-wrap .cfg-input { padding-right: 42px; flex: 1; font-family: monospace; }
+.cfg-secret-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 4px;
+    transition: color 0.15s;
+    font-size: 13px;
+}
+.cfg-secret-toggle:hover { color: var(--accent); }
+.cfg-lock-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    background: rgba(69,248,130,0.08);
+    border: 1px solid rgba(69,248,130,0.15);
+    border-radius: 20px;
+    font-size: 10px;
+    color: var(--accent);
+    margin-left: 8px;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+/* ── Toggle switch ── */
+.cfg-toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+}
+.cfg-switch {
+    position: relative;
+    width: 44px;
+    height: 24px;
+    flex-shrink: 0;
+}
+.cfg-switch input { display: none; }
+.cfg-switch__track {
+    position: absolute;
+    inset: 0;
+    background: var(--bg-darker);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.cfg-switch input:checked + .cfg-switch__track {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+.cfg-switch__track::after {
+    content: '';
+    position: absolute;
+    left: 3px;
+    top: 3px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    transition: transform 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+.cfg-switch input:checked + .cfg-switch__track::after {
+    transform: translateX(20px);
+}
+.cfg-toggle-text {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+.cfg-switch input:checked ~ .cfg-toggle-text { color: var(--accent); }
+
+/* ── Color picker ── */
+.cfg-color-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.cfg-color-swatch {
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    border: 2px solid var(--border-color);
+    cursor: pointer;
+    overflow: hidden;
+    padding: 0;
+    background: none;
+    flex-shrink: 0;
+}
+.cfg-color-swatch input[type="color"] {
+    width: 150%;
+    height: 150%;
+    margin: -10px;
+    cursor: pointer;
+    border: none;
+    padding: 0;
+    background: none;
+}
+.cfg-color-hex {
+    font-family: monospace;
+    font-size: 13px;
+    color: var(--text-primary);
+    padding: 9px 14px;
+    background: var(--bg-darker);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    width: 110px;
+}
+
+/* ── Image field ── */
+.cfg-image-preview {
+    width: 120px;
+    height: 60px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    background: var(--bg-darker);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-right: 12px;
+}
+.cfg-image-preview img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+.cfg-image-preview--empty {
+    color: var(--text-secondary);
+    font-size: 22px;
+    opacity: 0.3;
+}
+.cfg-remove-check {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--danger);
+    margin-top: 8px;
+    cursor: pointer;
+}
+.cfg-remove-check input { accent-color: var(--danger); }
+
+/* ── URL field ── */
+.cfg-url-wrap {
+    position: relative;
+    width: 100%;
+}
+.cfg-url-wrap .cfg-input { padding-left: 38px; }
+.cfg-url-prefix {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    font-size: 12px;
+    pointer-events: none;
+}
+
+/* ── Quill ── */
+.quill-editor-wrap { width: 100%; }
+.quill-editor {
+    background: var(--bg-darker);
+    border: 1px solid var(--border-color);
+    border-radius: 0 0 8px 8px;
+    color: var(--text-primary);
+    min-height: 220px;
+    font-size: 13px;
+}
+.quill-editor .ql-editor { min-height: 220px; }
+.ql-toolbar.ql-snow {
+    border: 1px solid var(--border-color) !important;
+    border-radius: 8px 8px 0 0 !important;
+    background: var(--bg-card) !important;
+}
+.ql-container.ql-snow {
+    border: 1px solid var(--border-color) !important;
+    border-top: none !important;
+    border-radius: 0 0 8px 8px !important;
+}
+.ql-toolbar .ql-stroke { stroke: var(--text-secondary) !important; }
+.ql-toolbar .ql-fill { fill: var(--text-secondary) !important; }
+.ql-toolbar .ql-picker-label { color: var(--text-secondary) !important; }
+.ql-toolbar button:hover .ql-stroke, .ql-toolbar .ql-active .ql-stroke { stroke: var(--accent) !important; }
+.ql-toolbar button:hover .ql-fill, .ql-toolbar .ql-active .ql-fill { fill: var(--accent) !important; }
+.ql-snow .ql-picker-options { background: var(--bg-card) !important; border-color: var(--border-color) !important; }
+.ql-snow .ql-picker-item { color: var(--text-primary) !important; }
+
+/* ── Save bar ── */
+.cfg-save-bar {
+    position: sticky;
+    bottom: 0;
+    background: var(--bg-darker);
+    border-top: 1px solid var(--border-color);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 10;
+    border-radius: 0 0 12px 12px;
+}
+.cfg-save-bar__note {
+    font-size: 12px;
+    color: var(--text-secondary);
+    flex: 1;
+}
+
+/* ── Slides grid ── */
+.cfg-slides-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 10px;
+    margin-bottom: 14px;
+}
+.cfg-slide-card {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    aspect-ratio: 16/9;
+    background: var(--bg-darker);
+}
+.cfg-slide-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.cfg-slide-delete {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background: rgba(0,0,0,0.75);
+    border: none;
+    color: var(--danger);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    transition: background 0.15s;
+}
+.cfg-slide-delete:hover { background: var(--danger); color: #fff; }
+.cfg-slide-upload {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+/* ── Empty state ── */
+.cfg-empty {
+    padding: 50px 20px;
+    text-align: center;
+    color: var(--text-secondary);
+}
+.cfg-empty i { font-size: 40px; opacity: 0.2; margin-bottom: 14px; display: block; }
+.cfg-empty code {
+    background: var(--bg-darker);
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--accent);
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .cfg-row { grid-template-columns: 1fr; }
+    .cfg-row__meta { border-right: none; border-bottom: 1px solid rgba(30,48,72,0.6); padding-bottom: 10px; }
+    .cfg-row__field { padding-top: 10px; }
+    .cfg-header__name { font-size: 18px; }
+}
 {% endblock %}
 
 {% block admin_body %}
-    <div class="row g-4">
-        {# ===== SIDEBAR TABS ===== #}
-        <div class="col-xl-3 col-lg-4">
-            <div class="admin-table">
-                <div class="admin-table__header">
-                    <h3>Configuration</h3>
-                </div>
-                <div style="padding:12px;">
-                    <div class="settings-tabs">
-                        {% for cat_key, cat_label in category_labels %}
-                            <a href="{{ path('admin_settings_index', {tab: cat_key}) }}"
-                               class="settings-tab {{ active_tab == cat_key ? 'active' : '' }}">
-                                <i class="{{ category_icons[cat_key] ?? 'fas fa-cog' }}"></i>
-                                {{ cat_label }}
-                                {% if settings_by_category[cat_key] is defined %}
-                                    <span class="settings-tab__count">{{ settings_by_category[cat_key]|length }}</span>
-                                {% endif %}
-                            </a>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
+
+{# ── Navigation pills ── #}
+<nav class="cfg-nav">
+    {% for cat_key, cat_label in category_labels %}
+        <a href="{{ path('admin_settings_index', {tab: cat_key}) }}"
+           class="cfg-pill {{ active_tab == cat_key ? 'active' : '' }}">
+            <i class="{{ category_icons[cat_key] ?? 'fas fa-cog' }}"></i>
+            {{ cat_label }}
+            {% if settings_by_category[cat_key] is defined %}
+                <span class="cfg-pill__count">{{ settings_by_category[cat_key]|length }}</span>
+            {% endif %}
+        </a>
+    {% endfor %}
+</nav>
+
+{# ── Page header ── #}
+<div class="cfg-header">
+    <div class="cfg-header__title">
+        <div class="cfg-header__icon">
+            <i class="{{ category_icons[active_tab] ?? 'fas fa-cog' }}"></i>
         </div>
-
-        {# ===== SETTINGS FORM ===== #}
-        <div class="col-xl-9 col-lg-8">
-            <div class="admin-table">
-                <div class="admin-table__header">
-                    <h3>
-                        <i class="{{ category_icons[active_tab] ?? 'fas fa-cog' }}" style="color:var(--accent);margin-right:8px;"></i>
-                        {{ category_labels[active_tab] ?? active_tab|capitalize }}
-                    </h3>
-                </div>
-                <div style="padding:25px;">
-                    {# ===== BANNER SLIDES MANAGER ===== #}
-                    {% if active_tab == 'banner' %}
-                        <div class="setting-group" style="margin-bottom:30px;padding-bottom:25px;border-bottom:1px solid var(--border-color);">
-                            <label class="setting-group__label" style="font-size:15px;margin-bottom:4px;">
-                                <i class="fas fa-images" style="color:var(--accent);margin-right:6px;"></i>
-                                Diaporama de la banniere
-                            </label>
-                            <div class="setting-group__desc" style="margin-bottom:14px;">
-                                Uploadez les images qui defileront en fond de la banniere d'accueil. Format recommande : 1920x1080px minimum.
-                            </div>
-
-                            {# Current slides grid #}
-                            {% if banner_slides|length > 0 %}
-                                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:16px;">
-                                    {% for slide in banner_slides %}
-                                        <div style="position:relative;border-radius:8px;overflow:hidden;border:1px solid var(--border-color);background:var(--bg-darker);">
-                                            <img src="{{ asset('uploads/banners/' ~ slide) }}" alt=""
-                                                 style="width:100%;height:110px;object-fit:cover;display:block;">
-                                            <form method="post" action="{{ path('admin_settings_banner_slide_delete') }}"
-                                                  style="position:absolute;top:6px;right:6px;"
-                                                  onsubmit="return confirm('Supprimer cette slide ?')">
-                                                <input type="hidden" name="_token" value="{{ csrf_token('banner_slide_delete') }}">
-                                                <input type="hidden" name="filename" value="{{ slide }}">
-                                                <button type="submit" style="background:rgba(0,0,0,0.7);border:none;color:#ff4757;width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </form>
-                                        </div>
-                                    {% endfor %}
-                                </div>
-                            {% else %}
-                                <div style="padding:20px;text-align:center;background:var(--bg-darker);border:1px dashed var(--border-color);border-radius:8px;color:var(--text-secondary);margin-bottom:16px;">
-                                    <i class="fas fa-images" style="font-size:24px;margin-bottom:8px;display:block;opacity:0.4;"></i>
-                                    Aucune slide. L'image par defaut sera utilisee.
-                                </div>
-                            {% endif %}
-
-                            {# Upload form #}
-                            <form method="post" action="{{ path('admin_settings_banner_slide_upload') }}" enctype="multipart/form-data"
-                                  style="display:flex;align-items:center;gap:12px;">
-                                <input type="hidden" name="_token" value="{{ csrf_token('banner_slide') }}">
-                                <input type="file" name="slide_image" accept="image/jpeg,image/png,image/webp,image/gif"
-                                       class="setting-input" style="flex:1;" required>
-                                <button type="submit" class="btn-admin btn-admin--primary" style="white-space:nowrap;">
-                                    <i class="fas fa-plus"></i> Ajouter
-                                </button>
-                            </form>
-                        </div>
-                    {% endif %}
-
-                    {% if settings_by_category[active_tab] is defined and settings_by_category[active_tab]|length > 0 %}
-                        <form method="post" action="{{ path('admin_settings_save') }}" enctype="multipart/form-data">
-                            <input type="hidden" name="_token" value="{{ csrf_token('settings_save') }}">
-                            <input type="hidden" name="_category" value="{{ active_tab }}">
-
-                            {% for setting in settings_by_category[active_tab] %}
-                                {# Skip banner slides/bg from normal loop — managed above #}
-                                {% if setting.key in ['banner_slides', 'banner_bg_image'] %}
-                                {% else %}
-                                <div class="setting-group">
-                                    <label class="setting-group__label" for="setting_{{ setting.key }}">
-                                        {{ setting.label }}
-                                    </label>
-                                    {% if setting.description %}
-                                        <div class="setting-group__desc">{{ setting.description }}</div>
-                                    {% endif %}
-
-                                    {% if setting.type == 'secret' %}
-                                        <div style="position:relative;">
-                                            <i class="fas fa-lock" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--accent);font-size:13px;"></i>
-                                            <input type="password" id="setting_{{ setting.key }}" name="setting_{{ setting.key }}"
-                                                   class="setting-input" style="padding-left:36px;"
-                                                   value="{{ setting.value ? '********' : '' }}"
-                                                   placeholder="Entrez la valeur secrete"
-                                                   autocomplete="off">
-                                        </div>
-
-                                    {% elseif setting.type == 'text' %}
-                                        <input type="text" id="setting_{{ setting.key }}" name="setting_{{ setting.key }}"
-                                               class="setting-input" value="{{ setting.value }}">
-
-                                    {% elseif setting.type == 'textarea' %}
-                                        <textarea id="setting_{{ setting.key }}" name="setting_{{ setting.key }}"
-                                                  class="setting-input">{{ setting.value }}</textarea>
-
-                                    {% elseif setting.type == 'html' %}
-                                        <div class="quill-editor-wrap">
-                                            <div id="quill_{{ setting.key }}" class="quill-editor">{# content injected by JS #}</div>
-                                            <textarea id="setting_{{ setting.key }}" name="setting_{{ setting.key }}"
-                                                      class="setting-input" style="display:none;">{{ setting.value }}</textarea>
-                                        </div>
-
-                                    {% elseif setting.type == 'number' %}
-                                        <input type="number" id="setting_{{ setting.key }}" name="setting_{{ setting.key }}"
-                                               class="setting-input" value="{{ setting.value }}" min="0" style="max-width:200px;">
-
-                                    {% elseif setting.type == 'url' %}
-                                        <input type="url" id="setting_{{ setting.key }}" name="setting_{{ setting.key }}"
-                                               class="setting-input" value="{{ setting.value }}" placeholder="https://">
-
-                                    {% elseif setting.type == 'color' %}
-                                        <div class="setting-color-wrapper">
-                                            <input type="color" id="setting_{{ setting.key }}" name="setting_{{ setting.key }}"
-                                                   value="{{ setting.value ?: '#45f882' }}"
-                                                   onchange="this.nextElementSibling.textContent=this.value">
-                                            <span class="color-hex">{{ setting.value ?: '#45f882' }}</span>
-                                        </div>
-
-                                    {% elseif setting.type == 'boolean' %}
-                                        <label class="setting-toggle">
-                                            <input type="checkbox" id="setting_{{ setting.key }}" name="setting_{{ setting.key }}"
-                                                   value="1" {{ setting.boolValue ? 'checked' : '' }}>
-                                            <div class="setting-toggle__text">
-                                                <div style="font-size:13px;font-weight:500;">{{ setting.label }}</div>
-                                            </div>
-                                        </label>
-
-                                    {% elseif setting.type == 'image' %}
-                                        <div class="setting-image-preview">
-                                            {% if setting.value %}
-                                                <img src="{{ asset(setting.value) }}" alt="">
-                                            {% else %}
-                                                <div class="no-image"><i class="fas fa-image"></i></div>
-                                            {% endif %}
-                                        </div>
-                                        <input type="file" id="setting_{{ setting.key }}" name="setting_{{ setting.key }}"
-                                               class="setting-input" accept="image/*">
-                                        {% if setting.value %}
-                                            <label class="remove-image-check">
-                                                <input type="checkbox" name="remove_{{ setting.key }}" value="1">
-                                                Supprimer l'image actuelle
-                                            </label>
-                                        {% endif %}
-                                    {% endif %}
-                                </div>
-                                {% endif %}{# end skip banner_slides/banner_bg_image #}
-                            {% endfor %}
-
-                            <div style="padding-top:15px;border-top:1px solid var(--border-color);display:flex;gap:10px;">
-                                <button type="submit" class="btn-admin btn-admin--primary">
-                                    <i class="fas fa-save"></i> Enregistrer
-                                </button>
-                            </div>
-                        </form>
-                    {% else %}
-                        <div style="text-align:center;padding:40px;color:var(--text-secondary);">
-                            <i class="fas fa-cog" style="font-size:36px;margin-bottom:10px;display:block;"></i>
-                            <p>Aucun parametre dans cette categorie.<br>
-                            Executez <code>php bin/console app:init-settings</code> pour initialiser les parametres.</p>
-                        </div>
-                    {% endif %}
-                </div>
+        <div>
+            <div class="cfg-header__name">{{ category_labels[active_tab] ?? active_tab|capitalize }}</div>
+            <div class="cfg-header__sub">
+                {% if settings_by_category[active_tab] is defined %}
+                    {{ settings_by_category[active_tab]|length }} parametre(s) dans cette section
+                {% else %}
+                    Aucun parametre configure
+                {% endif %}
             </div>
         </div>
     </div>
+</div>
 
-    {# Quill.js for HTML fields #}
-    {% set hasHtmlFields = false %}
-    {% if settings_by_category[active_tab] is defined %}
-        {% for s in settings_by_category[active_tab] %}
-            {% if s.type == 'html' %}{% set hasHtmlFields = true %}{% endif %}
+{# ── Banner slides (section speciale) ── #}
+{% if active_tab == 'banner' %}
+<div class="cfg-card" style="margin-bottom:16px;">
+    <div class="cfg-card__header">
+        <div class="cfg-card__header-icon" style="background:rgba(69,248,130,0.1);color:var(--accent);">
+            <i class="fas fa-images"></i>
+        </div>
+        <span class="cfg-card__header-title">Diaporama de la banniere</span>
+    </div>
+    <div style="padding:20px;">
+        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">
+            Images qui defileront en fond de la banniere d'accueil. Format recommande : 1920×1080px minimum.
+        </p>
+        {% if banner_slides|length > 0 %}
+        <div class="cfg-slides-grid">
+            {% for slide in banner_slides %}
+            <div class="cfg-slide-card">
+                <img src="{{ asset('uploads/banners/' ~ slide) }}" alt="Slide {{ loop.index }}">
+                <form method="post" action="{{ path('admin_settings_banner_slide_delete') }}"
+                      onsubmit="return confirm('Supprimer cette slide ?')">
+                    <input type="hidden" name="_token" value="{{ csrf_token('banner_slide_delete') }}">
+                    <input type="hidden" name="filename" value="{{ slide }}">
+                    <button type="submit" class="cfg-slide-delete" title="Supprimer">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div style="padding:24px;text-align:center;background:var(--bg-darker);border:1px dashed var(--border-color);border-radius:8px;color:var(--text-secondary);margin-bottom:14px;">
+            <i class="fas fa-photo-video" style="font-size:28px;opacity:.3;display:block;margin-bottom:8px;"></i>
+            Aucune slide — l'image par defaut sera utilisee.
+        </div>
+        {% endif %}
+        <form method="post" action="{{ path('admin_settings_banner_slide_upload') }}" enctype="multipart/form-data" class="cfg-slide-upload">
+            <input type="hidden" name="_token" value="{{ csrf_token('banner_slide') }}">
+            <input type="file" name="slide_image" accept="image/jpeg,image/png,image/webp,image/gif"
+                   class="cfg-input" style="flex:1;" required>
+            <button type="submit" class="btn-admin btn-admin--primary" style="white-space:nowrap;">
+                <i class="fas fa-plus"></i> Ajouter
+            </button>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+{# ── Main settings form ── #}
+{% if settings_by_category[active_tab] is defined and settings_by_category[active_tab]|length > 0 %}
+
+{# Group settings by type for better visual organisation #}
+{% set booleans = [] %}
+{% set others = [] %}
+{% for setting in settings_by_category[active_tab] %}
+    {% if setting.key not in ['banner_slides', 'banner_bg_image'] %}
+        {% if setting.type == 'boolean' %}
+            {% set booleans = booleans|merge([setting]) %}
+        {% else %}
+            {% set others = others|merge([setting]) %}
+        {% endif %}
+    {% endif %}
+{% endfor %}
+
+<form method="post" action="{{ path('admin_settings_save') }}" enctype="multipart/form-data" id="settingsForm">
+<input type="hidden" name="_token" value="{{ csrf_token('settings_save') }}">
+<input type="hidden" name="_category" value="{{ active_tab }}">
+
+{# ── Non-boolean settings ── #}
+{% if others|length > 0 %}
+<div class="cfg-card">
+    <div class="cfg-card__header">
+        <div class="cfg-card__header-icon" style="background:rgba(54,185,204,0.1);color:var(--info);">
+            <i class="{{ category_icons[active_tab] ?? 'fas fa-cog' }}"></i>
+        </div>
+        <span class="cfg-card__header-title">Parametres</span>
+    </div>
+    <div class="cfg-card__body">
+        {% for setting in others %}
+        <div class="cfg-row">
+            <div class="cfg-row__meta">
+                <div class="cfg-row__label">
+                    {{ setting.label }}
+                    {% if setting.type == 'secret' %}
+                        <span class="cfg-lock-badge"><i class="fas fa-lock"></i> Chiffre</span>
+                    {% endif %}
+                </div>
+                {% if setting.description %}
+                <div class="cfg-row__desc">{{ setting.description }}</div>
+                {% endif %}
+            </div>
+            <div class="cfg-row__field">
+
+                {# SECRET #}
+                {% if setting.type == 'secret' %}
+                <div class="cfg-secret-wrap">
+                    <div class="cfg-input-wrap" style="flex:1;position:relative;">
+                        <input type="password" id="setting_{{ setting.key }}" name="setting_{{ setting.key }}"
+                               class="cfg-input" style="padding-right:42px;font-family:monospace;"
+                               value="{{ setting.value ? '********' : '' }}"
+                               placeholder="Entrez la valeur secrete"
+                               autocomplete="off">
+                        <button type="button" class="cfg-secret-toggle"
+                                onclick="toggleSecret('setting_{{ setting.key }}', this)">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                {# TEXT #}
+                {% elseif setting.type == 'text' %}
+                <input type="text" id="setting_{{ setting.key }}" name="setting_{{ setting.key }}"
+                       class="cfg-input" value="{{ setting.value }}">
+
+                {# TEXTAREA #}
+                {% elseif setting.type == 'textarea' %}
+                <textarea id="setting_{{ setting.key }}" name="setting_{{ setting.key }}"
+                          class="cfg-input" style="width:100%;align-self:flex-start;">{{ setting.value }}</textarea>
+
+                {# HTML (Quill) #}
+                {% elseif setting.type == 'html' %}
+                <div class="quill-editor-wrap">
+                    <div id="quill_{{ setting.key }}" class="quill-editor"></div>
+                    <textarea id="setting_{{ setting.key }}" name="setting_{{ setting.key }}"
+                              style="display:none;">{{ setting.value }}</textarea>
+                </div>
+
+                {# NUMBER #}
+                {% elseif setting.type == 'number' %}
+                <input type="number" id="setting_{{ setting.key }}" name="setting_{{ setting.key }}"
+                       class="cfg-input" value="{{ setting.value }}" min="0" style="max-width:180px;">
+
+                {# URL #}
+                {% elseif setting.type == 'url' %}
+                <div class="cfg-url-wrap">
+                    <i class="cfg-url-prefix fas fa-link"></i>
+                    <input type="url" id="setting_{{ setting.key }}" name="setting_{{ setting.key }}"
+                           class="cfg-input" value="{{ setting.value }}" placeholder="https://">
+                </div>
+
+                {# COLOR #}
+                {% elseif setting.type == 'color' %}
+                <div class="cfg-color-wrap">
+                    <label class="cfg-color-swatch" title="Choisir une couleur">
+                        <input type="color" id="setting_{{ setting.key }}" name="setting_{{ setting.key }}"
+                               value="{{ setting.value ?: '#45f882' }}"
+                               oninput="syncColorHex(this)">
+                    </label>
+                    <input type="text" id="hex_{{ setting.key }}" class="cfg-color-hex"
+                           value="{{ setting.value ?: '#45f882' }}"
+                           oninput="syncColorPicker(this, 'setting_{{ setting.key }}')">
+                </div>
+
+                {# IMAGE #}
+                {% elseif setting.type == 'image' %}
+                <div style="width:100%;">
+                    <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+                        <div class="cfg-image-preview">
+                            {% if setting.value %}
+                                <img src="{{ asset(setting.value) }}" alt="">
+                            {% else %}
+                                <div class="cfg-image-preview--empty"><i class="fas fa-image"></i></div>
+                            {% endif %}
+                        </div>
+                        <div style="flex:1;">
+                            <input type="file" id="setting_{{ setting.key }}" name="setting_{{ setting.key }}"
+                                   class="cfg-input" accept="image/*">
+                            {% if setting.value %}
+                            <label class="cfg-remove-check" style="margin-top:8px;">
+                                <input type="checkbox" name="remove_{{ setting.key }}" value="1">
+                                Supprimer l'image actuelle
+                            </label>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
         {% endfor %}
-    {% endif %}
+    </div>
+</div>
+{% endif %}
 
-    {% if hasHtmlFields %}
-        <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
-        <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
-        <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            var editors = [];
-            document.querySelectorAll('.quill-editor').forEach(function(el) {
-                var textareaId = el.id.replace('quill_', 'setting_');
-                var textarea = document.getElementById(textareaId);
-                if (!textarea) return;
+{# ── Boolean toggles card ── #}
+{% if booleans|length > 0 %}
+<div class="cfg-card">
+    <div class="cfg-card__header">
+        <div class="cfg-card__header-icon" style="background:rgba(246,194,62,0.1);color:var(--warning);">
+            <i class="fas fa-toggle-on"></i>
+        </div>
+        <span class="cfg-card__header-title">Activations</span>
+    </div>
+    <div class="cfg-card__body">
+        {% for setting in booleans %}
+        <div class="cfg-row">
+            <div class="cfg-row__meta">
+                <div class="cfg-row__label">{{ setting.label }}</div>
+                {% if setting.description %}
+                <div class="cfg-row__desc">{{ setting.description }}</div>
+                {% endif %}
+            </div>
+            <div class="cfg-row__field">
+                <label class="cfg-toggle-row" style="cursor:pointer;">
+                    <div class="cfg-switch">
+                        <input type="checkbox" id="setting_{{ setting.key }}" name="setting_{{ setting.key }}"
+                               value="1" {{ setting.boolValue ? 'checked' : '' }}>
+                        <div class="cfg-switch__track"></div>
+                    </div>
+                    <span class="cfg-toggle-text">
+                        {{ setting.boolValue ? 'Actif' : 'Inactif' }}
+                    </span>
+                </label>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
 
-                var quill = new Quill(el, {
-                    theme: 'snow',
-                    modules: {
-                        toolbar: [
-                            [{ header: [2, 3, 4, false] }],
-                            ['bold', 'italic', 'underline'],
-                            [{ list: 'ordered' }, { list: 'bullet' }],
-                            ['link'],
-                            ['blockquote'],
-                            ['clean']
-                        ]
-                    }
-                });
+{# ── Save bar ── #}
+<div class="cfg-card" style="margin-bottom:0;">
+    <div class="cfg-save-bar">
+        <span class="cfg-save-bar__note">
+            <i class="fas fa-info-circle" style="margin-right:5px;"></i>
+            Les modifications s'appliquent immediatement apres sauvegarde.
+        </span>
+        <button type="submit" class="btn-admin btn-admin--primary">
+            <i class="fas fa-save"></i> Enregistrer
+        </button>
+    </div>
+</div>
 
-                quill.root.innerHTML = textarea.value;
-                editors.push({ quill: quill, textarea: textarea });
-            });
+</form>
 
-            var form = document.querySelector('form[action*="settings/save"]');
-            if (form) {
-                form.addEventListener('submit', function() {
-                    editors.forEach(function(ed) {
-                        ed.textarea.value = ed.quill.root.innerHTML;
-                    });
-                });
-            }
+{% else %}
+<div class="cfg-card">
+    <div class="cfg-empty">
+        <i class="fas fa-box-open"></i>
+        <p>Aucun parametre dans cette categorie.</p>
+        <p style="margin-top:8px;">Executez <code>php bin/console app:init-settings</code> pour initialiser.</p>
+    </div>
+</div>
+{% endif %}
+
+{# ── Quill.js ── #}
+{% set hasHtmlFields = false %}
+{% if settings_by_category[active_tab] is defined %}
+    {% for s in settings_by_category[active_tab] %}
+        {% if s.type == 'html' %}{% set hasHtmlFields = true %}{% endif %}
+    {% endfor %}
+{% endif %}
+{% if hasHtmlFields %}
+<link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var editors = [];
+    document.querySelectorAll('.quill-editor').forEach(function(el) {
+        var textareaId = el.id.replace('quill_', 'setting_');
+        var textarea = document.getElementById(textareaId);
+        if (!textarea) return;
+        var quill = new Quill(el, {
+            theme: 'snow',
+            modules: { toolbar: [[{header:[2,3,4,false]}],['bold','italic','underline'],[{list:'ordered'},{list:'bullet'}],['link'],['blockquote'],['clean']] }
         });
-        </script>
-    {% endif %}
+        quill.root.innerHTML = textarea.value;
+        editors.push({ quill, textarea });
+    });
+    var form = document.getElementById('settingsForm');
+    if (form) {
+        form.addEventListener('submit', function() {
+            editors.forEach(function(ed) { ed.textarea.value = ed.quill.root.innerHTML; });
+        });
+    }
+});
+</script>
+{% endif %}
+
+<script>
+/* Toggle secret visibility */
+function toggleSecret(inputId, btn) {
+    var input = document.getElementById(inputId);
+    if (!input) return;
+    var isHidden = input.type === 'password';
+    input.type = isHidden ? 'text' : 'password';
+    btn.innerHTML = isHidden ? '<i class="fas fa-eye-slash"></i>' : '<i class="fas fa-eye"></i>';
+}
+
+/* Color sync */
+function syncColorHex(picker) {
+    var hexInput = document.getElementById('hex_' + picker.id.replace('setting_', ''));
+    if (hexInput) hexInput.value = picker.value;
+}
+function syncColorPicker(hexInput, pickerId) {
+    var picker = document.getElementById(pickerId);
+    if (picker && /^#[0-9a-fA-F]{6}$/.test(hexInput.value)) {
+        picker.value = hexInput.value;
+    }
+}
+
+/* Toggle text live update */
+document.querySelectorAll('.cfg-switch input[type="checkbox"]').forEach(function(cb) {
+    cb.addEventListener('change', function() {
+        var label = this.closest('.cfg-toggle-row').querySelector('.cfg-toggle-text');
+        if (label) label.textContent = this.checked ? 'Actif' : 'Inactif';
+    });
+});
+</script>
 {% endblock %}
