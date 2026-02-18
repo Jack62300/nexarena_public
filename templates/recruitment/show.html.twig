@@ -78,13 +78,18 @@
                         </div>
                         <p class="rcs-form-sub">Remplissez le formulaire pour soumettre votre candidature.</p>
 
-                        {% if listing.requiresLogin and not app.user %}
+                        {% if not app.user %}
                             <div class="rcs-lock-msg">
                                 <div class="rcs-lock-msg__icon"><i class="fas fa-lock"></i></div>
-                                <p>Cette annonce est reservee aux membres.<br>Connectez-vous pour postuler.</p>
+                                <p>Vous devez etre connecte pour postuler.</p>
                                 <a href="{{ path('app_login') }}" class="rcs-lock-msg__btn">
                                     <i class="fas fa-sign-in-alt"></i> Se connecter
                                 </a>
+                            </div>
+                        {% elseif alreadyApplied %}
+                            <div class="rcs-lock-msg rcs-lock-msg--success">
+                                <div class="rcs-lock-msg__icon"><i class="fas fa-check-circle"></i></div>
+                                <p>Vous avez deja envoye une candidature pour cette annonce.</p>
                             </div>
                         {% else %}
                         <form method="post" action="{{ path('recruitment_apply', {slug: listing.slug}) }}">
@@ -94,13 +99,13 @@
                                 <label class="rcs-fl">Votre nom / pseudo <span class="req">*</span></label>
                                 <input type="text" name="applicant_name" class="rcs-fi" required maxlength="255"
                                        placeholder="Ex: Steve"
-                                       value="{{ app.user ? app.user.username : '' }}">
+                                       value="{{ app.user.username }}">
                             </div>
                             <div class="rcs-fg">
                                 <label class="rcs-fl">Votre email <span class="req">*</span></label>
                                 <input type="email" name="applicant_email" class="rcs-fi" required maxlength="255"
                                        placeholder="votre@email.com"
-                                       value="{{ app.user ? app.user.email : '' }}">
+                                       value="{{ app.user.email }}">
                             </div>
 
                             <div class="rcs-f-divider"></div>

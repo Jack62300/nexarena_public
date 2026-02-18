@@ -6,6 +6,7 @@ use App\Entity\Notification;
 use App\Entity\RecruitmentApplication;
 use App\Entity\RecruitmentListing;
 use App\Repository\CategoryRepository;
+use App\Repository\RecruitmentApplicationRepository;
 use App\Repository\RecruitmentListingRepository;
 use App\Repository\ServerCollaboratorRepository;
 use App\Service\NotificationService;
@@ -15,6 +16,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 class RecruitmentController extends AbstractController
 {
@@ -23,6 +25,7 @@ class RecruitmentController extends AbstractController
         private NotificationService $notificationService,
         private ServerCollaboratorRepository $collabRepo,
         private WebhookService $webhookService,
+        private RecruitmentApplicationRepository $applicationRepo,
     ) {
     }
 
@@ -51,12 +54,19 @@ class RecruitmentController extends AbstractController
             throw $this->createNotFoundException('Annonce introuvable.');
         }
 
+        $alreadyApplied = false;
+        if ($this->getUser()) {
+            $alreadyApplied = $this->applicationRepo->findByListingAndUser($listing, $this->getUser()) !== null;
+        }
+
         return $this->render('recruitment/show.html.twig', [
             'listing' => $listing,
+            'alreadyApplied' => $alreadyApplied,
         ]);
     }
 
     #[Route('/recrutement/{slug}/postuler', name: 'recruitment_apply', methods: ['POST'], requirements: ['slug' => '[a-z0-9]+(?:-[a-z0-9]+)*'])]
+    #[IsGranted('ROLE_USER')]
     public function apply(string $slug, Request $request, RecruitmentListingRepository $repo): Response
     {
         $listing = $repo->findOneBy(['slug' => $slug]);
@@ -65,9 +75,9 @@ class RecruitmentController extends AbstractController
             throw $this->createNotFoundException('Annonce introuvable.');
         }
 
-        // Check login requirement
-        if ($listing->isRequiresLogin() && !$this->getUser()) {
-            $this->addFlash('error', 'Vous devez etre connecte pour postuler a cette annonce.');
+        // Block duplicate application
+        if ($this->applicationRepo->findByListingAndUser($listing, $this->getUser()) !== null) {
+            $this->addFlash('error', 'Vous avez deja postule a cette annonce.');
             return $this->redirectToRoute('recruitment_show', ['slug' => $slug]);
         }
 

@@ -327,3 +327,11 @@
         box-shadow: 0 8px 25px rgba(59,130,246,0.3);
         color: #fff;
     }
+    .rcs-lock-msg--success .rcs-lock-msg__icon {
+        background: rgba(69,248,130,0.08);
+        border-color: rgba(69,248,130,0.2);
+        color: #45f882;
+    }
+    .rcs-lock-msg--success p {
+        color: rgba(69,248,130,0.8);
+    }

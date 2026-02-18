@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\RecruitmentApplication;
 use App\Entity\RecruitmentListing;
+use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -51,5 +52,16 @@ class RecruitmentApplicationRepository extends ServiceEntityRepository
             ->setParameter('listing', $listing)
             ->getQuery()
             ->getSingleScalarResult();
+    }
+
+    public function findByListingAndUser(RecruitmentListing $listing, User $user): ?RecruitmentApplication
+    {
+        return $this->createQueryBuilder('a')
+            ->where('a.listing = :listing')
+            ->andWhere('a.applicantUser = :user')
+            ->setParameter('listing', $listing)
+            ->setParameter('user', $user)
+            ->getQuery()
+            ->getOneOrNullResult();
     }
 }
