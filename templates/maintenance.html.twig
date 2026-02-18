@@ -4,28 +4,25 @@
 
 {% block stylesheets %}
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-body {
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    background: #060b12;
-    color: #e4e6eb;
-    min-height: 100vh;
+/* ── Wrapper centré sous la navbar ── */
+.maint-wrap {
+    position: relative;
+    min-height: calc(100vh - 75px - 60px); /* navbar ~75px, footer ~60px */
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 24px;
-    position: relative;
+    padding: 40px 24px 24px;
     overflow: hidden;
 }
 
 /* ── Background layers ── */
 .maint-bg {
-    position: fixed;
+    position: absolute;
     inset: 0;
     pointer-events: none;
     z-index: 0;
+    overflow: hidden;
 }
 .maint-bg__grid {
     position: absolute;
@@ -37,27 +34,27 @@ body {
 }
 .maint-bg__glow-top {
     position: absolute;
-    top: -160px;
+    top: -100px;
     left: 50%;
     transform: translateX(-50%);
     width: 700px;
-    height: 420px;
+    height: 400px;
     background: radial-gradient(ellipse, rgba(69,248,130,.07) 0%, transparent 65%);
 }
 .maint-bg__glow-bl {
     position: absolute;
-    bottom: -120px;
+    bottom: -80px;
     left: -80px;
-    width: 420px;
-    height: 320px;
+    width: 380px;
+    height: 280px;
     background: radial-gradient(ellipse, rgba(88,101,242,.06) 0%, transparent 65%);
 }
 .maint-bg__glow-tr {
     position: absolute;
-    top: 60px;
-    right: -60px;
-    width: 340px;
-    height: 260px;
+    top: 40px;
+    right: -40px;
+    width: 300px;
+    height: 240px;
     background: radial-gradient(ellipse, rgba(69,248,130,.04) 0%, transparent 65%);
 }
 
@@ -182,10 +179,10 @@ body {
     text-align: left;
 }
 .maint-flash i { margin-top: 1px; flex-shrink: 0; }
-.maint-flash--error  { background: rgba(231,74,59,.1);   border: 1px solid rgba(231,74,59,.2);  color: #ff6b6b; }
-.maint-flash--success{ background: rgba(28,200,138,.1);  border: 1px solid rgba(28,200,138,.2); color: #1cc88a; }
-.maint-flash--info   { background: rgba(54,185,204,.1);  border: 1px solid rgba(54,185,204,.2); color: #36b9cc; }
-.maint-flash--warning{ background: rgba(246,194,62,.1);  border: 1px solid rgba(246,194,62,.2); color: #f6c23e; }
+.maint-flash--error   { background: rgba(231,74,59,.1);   border: 1px solid rgba(231,74,59,.2);   color: #ff6b6b; }
+.maint-flash--success { background: rgba(28,200,138,.1);  border: 1px solid rgba(28,200,138,.2);  color: #1cc88a; }
+.maint-flash--info    { background: rgba(54,185,204,.1);  border: 1px solid rgba(54,185,204,.2);  color: #36b9cc; }
+.maint-flash--warning { background: rgba(246,194,62,.1);  border: 1px solid rgba(246,194,62,.2);  color: #f6c23e; }
 
 /* ── Separator ── */
 .maint-sep {
@@ -227,15 +224,14 @@ body {
     cursor: pointer;
     transition: all .2s;
     box-shadow: 0 4px 20px rgba(88,101,242,.3);
-    letter-spacing: .1px;
 }
 .btn-discord:hover {
     background: linear-gradient(135deg, #4752c4, #3a45b0);
     transform: translateY(-1px);
     box-shadow: 0 8px 28px rgba(88,101,242,.4);
     color: #fff;
+    text-decoration: none;
 }
-.btn-discord:active { transform: translateY(0); }
 .btn-discord i { font-size: 17px; }
 
 /* ── Access note ── */
@@ -248,19 +244,8 @@ body {
     font-size: 12px;
     color: #374151;
 }
-.maint-note i { font-size: 11px; }
 
-/* ── Footer ── */
-.maint-footer {
-    position: relative;
-    z-index: 1;
-    margin-top: 28px;
-    text-align: center;
-    font-size: 12px;
-    color: #1f2937;
-}
-
-/* ── Progress bar (decorative) ── */
+/* ── Progress bar ── */
 .maint-progress {
     height: 3px;
     background: rgba(255,255,255,.05);
@@ -270,7 +255,6 @@ body {
 }
 .maint-progress__bar {
     height: 100%;
-    width: 60%;
     background: linear-gradient(90deg, #45f882, #22c55e);
     border-radius: 99px;
     animation: progress-anim 3s ease-in-out infinite alternate;
@@ -278,6 +262,29 @@ body {
 @keyframes progress-anim {
     0%   { width: 35%; opacity: .7; }
     100% { width: 75%; opacity: 1; }
+}
+
+/* ── Footer pleine largeur ── */
+.maint-footer {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 16px 24px;
+    margin-top: 32px;
+    border-top: 1px solid rgba(255,255,255,.05);
+    font-size: 12px;
+    color: #374151;
+}
+.maint-footer__sep {
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: #1f2937;
+    flex-shrink: 0;
 }
 
 /* ── Responsive ── */
@@ -289,81 +296,83 @@ body {
 {% endblock %}
 
 {% block body %}
+<div class="maint-wrap">
 
-<div class="maint-bg">
-    <div class="maint-bg__grid"></div>
-    <div class="maint-bg__glow-top"></div>
-    <div class="maint-bg__glow-bl"></div>
-    <div class="maint-bg__glow-tr"></div>
-</div>
-
-<div class="maint-card">
-
-    {# Logo #}
-    <div class="maint-logo">
-        {% set logo = setting('site_logo', '') %}
-        {% if logo %}
-            <img src="{{ asset(logo) }}" alt="{{ setting('site_name', 'Nexarena') }}">
-        {% else %}
-            <span class="maint-logo__name">{{ setting('site_name', 'Nexarena') }}</span>
-        {% endif %}
+    <div class="maint-bg">
+        <div class="maint-bg__grid"></div>
+        <div class="maint-bg__glow-top"></div>
+        <div class="maint-bg__glow-bl"></div>
+        <div class="maint-bg__glow-tr"></div>
     </div>
 
-    {# Status indicator #}
-    <div class="maint-status">
-        <span class="maint-status__dot"></span>
-        <span class="maint-status__text">Maintenance en cours</span>
-    </div>
+    <div class="maint-card">
 
-    {# Flash messages #}
-    {% for type, messages in app.flashes %}
-        {% for message in messages %}
-            <div class="maint-flash maint-flash--{{ type }}">
-                <i class="fas fa-{{ type == 'error' ? 'exclamation-circle' : (type == 'success' ? 'check-circle' : (type == 'warning' ? 'exclamation-triangle' : 'info-circle')) }}"></i>
-                <span>{{ message }}</span>
-            </div>
+        {# Logo #}
+        <div class="maint-logo">
+            {% set logo = setting('site_logo', '') %}
+            {% if logo %}
+                <img src="{{ asset(logo) }}" alt="{{ setting('site_name', 'Nexarena') }}">
+            {% else %}
+                <span class="maint-logo__name">{{ setting('site_name', 'Nexarena') }}</span>
+            {% endif %}
+        </div>
+
+        {# Status #}
+        <div class="maint-status">
+            <span class="maint-status__dot"></span>
+            <span class="maint-status__text">Maintenance en cours</span>
+        </div>
+
+        {# Flash messages #}
+        {% for type, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="maint-flash maint-flash--{{ type }}">
+                    <i class="fas fa-{{ type == 'error' ? 'exclamation-circle' : (type == 'success' ? 'check-circle' : (type == 'warning' ? 'exclamation-triangle' : 'info-circle')) }}"></i>
+                    <span>{{ message }}</span>
+                </div>
+            {% endfor %}
         {% endfor %}
-    {% endfor %}
 
-    {# Icon #}
-    <div class="maint-icon-wrap">
-        <div class="maint-icon">⚙️</div>
+        {# Icon #}
+        <div class="maint-icon-wrap">
+            <div class="maint-icon">⚙️</div>
+        </div>
+
+        <h1 class="maint-title">Site temporairement<br><span>indisponible</span></h1>
+
+        <p class="maint-desc">
+            Nous apportons des améliorations pour vous offrir une<br>
+            meilleure expérience. Merci de votre patience.
+        </p>
+
+        <div class="maint-progress">
+            <div class="maint-progress__bar"></div>
+        </div>
+
+        <div class="maint-sep">
+            <span class="maint-sep__label">Accès administrateur</span>
+        </div>
+
+        <a href="{{ path('app_oauth_connect', {provider: 'discord'}) }}" class="btn-discord">
+            <i class="fab fa-discord"></i>
+            Se connecter via Discord
+        </a>
+
+        <div class="maint-note">
+            <i class="fas fa-shield-alt"></i>
+            Réservé aux membres de l'équipe
+        </div>
+
     </div>
 
-    {# Heading #}
-    <h1 class="maint-title">Site temporairement<br><span>indisponible</span></h1>
-
-    <p class="maint-desc">
-        Nous apportons des améliorations pour vous offrir une<br>
-        meilleure expérience. Merci de votre patience.
-    </p>
-
-    {# Progress bar (decorative) #}
-    <div class="maint-progress">
-        <div class="maint-progress__bar"></div>
-    </div>
-
-    {# Discord login #}
-    <div class="maint-sep">
-        <span class="maint-sep__label">Accès administrateur</span>
-    </div>
-
-    <a href="{{ path('app_oauth_connect', {provider: 'discord'}) }}" class="btn-discord">
-        <i class="fab fa-discord"></i>
-        Se connecter via Discord
-    </a>
-
-    <div class="maint-note">
-        <i class="fas fa-shield-alt"></i>
-        Réservé aux membres de l'équipe
-    </div>
+    {# Footer pleine largeur #}
+    <footer class="maint-footer">
+        <span>&copy; {{ 'now'|date('Y') }} {{ setting('site_name', 'Nexarena') }}</span>
+        <span class="maint-footer__sep"></span>
+        <span>Tous droits réservés</span>
+    </footer>
 
 </div>
-
-<div class="maint-footer">
-    &copy; {{ 'now'|date('Y') }} {{ setting('site_name', 'Nexarena') }}
-</div>
-
 {% endblock %}
 
 {% block javascripts %}{% endblock %}
