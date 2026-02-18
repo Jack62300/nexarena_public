@@ -22,7 +22,13 @@
             <div class="nx-rk-header__content">
                 <div class="nx-rk-header__left">
                     <div class="nx-rk-header__icon">
-                        <i class="{{ parentCategory.icon ?? 'fas fa-gamepad' }}"></i>
+                        {% if gameCategory and gameCategory.image %}
+                            <img src="{{ asset('uploads/categories/' ~ gameCategory.image) }}" alt="{{ gameCategory.name }}">
+                        {% elseif parentCategory and parentCategory.image %}
+                            <img src="{{ asset('uploads/categories/' ~ parentCategory.image) }}" alt="{{ parentCategory.name }}">
+                        {% else %}
+                            <i class="{{ parentCategory.icon ?? 'fas fa-gamepad' }}"></i>
+                        {% endif %}
                     </div>
                     <div>
                         <h1 class="nx-rk-header__title">{{ title }}</h1>
@@ -131,7 +137,13 @@
                                         <img src="{{ asset('uploads/servers/presentations/' ~ server.presentationImage) }}" alt="{{ server.name }}">
                                     {% else %}
                                         <div class="nx-rk-row__thumb-placeholder">
-                                            <i class="{{ server.category.icon ?? 'fas fa-server' }}"></i>
+                                            {% if server.gameCategory and server.gameCategory.image %}
+                                                <img src="{{ asset('uploads/categories/' ~ server.gameCategory.image) }}" alt="{{ server.gameCategory.name }}" style="width:100%;height:100%;object-fit:contain;border-radius:6px;padding:4px;">
+                                            {% elseif server.category and server.category.image %}
+                                                <img src="{{ asset('uploads/categories/' ~ server.category.image) }}" alt="{{ server.category.name }}" style="width:100%;height:100%;object-fit:contain;border-radius:6px;padding:4px;">
+                                            {% else %}
+                                                <i class="{{ server.category.icon ?? 'fas fa-server' }}"></i>
+                                            {% endif %}
                                         </div>
                                     {% endif %}
                                 </a>
@@ -327,4 +339,13 @@
 
 {% block stylesheets %}
 <link rel="stylesheet" href="{{ asset('assets/css/pages/ranking.css') }}">
+<style>
+.nx-rk-header__icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 12px;
+    padding: 6px;
+}
+</style>
 {% endblock %}
