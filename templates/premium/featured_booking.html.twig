@@ -1,136 +1,185 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Selection premium - {{ server.name }} - {{ setting('site_name', 'Nexarena') }}{% endblock %}
+{% block title %}Boost — {{ server.name }} · {{ setting('site_name', 'Nexarena') }}{% endblock %}
 
 {% block stylesheets %}
 <link rel="stylesheet" href="{{ asset('assets/css/pages/featured-booking.css') }}">
 {% endblock %}
 
 {% block body %}
-<section class="booking-section">
+<div class="fb-page">
+
+    {# ===== HERO ===== #}
+    <div class="fb-hero">
+        <div class="fb-hero__glow"></div>
+        <div class="container">
+            <div class="fb-hero__inner">
+                <div class="fb-hero__left">
+                    <div class="fb-hero__badge"><i class="fas fa-crown"></i> Sélection premium</div>
+                    <h1 class="fb-hero__title">{{ server.name }}</h1>
+                    <p class="fb-hero__sub">Réservez une position en vitrine pour booster votre visibilité</p>
+                </div>
+                <div class="fb-hero__right">
+                    <div class="fb-balance">
+                        <div class="fb-balance__icon"><i class="fas fa-bolt"></i></div>
+                        <div>
+                            <div class="fb-balance__label">NexBoost du serveur</div>
+                            <div class="fb-balance__val">{{ user_boost_balance }}</div>
+                        </div>
+                        <a href="{{ path('user_servers_manage', {id: server.id}) }}" class="fb-balance__add">
+                            <i class="fas fa-plus"></i> Déposer
+                        </a>
+                    </div>
+                    <a href="{{ path('user_servers_manage', {id: server.id}) }}" class="fb-back-btn">
+                        <i class="fas fa-arrow-left"></i> Gestion du serveur
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="container">
+
         {% for type, messages in app.flashes %}
             {% for message in messages %}
-                <div class="alert alert-{{ type }} alert-dismissible fade show" role="alert" style="background:#162231;border:1px solid {{ type == 'success' ? '#1cc88a' : '#e74a3b' }};color:#fff;">
-                    {{ message }}
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+                <div class="fb-alert fb-alert--{{ type }}">
+                    <i class="fas fa-{{ type == 'success' ? 'check-circle' : 'exclamation-triangle' }}"></i>
+                    <span>{{ message }}</span>
+                    <button type="button" onclick="this.parentElement.remove()">&times;</button>
                 </div>
             {% endfor %}
         {% endfor %}
 
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
-            <div class="booking-header">
-                <h1 class="booking-header__title"><i class="fas fa-crown" style="color:#ffd700;"></i> Selection premium : <span>{{ server.name }}</span></h1>
-                <p class="booking-header__subtitle">Reservez une position pour apparaitre en haut de la page d'accueil{% if has_game_scope %} ou de la page {{ server_gc_name }}{% endif %}</p>
-            </div>
-            <a href="{{ path('user_servers_manage', {id: server.id}) }}" style="color:#8b949e;text-decoration:none;font-size:14px;">
-                <i class="fas fa-arrow-left"></i> Retour a la gestion
-            </a>
-        </div>
+        <div class="fb-layout">
 
-        <div class="booking-balance">
-            <i class="fas fa-bolt booking-balance__icon"></i>
-            <div>
-                <div class="booking-balance__label">NexBoost du serveur</div>
-                <div class="booking-balance__value">{{ user_boost_balance }}</div>
-            </div>
-            <a href="{{ path('user_servers_manage', {id: server.id}) }}" style="margin-left:auto;color:#ff6b35;font-size:13px;text-decoration:underline;">Deposer des jetons</a>
-        </div>
+            {# ===== LEFT — CONFIGURATION ===== #}
+            <div class="fb-config">
 
-        {# === SCOPE TABS === #}
-        <div class="booking-scope-tabs" id="scopeTabs">
-            <button type="button" class="booking-scope-tab booking-scope-tab--active" data-scope="homepage" onclick="selectScope('homepage', this)">
-                <i class="fas fa-home"></i> Page d'accueil
-            </button>
-            {% if has_game_scope %}
-                <button type="button" class="booking-scope-tab" data-scope="game" onclick="selectScope('game', this)">
-                    <i class="fas fa-gamepad"></i> {{ server_gc_name }}
-                </button>
-            {% endif %}
-        </div>
-
-        {# === POSITION CARDS === #}
-        <div class="booking-positions" id="positionCards">
-            {% for pos in 1..5 %}
-                <button type="button" class="booking-pos-card{{ pos == 1 ? ' booking-pos-card--active' : '' }}" data-pos="{{ pos }}" onclick="selectPosition({{ pos }}, this)">
-                    <div class="booking-pos-card__rank">#{{ pos }}</div>
-                    <div class="booking-pos-card__cost">
-                        <span class="booking-pos-card__cost-val" id="posCost{{ pos }}">{{ homepage_costs[pos] }}</span>
-                        <span class="booking-pos-card__cost-unit">NexBoost/12h</span>
+                {# Scope tabs (only if game scope available) #}
+                {% if has_game_scope %}
+                <div class="fb-card">
+                    <div class="fb-card__label"><i class="fas fa-bullseye"></i> Emplacement</div>
+                    <div class="fb-scope-tabs">
+                        <button type="button" class="fb-scope-tab fb-scope-tab--active" data-scope="homepage" onclick="selectScope('homepage', this)">
+                            <i class="fas fa-home"></i> Page d'accueil
+                        </button>
+                        <button type="button" class="fb-scope-tab" data-scope="game" onclick="selectScope('game', this)">
+                            <i class="fas fa-gamepad"></i> {{ server_gc_name }}
+                        </button>
                     </div>
-                </button>
-            {% endfor %}
-        </div>
+                </div>
+                {% endif %}
 
-        {# === CALENDAR === #}
-        <div class="booking-calendar" id="bookingCalendar">
-            <div class="booking-calendar__nav">
-                <button type="button" class="booking-calendar__nav-btn" onclick="navigateMonth(-1)"><i class="fas fa-chevron-left"></i></button>
-                <span class="booking-calendar__month" id="calendarMonth"></span>
-                <button type="button" class="booking-calendar__nav-btn" onclick="navigateMonth(1)"><i class="fas fa-chevron-right"></i></button>
+                {# Position picker #}
+                <div class="fb-card">
+                    <div class="fb-card__label"><i class="fas fa-trophy"></i> Position</div>
+                    <div class="fb-positions">
+                        {% for pos in 1..5 %}
+                        <button type="button" class="fb-pos{% if pos == 1 %} fb-pos--active{% endif %}" data-pos="{{ pos }}" onclick="selectPosition({{ pos }}, this)">
+                            <div class="fb-pos__top">
+                                {% if pos == 1 %}<i class="fas fa-crown fb-pos__crown"></i>{% endif %}
+                                <span class="fb-pos__num">#{{ pos }}</span>
+                            </div>
+                            <div class="fb-pos__cost">
+                                <span id="posCost{{ pos }}">{{ homepage_costs[pos] }}</span>
+                                <i class="fas fa-bolt"></i>
+                            </div>
+                            <div class="fb-pos__unit">/ 12h</div>
+                        </button>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                {# Date strip (compact, 7 days at a time) #}
+                <div class="fb-card">
+                    <div class="fb-card__label-row">
+                        <div class="fb-card__label"><i class="fas fa-calendar-day"></i> Date</div>
+                        <span class="fb-strip-range" id="fbStripRange"></span>
+                    </div>
+                    <div class="fb-datepicker">
+                        <button type="button" class="fb-datepicker__nav" onclick="navigateDays(-7)" id="navPrev"><i class="fas fa-chevron-left"></i></button>
+                        <div class="fb-datepicker__strip" id="dayStrip"></div>
+                        <button type="button" class="fb-datepicker__nav" onclick="navigateDays(7)"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                    <div class="fb-datepicker__legend">
+                        <span><span class="fb-dot fb-dot--free"></span> Disponible</span>
+                        <span><span class="fb-dot fb-dot--mine"></span> Mon serveur</span>
+                        <span><span class="fb-dot fb-dot--taken"></span> Pris</span>
+                        <span><span class="fb-dot fb-dot--past"></span> Passé</span>
+                    </div>
+                </div>
+
+                {# Slot + Duration — shown after date selected #}
+                <div class="fb-card fb-options" id="fbOptions" style="display:none;">
+                    <div class="fb-options__inner">
+                        <div class="fb-options__group">
+                            <div class="fb-card__label"><i class="fas fa-clock"></i> Créneau horaire</div>
+                            <div class="fb-slot-btns" id="slotBtnsWrap">
+                                <button type="button" class="fb-slot-btn fb-slot-btn--active" data-slot="00:00" onclick="selectSlot('00:00', this)">
+                                    <i class="fas fa-moon"></i>
+                                    <div><strong>Nuit</strong><span>00:00 – 12:00</span></div>
+                                </button>
+                                <button type="button" class="fb-slot-btn" data-slot="12:00" onclick="selectSlot('12:00', this)">
+                                    <i class="fas fa-sun"></i>
+                                    <div><strong>Jour</strong><span>12:00 – 00:00</span></div>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="fb-options__group">
+                            <div class="fb-card__label"><i class="fas fa-hourglass-half"></i> Durée</div>
+                            <div class="fb-dur-btns" id="durBtnsWrap"></div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
-            <div class="booking-calendar__grid" id="calendarGrid"></div>
-            <div class="booking-legend">
-                <div class="booking-legend__item"><span class="booking-legend__dot booking-legend__dot--available"></span> Disponible</div>
-                <div class="booking-legend__item"><span class="booking-legend__dot booking-legend__dot--booked"></span> Deja reserve (votre serveur)</div>
-                <div class="booking-legend__item"><span class="booking-legend__dot booking-legend__dot--full"></span> Position prise</div>
-            </div>
-        </div>
 
-        {# === CONFIRM === #}
-        <div class="booking-confirm" id="bookingConfirm">
-            <div class="booking-confirm__summary" id="confirmSummary"></div>
+            {# ===== RIGHT — SUMMARY ===== #}
+            <div class="fb-summary-col">
+                <div class="fb-summary" id="fbSummary">
 
-            <div style="margin:16px 0;">
-                <label style="display:block;margin-bottom:8px;font-size:13px;font-weight:600;color:#e4e6eb;">Creneau horaire</label>
-                <div style="display:flex;gap:8px;flex-wrap:wrap;" id="slotBtnsWrap">
-                    <button type="button" class="slot-btn slot-btn--active" data-slot="00:00" onclick="selectSlot('00:00', this)">
-                        <i class="fas fa-moon"></i> 00:00 - 12:00
-                    </button>
-                    <button type="button" class="slot-btn" data-slot="12:00" onclick="selectSlot('12:00', this)">
-                        <i class="fas fa-sun"></i> 12:00 - 00:00
-                    </button>
+                    <div class="fb-summary__placeholder" id="fbSummaryPlaceholder">
+                        <div class="fb-summary__ph-icon"><i class="fas fa-calendar-check"></i></div>
+                        <p>Choisissez une date<br>pour voir le récapitulatif</p>
+                    </div>
+
+                    <div class="fb-summary__content" id="fbSummaryContent" style="display:none;">
+                        <div class="fb-summary__header">
+                            <i class="fas fa-bolt"></i> Récapitulatif
+                        </div>
+                        <div class="fb-summary__rows" id="fbSummaryRows"></div>
+                        <div class="fb-summary__cost" id="fbSummaryCost">
+                            <i class="fas fa-bolt"></i> <span id="fbCostNum">0</span> NexBoost
+                        </div>
+                        <div class="fb-summary__balance" id="fbSummaryBalance"></div>
+                        <form method="post" action="{{ path('featured_booking_book', {id: server.id}) }}" style="margin:0;">
+                            <input type="hidden" name="_token" value="{{ csrf_token('featured_booking') }}">
+                            <input type="hidden" name="scope" id="confirmScope" value="homepage">
+                            <input type="hidden" name="position" id="confirmPosition" value="1">
+                            <input type="hidden" name="startsAt" id="confirmStartsAt" value="">
+                            <input type="hidden" name="duration" id="confirmDuration" value="12">
+                            <button type="submit" class="fb-summary__btn" id="confirmBtn">
+                                <i class="fas fa-crown"></i> Réserver maintenant
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="fb-tip">
+                    <i class="fas fa-lightbulb"></i>
+                    <div>
+                        <strong>Comment ça marche ?</strong><br>
+                        Chaque créneau = 12h d'exposition. Plus la position est haute (#1 en tête), plus elle coûte de NexBoost mais plus votre serveur est visible.
+                    </div>
                 </div>
             </div>
 
-            <div style="margin:16px 0;">
-                <label style="display:block;margin-bottom:8px;font-size:13px;font-weight:600;color:#e4e6eb;">Duree</label>
-                <div style="display:flex;gap:8px;flex-wrap:wrap;" id="durBtnsWrap"></div>
-            </div>
-
-            <div class="booking-confirm__cost" id="confirmCost"></div>
-            <form method="post" action="{{ path('featured_booking_book', {id: server.id}) }}">
-                <input type="hidden" name="_token" value="{{ csrf_token('featured_booking') }}">
-                <input type="hidden" name="scope" id="confirmScope" value="homepage">
-                <input type="hidden" name="position" id="confirmPosition" value="1">
-                <input type="hidden" name="startsAt" id="confirmStartsAt" value="">
-                <input type="hidden" name="duration" id="confirmDuration" value="12">
-                <button type="submit" class="booking-confirm__btn" id="confirmBtn">
-                    <i class="fas fa-check"></i> Confirmer la reservation
-                </button>
-            </form>
         </div>
     </div>
-</section>
+</div>
 {% endblock %}
 
 {% block javascripts %}
-<style>
-.slot-btn, .dur-btn {
-    padding: 8px 16px;
-    border-radius: 8px;
-    border: 1px solid #1e3048;
-    background: #0d1a26;
-    color: #8b949e;
-    font-size: 13px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-.slot-btn:hover:not(.slot-btn--booked), .dur-btn:hover { border-color: #ff6b35; color: #e4e6eb; }
-.slot-btn--active, .dur-btn--active { border-color: #ff6b35; background: rgba(255,107,53,0.12); color: #ff6b35; font-weight: 600; }
-.slot-btn--booked { border-color: rgba(28,200,138,0.3); background: rgba(28,200,138,0.1); color: #1cc88a; cursor: not-allowed; opacity: 0.7; }
-.slot-btn--full { border-color: rgba(231,74,59,0.3); background: rgba(231,74,59,0.1); color: #e74a3b; cursor: not-allowed; opacity: 0.7; }
-</style>
 <script>
 (function() {
     var homepageCosts = {{ homepage_costs|json_encode|raw }};
@@ -138,14 +187,26 @@
     var homepageAvailability = {{ homepage_availability|json_encode|raw }};
     var serverId = {{ server.id }};
     var serverGcName = {{ server_gc_name|json_encode|raw }};
+    var userBoostBalance = {{ user_boost_balance }};
 
     var currentScope = 'homepage';
     var currentPosition = 1;
     var currentCosts = homepageCosts;
-
     var slotTaken = {};
     var serverBookedSlots = [];
-    var costPer12h = homepageCosts['1'] || 10;
+    var costPer12h = homepageCosts[1] || 10;
+
+    var today = new Date();
+    today.setHours(0, 0, 0, 0);
+    var stripOffset = 0; // days offset from today for the 7-day strip
+    var selectedDate = null;
+    var selectedSlot = '00:00';
+    var selectedDuration = 12;
+
+    var dayNames = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+    var monthNames = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+
+    function pad2(n) { return n < 10 ? '0' + n : '' + n; }
 
     function buildSlotTakenFromAvailability(availability, pos) {
         var result = {};
@@ -157,19 +218,85 @@
 
     slotTaken = buildSlotTakenFromAvailability(homepageAvailability, 1);
 
-    var today = new Date();
-    today.setHours(0, 0, 0, 0);
-    var currentYear = today.getFullYear();
-    var currentMonth = today.getMonth();
-    var selectedDate = null;
-    var selectedSlot = '00:00';
-    var selectedDuration = 12;
+    // ---- DATE STRIP ----
+    function renderStrip() {
+        var strip = document.getElementById('dayStrip');
+        strip.innerHTML = '';
 
-    var monthNames = ['Janvier','Fevrier','Mars','Avril','Mai','Juin','Juillet','Aout','Septembre','Octobre','Novembre','Decembre'];
-    var dayLabels = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+        var startDate = new Date(today);
+        startDate.setDate(today.getDate() + stripOffset);
+        var endDate = new Date(startDate);
+        endDate.setDate(startDate.getDate() + 6);
 
-    function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+        var rangeEl = document.getElementById('fbStripRange');
+        rangeEl.textContent = startDate.getDate() + ' ' + monthNames[startDate.getMonth()] + ' – ' + endDate.getDate() + ' ' + monthNames[endDate.getMonth()];
 
+        // Disable prev if at start
+        document.getElementById('navPrev').disabled = stripOffset <= 0;
+
+        for (var i = 0; i < 7; i++) {
+            var d = new Date(startDate);
+            d.setDate(startDate.getDate() + i);
+
+            var dateStr = d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+            var isPast = d < today;
+
+            var morningKey = dateStr + ' 00:00';
+            var afternoonKey = dateStr + ' 12:00';
+            var morningTaken = slotTaken[morningKey] || false;
+            var afternoonTaken = slotTaken[afternoonKey] || false;
+            var morningMine = serverBookedSlots.indexOf(morningKey) !== -1;
+            var afternoonMine = serverBookedSlots.indexOf(afternoonKey) !== -1;
+
+            var card = document.createElement('button');
+            card.type = 'button';
+            card.className = 'fb-day-card';
+
+            if (isPast) {
+                card.classList.add('fb-day-card--past');
+                card.disabled = true;
+            } else if (morningMine && afternoonMine) {
+                card.classList.add('fb-day-card--mine');
+            } else if ((morningTaken || morningMine) && (afternoonTaken || afternoonMine)) {
+                card.classList.add('fb-day-card--full');
+                card.disabled = true;
+            } else {
+                card.classList.add('fb-day-card--available');
+                card.setAttribute('data-date', dateStr);
+                card.addEventListener('click', function() { selectDateFn(this.getAttribute('data-date')); });
+            }
+
+            if (selectedDate === dateStr) {
+                card.classList.add('fb-day-card--selected');
+            }
+
+            card.innerHTML =
+                '<div class="fb-day-card__dow">' + dayNames[d.getDay()] + '</div>' +
+                '<div class="fb-day-card__num">' + d.getDate() + '</div>' +
+                '<div class="fb-day-card__dots">' +
+                    '<span class="fb-day-dot ' + getDotClass(morningTaken, morningMine, isPast) + '" title="00h-12h"></span>' +
+                    '<span class="fb-day-dot ' + getDotClass(afternoonTaken, afternoonMine, isPast) + '" title="12h-00h"></span>' +
+                '</div>';
+
+            strip.appendChild(card);
+        }
+    }
+
+    function getDotClass(taken, mine, past) {
+        if (past) return 'fb-day-dot--past';
+        if (mine) return 'fb-day-dot--mine';
+        if (taken) return 'fb-day-dot--taken';
+        return 'fb-day-dot--free';
+    }
+
+    window.navigateDays = function(dir) {
+        var next = stripOffset + dir;
+        if (next < 0) next = 0;
+        stripOffset = next;
+        renderStrip();
+    };
+
+    // ---- SCOPE & POSITION ----
     function updateCostDisplay() {
         currentCosts = currentScope === 'homepage' ? homepageCosts : gameCosts;
         for (var i = 1; i <= 5; i++) {
@@ -181,25 +308,24 @@
 
     function loadAvailability() {
         var url = '/serveur/' + serverId + '/boost/availability?scope=' + currentScope + '&position=' + currentPosition;
-
         fetch(url)
             .then(function(r) { return r.json(); })
             .then(function(data) {
                 slotTaken = data.slot_taken || {};
                 serverBookedSlots = data.server_booked_slots || [];
                 costPer12h = data.cost_per_12h || 1;
-                renderCalendar();
                 selectedDate = null;
-                document.getElementById('bookingConfirm').classList.remove('active');
+                hideSummary();
+                document.getElementById('fbOptions').style.display = 'none';
+                renderStrip();
             })
             .catch(function() {});
     }
 
     window.selectScope = function(scope, btn) {
         currentScope = scope;
-        document.querySelectorAll('.booking-scope-tab').forEach(function(el) { el.classList.remove('booking-scope-tab--active'); });
-        btn.classList.add('booking-scope-tab--active');
-
+        document.querySelectorAll('.fb-scope-tab').forEach(function(el) { el.classList.remove('fb-scope-tab--active'); });
+        btn.classList.add('fb-scope-tab--active');
         document.getElementById('confirmScope').value = scope;
         updateCostDisplay();
         loadAvailability();
@@ -207,235 +333,153 @@
 
     window.selectPosition = function(pos, btn) {
         currentPosition = pos;
-        document.querySelectorAll('.booking-pos-card').forEach(function(el) { el.classList.remove('booking-pos-card--active'); });
-        btn.classList.add('booking-pos-card--active');
+        document.querySelectorAll('.fb-pos').forEach(function(el) { el.classList.remove('fb-pos--active'); });
+        btn.classList.add('fb-pos--active');
         document.getElementById('confirmPosition').value = pos;
         costPer12h = currentCosts[pos] || 1;
 
         if (currentScope === 'homepage') {
             slotTaken = buildSlotTakenFromAvailability(homepageAvailability, pos);
-            renderCalendar();
             selectedDate = null;
-            document.getElementById('bookingConfirm').classList.remove('active');
+            hideSummary();
+            document.getElementById('fbOptions').style.display = 'none';
+            renderStrip();
         } else {
             loadAvailability();
         }
     };
 
-    function renderCalendar() {
-        var grid = document.getElementById('calendarGrid');
-        var monthEl = document.getElementById('calendarMonth');
-        grid.innerHTML = '';
-
-        monthEl.textContent = monthNames[currentMonth] + ' ' + currentYear;
-
-        dayLabels.forEach(function(d) {
-            var label = document.createElement('div');
-            label.className = 'booking-calendar__day-label';
-            label.textContent = d;
-            grid.appendChild(label);
-        });
-
-        var firstDay = new Date(currentYear, currentMonth, 1);
-        var lastDay = new Date(currentYear, currentMonth + 1, 0);
-        var startDow = (firstDay.getDay() + 6) % 7;
-
-        for (var i = 0; i < startDow; i++) {
-            var empty = document.createElement('div');
-            empty.className = 'booking-calendar__day booking-calendar__day--empty';
-            grid.appendChild(empty);
-        }
-
-        for (var d = 1; d <= lastDay.getDate(); d++) {
-            var date = new Date(currentYear, currentMonth, d);
-            var dateStr = date.getFullYear() + '-' + pad2(date.getMonth()+1) + '-' + pad2(d);
-            var isPast = date < today;
-
-            var morningKey = dateStr + ' 00:00';
-            var afternoonKey = dateStr + ' 12:00';
-            var morningTaken = slotTaken[morningKey] || false;
-            var afternoonTaken = slotTaken[afternoonKey] || false;
-            var morningBooked = serverBookedSlots.indexOf(morningKey) !== -1;
-            var afternoonBooked = serverBookedSlots.indexOf(afternoonKey) !== -1;
-
-            var bothTaken = (morningTaken || morningBooked) && (afternoonTaken || afternoonBooked);
-
-            var cell = document.createElement('div');
-            cell.className = 'booking-calendar__day';
-
-            if (isPast) {
-                cell.classList.add('booking-calendar__day--past');
-            } else if (morningBooked && afternoonBooked) {
-                cell.classList.add('booking-calendar__day--booked');
-            } else if (bothTaken) {
-                cell.classList.add('booking-calendar__day--full');
-            } else {
-                cell.classList.add('booking-calendar__day--available');
-                cell.setAttribute('data-date', dateStr);
-                cell.addEventListener('click', function() {
-                    selectDateFn(this.getAttribute('data-date'));
-                });
-            }
-
-            var num = document.createElement('div');
-            num.className = 'booking-calendar__day-number';
-            num.textContent = d;
-            cell.appendChild(num);
-
-            if (!isPast) {
-                var slots = document.createElement('div');
-                slots.className = 'booking-calendar__day-slots';
-                if (morningBooked && afternoonBooked) {
-                    slots.textContent = 'Reserve';
-                    slots.style.color = '#1cc88a';
-                } else {
-                    var free = 0;
-                    if (!morningTaken && !morningBooked) free++;
-                    if (!afternoonTaken && !afternoonBooked) free++;
-                    slots.textContent = free > 0 ? free + ' dispo' : 'Pris';
-                    if (free === 0) slots.style.color = '#e74a3b';
-                }
-                cell.appendChild(slots);
-            }
-
-            grid.appendChild(cell);
-        }
-    }
-
+    // ---- DATE SELECTION ----
     function selectDateFn(dateStr) {
         selectedDate = dateStr;
-
-        document.querySelectorAll('.booking-calendar__day--selected').forEach(function(el) {
-            el.classList.remove('booking-calendar__day--selected');
-        });
-        var cell = document.querySelector('[data-date="' + dateStr + '"]');
-        if (cell) cell.classList.add('booking-calendar__day--selected');
-
+        renderStrip(); // re-render to show selection
         updateSlotButtons();
         updateDurationButtons();
-        updateConfirm();
-        document.getElementById('bookingConfirm').classList.add('active');
+        document.getElementById('fbOptions').style.display = '';
+        updateSummary();
     }
 
     function updateSlotButtons() {
         if (!selectedDate) return;
-
         var morningKey = selectedDate + ' 00:00';
         var afternoonKey = selectedDate + ' 12:00';
         var morningTaken = slotTaken[morningKey] || false;
         var afternoonTaken = slotTaken[afternoonKey] || false;
-        var morningBooked = serverBookedSlots.indexOf(morningKey) !== -1;
-        var afternoonBooked = serverBookedSlots.indexOf(afternoonKey) !== -1;
+        var morningMine = serverBookedSlots.indexOf(morningKey) !== -1;
+        var afternoonMine = serverBookedSlots.indexOf(afternoonKey) !== -1;
 
-        var btns = document.querySelectorAll('.slot-btn');
+        var btns = document.querySelectorAll('.fb-slot-btn');
         btns.forEach(function(btn) {
             var slot = btn.getAttribute('data-slot');
             var taken = (slot === '00:00') ? morningTaken : afternoonTaken;
-            var booked = (slot === '00:00') ? morningBooked : afternoonBooked;
+            var mine = (slot === '00:00') ? morningMine : afternoonMine;
 
-            btn.classList.remove('slot-btn--active', 'slot-btn--booked', 'slot-btn--full');
+            btn.classList.remove('fb-slot-btn--active', 'fb-slot-btn--mine', 'fb-slot-btn--taken');
             btn.disabled = false;
 
-            if (booked) {
-                btn.classList.add('slot-btn--booked');
-                btn.disabled = true;
-            } else if (taken) {
-                btn.classList.add('slot-btn--full');
-                btn.disabled = true;
-            }
+            if (mine) { btn.classList.add('fb-slot-btn--mine'); btn.disabled = true; }
+            else if (taken) { btn.classList.add('fb-slot-btn--taken'); btn.disabled = true; }
         });
 
-        var morningAvailable = !morningTaken && !morningBooked;
-        var afternoonAvailable = !afternoonTaken && !afternoonBooked;
+        var morningOk = !morningTaken && !morningMine;
+        var afternoonOk = !afternoonTaken && !afternoonMine;
+        var activeBtns = Array.from(btns).filter(function(b) { return !b.disabled; });
 
-        if (morningAvailable) {
-            selectedSlot = '00:00';
-            btns[0].classList.add('slot-btn--active');
-        } else if (afternoonAvailable) {
-            selectedSlot = '12:00';
-            btns[1].classList.add('slot-btn--active');
-        }
-
-        updateSubmitBtn();
+        if (morningOk) { selectedSlot = '00:00'; btns[0].classList.add('fb-slot-btn--active'); }
+        else if (afternoonOk) { selectedSlot = '12:00'; btns[1].classList.add('fb-slot-btn--active'); }
     }
 
     function updateDurationButtons() {
         var wrap = document.getElementById('durBtnsWrap');
         wrap.innerHTML = '';
-        var durations = [12, 24, 48];
         selectedDuration = 12;
-
-        durations.forEach(function(dur, idx) {
+        [12, 24, 48].forEach(function(dur, idx) {
             var cost = Math.ceil(dur / 12) * costPer12h;
             var btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = 'dur-btn' + (idx === 0 ? ' dur-btn--active' : '');
+            btn.className = 'fb-dur-btn' + (idx === 0 ? ' fb-dur-btn--active' : '');
             btn.setAttribute('data-dur', dur);
-            btn.textContent = dur + 'h (' + cost + ' NexBoost)';
+            btn.innerHTML = dur + 'h<span>' + cost + ' <i class="fas fa-bolt"></i></span>';
             btn.addEventListener('click', function() {
                 selectedDuration = dur;
-                document.querySelectorAll('.dur-btn').forEach(function(el) { el.classList.remove('dur-btn--active'); });
-                btn.classList.add('dur-btn--active');
-                updateConfirm();
+                wrap.querySelectorAll('.fb-dur-btn').forEach(function(b) { b.classList.remove('fb-dur-btn--active'); });
+                btn.classList.add('fb-dur-btn--active');
+                document.getElementById('confirmDuration').value = dur;
+                updateSummary();
             });
             wrap.appendChild(btn);
         });
     }
 
-    function updateSubmitBtn() {
-        if (!selectedDate) return;
-        var key = selectedDate + ' ' + selectedSlot;
-        var taken = slotTaken[key] || false;
-        var booked = serverBookedSlots.indexOf(key) !== -1;
-        var btn = document.getElementById('confirmBtn');
-        btn.disabled = taken || booked;
-        btn.style.opacity = (taken || booked) ? '0.4' : '1';
+    window.selectSlot = function(slot, btn) {
+        if (btn.disabled) return;
+        selectedSlot = slot;
+        document.querySelectorAll('.fb-slot-btn:not(:disabled)').forEach(function(el) { el.classList.remove('fb-slot-btn--active'); });
+        btn.classList.add('fb-slot-btn--active');
+        updateSummary();
+    };
+
+    // ---- SUMMARY ----
+    function hideSummary() {
+        document.getElementById('fbSummaryPlaceholder').style.display = '';
+        document.getElementById('fbSummaryContent').style.display = 'none';
     }
 
-    function updateConfirm() {
+    function updateSummary() {
         if (!selectedDate) return;
-        var parts = selectedDate.split('-');
-        var formatted = parts[2] + '/' + parts[1] + '/' + parts[0];
-        var slotLabel = selectedSlot === '00:00' ? '00:00 - 12:00' : '12:00 - 00:00';
-        var scopeLabel = currentScope === 'homepage' ? 'Page d\'accueil' : serverGcName;
 
-        document.getElementById('confirmSummary').innerHTML =
-            '<strong>Scope :</strong> ' + scopeLabel +
-            ' &mdash; <strong>Position :</strong> #' + currentPosition +
-            ' &mdash; <strong>Date :</strong> ' + formatted +
-            ' &mdash; <strong>Creneau :</strong> ' + slotLabel +
-            ' &mdash; <strong>Duree :</strong> ' + selectedDuration + 'h';
-
+        var key = selectedDate + ' ' + selectedSlot;
+        var taken = slotTaken[key] || false;
+        var mine = serverBookedSlots.indexOf(key) !== -1;
         var cost = Math.ceil(selectedDuration / 12) * costPer12h;
-        document.getElementById('confirmCost').innerHTML = '<i class="fas fa-bolt"></i> Cout : ' + cost + ' NexBoost';
+        var canBook = !taken && !mine;
+
+        var parts = selectedDate.split('-');
+        var dateFormatted = parts[2] + '/' + parts[1] + '/' + parts[0];
+        var slotLabel = selectedSlot === '00:00' ? '00:00 – 12:00' : '12:00 – 00:00';
+        var scopeLabel = currentScope === 'homepage' ? "Page d'accueil" : serverGcName;
+
+        var rows = [
+            { icon: 'fa-bullseye', label: 'Emplacement', val: scopeLabel },
+            { icon: 'fa-trophy', label: 'Position', val: '#' + currentPosition },
+            { icon: 'fa-calendar', label: 'Date', val: dateFormatted },
+            { icon: 'fa-clock', label: 'Créneau', val: slotLabel },
+            { icon: 'fa-hourglass-half', label: 'Durée', val: selectedDuration + 'h' },
+        ];
+
+        var rowsHtml = rows.map(function(r) {
+            return '<div class="fb-sum-row"><span class="fb-sum-row__label"><i class="fas ' + r.icon + '"></i> ' + r.label + '</span><span class="fb-sum-row__val">' + r.val + '</span></div>';
+        }).join('');
+
+        document.getElementById('fbSummaryRows').innerHTML = rowsHtml;
+        document.getElementById('fbCostNum').textContent = cost;
+        document.getElementById('fbSummaryCost').style.color = canBook ? '#ff6b35' : '#e74a3b';
+
+        var balanceOk = userBoostBalance >= cost;
+        var balEl = document.getElementById('fbSummaryBalance');
+        if (!balanceOk) {
+            balEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Solde insuffisant (' + userBoostBalance + ' NexBoost disponibles)';
+            balEl.className = 'fb-summary__balance fb-summary__balance--warn';
+        } else {
+            balEl.innerHTML = '<i class="fas fa-check-circle"></i> Solde suffisant (' + userBoostBalance + ' NexBoost)';
+            balEl.className = 'fb-summary__balance fb-summary__balance--ok';
+        }
+
+        var btn = document.getElementById('confirmBtn');
+        btn.disabled = !canBook || !balanceOk;
 
         document.getElementById('confirmScope').value = currentScope;
         document.getElementById('confirmPosition').value = currentPosition;
         document.getElementById('confirmStartsAt').value = selectedDate + ' ' + selectedSlot;
         document.getElementById('confirmDuration').value = selectedDuration;
 
-        updateSubmitBtn();
+        document.getElementById('fbSummaryPlaceholder').style.display = 'none';
+        document.getElementById('fbSummaryContent').style.display = '';
     }
 
-    window.selectSlot = function(slot, btn) {
-        if (btn.disabled) return;
-        selectedSlot = slot;
-        document.querySelectorAll('.slot-btn').forEach(function(el) {
-            if (!el.disabled) el.classList.remove('slot-btn--active');
-        });
-        btn.classList.add('slot-btn--active');
-        updateConfirm();
-    };
-
-    window.navigateMonth = function(dir) {
-        currentMonth += dir;
-        if (currentMonth > 11) { currentMonth = 0; currentYear++; }
-        if (currentMonth < 0) { currentMonth = 11; currentYear--; }
-        renderCalendar();
-    };
-
+    // ---- INIT ----
     updateCostDisplay();
-    renderCalendar();
+    renderStrip();
 })();
 </script>
 {% endblock %}
