@@ -33,8 +33,10 @@ class ServerApiController extends AbstractController
 
         $serverIp = $server->getIp();
         if ($serverIp) {
-            $clientIp = $request->getClientIp();
-            if ($clientIp !== $serverIp) {
+            // Strip port if present (e.g. "1.2.3.4:30120" → "1.2.3.4")
+            $serverIpOnly = explode(':', $serverIp)[0];
+            $clientIp = $request->getClientIp() ?? '';
+            if ($clientIp !== $serverIpOnly) {
                 return $this->json(['error' => 'IP not authorized.'], 403);
             }
         }
@@ -109,6 +111,30 @@ class ServerApiController extends AbstractController
         return $this->json([
             'voted' => $vote !== null,
             'discord_id' => $discordId,
+            'voted_at' => $vote?->getVotedAt()?->format('c'),
+        ]);
+    }
+
+    #[Route('/vote/steam/{steamId}', name: 'api_server_check_vote_steam', methods: ['GET'])]
+    public function checkVoteBySteam(string $token, string $steamId, Request $request): JsonResponse
+    {
+        // Steam64 ID: 17-digit numeric string
+        if (!preg_match('/^\d{1,20}$/', $steamId)) {
+            return $this->json(['error' => 'Invalid Steam ID format.'], 400);
+        }
+
+        $result = $this->resolveServer($token, $request);
+        if ($result instanceof JsonResponse) {
+            return $result;
+        }
+        $server = $result;
+
+        $interval = $this->settings->getInt('vote_interval', 120);
+        $vote = $this->voteRepo->findRecentVoteBySteamId($server, $steamId, $interval);
+
+        return $this->json([
+            'voted'    => $vote !== null,
+            'steam_id' => $steamId,
             'voted_at' => $vote?->getVotedAt()?->format('c'),
         ]);
     }

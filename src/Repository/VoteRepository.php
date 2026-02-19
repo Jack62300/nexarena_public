@@ -229,18 +229,35 @@ class VoteRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
     }
 
-    // API: Check by Discord ID (join User table)
+    // API: Check by Discord ID (stored directly on Vote entity)
     public function findRecentVoteByDiscordId(Server $server, string $discordId, int $intervalMinutes): ?Vote
     {
         $since = new \DateTimeImmutable("-{$intervalMinutes} minutes");
 
         return $this->createQueryBuilder('v')
-            ->join('v.user', 'u')
             ->where('v.server = :server')
-            ->andWhere('u.discordId = :discordId')
+            ->andWhere('v.discordId = :discordId')
             ->andWhere('v.votedAt > :since')
             ->setParameter('server', $server)
             ->setParameter('discordId', $discordId)
+            ->setParameter('since', $since)
+            ->orderBy('v.votedAt', 'DESC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    // API: Check by Steam ID (stored directly on Vote entity)
+    public function findRecentVoteBySteamId(Server $server, string $steamId, int $intervalMinutes): ?Vote
+    {
+        $since = new \DateTimeImmutable("-{$intervalMinutes} minutes");
+
+        return $this->createQueryBuilder('v')
+            ->where('v.server = :server')
+            ->andWhere('v.steamId = :steamId')
+            ->andWhere('v.votedAt > :since')
+            ->setParameter('server', $server)
+            ->setParameter('steamId', $steamId)
             ->setParameter('since', $since)
             ->orderBy('v.votedAt', 'DESC')
             ->setMaxResults(1)
