@@ -4,73 +4,291 @@
 {% block page_title %}Sécurité & Accès Géographique{% endblock %}
 
 {% block admin_css %}
-.country-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 6px;
-    max-height: 520px;
-    overflow-y: auto;
-    padding-right: 4px;
+/* ── Cartes ── */
+.sa-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 16px;
 }
-.country-card {
+.sa-card__header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border-color);
+    background: rgba(255,255,255,.02);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+}
+.sa-card__header i { font-size: 14px; }
+.sa-card__body { padding: 20px; }
+
+/* ── Toggles ── */
+.sa-toggle-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px solid rgba(30,48,72,.5);
+}
+.sa-toggle-row:last-child { border-bottom: none; padding-bottom: 0; }
+.sa-toggle-row:first-child { padding-top: 0; }
+.sa-toggle {
+    position: relative;
+    display: inline-block;
+    width: 46px;
+    height: 24px;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+.sa-toggle input { display: none; }
+.sa-toggle__rail {
+    position: absolute;
+    inset: 0;
+    background: var(--border-color);
+    border-radius: 24px;
+    cursor: pointer;
+    transition: background .25s;
+}
+.sa-toggle__rail:before {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    background: var(--text-secondary);
+    border-radius: 50%;
+    top: 4px;
+    left: 4px;
+    transition: transform .25s, background .25s;
+}
+.sa-toggle input:checked ~ .sa-toggle__rail { background: var(--accent); }
+.sa-toggle input:checked ~ .sa-toggle__rail:before {
+    transform: translateX(22px);
+    background: #0a1018;
+}
+.sa-toggle-label { font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 3px; }
+.sa-toggle-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+
+/* ── Inputs / Textarea ── */
+.sa-input {
+    width: 100%;
+    background: var(--bg-darker);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 13px;
+    padding: 9px 14px;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+    font-family: 'Courier New', monospace;
+    resize: vertical;
+}
+.sa-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(69,248,130,.1);
+}
+.sa-input::placeholder { color: var(--text-secondary); opacity: .6; }
+.sa-hint { font-size: 11px; color: var(--text-secondary); margin-top: 8px; line-height: 1.5; }
+.sa-hint code {
+    background: rgba(255,255,255,.08);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 11px;
+    color: var(--accent);
+}
+
+/* ── Diagnostic ── */
+.sa-diag-group { display: flex; gap: 8px; margin-bottom: 10px; }
+.sa-diag-input {
+    flex: 1;
+    background: var(--bg-darker);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 13px;
+    padding: 8px 12px;
+    font-family: 'Courier New', monospace;
+    outline: none;
+    transition: border-color .2s;
+}
+.sa-diag-input:focus { border-color: var(--info); }
+.sa-diag-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: none;
+    background: var(--info);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .2s;
+    white-space: nowrap;
+}
+.sa-diag-btn:hover { opacity: .85; }
+.sa-diag-result {
+    background: var(--bg-darker);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    white-space: pre-wrap;
+    max-height: 260px;
+    overflow-y: auto;
+    color: #6fffb0;
+    display: none;
+}
+.sa-diag-result.error { color: #ff7675; }
+
+/* ── Onglets régions ── */
+.sa-region-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.sa-tab {
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .18s;
+}
+.sa-tab:hover { border-color: var(--accent); color: var(--accent); }
+.sa-tab.active { background: var(--accent); border-color: var(--accent); color: #0a1018; font-weight: 700; }
+
+/* ── Recherche pays ── */
+.sa-search {
+    width: 100%;
+    background: var(--bg-darker);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 13px;
+    padding: 8px 12px;
+    outline: none;
+    margin-bottom: 10px;
+    transition: border-color .2s;
+}
+.sa-search:focus { border-color: var(--accent); }
+.sa-search::placeholder { color: var(--text-secondary); opacity: .6; }
+
+/* ── Boutons sélection ── */
+.sa-sel-btns { display: flex; gap: 8px; margin-bottom: 14px; }
+.sa-sel-btn {
+    padding: 5px 12px;
+    border-radius: 6px;
+    border: 1px solid;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .18s;
+    background: transparent;
+}
+.sa-sel-btn--green { border-color: var(--success); color: var(--success); }
+.sa-sel-btn--green:hover { background: rgba(28,200,138,.15); }
+.sa-sel-btn--red { border-color: var(--danger); color: var(--danger); }
+.sa-sel-btn--red:hover { background: rgba(231,74,59,.15); }
+
+/* ── Grille pays ── */
+.sa-country-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(138px, 1fr));
+    gap: 5px;
+    max-height: 500px;
+    overflow-y: auto;
+    padding-right: 2px;
+}
+.sa-country-grid::-webkit-scrollbar { width: 4px; }
+.sa-country-grid::-webkit-scrollbar-track { background: transparent; }
+.sa-country-grid::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+
+.sa-country {
     display: flex;
     align-items: center;
     gap: 6px;
     padding: 6px 8px;
-    border: 1px solid rgba(255,255,255,.12);
+    border: 1px solid var(--border-color);
     border-radius: 6px;
     cursor: pointer;
-    font-size: .78rem;
-    background: rgba(255,255,255,.03);
-    transition: background .15s, border-color .15s;
+    font-size: 12px;
+    color: var(--text-secondary);
+    background: rgba(255,255,255,.02);
+    transition: all .15s;
     user-select: none;
-    white-space: nowrap;
     overflow: hidden;
-    text-overflow: ellipsis;
 }
-.country-card:hover {
-    background: rgba(255,255,255,.08);
-    border-color: rgba(255,255,255,.25);
+.sa-country:hover { background: rgba(255,255,255,.06); color: var(--text-primary); }
+.sa-country.selected {
+    background: rgba(69,248,130,.12);
+    border-color: var(--accent);
+    color: var(--accent);
 }
-.country-card.selected {
-    background: rgba(108,92,231,.25);
-    border-color: #6c5ce7;
-    color: #b39ddb;
+.sa-country input { display: none; }
+.sa-country__flag { font-size: 1.05rem; flex-shrink: 0; line-height: 1; }
+.sa-country__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ── Compteur ── */
+.sa-count-badge {
+    background: rgba(69,248,130,.15);
+    color: var(--accent);
+    border: 1px solid rgba(69,248,130,.3);
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 2px 10px;
 }
-.country-card input[type=checkbox] { display: none; }
-.country-flag { font-size: 1.1rem; flex-shrink: 0; }
-.country-name { overflow: hidden; text-overflow: ellipsis; }
-.region-tabs .nav-link {
-    font-size: .8rem;
-    padding: .3rem .7rem;
-}
-.diagnostic-result {
-    background: #1a1a2e;
-    border-radius: 6px;
-    padding: 12px;
-    font-size: .78rem;
-    font-family: monospace;
-    white-space: pre-wrap;
-    max-height: 260px;
-    overflow-y: auto;
-    color: #a0f0a0;
-}
-.diagnostic-result.has-error { color: #ff7675; }
-.sticky-save {
+
+/* ── Barre sticky save ── */
+.sa-save-bar {
     position: sticky;
     bottom: 0;
-    background: var(--bs-body-bg, #1a1a2e);
-    padding: 12px 0 4px;
-    border-top: 1px solid rgba(255,255,255,.1);
+    background: var(--bg-dark);
+    border-top: 1px solid var(--border-color);
+    padding: 14px 0 6px;
+    margin-top: 8px;
     z-index: 10;
+}
+.sa-save-btn {
+    padding: 10px 28px;
+    border-radius: 8px;
+    border: none;
+    background: var(--accent);
+    color: #0a1018;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity .2s, transform .15s;
+}
+.sa-save-btn:hover { opacity: .88; transform: translateY(-1px); }
+
+/* ── Badge alerte clé manquante ── */
+.sa-warn-badge {
+    background: rgba(246,194,62,.12);
+    color: var(--warning);
+    border: 1px solid rgba(246,194,62,.3);
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 10px;
 }
 {% endblock %}
 
 {% block admin_body %}
-<div class="d-flex justify-content-between align-items-center mb-4">
+
+{# ── En-tête ── #}
+<div style="display:flex;align-items:center;gap:16px;margin-bottom:28px;">
+    <div style="width:48px;height:48px;border-radius:12px;background:rgba(69,248,130,.1);border:1px solid rgba(69,248,130,.2);display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--accent);flex-shrink:0;">
+        <i class="fas fa-shield-alt"></i>
+    </div>
     <div>
-        <h4 class="mb-1"><i class="fas fa-shield-alt text-warning me-2"></i>Sécurité & Accès Géographique</h4>
-        <p class="text-muted mb-0 small">Contrôlez les VPN/proxy, les pays autorisés et les IPs de confiance.</p>
+        <div style="font-size:22px;font-weight:700;color:var(--text-primary);">Sécurité & Accès Géographique</div>
+        <div style="font-size:13px;color:var(--text-secondary);">Contrôlez les VPN/proxy, les pays autorisés et les IPs de confiance.</div>
     </div>
 </div>
 
@@ -80,159 +298,156 @@
 
     <div class="row g-4">
 
-        {# ===== COLONNE GAUCHE ===== #}
+        {# ═══ COLONNE GAUCHE ═══ #}
         <div class="col-lg-5">
 
-            {# Card Règles de blocage #}
-            <div class="card mb-3">
-                <div class="card-header">
-                    <i class="fas fa-ban me-2 text-danger"></i>Règles de blocage
+            {# Règles de blocage #}
+            <div class="sa-card">
+                <div class="sa-card__header">
+                    <span><i class="fas fa-ban" style="color:var(--danger);"></i> Règles de blocage</span>
                 </div>
-                <div class="card-body">
-                    <div class="mb-3 pb-3 border-bottom border-secondary">
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox"
-                                   name="setting_admin_vpn_block_enabled"
-                                   id="adminVpnBlock"
+                <div class="sa-card__body">
+
+                    <div class="sa-toggle-row">
+                        <label class="sa-toggle">
+                            <input type="checkbox" name="setting_admin_vpn_block_enabled"
                                    {% if current.admin_vpn_block_enabled %}checked{% endif %}>
-                            <label class="form-check-label fw-semibold" for="adminVpnBlock">
-                                Bloquer les VPN/proxy sur l'espace admin
-                            </label>
+                            <span class="sa-toggle__rail"></span>
+                        </label>
+                        <div>
+                            <div class="sa-toggle-label">Bloquer les VPN/proxy sur l'espace admin</div>
+                            <div class="sa-toggle-desc">Protège le panneau d'administration contre les accès via VPN ou proxy.</div>
                         </div>
-                        <small class="text-muted">Protège le panneau d'administration contre les accès via VPN ou proxy.</small>
                     </div>
 
-                    <div class="mb-3 pb-3 border-bottom border-secondary">
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox"
-                                   name="setting_vpn_block_enabled"
-                                   id="vpnBlock"
+                    <div class="sa-toggle-row">
+                        <label class="sa-toggle">
+                            <input type="checkbox" name="setting_vpn_block_enabled"
                                    {% if current.vpn_block_enabled %}checked{% endif %}>
-                            <label class="form-check-label fw-semibold" for="vpnBlock">
-                                Bloquer les VPN/proxy sur tout le site
-                            </label>
+                            <span class="sa-toggle__rail"></span>
+                        </label>
+                        <div>
+                            <div class="sa-toggle-label">Bloquer les VPN/proxy sur tout le site</div>
+                            <div class="sa-toggle-desc">Les visiteurs utilisant un VPN ou proxy actif seront bloqués sur l'ensemble du site.</div>
                         </div>
-                        <small class="text-muted">Les visiteurs VPN/proxy seront redirigés ou bloqués sur l'ensemble du site.</small>
                     </div>
 
-                    <div>
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox"
-                                   name="setting_country_block_enabled"
-                                   id="countryBlock"
+                    <div class="sa-toggle-row">
+                        <label class="sa-toggle">
+                            <input type="checkbox" name="setting_country_block_enabled"
                                    {% if current.country_block_enabled %}checked{% endif %}>
-                            <label class="form-check-label fw-semibold" for="countryBlock">
-                                Activer le filtrage par pays
-                            </label>
+                            <span class="sa-toggle__rail"></span>
+                        </label>
+                        <div>
+                            <div class="sa-toggle-label">Activer le filtrage par pays</div>
+                            <div class="sa-toggle-desc">Seuls les pays cochés dans la grille seront autorisés. Une liste vide = tous autorisés.</div>
                         </div>
-                        <small class="text-muted">Seuls les pays cochés dans la grille seront autorisés. Liste vide = tous autorisés.</small>
                     </div>
+
                 </div>
             </div>
 
-            {# Card IPs de confiance #}
-            <div class="card mb-3">
-                <div class="card-header">
-                    <i class="fas fa-list-check me-2 text-success"></i>IPs de confiance
+            {# IPs de confiance #}
+            <div class="sa-card">
+                <div class="sa-card__header">
+                    <span><i class="fas fa-list-check" style="color:var(--success);"></i> IPs de confiance</span>
                 </div>
-                <div class="card-body">
-                    <textarea name="trusted_ips" class="form-control font-monospace"
-                              rows="6" placeholder="82.66.56.201&#10;10.0.0.0/8&#10;192.168.1.0/24">{{ current.trusted_ips }}</textarea>
-                    <small class="text-muted mt-1 d-block">
+                <div class="sa-card__body">
+                    <textarea name="trusted_ips" class="sa-input" rows="6"
+                              placeholder="82.66.56.201&#10;10.0.0.0/8&#10;192.168.1.0/24">{{ current.trusted_ips }}</textarea>
+                    <div class="sa-hint">
                         Une entrée par ligne. Accepte les IPs exactes (<code>82.66.56.201</code>)
                         et les plages CIDR (<code>82.66.0.0/16</code>).
                         Ces IPs contournent tous les blocages.
-                    </small>
+                    </div>
                 </div>
             </div>
 
-            {# Card Outil de diagnostic #}
-            <div class="card">
-                <div class="card-header">
-                    <i class="fas fa-stethoscope me-2 text-info"></i>Outil de diagnostic IP
+            {# Outil de diagnostic #}
+            <div class="sa-card">
+                <div class="sa-card__header">
+                    <span><i class="fas fa-stethoscope" style="color:var(--info);"></i> Diagnostic IP en temps réel</span>
                     {% if not current.ipqs_api_key %}
-                        <span class="badge bg-warning text-dark ms-2">Clé IPQS manquante</span>
+                        <span class="sa-warn-badge"><i class="fas fa-exclamation-triangle me-1"></i>Clé IPQS manquante</span>
                     {% endif %}
                 </div>
-                <div class="card-body">
-                    <div class="input-group mb-2">
-                        <input type="text" class="form-control font-monospace" id="diagIpInput"
+                <div class="sa-card__body">
+                    <div class="sa-diag-group">
+                        <input type="text" id="diagIpInput" class="sa-diag-input"
                                placeholder="ex. 82.66.56.201" maxlength="45">
-                        <button type="button" class="btn btn-info btn-sm" id="diagBtn">
-                            <i class="fas fa-search me-1"></i>Analyser
+                        <button type="button" id="diagBtn" class="sa-diag-btn">
+                            <i class="fas fa-search"></i> Analyser
                         </button>
                     </div>
-                    <div id="diagResult" class="diagnostic-result d-none"></div>
-                    <small class="text-muted">
-                        Interroge IPQualityScore en temps réel + évalue les règles locales.
-                    </small>
+                    <div id="diagResult" class="sa-diag-result"></div>
+                    <div class="sa-hint" style="margin-top:10px;">
+                        Interroge IPQualityScore en temps réel et évalue les règles locales
+                        (trusted, VPN, pays autorisé).
+                    </div>
                 </div>
             </div>
 
         </div>{# /col-lg-5 #}
 
-        {# ===== COLONNE DROITE ===== #}
+        {# ═══ COLONNE DROITE ═══ #}
         <div class="col-lg-7">
-            <div class="card h-auto">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <span><i class="fas fa-globe me-2 text-primary"></i>Pays autorisés</span>
-                    <span id="countryCount" class="badge bg-primary">{{ selected_codes|length }} / {{ total_countries }}</span>
+            <div class="sa-card" style="height:auto;">
+                <div class="sa-card__header">
+                    <span><i class="fas fa-globe" style="color:#74b9ff;"></i> Pays autorisés</span>
+                    <span class="sa-count-badge" id="countryCount">{{ selected_codes|length }} / {{ total_countries }}</span>
                 </div>
-                <div class="card-body">
-                    {# Barre de recherche #}
-                    <input type="text" id="countrySearch" class="form-control form-control-sm mb-2"
-                           placeholder="Rechercher un pays...">
+                <div class="sa-card__body">
+
+                    {# Recherche #}
+                    <input type="text" id="countrySearch" class="sa-search"
+                           placeholder="🔍 Rechercher un pays ou code ISO...">
 
                     {# Onglets régions #}
-                    <div class="d-flex flex-wrap gap-1 mb-2 region-tabs">
-                        <button type="button" class="btn btn-sm btn-outline-secondary active" data-region="all">
-                            Tous
-                        </button>
+                    <div class="sa-region-tabs">
+                        <button type="button" class="sa-tab active" data-region="all">Tous</button>
                         {% for regionKey, regionLabel in region_labels %}
-                            <button type="button" class="btn btn-sm btn-outline-secondary" data-region="{{ regionKey }}">
-                                {{ regionLabel }}
-                            </button>
+                            <button type="button" class="sa-tab" data-region="{{ regionKey }}">{{ regionLabel }}</button>
                         {% endfor %}
                     </div>
 
-                    {# Boutons sélection rapide #}
-                    <div class="d-flex gap-2 mb-3">
-                        <button type="button" class="btn btn-sm btn-outline-success" id="selectAll">
-                            <i class="fas fa-check-double me-1"></i>Tout sélectionner
+                    {# Sélection rapide #}
+                    <div class="sa-sel-btns">
+                        <button type="button" id="selectAll" class="sa-sel-btn sa-sel-btn--green">
+                            <i class="fas fa-check-double"></i> Tout sélectionner
                         </button>
-                        <button type="button" class="btn btn-sm btn-outline-danger" id="deselectAll">
-                            <i class="fas fa-times me-1"></i>Tout désélectionner
+                        <button type="button" id="deselectAll" class="sa-sel-btn sa-sel-btn--red">
+                            <i class="fas fa-times"></i> Tout désélectionner
                         </button>
                     </div>
 
-                    {# Grille des pays #}
-                    <div class="country-grid" id="countryGrid">
+                    {# Grille pays #}
+                    <div class="sa-country-grid" id="countryGrid">
                         {% for regionKey, regionCountries in countries_by_region %}
                             {% for country in regionCountries %}
                                 {% set isSelected = country.code in selected_codes %}
-                                <label class="country-card{{ isSelected ? ' selected' : '' }}"
+                                <label class="sa-country{{ isSelected ? ' selected' : '' }}"
                                        data-region="{{ country.region }}"
                                        data-name="{{ country.name|lower }}"
                                        data-code="{{ country.code }}">
-                                    <input type="checkbox"
-                                           value="{{ country.code }}"
+                                    <input type="checkbox" value="{{ country.code }}"
                                            {% if isSelected %}checked{% endif %}>
-                                    <span class="country-flag">{{ country.code|country_flag }}</span>
-                                    <span class="country-name" title="{{ country.name }}">{{ country.name }}</span>
+                                    <span class="sa-country__flag">{{ country.code|country_flag }}</span>
+                                    <span class="sa-country__name" title="{{ country.name }}">{{ country.name }}</span>
                                 </label>
                             {% endfor %}
                         {% endfor %}
                     </div>
+
                 </div>
             </div>
         </div>{# /col-lg-7 #}
 
     </div>{# /row #}
 
-    {# Bouton sticky Enregistrer #}
-    <div class="sticky-save mt-3">
-        <button type="submit" class="btn btn-primary">
-            <i class="fas fa-save me-2"></i>Enregistrer les règles
+    {# Barre sticky Enregistrer #}
+    <div class="sa-save-bar">
+        <button type="submit" class="sa-save-btn">
+            <i class="fas fa-save" style="margin-right:8px;"></i>Enregistrer les règles
         </button>
     </div>
 
@@ -244,21 +459,21 @@
 (function () {
     'use strict';
 
-    // ── Sélection pays ──────────────────────────────────────────────────────
+    // ── Grille pays ──────────────────────────────────────────────────────
     const grid   = document.getElementById('countryGrid');
     const hidden = document.getElementById('allowedCountriesInput');
-    const count  = document.getElementById('countryCount');
+    const badge  = document.getElementById('countryCount');
 
     function updateCount() {
-        const checked = grid.querySelectorAll('input[type=checkbox]:checked');
-        const codes = Array.from(checked).map(cb => cb.value);
+        const codes = Array.from(
+            grid.querySelectorAll('input[type=checkbox]:checked')
+        ).map(cb => cb.value);
         hidden.value = codes.join(',');
-        count.textContent = codes.length + ' / {{ total_countries }}';
+        badge.textContent = codes.length + ' / {{ total_countries }}';
     }
 
-    // Clic sur une carte
     grid.addEventListener('click', function (e) {
-        const card = e.target.closest('.country-card');
+        const card = e.target.closest('.sa-country');
         if (!card) return;
         const cb = card.querySelector('input[type=checkbox]');
         if (!cb) return;
@@ -267,14 +482,13 @@
         updateCount();
     });
 
-    // ── Filtrage région ─────────────────────────────────────────────────────
+    // ── Filtrage région ──────────────────────────────────────────────────
     let activeRegion = 'all';
     let searchQuery  = '';
 
-    document.querySelectorAll('[data-region]').forEach(function (btn) {
+    document.querySelectorAll('.sa-tab').forEach(function (btn) {
         btn.addEventListener('click', function () {
-            // Update active button
-            document.querySelectorAll('.region-tabs [data-region]').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.sa-tab').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             activeRegion = btn.dataset.region;
             applyFilter();
@@ -287,18 +501,19 @@
     });
 
     function applyFilter() {
-        grid.querySelectorAll('.country-card').forEach(function (card) {
-            const regionMatch = activeRegion === 'all' || card.dataset.region === activeRegion;
-            const nameMatch   = searchQuery === '' || card.dataset.name.includes(searchQuery)
-                                || card.dataset.code.toLowerCase().includes(searchQuery);
-            card.style.display = (regionMatch && nameMatch) ? '' : 'none';
+        grid.querySelectorAll('.sa-country').forEach(function (card) {
+            const regionOk = activeRegion === 'all' || card.dataset.region === activeRegion;
+            const searchOk = searchQuery === ''
+                || card.dataset.name.includes(searchQuery)
+                || card.dataset.code.toLowerCase().includes(searchQuery);
+            card.style.display = (regionOk && searchOk) ? '' : 'none';
         });
     }
 
-    // ── Tout sélectionner / désélectionner ─────────────────────────────────
+    // ── Sélection rapide ─────────────────────────────────────────────────
     document.getElementById('selectAll').addEventListener('click', function () {
-        grid.querySelectorAll('.country-card').forEach(function (card) {
-            if (card.style.display === 'none') return; // ignore filtered out
+        grid.querySelectorAll('.sa-country').forEach(function (card) {
+            if (card.style.display === 'none') return;
             const cb = card.querySelector('input[type=checkbox]');
             if (cb) { cb.checked = true; card.classList.add('selected'); }
         });
@@ -306,7 +521,7 @@
     });
 
     document.getElementById('deselectAll').addEventListener('click', function () {
-        grid.querySelectorAll('.country-card').forEach(function (card) {
+        grid.querySelectorAll('.sa-country').forEach(function (card) {
             if (card.style.display === 'none') return;
             const cb = card.querySelector('input[type=checkbox]');
             if (cb) { cb.checked = false; card.classList.remove('selected'); }
@@ -314,7 +529,7 @@
         updateCount();
     });
 
-    // ── Outil de diagnostic ─────────────────────────────────────────────────
+    // ── Diagnostic ───────────────────────────────────────────────────────
     const diagBtn    = document.getElementById('diagBtn');
     const diagInput  = document.getElementById('diagIpInput');
     const diagResult = document.getElementById('diagResult');
@@ -323,33 +538,31 @@
         const ip = diagInput.value.trim();
         if (!ip) { diagInput.focus(); return; }
 
-        diagResult.classList.remove('d-none', 'has-error');
+        diagResult.style.display = 'block';
+        diagResult.classList.remove('error');
         diagResult.textContent = 'Analyse en cours…';
 
         fetch('{{ path('admin_security_access_diagnostic') }}?ip=' + encodeURIComponent(ip))
             .then(function (r) { return r.json(); })
             .then(function (data) {
-                diagResult.classList.remove('d-none');
                 if (data.error) {
-                    diagResult.classList.add('has-error');
+                    diagResult.classList.add('error');
                     diagResult.textContent = '⚠ ' + data.error;
                 } else {
-                    diagResult.classList.remove('has-error');
+                    diagResult.classList.remove('error');
                     diagResult.textContent = JSON.stringify(data, null, 2);
                 }
             })
             .catch(function (err) {
-                diagResult.classList.add('has-error');
+                diagResult.classList.add('error');
                 diagResult.textContent = 'Erreur réseau : ' + err.message;
             });
     });
 
-    // Allow pressing Enter in diagnostic input
     diagInput.addEventListener('keydown', function (e) {
         if (e.key === 'Enter') { e.preventDefault(); diagBtn.click(); }
     });
 
-    // Init count
     updateCount();
 }());
 </script>
