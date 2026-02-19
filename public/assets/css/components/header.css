@@ -575,3 +575,62 @@
     color: var(--tg-theme-primary);
     font-size: 13px;
 }
+
+/* =======================================================
+   NAVBAR – BOUTIQUE VERTE ALIGNÉE PARFAITEMENT
+   ======================================================= */
+
+
+.tgmenu__navbar-wrap ul li a.nav-boutique {
+    align-self: center;   /* la clé 🔑 */
+}
+.tgmenu__navbar-wrap ul li:has(.nav-boutique) {
+    align-self: center;
+    display: flex;
+    align-items: center;
+}
+/* =======================================================
+   NAVBAR – BOUTIQUE VERTE VERSION FINALE
+   ======================================================= */
+
+.tgmenu__navbar-wrap ul li a.nav-boutique {
+    align-self: center; /* empêche le stretch vertical */
+
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+
+    padding: 10px 14px !important; /* padding vertical contrôlé */
+
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+
+    color: #000 !important;
+
+    border-radius: 6px;
+    background: linear-gradient(135deg, rgba(69, 248, 129, 0.664), rgba(69, 248, 129, 0.596));
+
+    /* shadow intérieur gris/noir */
+    box-shadow:
+        inset 0 2px 4px rgba(0,0,0,0.5),
+        inset 0 -1px 2px rgba(255,255,255,0.08);
+
+    border: 1px solid rgba(0,0,0,0.35);
+
+    transition: all .2s ease;
+}
+
+/* icône */
+.tgmenu__navbar-wrap ul li a.nav-boutique i {
+    font-size: 12px;
+}
+
+/* hover */
+.tgmenu__navbar-wrap ul li a.nav-boutique:hover {
+    background: #2cff98;
+    box-shadow:
+        inset 0 2px 6px rgba(0,0,0,0.6),
+        0 0 8px rgba(69,248,130,0.35);
+}

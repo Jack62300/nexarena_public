@@ -190,7 +190,7 @@
 {% endblock %}
 
 {% block admin_js %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function() {
     var colorPicker = document.getElementById('colorPicker');
     var colorHex = document.getElementById('colorHex');

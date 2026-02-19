@@ -242,7 +242,7 @@
 {% block javascripts %}
 {% set can_edit_info = can_edit_info|default(true) %}
 {% if not can_edit_info %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function() {
     // Disable Quill editor for collaborators without edit_info
     var checkQuill = setInterval(function() {
@@ -259,7 +259,7 @@
 })();
 </script>
 {% endif %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function() {
     var categorySelect = document.getElementById('category_id');
     var gameCategorySelect = document.getElementById('game_category_id');

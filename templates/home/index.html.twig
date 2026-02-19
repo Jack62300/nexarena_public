@@ -333,7 +333,7 @@
 
 {% block javascripts %}
 {{ parent() }}
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function(){
     /* ===== Banner Slideshow ===== */
     var bannerSlides = document.querySelectorAll('.banner-slide');

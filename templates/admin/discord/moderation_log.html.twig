@@ -184,7 +184,7 @@
 {% endblock %}
 
 {% block admin_js %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 document.querySelectorAll('.dc-modlog-row').forEach(function(row) {
     row.addEventListener('click', function() {
         var expand = row.nextElementSibling;

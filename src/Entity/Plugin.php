@@ -54,6 +54,9 @@ class Plugin
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $virusTotalAnalysisId = null;
 
+    #[ORM\Column(length: 100, nullable: true)]
+    private ?string $creatorName = null;
+
     #[ORM\Column]
     private bool $isActive = true;
 
@@ -222,6 +225,9 @@ class Plugin
         $this->virusTotalAnalysisId = $virusTotalAnalysisId;
         return $this;
     }
+
+    public function getCreatorName(): ?string { return $this->creatorName; }
+    public function setCreatorName(?string $creatorName): static { $this->creatorName = $creatorName; return $this; }
 
     public function isActive(): bool
     {

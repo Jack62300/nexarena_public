@@ -157,7 +157,7 @@
 {% endblock %}
 
 {% block admin_js %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function() {
     const input = document.getElementById('serverSearch');
     const results = document.getElementById('searchResults');

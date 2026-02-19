@@ -94,7 +94,7 @@
 </div>
 
 {% if application.chatEnabled %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 var currentUserId = {{ app.user.id }};
 var lastMessageId = 0;
 var chatUrl = '{{ path('api_applicant_chat_messages', {appId: application.id}) }}';

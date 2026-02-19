@@ -201,7 +201,7 @@
         {% endfor %}
     {% endfor %}
 
-    <script>
+    <script nonce="{{ csp_nonce() }}">
     function testWebhook(btn) {
         var id = btn.dataset.testUrl.match(/\/(\d+)\/test/)[1];
         var form = document.getElementById('test-form-' + id);

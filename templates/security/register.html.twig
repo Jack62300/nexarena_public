@@ -79,16 +79,18 @@
                         </div>
 
                         {# Formulaire classique #}
-                        {{ form_start(form, {'attr': {'class': 'account__form'}}) }}
+                        {{ form_start(form, {'attr': {'class': 'account__form', 'id': 'register-form'}}) }}
                             <div class="form-grp">
                                 <label for="{{ form.username.vars.id }}">Nom d'utilisateur</label>
                                 {{ form_widget(form.username) }}
                                 {{ form_errors(form.username) }}
+                                <div id="username-bl-feedback" class="invalid-feedback d-block" style="display:none!important;color:#e74c3c;font-size:.85rem;margin-top:.25rem;"></div>
                             </div>
                             <div class="form-grp">
                                 <label for="{{ form.email.vars.id }}">Email</label>
                                 {{ form_widget(form.email) }}
                                 {{ form_errors(form.email) }}
+                                <div id="email-bl-feedback" class="invalid-feedback d-block" style="display:none!important;color:#e74c3c;font-size:.85rem;margin-top:.25rem;"></div>
                             </div>
                             <div class="form-grp">
                                 <label for="{{ form.plainPassword.first.vars.id }}">Mot de passe</label>
@@ -101,8 +103,86 @@
                                 {{ form_errors(form.plainPassword.second) }}
                                 {{ form_errors(form.plainPassword) }}
                             </div>
-                            <button type="submit" class="btn btn-two arrow-btn">S'inscrire</button>
+                            <button type="submit" id="register-submit" class="btn btn-two arrow-btn">S'inscrire</button>
                         {{ form_end(form) }}
+
+                        <script>
+                        (function() {
+                            const blCheckUrl = '{{ path('api_blacklist_check') }}';
+                            const usernameInput = document.getElementById('{{ form.username.vars.id }}');
+                            const emailInput    = document.getElementById('{{ form.email.vars.id }}');
+                            const usernameFb    = document.getElementById('username-bl-feedback');
+                            const emailFb       = document.getElementById('email-bl-feedback');
+                            const submitBtn     = document.getElementById('register-submit');
+
+                            let usernameOk = true;
+                            let emailOk    = true;
+
+                            function updateSubmit() {
+                                submitBtn.disabled = !usernameOk || !emailOk;
+                            }
+
+                            function showError(el, msg) {
+                                el.textContent = msg;
+                                el.style.setProperty('display', 'block', 'important');
+                            }
+
+                            function clearError(el) {
+                                el.textContent = '';
+                                el.style.setProperty('display', 'none', 'important');
+                            }
+
+                            async function checkBlacklist(type, value) {
+                                if (!value) return true;
+                                try {
+                                    const res = await fetch(blCheckUrl + '?type=' + encodeURIComponent(type) + '&value=' + encodeURIComponent(value));
+                                    if (!res.ok) return true;
+                                    const data = await res.json();
+                                    return data;
+                                } catch (e) {
+                                    return { allowed: true };
+                                }
+                            }
+
+                            if (usernameInput) {
+                                usernameInput.addEventListener('blur', async () => {
+                                    const val = usernameInput.value.trim();
+                                    if (!val) return;
+                                    const data = await checkBlacklist('username', val);
+                                    if (!data.allowed) {
+                                        showError(usernameFb, data.message);
+                                        usernameOk = false;
+                                    } else {
+                                        clearError(usernameFb);
+                                        usernameOk = true;
+                                    }
+                                    updateSubmit();
+                                });
+                                usernameInput.addEventListener('input', () => {
+                                    if (!usernameOk) { clearError(usernameFb); usernameOk = true; updateSubmit(); }
+                                });
+                            }
+
+                            if (emailInput) {
+                                emailInput.addEventListener('blur', async () => {
+                                    const val = emailInput.value.trim();
+                                    if (!val) return;
+                                    const data = await checkBlacklist('email_domain', val);
+                                    if (!data.allowed) {
+                                        showError(emailFb, data.message);
+                                        emailOk = false;
+                                    } else {
+                                        clearError(emailFb);
+                                        emailOk = true;
+                                    }
+                                    updateSubmit();
+                                });
+                                emailInput.addEventListener('input', () => {
+                                    if (!emailOk) { clearError(emailFb); emailOk = true; updateSubmit(); }
+                                });
+                            }
+                        })();
+                        </script>
 
                         <div class="account__switch">
                             <p>Déjà un compte ? <a href="{{ path('app_login') }}">Se connecter</a></p>

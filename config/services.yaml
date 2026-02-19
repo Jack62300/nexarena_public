@@ -56,6 +56,10 @@ services:
         arguments:
             $projectDir: '%kernel.project_dir%'
 
+    App\Controller\Admin\PluginSubmissionController:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+
     App\Controller\Admin\PartnerController:
         arguments:
             $projectDir: '%kernel.project_dir%'

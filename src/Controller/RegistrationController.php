@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Form\RegistrationFormType;
+use App\Service\BlacklistService;
 use App\Service\MailerService;
 use App\Service\SettingsService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -30,6 +31,7 @@ class RegistrationController extends AbstractController
         SettingsService $settings,
         MailerService $mailerService,
         LoggerInterface $logger,
+        BlacklistService $blacklistService,
     ): Response {
         if ($this->getUser()) {
             return $this->redirectToRoute('app_home');
@@ -57,6 +59,16 @@ class RegistrationController extends AbstractController
             $username = $form->get('username')->getData();
             $email = $form->get('email')->getData();
             $plainPassword = $form->get('plainPassword')->getData();
+
+            // Blacklist checks
+            if ($blacklistService->isUsernameBlacklisted($username)) {
+                $this->addFlash('error', "Ce pseudo n'est pas autorisé sur Nexarena.");
+                return $this->render('security/register.html.twig', ['form' => $form]);
+            }
+            if ($blacklistService->isEmailDomainBlacklisted($email)) {
+                $this->addFlash('error', "Les inscriptions avec ce domaine email ne sont pas acceptées.");
+                return $this->render('security/register.html.twig', ['form' => $form]);
+            }
 
             // Email already in use? Don't reveal this to prevent user enumeration.
             $existingUser = $em->getRepository(User::class)->findOneBy(['email' => $email]);

@@ -7,15 +7,25 @@
     <div class="admin-table">
         <div class="admin-table__header">
             <h3>Plugins</h3>
-            <a href="{{ path('admin_plugins_new') }}" class="btn-admin btn-admin--primary">
-                <i class="fas fa-plus"></i> Nouveau plugin
-            </a>
+            <div style="display:flex;gap:8px;">
+                <a href="{{ path('admin_plugin_submissions_list') }}" class="btn-admin btn-admin--outline btn-admin--sm">
+                    <i class="fas fa-inbox me-1"></i>Soumissions
+                    {% set pendingSubs = pending_plugin_submissions_count() %}
+                    {% if pendingSubs > 0 %}
+                        <span class="badge bg-warning text-dark ms-1">{{ pendingSubs }}</span>
+                    {% endif %}
+                </a>
+                <a href="{{ path('admin_plugins_new') }}" class="btn-admin btn-admin--primary">
+                    <i class="fas fa-plus"></i> Nouveau plugin
+                </a>
+            </div>
         </div>
         <table>
             <thead>
                 <tr>
                     <th>Icone</th>
                     <th>Nom</th>
+                    <th>Créateur</th>
                     <th>Plateforme</th>
                     <th>Categorie</th>
                     <th>Version</th>
@@ -39,6 +49,7 @@
                             {% endif %}
                         </td>
                         <td><strong>{{ plugin.name }}</strong></td>
+                        <td style="color:var(--text-secondary);font-size:.85rem;">{{ plugin.creatorName ?? '—' }}</td>
                         <td>
                             <span class="role-badge" style="background:rgba(54,185,204,0.12);color:#36b9cc;border:1px solid rgba(54,185,204,0.25);">
                                 {{ plugin.platform }}
@@ -114,7 +125,7 @@
                     </tr>
                 {% else %}
                     <tr>
-                        <td colspan="10" style="text-align:center;color:var(--text-secondary);padding:30px;">
+                        <td colspan="11" style="text-align:center;color:var(--text-secondary);padding:30px;">
                             Aucun plugin pour le moment.
                         </td>
                     </tr>

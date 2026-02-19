@@ -1,0 +1,219 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block page_title %}Soumission — {{ submission.pluginName }}{% endblock %}
+{% block title %}Nexarena Admin — Soumission plugin{% endblock %}
+
+{% block admin_css %}
+.sub-info-label { font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-secondary);margin-bottom:4px; }
+.sub-info-value { font-size:.95rem;color:var(--text-primary);margin-bottom:16px; }
+.approve-form input.form-control-admin {
+    width:100%;padding:9px 13px;background:var(--bg-darker);border:1px solid var(--border-color);
+    border-radius:6px;color:var(--text-primary);font-size:.875rem;margin-bottom:12px;
+}
+.approve-form select.form-control-admin {
+    width:100%;padding:9px 13px;background:var(--bg-darker);border:1px solid var(--border-color);
+    border-radius:6px;color:var(--text-primary);font-size:.875rem;margin-bottom:12px;
+}
+.approve-form textarea.form-control-admin {
+    width:100%;padding:9px 13px;background:var(--bg-darker);border:1px solid var(--border-color);
+    border-radius:6px;color:var(--text-primary);font-size:.875rem;resize:vertical;margin-bottom:12px;
+}
+.approve-form label.form-label { display:block;font-size:.8rem;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px; }
+{% endblock %}
+
+{% block admin_body %}
+<div class="row g-4" style="max-width:1100px;">
+
+    {# ── LEFT: Submission details ── #}
+    <div class="col-lg-5">
+        <div class="admin-table">
+            <div class="admin-table__header">
+                <h3>Détail de la soumission</h3>
+                <a href="{{ path('admin_plugin_submissions_list') }}" class="btn-admin btn-admin--outline btn-admin--sm">
+                    <i class="fas fa-arrow-left"></i> Retour
+                </a>
+            </div>
+            <div style="padding:20px;">
+
+                <div>
+                    <div class="sub-info-label">Statut</div>
+                    <div class="sub-info-value">
+                        {% if submission.status == 'pending' %}
+                            <span class="role-badge" style="background:rgba(246,194,62,.12);color:#f6c23e;border:1px solid rgba(246,194,62,.25);">
+                                <i class="fas fa-clock me-1"></i>En attente de validation
+                            </span>
+                        {% elseif submission.status == 'approved' %}
+                            <span class="role-badge" style="background:rgba(28,200,138,.12);color:#1cc88a;border:1px solid rgba(28,200,138,.25);">
+                                <i class="fas fa-check me-1"></i>Approuvé
+                            </span>
+                            {% if submission.linkedPlugin %}
+                                — <a href="{{ path('admin_plugins_edit', {id: submission.linkedPlugin.id}) }}" class="text-success">
+                                    Voir le plugin créé
+                                </a>
+                            {% endif %}
+                        {% else %}
+                            <span class="role-badge" style="background:rgba(231,74,59,.12);color:#e74a3b;border:1px solid rgba(231,74,59,.25);">
+                                <i class="fas fa-times me-1"></i>Rejeté
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div>
+                    <div class="sub-info-label">Nom du plugin</div>
+                    <div class="sub-info-value"><strong>{{ submission.pluginName }}</strong></div>
+                </div>
+
+                <div>
+                    <div class="sub-info-label">Créateur</div>
+                    <div class="sub-info-value">
+                        {{ submission.creatorName }}
+                        {% if submission.submitterUser %}
+                            <small class="text-muted ms-1">(@{{ submission.submitterUser.username }})</small>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div>
+                    <div class="sub-info-label">Jeu / plateforme</div>
+                    <div class="sub-info-value">{{ submission.gameDescription }}</div>
+                </div>
+
+                <div>
+                    <div class="sub-info-label">Description</div>
+                    <div class="sub-info-value" style="white-space:pre-wrap;">{{ submission.description }}</div>
+                </div>
+
+                <div>
+                    <div class="sub-info-label">Archive</div>
+                    <div class="sub-info-value">
+                        <i class="fas fa-file-archive me-1 text-muted"></i>
+                        {{ submission.originalFileName ?? submission.fileName }}
+                        {% if submission.fileSize %}
+                            <small class="text-muted">({{ (submission.fileSize / 1024)|round(1) }} Ko)</small>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div>
+                    <div class="sub-info-label">Soumis le</div>
+                    <div class="sub-info-value text-muted">{{ submission.createdAt|date('d/m/Y à H:i') }}</div>
+                </div>
+
+                {% if submission.status == 'rejected' and submission.rejectionReason %}
+                <div>
+                    <div class="sub-info-label">Raison du rejet</div>
+                    <div class="sub-info-value text-danger">{{ submission.rejectionReason }}</div>
+                </div>
+                {% endif %}
+
+                {% if submission.reviewedBy %}
+                <div>
+                    <div class="sub-info-label">Révisé par</div>
+                    <div class="sub-info-value text-muted">{{ submission.reviewedBy.username }} — {{ submission.reviewedAt|date('d/m/Y') }}</div>
+                </div>
+                {% endif %}
+
+                {# Reject form (pending only) #}
+                {% if submission.status == 'pending' and is_granted('ROLE_MANAGER') %}
+                <hr style="border-color:var(--border-color);margin:20px 0;">
+                <form method="post" action="{{ path('admin_plugin_submissions_reject', {id: submission.id}) }}" class="approve-form">
+                    <input type="hidden" name="_token" value="{{ csrf_token('reject_' ~ submission.id) }}">
+                    <label class="form-label">Raison du rejet <span class="text-muted">(optionnel)</span></label>
+                    <textarea name="reason" class="form-control-admin" rows="3" placeholder="Indiquez pourquoi ce plugin n'est pas accepté..."></textarea>
+                    <button type="submit" class="btn-admin btn-admin--sm" style="background:var(--danger);color:#fff;border:none;width:100%;"
+                            onclick="return confirm('Rejeter cette soumission ?')">
+                        <i class="fas fa-times me-1"></i>Rejeter la soumission
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {# ── RIGHT: Approval form (pending only) ── #}
+    {% if submission.status == 'pending' and is_granted('ROLE_MANAGER') %}
+    <div class="col-lg-7">
+        <div class="admin-table">
+            <div class="admin-table__header">
+                <h3><i class="fas fa-check-circle me-2 text-success"></i>Approuver et créer le plugin</h3>
+            </div>
+            <div style="padding:20px;">
+                <p style="font-size:.85rem;color:var(--text-secondary);margin-bottom:20px;">
+                    Complétez les informations ci-dessous pour créer le plugin à partir de cette soumission.
+                    Vous pourrez ensuite modifier toutes les informations depuis la liste des plugins.
+                </p>
+
+                <form method="post" action="{{ path('admin_plugin_submissions_approve', {id: submission.id}) }}" class="approve-form">
+                    <input type="hidden" name="_token" value="{{ csrf_token('approve_' ~ submission.id) }}">
+
+                    <label class="form-label">Nom du plugin <span style="color:var(--danger)">*</span></label>
+                    <input type="text" name="plugin_name" class="form-control-admin" value="{{ submission.pluginName }}" required maxlength="100">
+
+                    <label class="form-label">Créateur (pré-rempli)</label>
+                    <input type="text" class="form-control-admin" value="{{ submission.creatorName }}" disabled style="opacity:.6;">
+                    <small style="color:var(--text-secondary);font-size:.8rem;display:block;margin-top:-8px;margin-bottom:12px;">Le nom du créateur est pris automatiquement depuis la soumission.</small>
+
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <label class="form-label">Plateforme <span style="color:var(--danger)">*</span></label>
+                            <select name="platform" class="form-control-admin" required>
+                                <option value="minecraft">Minecraft (Bukkit/Spigot)</option>
+                                <option value="fivem">FiveM (ESX/QBCore)</option>
+                                <option value="gmod">Garry's Mod (DarkRP)</option>
+                                <option value="discord">Discord Bot</option>
+                                <option value="teamspeak">TeamSpeak</option>
+                                <option value="rust">Rust</option>
+                                <option value="ark">ARK</option>
+                                <option value="cs2">CS2</option>
+                                <option value="unturned">Unturned</option>
+                                <option value="other" selected>Autre</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Catégorie</label>
+                            <select name="category" class="form-control-admin">
+                                <option value="game" selected>Jeux</option>
+                                <option value="vocal">Vocal</option>
+                                <option value="hosting">Hébergement</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <label class="form-label">Version</label>
+                    <input type="text" name="version" class="form-control-admin" value="1.0.0" placeholder="1.0.0" maxlength="20">
+
+                    <label class="form-label">Description longue <span class="text-muted">(optionnel)</span></label>
+                    <textarea name="long_description" class="form-control-admin" rows="5"
+                              placeholder="Ajoutez une description détaillée, instructions d'installation, etc."></textarea>
+
+                    {% set reward = setting('plugin_submission_reward', '200') %}
+                    {% if reward > 0 and submission.submitterUser %}
+                    <div style="background:rgba(69,248,130,.07);border:1px solid rgba(69,248,130,.2);border-radius:8px;padding:12px;margin-bottom:12px;font-size:.85rem;color:#45f882;">
+                        <i class="fas fa-coins me-1"></i>
+                        <strong>{{ reward }} NexBits</strong> seront automatiquement crédités à
+                        <strong>{{ submission.submitterUser.username }}</strong> lors de l'approbation.
+                    </div>
+                    {% elseif reward > 0 and not submission.submitterUser %}
+                    <div style="background:rgba(246,194,62,.07);border:1px solid rgba(246,194,62,.2);border-radius:8px;padding:12px;margin-bottom:12px;font-size:.85rem;color:#f6c23e;">
+                        <i class="fas fa-exclamation-triangle me-1"></i>
+                        Soumission anonyme (pas de compte) — aucune récompense ne peut être créditée.
+                    </div>
+                    {% endif %}
+
+                    <div style="background:rgba(246,194,62,.07);border:1px solid rgba(246,194,62,.2);border-radius:8px;padding:12px;margin-bottom:16px;font-size:.85rem;color:#f6c23e;">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Le plugin sera créé en statut <strong>inactif</strong> et un scan VirusTotal sera lancé automatiquement.
+                        Vous pourrez l'activer depuis la liste des plugins une fois le scan terminé.
+                    </div>
+
+                    <button type="submit" class="btn-admin btn-admin--primary" style="width:100%;">
+                        <i class="fas fa-check me-1"></i>Approuver et créer le plugin
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

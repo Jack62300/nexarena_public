@@ -1094,7 +1094,7 @@
 
                     {# Chart.js CDN + init #}
                     <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
-                    <script>
+                    <script nonce="{{ csp_nonce() }}">
                     (function() {
                         var baseOpts = {
                             responsive: true,
@@ -1366,7 +1366,7 @@
 {% endblock %}
 
 {% block javascripts %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 /* === Manage tabs === */
 window.switchManageTab = function(tab) {
     document.querySelectorAll('.manage-tabs__btn').forEach(function(btn) {
@@ -1552,7 +1552,7 @@ window.selectTheme = function(key) {
 })();
 </script>
 {% if server.statusCheckEnabled and server.ip and server.port %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function() {
     fetch('/serveur/{{ server.slug }}/status')
     .then(function(r) { return r.json(); })
@@ -1576,7 +1576,7 @@ window.selectTheme = function(key) {
 {% endif %}
 
 {% if can_moderate_comments %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function() {
     var flagTokens = {
         {% for comment in comments %}

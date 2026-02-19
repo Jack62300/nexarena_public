@@ -93,6 +93,10 @@ class InitSettingsCommand extends Command
         ['key' => 'ipgeolocation_api_key', 'value' => '', 'type' => 'secret', 'label' => 'IPGeolocation API Key', 'description' => 'Cle API ipgeolocation.io pour la detection VPN/Proxy', 'category' => 'api_keys', 'position' => 7],
         ['key' => 'virustotal_api_key', 'value' => '', 'type' => 'secret', 'label' => 'VirusTotal API Key', 'description' => 'Cle API VirusTotal pour scanner les fichiers uploades (virustotal.com)', 'category' => 'api_keys', 'position' => 8],
 
+        // ========== PLUGINS ==========
+        ['key' => 'plugin_submission_reward', 'value' => '200', 'type' => 'number', 'label' => 'Recompense soumission plugin (NexBits)', 'description' => 'Nombre de NexBits credites sur le compte de l\'auteur lorsqu\'un plugin soumis est approuve (0 = pas de recompense)', 'category' => 'plugins', 'position' => 0],
+        ['key' => 'plugin_submission_enabled', 'value' => '1', 'type' => 'boolean', 'label' => 'Soumissions de plugins activees', 'description' => 'Permettre aux utilisateurs de soumettre des plugins via la page publique', 'category' => 'plugins', 'position' => 1],
+
         // ========== VOTES ==========
         ['key' => 'vote_interval', 'value' => '120', 'type' => 'number', 'label' => 'Intervalle de vote (minutes)', 'description' => 'Temps minimum entre deux votes du meme utilisateur sur le meme serveur (en minutes). 120 = 2 heures.', 'category' => 'votes', 'position' => 0],
         ['key' => 'vote_require_login', 'value' => '1', 'type' => 'boolean', 'label' => 'Connexion requise pour voter', 'description' => 'Les utilisateurs doivent etre connectes pour voter', 'category' => 'votes', 'position' => 1],

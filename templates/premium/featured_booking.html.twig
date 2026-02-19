@@ -180,7 +180,7 @@
 {% endblock %}
 
 {% block javascripts %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function() {
     var homepageCosts = {{ homepage_costs|json_encode|raw }};
     var gameCosts = {{ game_costs|json_encode|raw }};

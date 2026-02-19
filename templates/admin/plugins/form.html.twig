@@ -49,6 +49,12 @@
                         {{ form_errors(form.name) }}
                     </div>
 
+                    <div class="form-group">
+                        <label for="{{ form.creatorName.vars.id }}">Créateur <small style="font-weight:400;text-transform:none;color:var(--text-secondary);">(optionnel — affiché sur la page publique)</small></label>
+                        {{ form_widget(form.creatorName, {'attr': {'class': 'form-control-admin'}}) }}
+                        {{ form_errors(form.creatorName) }}
+                    </div>
+
                     <div class="row g-3">
                         <div class="col-md-6">
                             <div class="form-group">

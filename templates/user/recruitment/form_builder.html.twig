@@ -81,7 +81,7 @@
 {% endblock %}
 
 {% block javascripts %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function() {
     var fields = {{ listing.formFields|json_encode|raw }};
     var container = document.getElementById('fieldsContainer');

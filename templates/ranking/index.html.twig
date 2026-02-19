@@ -312,7 +312,7 @@
         {% endif %}
     {% endfor %}
     {% if server_ids|length > 0 %}
-        <script>
+        <script nonce="{{ csp_nonce() }}">
         (function() {
             var ids = {{ server_ids|json_encode|raw }};
             ids.forEach(function(id) {

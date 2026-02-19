@@ -22,7 +22,7 @@
 
 <link rel="stylesheet" href="{{ asset('assets/css/components/notifications.css') }}">
 
-<script>
+<script nonce="{{ csp_nonce() }}">
 document.addEventListener('DOMContentLoaded', function() {
     var wrap = document.getElementById('nxNotifWrap');
     var toggle = document.getElementById('nxNotifToggle');

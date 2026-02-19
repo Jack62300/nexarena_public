@@ -739,7 +739,7 @@
 {% endblock %}
 
 {% block javascripts %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function() {
     /* === TABS === */
     var tabs = document.querySelectorAll('.sv-nav__link');
@@ -1006,7 +1006,7 @@
 })();
 </script>
 {% if server.twitchChannel %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 /* === Twitch Integration === */
 (function() {
     var serverId = {{ server.id }};
@@ -1151,7 +1151,7 @@
 </script>
 {% endif %}
 
-<script>
+<script nonce="{{ csp_nonce() }}">
 /* === Browser Fingerprint === */
 (function() {
     function computeFingerprint() {

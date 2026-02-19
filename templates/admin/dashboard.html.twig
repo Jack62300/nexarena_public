@@ -229,7 +229,7 @@
     <link rel="stylesheet" href="{{ asset('assets/css/admin/dashboard.css') }}">
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
-    <script>
+    <script nonce="{{ csp_nonce() }}">
     document.addEventListener('DOMContentLoaded', function() {
         var ts = getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim() || '#8a8d93';
         var gc = 'rgba(255,255,255,0.04)';

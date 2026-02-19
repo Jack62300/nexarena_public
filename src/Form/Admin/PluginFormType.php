@@ -24,6 +24,11 @@ class PluginFormType extends AbstractType
                     new Assert\NotBlank(message: 'Le nom est obligatoire.'),
                 ],
             ])
+            ->add('creatorName', TextType::class, [
+                'label' => false,
+                'required' => false,
+                'attr' => ['placeholder' => 'ex: DevStudio, John_Dev, ...'],
+            ])
             ->add('platform', ChoiceType::class, [
                 'label' => false,
                 'choices' => [

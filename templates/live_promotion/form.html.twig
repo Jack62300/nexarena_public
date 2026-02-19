@@ -67,7 +67,7 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce() }}">
 document.getElementById('durationInput').addEventListener('input', function() {
     document.getElementById('totalCost').textContent = Math.max(1, parseInt(this.value) || 0) * {{ cost_per_day }};
 });

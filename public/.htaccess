@@ -1,12 +1,18 @@
 # ── Security Headers ──
 <IfModule mod_headers.c>
-    # Hide server version
+    # Hide server version (replaces detailed string with generic name)
     Header unset X-Powered-By
     Header always unset X-Powered-By
-    Header unset Server
+    Header always set Server "Server"
+
+    # CSP for static files not handled by Symfony
+    <FilesMatch "^(robots\.txt|sitemap\.xml)$">
+        Header always set Content-Security-Policy "default-src 'none'; frame-ancestors 'none'"
+        Header always set X-Content-Type-Options "nosniff"
+    </FilesMatch>
 </IfModule>
 
-# Hide Apache version
+# Hide Apache version from error pages
 ServerSignature Off
 
 # ── Symfony Front Controller ──

@@ -2,6 +2,7 @@
 
 namespace App\EventListener;
 
+use App\Service\CspNonceProvider;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
@@ -9,6 +10,10 @@ use Symfony\Component\HttpKernel\KernelEvents;
 #[AsEventListener(event: KernelEvents::RESPONSE, priority: -10)]
 class SecurityHeadersListener
 {
+    public function __construct(private CspNonceProvider $nonceProvider)
+    {
+    }
+
     public function __invoke(ResponseEvent $event): void
     {
         if (!$event->isMainRequest()) {
@@ -40,12 +45,19 @@ class SecurityHeadersListener
 
         // ── Content-Security-Policy (skip if already set, e.g. widget routes) ──
         if (!$response->headers->has('Content-Security-Policy')) {
+            $nonce = $this->nonceProvider->getNonce();
+
             $csp = implode('; ', [
                 "default-src 'self'",
-                "script-src 'self' https://cdn.jsdelivr.net https://www.paypal.com https://www.sandbox.paypal.com 'unsafe-inline'",
+                // Nonce replaces 'unsafe-inline' for inline scripts.
+                // External CDN scripts are allowed by domain.
+                "script-src 'self' 'nonce-{$nonce}' https://cdn.jsdelivr.net https://www.paypal.com https://www.sandbox.paypal.com",
+                // Inline event handlers (onclick="…") are blocked entirely.
+                "script-src-attr 'none'",
+                // Styles: keep unsafe-inline (inline styles are widespread and lower risk).
                 "style-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net 'unsafe-inline'",
                 "img-src 'self' https: data:",
-                "font-src 'self' data:",
+                "font-src 'self' https://cdnjs.cloudflare.com data:",
                 "frame-src 'self' https://player.twitch.tv https://www.paypal.com https://www.sandbox.paypal.com https://discord.com",
                 "connect-src 'self' https://www.paypal.com https://www.sandbox.paypal.com",
                 "object-src 'none'",

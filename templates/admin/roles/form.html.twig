@@ -245,7 +245,7 @@
 {% endblock %}
 
 {% block admin_js %}
-    <script>
+    <script nonce="{{ csp_nonce() }}">
         function updatePreview(color) {
             var el = document.getElementById('colorPreview');
             el.style.background = color + '22';

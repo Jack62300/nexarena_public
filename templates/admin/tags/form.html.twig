@@ -120,7 +120,7 @@
 {% endblock %}
 
 {% block admin_js %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function() {
     var colorInput = document.getElementById('colorInput');
     var swatch = document.getElementById('colorSwatch');

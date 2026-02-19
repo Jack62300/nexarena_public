@@ -20,9 +20,20 @@
                 <div class="nx-pl-header__icon">
                     <i class="fas fa-puzzle-piece"></i>
                 </div>
-                <div>
+                <div style="flex:1;">
                     <h1 class="nx-pl-header__title">Plugins</h1>
                     <p class="nx-pl-header__desc">Integrez le systeme de vote Nexarena sur votre serveur de jeu</p>
+                </div>
+                <div style="text-align:right;">
+                    <a href="{{ path('plugins_submit') }}" class="btn btn-two arrow-btn" style="white-space:nowrap;">
+                        <i class="fas fa-upload me-2"></i>Soumettre un plugin
+                    </a>
+                    {% set reward = setting('plugin_submission_reward', '200') %}
+                    {% if reward > 0 %}
+                    <div style="font-size:.78rem;color:#45f882;margin-top:6px;">
+                        <i class="fas fa-coins me-1"></i>Gagnez <strong>{{ reward }} NexBits</strong> si approuvé !
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -94,6 +105,11 @@
                             </div>
                             <div class="nx-pl-card__body">
                                 <h3 class="nx-pl-card__name">{{ plugin.name }}</h3>
+                                {% if plugin.creatorName %}
+                                    <div class="nx-pl-card__creator">
+                                        <i class="fas fa-user me-1"></i>Par <strong>{{ plugin.creatorName }}</strong>
+                                    </div>
+                                {% endif %}
                                 <p class="nx-pl-card__desc">{{ plugin.description }}</p>
                             </div>
                             <div class="nx-pl-card__footer">
@@ -139,7 +155,7 @@
 {% endblock %}
 
 {% block javascripts %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 document.addEventListener('DOMContentLoaded', function() {
     var tabs = document.querySelectorAll('.nx-pl-tab');
     var cards = document.querySelectorAll('.nx-pl-card');

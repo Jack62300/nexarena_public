@@ -169,7 +169,7 @@
         }
         .dev-toolbar__logout:hover { opacity: 0.8; color: #ff4757; }
     </style>
-    <script>
+    <script nonce="{{ csp_nonce() }}">
     (function(){
         var toggle = document.getElementById('devToolbarToggle');
         var panel = document.getElementById('devToolbarPanel');

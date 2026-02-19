@@ -52,10 +52,11 @@
                                     <li class="{{ _route starts with 'recruitment_' ? 'active' : '' }}">
                                         <a href="{{ path('recruitment_index') }}">Recrutement</a>
                                     </li>
-                                    {% if premium_enabled() %}
+                                   {% if premium_enabled() %}
                                     <li class="{{ _route starts with 'premium_' ? 'active' : '' }}">
-                                        <a href="{{ path('premium_index') }}" style="display:flex;align-items:center;gap:4px;">
-                                            <i class="fas fa-cart-arrow-down" style="color:#ffd700;font-size:11px;"></i> Boutique
+                                        <a href="{{ path('premium_index') }}" class="nav-boutique">
+                                            <i class="fas fa-cart-arrow-down"></i>
+                                            Boutique
                                         </a>
                                     </li>
                                     {% endif %}
@@ -333,7 +334,7 @@
 {# ============================================ #}
 {#  NAVBAR JS                                   #}
 {# ============================================ #}
-<script>
+<script nonce="{{ csp_nonce() }}">
 document.addEventListener('DOMContentLoaded', function() {
     var wrap = document.getElementById('nxProfileWrap');
     var toggle = document.getElementById('nxProfileToggle');

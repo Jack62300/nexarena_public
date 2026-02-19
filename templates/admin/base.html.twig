@@ -32,7 +32,7 @@
             </a>
 
             {# ── Contenu ── #}
-            {% set contentActive = _r starts with 'admin_articles_' or _r starts with 'admin_parent_categories_' or _r starts with 'admin_categories_' or _r starts with 'admin_server_types_' or _r starts with 'admin_tags_' or _r starts with 'admin_servers_' or _r starts with 'admin_comments_' or _r starts with 'admin_plugins_' or _r starts with 'admin_partners_' or _r starts with 'admin_recruitment_' %}
+            {% set contentActive = _r starts with 'admin_articles_' or _r starts with 'admin_parent_categories_' or _r starts with 'admin_categories_' or _r starts with 'admin_server_types_' or _r starts with 'admin_tags_' or _r starts with 'admin_servers_' or _r starts with 'admin_comments_' or _r starts with 'admin_plugins_' or _r starts with 'admin_plugin_submissions_' or _r starts with 'admin_partners_' or _r starts with 'admin_recruitment_' %}
             <div class="admin-sidebar__group admin-sidebar__group--green {{ contentActive ? 'open' : '' }}">
                 <button class="admin-sidebar__section" type="button">
                     <span><i class="fas fa-th-large"></i> Contenu</span>
@@ -64,8 +64,15 @@
                             <span class="badge bg-danger">{{ flaggedCount }}</span>
                         {% endif %}
                     </a>
-                    <a href="{{ path('admin_plugins_list') }}" class="admin-sidebar__link {{ _r starts with 'admin_plugins_' ? 'active' : '' }}">
+                    <a href="{{ path('admin_plugins_list') }}" class="admin-sidebar__link {{ _r starts with 'admin_plugins_' and not (_r starts with 'admin_plugin_submissions_') ? 'active' : '' }}">
                         <i class="fas fa-puzzle-piece"></i> Plugins
+                    </a>
+                    <a href="{{ path('admin_plugin_submissions_list') }}" class="admin-sidebar__link {{ _r starts with 'admin_plugin_submissions_' ? 'active' : '' }}">
+                        <i class="fas fa-inbox"></i> Soumissions plugins
+                        {% set pendingSubs = pending_plugin_submissions_count() %}
+                        {% if pendingSubs > 0 %}
+                            <span class="badge bg-warning text-dark">{{ pendingSubs }}</span>
+                        {% endif %}
                     </a>
                     <a href="{{ path('admin_partners_list') }}" class="admin-sidebar__link {{ _r starts with 'admin_partners_' ? 'active' : '' }}">
                         <i class="fas fa-handshake"></i> Partenaires
@@ -98,7 +105,7 @@
             </div>
 
             {# ── Utilisateurs ── #}
-            {% set usersActive = _r starts with 'admin_users_' or _r starts with 'admin_votes_' or _r starts with 'admin_badges_' %}
+            {% set usersActive = _r starts with 'admin_users_' or _r starts with 'admin_votes_' or _r starts with 'admin_badges_' or _r starts with 'admin_blacklist_' %}
             <div class="admin-sidebar__group admin-sidebar__group--cyan {{ usersActive ? 'open' : '' }}">
                 <button class="admin-sidebar__section" type="button">
                     <span><i class="fas fa-users"></i> Utilisateurs</span>
@@ -113,6 +120,9 @@
                     </a>
                     <a href="{{ path('admin_badges_list') }}" class="admin-sidebar__link {{ _r starts with 'admin_badges_' ? 'active' : '' }}">
                         <i class="fas fa-award"></i> Badges
+                    </a>
+                    <a href="{{ path('admin_blacklist_index') }}" class="admin-sidebar__link {{ _r starts with 'admin_blacklist_' ? 'active' : '' }}">
+                        <i class="fas fa-ban"></i> Listes noires
                     </a>
                 </div>
             </div>
@@ -260,7 +270,7 @@
 
     <script src="{{ asset('assets/js/vendor/jquery-3.6.0.min.js') }}"></script>
     <script src="{{ asset('assets/js/bootstrap.min.js') }}"></script>
-    <script>
+    <script nonce="{{ csp_nonce() }}">
     document.querySelectorAll('.admin-sidebar__section').forEach(function(btn){
         btn.addEventListener('click', function(){
             var group = btn.closest('.admin-sidebar__group');

@@ -790,7 +790,7 @@ input[type="number"].cfg-input {
 {% if hasHtmlFields %}
 <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 document.addEventListener('DOMContentLoaded', function() {
     var editors = [];
     document.querySelectorAll('.quill-editor').forEach(function(el) {
@@ -814,7 +814,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 {% endif %}
 
-<script>
+<script nonce="{{ csp_nonce() }}">
 /* Toggle secret visibility */
 function toggleSecret(inputId, btn) {
     var input = document.getElementById(inputId);

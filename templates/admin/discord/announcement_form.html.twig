@@ -361,7 +361,7 @@
 {% endblock %}
 
 {% block admin_js %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function() {
     // DOM
     var typeEl = document.getElementById('type');

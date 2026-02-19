@@ -1,0 +1,226 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block page_title %}Listes noires{% endblock %}
+{% block title %}Nexarena Admin — Listes noires{% endblock %}
+
+{% block admin_css %}
+.bl-tab-btn {
+    cursor: pointer;
+    padding: .5rem 1.25rem;
+    border: 1px solid #444;
+    background: var(--bg-card, #1a1a2e);
+    color: var(--text-secondary, #aaa);
+    border-radius: 6px;
+    font-size: .9rem;
+    transition: all .15s;
+}
+.bl-tab-btn:hover { border-color: #888; color: #fff; }
+.bl-tab-btn.active { background: #e74c3c; border-color: #e74c3c; color: #fff; }
+.bl-pane { display: none; }
+.bl-pane.active { display: block; }
+.bl-badge {
+    display: inline-block;
+    background: rgba(255,255,255,.2);
+    border-radius: 10px;
+    padding: 1px 8px;
+    font-size: .75rem;
+    margin-left: 6px;
+}
+{% endblock %}
+
+{% block admin_body %}
+<div class="admin-table">
+    <div class="admin-table__header">
+        <h3><i class="fas fa-ban me-2"></i>Listes noires</h3>
+        <span class="text-muted" style="font-size:.85rem;">Pseudos et domaines email interdits</span>
+    </div>
+
+    {# ── Tabs ── #}
+    <div class="d-flex gap-2 mb-4 p-3">
+        <button class="bl-tab-btn active" data-tab="usernames">
+            <i class="fas fa-user-slash me-1"></i>Pseudos
+            <span class="bl-badge">{{ usernames|length }}</span>
+        </button>
+        <button class="bl-tab-btn" data-tab="domains">
+            <i class="fas fa-envelope-open me-1"></i>Domaines email
+            <span class="bl-badge">{{ domains|length }}</span>
+        </button>
+    </div>
+
+    {# ── Pseudos ── #}
+    <div id="tab-usernames" class="bl-pane active px-3 pb-3">
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="admin-card p-4">
+                    <h5 class="mb-3"><i class="fas fa-plus-circle me-1 text-success"></i>Ajouter un pseudo</h5>
+                    <form method="post" action="{{ path('admin_blacklist_add') }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('blacklist_add') }}">
+                        <input type="hidden" name="type" value="username">
+                        <div class="mb-3">
+                            <label class="form-label">Mot-clé</label>
+                            <input type="text" name="value" class="form-control" placeholder="ex: admin" required maxlength="255">
+                            <small class="text-muted">Tout pseudo contenant ce mot sera bloqué.</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Raison <span class="text-muted">(optionnel)</span></label>
+                            <input type="text" name="reason" class="form-control" placeholder="ex: Mot réservé" maxlength="255">
+                        </div>
+                        <button type="submit" class="btn btn-danger w-100"><i class="fas fa-ban me-1"></i>Ajouter</button>
+                    </form>
+                </div>
+
+                <div class="admin-card p-4 mt-3">
+                    <h5 class="mb-3"><i class="fas fa-list me-1 text-warning"></i>Import en masse</h5>
+                    <form method="post" action="{{ path('admin_blacklist_bulk') }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('blacklist_bulk') }}">
+                        <input type="hidden" name="type" value="username">
+                        <div class="mb-3">
+                            <label class="form-label">Mots-clés (1 par ligne)</label>
+                            <textarea name="values" class="form-control font-monospace" rows="6" placeholder="admin&#10;moderateur&#10;staff"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Raison commune <span class="text-muted">(optionnel)</span></label>
+                            <input type="text" name="reason" class="form-control" maxlength="255">
+                        </div>
+                        <button type="submit" class="btn btn-warning w-100"><i class="fas fa-file-import me-1"></i>Importer</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                <div class="admin-card p-4">
+                    <h5 class="mb-3">Pseudos bloqués ({{ usernames|length }})</h5>
+                    {% if usernames is empty %}
+                        <p class="text-muted">Aucun pseudo blacklisté.</p>
+                    {% else %}
+                        <div class="table-responsive">
+                            <table class="table table-dark table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Mot-clé</th>
+                                        <th>Raison</th>
+                                        <th>Ajouté par</th>
+                                        <th>Date</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for entry in usernames %}
+                                    <tr>
+                                        <td><code class="text-danger">{{ entry.value }}</code></td>
+                                        <td class="text-muted">{{ entry.reason ?? '—' }}</td>
+                                        <td>{{ entry.createdBy ? entry.createdBy.username : '—' }}</td>
+                                        <td class="text-muted small">{{ entry.createdAt|date('d/m/Y') }}</td>
+                                        <td>
+                                            <form method="post" action="{{ path('admin_blacklist_delete', {id: entry.id}) }}" onsubmit="return confirm('Supprimer « {{ entry.value }} » ?')">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('delete_' ~ entry.id) }}">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ── Domaines email ── #}
+    <div id="tab-domains" class="bl-pane px-3 pb-3">
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="admin-card p-4">
+                    <h5 class="mb-3"><i class="fas fa-plus-circle me-1 text-success"></i>Ajouter un domaine</h5>
+                    <form method="post" action="{{ path('admin_blacklist_add') }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('blacklist_add') }}">
+                        <input type="hidden" name="type" value="email_domain">
+                        <div class="mb-3">
+                            <label class="form-label">Domaine</label>
+                            <input type="text" name="value" class="form-control" placeholder="ex: mailinator.com" required maxlength="255">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Raison <span class="text-muted">(optionnel)</span></label>
+                            <input type="text" name="reason" class="form-control" placeholder="ex: Email jetable" maxlength="255">
+                        </div>
+                        <button type="submit" class="btn btn-danger w-100"><i class="fas fa-ban me-1"></i>Ajouter</button>
+                    </form>
+                </div>
+
+                <div class="admin-card p-4 mt-3">
+                    <h5 class="mb-3"><i class="fas fa-list me-1 text-warning"></i>Import en masse</h5>
+                    <form method="post" action="{{ path('admin_blacklist_bulk') }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('blacklist_bulk') }}">
+                        <input type="hidden" name="type" value="email_domain">
+                        <div class="mb-3">
+                            <label class="form-label">Domaines (1 par ligne)</label>
+                            <textarea name="values" class="form-control font-monospace" rows="6" placeholder="mailinator.com&#10;tempmail.com&#10;yopmail.com"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Raison commune <span class="text-muted">(optionnel)</span></label>
+                            <input type="text" name="reason" class="form-control" maxlength="255">
+                        </div>
+                        <button type="submit" class="btn btn-warning w-100"><i class="fas fa-file-import me-1"></i>Importer</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                <div class="admin-card p-4">
+                    <h5 class="mb-3">Domaines bloqués ({{ domains|length }})</h5>
+                    {% if domains is empty %}
+                        <p class="text-muted">Aucun domaine blacklisté.</p>
+                    {% else %}
+                        <div class="table-responsive">
+                            <table class="table table-dark table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Domaine</th>
+                                        <th>Raison</th>
+                                        <th>Ajouté par</th>
+                                        <th>Date</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for entry in domains %}
+                                    <tr>
+                                        <td><code class="text-danger">{{ entry.value }}</code></td>
+                                        <td class="text-muted">{{ entry.reason ?? '—' }}</td>
+                                        <td>{{ entry.createdBy ? entry.createdBy.username : '—' }}</td>
+                                        <td class="text-muted small">{{ entry.createdAt|date('d/m/Y') }}</td>
+                                        <td>
+                                            <form method="post" action="{{ path('admin_blacklist_delete', {id: entry.id}) }}" onsubmit="return confirm('Supprimer « {{ entry.value }} » ?')">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('delete_' ~ entry.id) }}">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script nonce="{{ csp_nonce() }}">
+document.querySelectorAll('.bl-tab-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.bl-tab-btn').forEach(function(b) { b.classList.remove('active'); });
+        document.querySelectorAll('.bl-pane').forEach(function(p) { p.classList.remove('active'); });
+        btn.classList.add('active');
+        document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    });
+});
+</script>
+{% endblock %}

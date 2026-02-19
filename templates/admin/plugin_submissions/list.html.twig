@@ -1,0 +1,84 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block page_title %}Soumissions de plugins{% endblock %}
+{% block title %}Nexarena Admin — Soumissions plugins{% endblock %}
+
+{% block admin_css %}
+.sub-status-pending  { background:rgba(246,194,62,.12); color:#f6c23e; border:1px solid rgba(246,194,62,.25); }
+.sub-status-approved { background:rgba(28,200,138,.12);  color:#1cc88a; border:1px solid rgba(28,200,138,.25); }
+.sub-status-rejected { background:rgba(231,74,59,.12);   color:#e74a3b; border:1px solid rgba(231,74,59,.25); }
+{% endblock %}
+
+{% block admin_body %}
+<div class="admin-table">
+    <div class="admin-table__header">
+        <h3><i class="fas fa-inbox me-2"></i>Soumissions de plugins</h3>
+        <span class="text-muted" style="font-size:.85rem;">{{ submissions|length }} soumission(s)</span>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Plugin</th>
+                <th>Créateur</th>
+                <th>Jeu</th>
+                <th>Fichier</th>
+                <th>Statut</th>
+                <th>Soumis le</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for sub in submissions %}
+            <tr>
+                <td><strong>{{ sub.pluginName }}</strong></td>
+                <td>
+                    {{ sub.creatorName }}
+                    {% if sub.submitterUser %}
+                        <br><small class="text-muted">@{{ sub.submitterUser.username }}</small>
+                    {% endif %}
+                </td>
+                <td style="color:var(--text-secondary);">{{ sub.gameDescription }}</td>
+                <td style="color:var(--text-secondary);font-size:.85rem;">
+                    {{ sub.originalFileName ?? sub.fileName }}
+                    {% if sub.fileSize %}
+                        <br><small>{{ (sub.fileSize / 1024)|round(1) }} Ko</small>
+                    {% endif %}
+                </td>
+                <td>
+                    <span class="role-badge sub-status-{{ sub.status }}">
+                        {% if sub.status == 'pending' %}<i class="fas fa-clock me-1"></i>En attente
+                        {% elseif sub.status == 'approved' %}<i class="fas fa-check me-1"></i>Approuvé
+                        {% else %}<i class="fas fa-times me-1"></i>Rejeté
+                        {% endif %}
+                    </span>
+                </td>
+                <td style="color:var(--text-secondary);font-size:.85rem;">{{ sub.createdAt|date('d/m/Y H:i') }}</td>
+                <td>
+                    <div style="display:flex;gap:6px;">
+                        <a href="{{ path('admin_plugin_submissions_show', {id: sub.id}) }}" class="btn-admin btn-admin--outline btn-admin--sm" title="Voir">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        {% if is_granted('ROLE_MANAGER') %}
+                        <form method="post" action="{{ path('admin_plugin_submissions_delete', {id: sub.id}) }}"
+                              onsubmit="return confirm('Supprimer cette soumission ?')" style="display:inline;">
+                            <input type="hidden" name="_token" value="{{ csrf_token('delete_submission_' ~ sub.id) }}">
+                            <button type="submit" class="btn-admin btn-admin--sm" style="background:var(--danger);color:#fff;border:none;" title="Supprimer">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="7" style="text-align:center;color:var(--text-secondary);padding:30px;">
+                    Aucune soumission pour le moment.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
