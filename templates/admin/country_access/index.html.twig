@@ -1,0 +1,454 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block page_title %}Accès géographique{% endblock %}
+{% block title %}Nexarena Admin — Accès géographique{% endblock %}
+
+{% block admin_css %}
+/* ── Layout ── */
+.ca-wrap { display: flex; flex-direction: column; gap: 20px; max-width: 1300px; }
+
+/* ── Panels ── */
+.ca-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+}
+.ca-panel__header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-darker);
+}
+.ca-panel__header h3 { margin: 0; font-size: 1rem; font-weight: 700; color: var(--text-primary); }
+.ca-panel__header p  { margin: 0; font-size: .8rem; color: var(--text-secondary); }
+.ca-panel__icon {
+    width: 38px; height: 38px; border-radius: 9px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 16px;
+}
+.ca-panel__body { padding: 20px 22px; }
+
+/* ── Toggle switches ── */
+.ca-toggle-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 18px; border-radius: 10px;
+    background: var(--bg-darker); border: 1px solid var(--border-color);
+    margin-bottom: 12px;
+    gap: 16px;
+}
+.ca-toggle-row:last-child { margin-bottom: 0; }
+.ca-toggle-row__info { flex: 1; }
+.ca-toggle-row__label { font-size: .9rem; font-weight: 600; color: var(--text-primary); margin-bottom: 2px; }
+.ca-toggle-row__desc  { font-size: .78rem; color: var(--text-secondary); }
+
+.ca-switch { position: relative; display: inline-block; width: 46px; height: 25px; flex-shrink: 0; }
+.ca-switch input { opacity: 0; width: 0; height: 0; }
+.ca-switch__slider {
+    position: absolute; inset: 0; cursor: pointer;
+    background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.1);
+    border-radius: 25px; transition: .2s;
+}
+.ca-switch__slider::before {
+    content: ''; position: absolute; height: 17px; width: 17px;
+    left: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: .2s;
+}
+.ca-switch input:checked + .ca-switch__slider { background: #45f882; border-color: #45f882; }
+.ca-switch input:checked + .ca-switch__slider::before { transform: translateX(21px); }
+
+/* ── Stats bar ── */
+.ca-stats {
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    padding: 14px 18px; border-radius: 10px;
+    background: rgba(69,248,130,.05); border: 1px solid rgba(69,248,130,.15);
+    margin-bottom: 20px;
+}
+.ca-stats__item { display: flex; align-items: center; gap: 7px; }
+.ca-stats__value { font-size: 1.3rem; font-weight: 800; color: #45f882; }
+.ca-stats__label { font-size: .78rem; color: var(--text-secondary); }
+.ca-stats__sep { width: 1px; height: 28px; background: var(--border-color); }
+
+/* ── Toolbar ── */
+.ca-toolbar {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    margin-bottom: 18px;
+}
+.ca-search {
+    flex: 1; min-width: 200px;
+    padding: 9px 14px 9px 36px;
+    background: var(--bg-darker); border: 1px solid var(--border-color);
+    border-radius: 8px; color: var(--text-primary); font-size: .875rem;
+}
+.ca-search:focus { outline: none; border-color: rgba(69,248,130,.4); }
+.ca-search-wrap { position: relative; flex: 1; min-width: 200px; }
+.ca-search-wrap i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-secondary); font-size: 13px; }
+
+.ca-btn { padding: 8px 14px; border-radius: 7px; border: 1px solid var(--border-color); background: var(--bg-darker); color: var(--text-secondary); font-size: .8rem; font-weight: 600; cursor: pointer; transition: .15s; white-space: nowrap; }
+.ca-btn:hover { border-color: #45f882; color: #45f882; }
+.ca-btn--danger:hover { border-color: var(--danger); color: var(--danger); }
+
+/* ── Region tabs ── */
+.ca-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px; }
+.ca-tab {
+    padding: 7px 14px; border-radius: 7px; font-size: .8rem; font-weight: 600;
+    border: 1px solid var(--border-color); background: var(--bg-darker);
+    color: var(--text-secondary); cursor: pointer; transition: .15s;
+    display: flex; align-items: center; gap: 6px;
+}
+.ca-tab:hover { border-color: rgba(255,255,255,.2); color: var(--text-primary); }
+.ca-tab.active { background: rgba(69,248,130,.1); border-color: rgba(69,248,130,.35); color: #45f882; }
+.ca-tab .ca-tab__count {
+    background: rgba(255,255,255,.07); border-radius: 99px;
+    padding: 1px 7px; font-size: .72rem; min-width: 22px; text-align: center;
+}
+.ca-tab.active .ca-tab__count { background: rgba(69,248,130,.15); }
+
+/* ── Region header ── */
+.ca-region-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 0 10px;
+    margin-bottom: 10px;
+}
+.ca-region-header h4 { font-size: .85rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .6px; margin: 0; }
+.ca-region-actions { display: flex; gap: 6px; }
+.ca-region-btn { font-size: .75rem; padding: 4px 10px; border-radius: 5px; border: 1px solid var(--border-color); background: transparent; color: var(--text-secondary); cursor: pointer; transition: .15s; }
+.ca-region-btn:hover { color: #45f882; border-color: rgba(69,248,130,.3); }
+
+/* ── Country grid ── */
+.ca-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.ca-country {
+    position: relative;
+}
+.ca-country input[type="checkbox"] { position: absolute; opacity: 0; width: 0; height: 0; }
+
+.ca-country__card {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; border-radius: 9px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-darker);
+    cursor: pointer; transition: .15s;
+    user-select: none;
+}
+.ca-country__card:hover { border-color: rgba(255,255,255,.15); }
+.ca-country input:checked ~ .ca-country__card {
+    background: rgba(69,248,130,.07);
+    border-color: rgba(69,248,130,.35);
+}
+.ca-country__flag { font-size: 20px; line-height: 1; flex-shrink: 0; }
+.ca-country__info { min-width: 0; flex: 1; }
+.ca-country__name { font-size: .78rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ca-country__code { font-size: .7rem; color: var(--text-secondary); }
+.ca-country__check {
+    width: 16px; height: 16px; border-radius: 4px; flex-shrink: 0;
+    border: 1.5px solid var(--border-color); transition: .15s;
+    display: flex; align-items: center; justify-content: center;
+    margin-left: auto;
+}
+.ca-country input:checked ~ .ca-country__card .ca-country__check {
+    background: #45f882; border-color: #45f882; color: #0a1018;
+}
+.ca-country input:checked ~ .ca-country__card .ca-country__check::after {
+    content: '✓'; font-size: 10px; font-weight: 900;
+}
+
+/* ── No results ── */
+.ca-empty { text-align: center; padding: 40px; color: var(--text-secondary); font-size: .875rem; display: none; }
+.ca-empty i { font-size: 32px; margin-bottom: 10px; display: block; opacity: .4; }
+
+/* ── Sticky save bar ── */
+.ca-save-bar {
+    position: sticky; bottom: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+    padding: 14px 22px;
+    background: var(--bg-card);
+    border-top: 1px solid var(--border-color);
+    box-shadow: 0 -4px 24px rgba(0,0,0,.3);
+}
+.ca-save-bar__info { font-size: .85rem; color: var(--text-secondary); }
+.ca-save-bar__info strong { color: #45f882; }
+{% endblock %}
+
+{% block admin_body %}
+
+{# ── Macro flag emoji ── #}
+{% macro flag(code) %}{{ ('\\u{1F1E6\\u{1F1E6}' ~ code)|upper }}{% endmacro %}
+
+<form method="post" action="{{ path('admin_country_access_save') }}" id="ca-form">
+<input type="hidden" name="_token" value="{{ csrf_token('country_access_save') }}">
+
+<div class="ca-wrap">
+
+    {# ══ PANNEAU 1 : PARAMÈTRES DE SÉCURITÉ ══ #}
+    <div class="ca-panel">
+        <div class="ca-panel__header">
+            <div class="ca-panel__icon" style="background:rgba(231,74,59,.1);color:#e74a3b;">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <div>
+                <h3>Paramètres de sécurité réseau</h3>
+                <p>Configurez les règles de blocage VPN et de filtrage géographique</p>
+            </div>
+        </div>
+        <div class="ca-panel__body">
+
+            <div class="ca-toggle-row">
+                <div class="ca-toggle-row__info">
+                    <div class="ca-toggle-row__label"><i class="fas fa-globe me-2" style="color:#45f882;"></i>Filtrage par pays actif</div>
+                    <div class="ca-toggle-row__desc">Bloquer les visiteurs dont le pays n'est pas dans la liste autorisée ci-dessous. Nécessite la clé API IPQualityScore.</div>
+                </div>
+                <label class="ca-switch">
+                    <input type="checkbox" name="country_block_enabled" id="tog-country" {{ blockEnabled ? 'checked' : '' }}>
+                    <span class="ca-switch__slider"></span>
+                </label>
+            </div>
+
+            <div class="ca-toggle-row">
+                <div class="ca-toggle-row__info">
+                    <div class="ca-toggle-row__label"><i class="fas fa-user-secret me-2" style="color:#f6c23e;"></i>Bloquer VPN / Proxy / Tor — tout le site</div>
+                    <div class="ca-toggle-row__desc">Refuser l'accès au site entier aux connexions VPN, proxy et Tor. Nécessite la clé API IPQualityScore.</div>
+                </div>
+                <label class="ca-switch">
+                    <input type="checkbox" name="vpn_block_enabled" {{ vpnBlockSite ? 'checked' : '' }}>
+                    <span class="ca-switch__slider"></span>
+                </label>
+            </div>
+
+            <div class="ca-toggle-row">
+                <div class="ca-toggle-row__info">
+                    <div class="ca-toggle-row__label"><i class="fas fa-lock me-2" style="color:#e74a3b;"></i>Bloquer VPN / Proxy / Tor — administration uniquement</div>
+                    <div class="ca-toggle-row__desc">Refuser l'accès au panneau admin aux connexions VPN, proxy et Tor (indépendant du réglage site entier).</div>
+                </div>
+                <label class="ca-switch">
+                    <input type="checkbox" name="admin_vpn_block_enabled" {{ adminVpnBlock ? 'checked' : '' }}>
+                    <span class="ca-switch__slider"></span>
+                </label>
+            </div>
+
+        </div>
+    </div>
+
+    {# ══ PANNEAU 2 : SÉLECTION DES PAYS ══ #}
+    <div class="ca-panel">
+        <div class="ca-panel__header">
+            <div class="ca-panel__icon" style="background:rgba(69,248,130,.1);color:#45f882;">
+                <i class="fas fa-globe"></i>
+            </div>
+            <div>
+                <h3>Pays autorisés</h3>
+                <p>Sélectionnez les pays pouvant accéder au site. Si aucun pays n'est sélectionné, tous sont autorisés.</p>
+            </div>
+        </div>
+        <div class="ca-panel__body">
+
+            {# Stats #}
+            {% set totalCount = countries|length %}
+            <div class="ca-stats">
+                <div class="ca-stats__item">
+                    <span class="ca-stats__value" id="selected-count">{{ selected|length }}</span>
+                    <span class="ca-stats__label">pays sélectionnés</span>
+                </div>
+                <div class="ca-stats__sep"></div>
+                <div class="ca-stats__item">
+                    <span class="ca-stats__value">{{ totalCount }}</span>
+                    <span class="ca-stats__label">pays disponibles</span>
+                </div>
+                {% if selected|length == 0 %}
+                <div class="ca-stats__sep"></div>
+                <div class="ca-stats__item" style="color:#f6c23e;font-size:.8rem;">
+                    <i class="fas fa-info-circle me-1"></i> Aucun pays sélectionné = tous les pays passent
+                </div>
+                {% endif %}
+            </div>
+
+            {# Toolbar #}
+            <div class="ca-toolbar">
+                <div class="ca-search-wrap">
+                    <i class="fas fa-search"></i>
+                    <input type="text" class="ca-search" id="ca-search" placeholder="Rechercher un pays...">
+                </div>
+                <button type="button" class="ca-btn" id="btn-select-all">Tout sélectionner</button>
+                <button type="button" class="ca-btn ca-btn--danger" id="btn-clear-all">Tout désélectionner</button>
+            </div>
+
+            {# Region tabs #}
+            {% set regionGroups = {} %}
+            {% for code, country in countries %}
+                {% set r = country.region %}
+                {% if regionGroups[r] is not defined %}
+                    {% set regionGroups = regionGroups|merge({(r): []}) %}
+                {% endif %}
+                {% set regionGroups = regionGroups|merge({(r): regionGroups[r]|merge([code])}) %}
+            {% endfor %}
+
+            <div class="ca-tabs" id="region-tabs">
+                <button type="button" class="ca-tab active" data-region="all">
+                    <i class="fas fa-th-large"></i> Tous
+                    <span class="ca-tab__count">{{ totalCount }}</span>
+                </button>
+                {% for region, data in regionLabels %}
+                    {% set cnt = regionGroups[region] is defined ? regionGroups[region]|length : 0 %}
+                    <button type="button" class="ca-tab" data-region="{{ region }}">
+                        <i class="{{ data.icon }}"></i> {{ data.label }}
+                        <span class="ca-tab__count">{{ cnt }}</span>
+                    </button>
+                {% endfor %}
+            </div>
+
+            {# Country grids by region #}
+            {% for region, regionData in regionLabels %}
+                {% if regionGroups[region] is defined %}
+                <div class="ca-region-block" data-region="{{ region }}">
+                    <div class="ca-region-header">
+                        <h4><i class="{{ regionData.icon }} me-2"></i>{{ regionData.label }}</h4>
+                        <div class="ca-region-actions">
+                            <button type="button" class="ca-region-btn" data-region-select="{{ region }}">Tout sélectionner</button>
+                            <button type="button" class="ca-region-btn" data-region-deselect="{{ region }}">Effacer</button>
+                        </div>
+                    </div>
+                    <div class="ca-grid">
+                        {% for code in regionGroups[region] %}
+                            {% set country = countries[code] %}
+                            <label class="ca-country" data-name="{{ country.name|lower }}" data-code="{{ code|lower }}">
+                                <input type="checkbox" name="countries[]" value="{{ code }}" {{ code in selected ? 'checked' : '' }}>
+                                <div class="ca-country__card">
+                                    <span class="ca-country__flag">{{ code|country_flag }}</span>
+                                    <div class="ca-country__info">
+                                        <div class="ca-country__name" title="{{ country.name }}">{{ country.name }}</div>
+                                        <div class="ca-country__code">{{ code }}</div>
+                                    </div>
+                                    <div class="ca-country__check"></div>
+                                </div>
+                            </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            {% endfor %}
+
+            <div class="ca-empty" id="ca-empty">
+                <i class="fas fa-search"></i>
+                Aucun pays ne correspond à votre recherche.
+            </div>
+
+        </div>
+    </div>
+
+</div>{# /ca-wrap #}
+
+{# ══ BARRE DE SAUVEGARDE STICKY ══ #}
+<div class="ca-save-bar">
+    <div class="ca-save-bar__info">
+        <strong id="save-count">{{ selected|length }}</strong> pays sélectionné(s)
+        {% if not blockEnabled %}<span style="color:var(--text-secondary);"> — filtrage désactivé</span>{% endif %}
+    </div>
+    <div style="display:flex;gap:10px;">
+        <a href="{{ path('admin_dashboard') }}" class="btn-admin btn-admin--outline">Annuler</a>
+        <button type="submit" class="btn-admin btn-admin--primary">
+            <i class="fas fa-save me-1"></i> Sauvegarder
+        </button>
+    </div>
+</div>
+
+</form>
+{% endblock %}
+
+{% block admin_js %}
+<script nonce="{{ csp_nonce() }}">
+(function () {
+    'use strict';
+
+    // ── Compteur ────────────────────────────────────────────────────────
+    function updateCount() {
+        var n = document.querySelectorAll('.ca-country input:checked').length;
+        document.getElementById('selected-count').textContent = n;
+        document.getElementById('save-count').textContent     = n;
+    }
+
+    document.querySelectorAll('.ca-country input').forEach(function(cb) {
+        cb.addEventListener('change', updateCount);
+    });
+
+    // ── Recherche ────────────────────────────────────────────────────────
+    var searchInput = document.getElementById('ca-search');
+    searchInput.addEventListener('input', function() {
+        var q = this.value.toLowerCase().trim();
+        var visible = 0;
+
+        document.querySelectorAll('.ca-country').forEach(function(el) {
+            var match = !q
+                || el.dataset.name.includes(q)
+                || el.dataset.code.includes(q);
+            el.style.display = match ? '' : 'none';
+            if (match) visible++;
+        });
+
+        document.querySelectorAll('.ca-region-block').forEach(function(block) {
+            var hasVisible = block.querySelectorAll('.ca-country:not([style*="display: none"])').length > 0;
+            block.style.display = hasVisible ? '' : 'none';
+        });
+
+        document.getElementById('ca-empty').style.display = visible === 0 ? 'block' : 'none';
+    });
+
+    // ── Onglets région ────────────────────────────────────────────────────
+    document.querySelectorAll('.ca-tab').forEach(function(tab) {
+        tab.addEventListener('click', function() {
+            document.querySelectorAll('.ca-tab').forEach(function(t) { t.classList.remove('active'); });
+            tab.classList.add('active');
+
+            var region = tab.dataset.region;
+            searchInput.value = '';
+
+            document.querySelectorAll('.ca-region-block').forEach(function(block) {
+                block.style.display = (region === 'all' || block.dataset.region === region) ? '' : 'none';
+            });
+
+            document.querySelectorAll('.ca-country').forEach(function(el) {
+                el.style.display = '';
+            });
+
+            document.getElementById('ca-empty').style.display = 'none';
+        });
+    });
+
+    // ── Tout sélectionner / désélectionner (global) ─────────────────────
+    document.getElementById('btn-select-all').addEventListener('click', function() {
+        document.querySelectorAll('.ca-country input').forEach(function(cb) { cb.checked = true; });
+        updateCount();
+    });
+
+    document.getElementById('btn-clear-all').addEventListener('click', function() {
+        if (!confirm('Désélectionner tous les pays ?')) return;
+        document.querySelectorAll('.ca-country input').forEach(function(cb) { cb.checked = false; });
+        updateCount();
+    });
+
+    // ── Boutons par région ────────────────────────────────────────────────
+    document.querySelectorAll('[data-region-select]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var region = btn.dataset.regionSelect;
+            document.querySelectorAll('.ca-region-block[data-region="' + region + '"] .ca-country input').forEach(function(cb) {
+                cb.checked = true;
+            });
+            updateCount();
+        });
+    });
+
+    document.querySelectorAll('[data-region-deselect]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var region = btn.dataset.regionDeselect;
+            document.querySelectorAll('.ca-region-block[data-region="' + region + '"] .ca-country input').forEach(function(cb) {
+                cb.checked = false;
+            });
+            updateCount();
+        });
+    });
+
+})();
+</script>
+{% endblock %}
