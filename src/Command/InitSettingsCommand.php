@@ -90,7 +90,7 @@ class InitSettingsCommand extends Command
         ['key' => 'twitch_client_id', 'value' => '', 'type' => 'secret', 'label' => 'Twitch Client ID', 'description' => 'Client ID de l\'application Twitch OAuth (dev.twitch.tv)', 'category' => 'api_keys', 'position' => 4],
         ['key' => 'twitch_client_secret', 'value' => '', 'type' => 'secret', 'label' => 'Twitch Client Secret', 'description' => 'Client Secret de l\'application Twitch OAuth', 'category' => 'api_keys', 'position' => 5],
         ['key' => 'steam_api_key', 'value' => '', 'type' => 'secret', 'label' => 'Steam API Key', 'description' => 'Cle API Steam (steamcommunity.com/dev/apikey)', 'category' => 'api_keys', 'position' => 6],
-        ['key' => 'ipgeolocation_api_key', 'value' => '', 'type' => 'secret', 'label' => 'IPGeolocation API Key', 'description' => 'Cle API ipgeolocation.io pour la detection VPN/Proxy', 'category' => 'api_keys', 'position' => 7],
+        ['key' => 'ipqs_api_key', 'value' => '', 'type' => 'secret', 'label' => 'IPQualityScore API Key', 'description' => 'Cle API IPQualityScore pour la detection VPN/Proxy/Tor et le filtrage par pays (ipqualityscore.com)', 'category' => 'api_keys', 'position' => 7],
         ['key' => 'virustotal_api_key', 'value' => '', 'type' => 'secret', 'label' => 'VirusTotal API Key', 'description' => 'Cle API VirusTotal pour scanner les fichiers uploades (virustotal.com)', 'category' => 'api_keys', 'position' => 8],
 
         // ========== PLUGINS ==========
@@ -124,6 +124,9 @@ class InitSettingsCommand extends Command
         ['key' => 'security_allowed_origins', 'value' => '', 'type' => 'textarea', 'label' => 'Origines autorisees (CORS)', 'description' => 'Domaines autorises pour les requetes cross-origin (un par ligne). Laissez vide pour tout autoriser.', 'category' => 'securite', 'position' => 1],
         ['key' => 'login_ip_verification_enabled', 'value' => '0', 'type' => 'boolean', 'label' => 'Verification IP a la connexion', 'description' => 'Si activee, toute connexion depuis une IP inconnue necessite une validation par email avant d\'acceder au site.', 'category' => 'securite', 'position' => 2],
         ['key' => 'admin_vpn_block_enabled', 'value' => '1', 'type' => 'boolean', 'label' => 'Bloquer VPN/Proxy sur l\'admin', 'description' => 'Refuser l\'acces a l\'administration aux connexions VPN, proxy et Tor. Desactiver uniquement si vous administrez le site depuis un VPN de confiance.', 'category' => 'securite', 'position' => 3],
+        ['key' => 'vpn_block_enabled', 'value' => '0', 'type' => 'boolean', 'label' => 'Bloquer VPN/Proxy sur tout le site', 'description' => 'Refuser l\'acces au site entier aux connexions VPN, proxy et Tor. Necessite la cle API IPQualityScore.', 'category' => 'securite', 'position' => 4],
+        ['key' => 'country_block_enabled', 'value' => '0', 'type' => 'boolean', 'label' => 'Filtrage par pays active', 'description' => 'Bloquer les visiteurs dont le pays n\'est pas dans la liste des pays autorises. Necessite la cle API IPQualityScore.', 'category' => 'securite', 'position' => 5],
+        ['key' => 'allowed_countries', 'value' => '', 'type' => 'text', 'label' => 'Pays autorises (codes ISO)', 'description' => 'Codes pays ISO 3166-1 alpha-2 separes par des virgules. Ex: FR,BE,CH,LU,MC,CA. Laisser vide = tous les pays autorises.', 'category' => 'securite', 'position' => 6],
 
         // ========== PAIEMENT ==========
         ['key' => 'paypal_client_id', 'value' => '', 'type' => 'secret', 'label' => 'PayPal Client ID', 'description' => 'Client ID de l\'application PayPal (developer.paypal.com)', 'category' => 'paiement', 'position' => 0],
