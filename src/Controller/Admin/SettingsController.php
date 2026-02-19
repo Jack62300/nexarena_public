@@ -17,6 +17,17 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_RESPONSABLE')]
 class SettingsController extends AbstractController
 {
+    /**
+     * Settings managed by SecurityAccessController — hidden from the generic settings panel.
+     */
+    private const MANAGED_ELSEWHERE = [
+        'admin_vpn_block_enabled',
+        'vpn_block_enabled',
+        'country_block_enabled',
+        'allowed_countries',
+        'trusted_ips',
+    ];
+
     private const CATEGORY_LABELS = [
         'general' => 'General',
         'banner' => 'Banniere & Accueil',
@@ -80,6 +91,19 @@ class SettingsController extends AbstractController
         }
 
         $settingsByCategory = $this->settingRepo->findAllGroupedByCategory();
+
+        // Filter out keys managed by SecurityAccessController
+        $filtered = [];
+        foreach ($settingsByCategory as $cat => $catSettings) {
+            $catFiltered = array_values(array_filter(
+                $catSettings,
+                fn(Setting $s) => !in_array($s->getKey(), self::MANAGED_ELSEWHERE, true)
+            ));
+            if (!empty($catFiltered)) {
+                $filtered[$cat] = $catFiltered;
+            }
+        }
+        $settingsByCategory = $filtered;
 
         return $this->render('admin/settings/index.html.twig', [
             'settings_by_category' => $settingsByCategory,
@@ -189,6 +213,10 @@ class SettingsController extends AbstractController
             $key = $setting->getKey();
 
             if ($key === 'banner_slides') {
+                continue;
+            }
+
+            if (in_array($key, self::MANAGED_ELSEWHERE, true)) {
                 continue;
             }
 

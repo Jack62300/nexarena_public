@@ -1,0 +1,356 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Sécurité & Accès Géographique — Admin{% endblock %}
+{% block page_title %}Sécurité & Accès Géographique{% endblock %}
+
+{% block admin_css %}
+.country-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 6px;
+    max-height: 520px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+.country-card {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: .78rem;
+    background: rgba(255,255,255,.03);
+    transition: background .15s, border-color .15s;
+    user-select: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.country-card:hover {
+    background: rgba(255,255,255,.08);
+    border-color: rgba(255,255,255,.25);
+}
+.country-card.selected {
+    background: rgba(108,92,231,.25);
+    border-color: #6c5ce7;
+    color: #b39ddb;
+}
+.country-card input[type=checkbox] { display: none; }
+.country-flag { font-size: 1.1rem; flex-shrink: 0; }
+.country-name { overflow: hidden; text-overflow: ellipsis; }
+.region-tabs .nav-link {
+    font-size: .8rem;
+    padding: .3rem .7rem;
+}
+.diagnostic-result {
+    background: #1a1a2e;
+    border-radius: 6px;
+    padding: 12px;
+    font-size: .78rem;
+    font-family: monospace;
+    white-space: pre-wrap;
+    max-height: 260px;
+    overflow-y: auto;
+    color: #a0f0a0;
+}
+.diagnostic-result.has-error { color: #ff7675; }
+.sticky-save {
+    position: sticky;
+    bottom: 0;
+    background: var(--bs-body-bg, #1a1a2e);
+    padding: 12px 0 4px;
+    border-top: 1px solid rgba(255,255,255,.1);
+    z-index: 10;
+}
+{% endblock %}
+
+{% block admin_body %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-1"><i class="fas fa-shield-alt text-warning me-2"></i>Sécurité & Accès Géographique</h4>
+        <p class="text-muted mb-0 small">Contrôlez les VPN/proxy, les pays autorisés et les IPs de confiance.</p>
+    </div>
+</div>
+
+<form method="post" action="{{ path('admin_security_access_index') }}" id="securityForm">
+    <input type="hidden" name="_token" value="{{ csrf_token('security_access_save') }}">
+    <input type="hidden" name="allowed_countries" id="allowedCountriesInput" value="{{ selected_codes|join(',') }}">
+
+    <div class="row g-4">
+
+        {# ===== COLONNE GAUCHE ===== #}
+        <div class="col-lg-5">
+
+            {# Card Règles de blocage #}
+            <div class="card mb-3">
+                <div class="card-header">
+                    <i class="fas fa-ban me-2 text-danger"></i>Règles de blocage
+                </div>
+                <div class="card-body">
+                    <div class="mb-3 pb-3 border-bottom border-secondary">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox"
+                                   name="setting_admin_vpn_block_enabled"
+                                   id="adminVpnBlock"
+                                   {% if current.admin_vpn_block_enabled %}checked{% endif %}>
+                            <label class="form-check-label fw-semibold" for="adminVpnBlock">
+                                Bloquer les VPN/proxy sur l'espace admin
+                            </label>
+                        </div>
+                        <small class="text-muted">Protège le panneau d'administration contre les accès via VPN ou proxy.</small>
+                    </div>
+
+                    <div class="mb-3 pb-3 border-bottom border-secondary">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox"
+                                   name="setting_vpn_block_enabled"
+                                   id="vpnBlock"
+                                   {% if current.vpn_block_enabled %}checked{% endif %}>
+                            <label class="form-check-label fw-semibold" for="vpnBlock">
+                                Bloquer les VPN/proxy sur tout le site
+                            </label>
+                        </div>
+                        <small class="text-muted">Les visiteurs VPN/proxy seront redirigés ou bloqués sur l'ensemble du site.</small>
+                    </div>
+
+                    <div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox"
+                                   name="setting_country_block_enabled"
+                                   id="countryBlock"
+                                   {% if current.country_block_enabled %}checked{% endif %}>
+                            <label class="form-check-label fw-semibold" for="countryBlock">
+                                Activer le filtrage par pays
+                            </label>
+                        </div>
+                        <small class="text-muted">Seuls les pays cochés dans la grille seront autorisés. Liste vide = tous autorisés.</small>
+                    </div>
+                </div>
+            </div>
+
+            {# Card IPs de confiance #}
+            <div class="card mb-3">
+                <div class="card-header">
+                    <i class="fas fa-list-check me-2 text-success"></i>IPs de confiance
+                </div>
+                <div class="card-body">
+                    <textarea name="trusted_ips" class="form-control font-monospace"
+                              rows="6" placeholder="82.66.56.201&#10;10.0.0.0/8&#10;192.168.1.0/24">{{ current.trusted_ips }}</textarea>
+                    <small class="text-muted mt-1 d-block">
+                        Une entrée par ligne. Accepte les IPs exactes (<code>82.66.56.201</code>)
+                        et les plages CIDR (<code>82.66.0.0/16</code>).
+                        Ces IPs contournent tous les blocages.
+                    </small>
+                </div>
+            </div>
+
+            {# Card Outil de diagnostic #}
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-stethoscope me-2 text-info"></i>Outil de diagnostic IP
+                    {% if not current.ipqs_api_key %}
+                        <span class="badge bg-warning text-dark ms-2">Clé IPQS manquante</span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <div class="input-group mb-2">
+                        <input type="text" class="form-control font-monospace" id="diagIpInput"
+                               placeholder="ex. 82.66.56.201" maxlength="45">
+                        <button type="button" class="btn btn-info btn-sm" id="diagBtn">
+                            <i class="fas fa-search me-1"></i>Analyser
+                        </button>
+                    </div>
+                    <div id="diagResult" class="diagnostic-result d-none"></div>
+                    <small class="text-muted">
+                        Interroge IPQualityScore en temps réel + évalue les règles locales.
+                    </small>
+                </div>
+            </div>
+
+        </div>{# /col-lg-5 #}
+
+        {# ===== COLONNE DROITE ===== #}
+        <div class="col-lg-7">
+            <div class="card h-auto">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-globe me-2 text-primary"></i>Pays autorisés</span>
+                    <span id="countryCount" class="badge bg-primary">{{ selected_codes|length }} / {{ total_countries }}</span>
+                </div>
+                <div class="card-body">
+                    {# Barre de recherche #}
+                    <input type="text" id="countrySearch" class="form-control form-control-sm mb-2"
+                           placeholder="Rechercher un pays...">
+
+                    {# Onglets régions #}
+                    <div class="d-flex flex-wrap gap-1 mb-2 region-tabs">
+                        <button type="button" class="btn btn-sm btn-outline-secondary active" data-region="all">
+                            Tous
+                        </button>
+                        {% for regionKey, regionLabel in region_labels %}
+                            <button type="button" class="btn btn-sm btn-outline-secondary" data-region="{{ regionKey }}">
+                                {{ regionLabel }}
+                            </button>
+                        {% endfor %}
+                    </div>
+
+                    {# Boutons sélection rapide #}
+                    <div class="d-flex gap-2 mb-3">
+                        <button type="button" class="btn btn-sm btn-outline-success" id="selectAll">
+                            <i class="fas fa-check-double me-1"></i>Tout sélectionner
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-danger" id="deselectAll">
+                            <i class="fas fa-times me-1"></i>Tout désélectionner
+                        </button>
+                    </div>
+
+                    {# Grille des pays #}
+                    <div class="country-grid" id="countryGrid">
+                        {% for regionKey, regionCountries in countries_by_region %}
+                            {% for country in regionCountries %}
+                                {% set isSelected = country.code in selected_codes %}
+                                <label class="country-card{{ isSelected ? ' selected' : '' }}"
+                                       data-region="{{ country.region }}"
+                                       data-name="{{ country.name|lower }}"
+                                       data-code="{{ country.code }}">
+                                    <input type="checkbox"
+                                           value="{{ country.code }}"
+                                           {% if isSelected %}checked{% endif %}>
+                                    <span class="country-flag">{{ country.code|country_flag }}</span>
+                                    <span class="country-name" title="{{ country.name }}">{{ country.name }}</span>
+                                </label>
+                            {% endfor %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>{# /col-lg-7 #}
+
+    </div>{# /row #}
+
+    {# Bouton sticky Enregistrer #}
+    <div class="sticky-save mt-3">
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save me-2"></i>Enregistrer les règles
+        </button>
+    </div>
+
+</form>
+{% endblock %}
+
+{% block admin_js %}
+<script nonce="{{ csp_nonce() }}">
+(function () {
+    'use strict';
+
+    // ── Sélection pays ──────────────────────────────────────────────────────
+    const grid   = document.getElementById('countryGrid');
+    const hidden = document.getElementById('allowedCountriesInput');
+    const count  = document.getElementById('countryCount');
+
+    function updateCount() {
+        const checked = grid.querySelectorAll('input[type=checkbox]:checked');
+        const codes = Array.from(checked).map(cb => cb.value);
+        hidden.value = codes.join(',');
+        count.textContent = codes.length + ' / {{ total_countries }}';
+    }
+
+    // Clic sur une carte
+    grid.addEventListener('click', function (e) {
+        const card = e.target.closest('.country-card');
+        if (!card) return;
+        const cb = card.querySelector('input[type=checkbox]');
+        if (!cb) return;
+        cb.checked = !cb.checked;
+        card.classList.toggle('selected', cb.checked);
+        updateCount();
+    });
+
+    // ── Filtrage région ─────────────────────────────────────────────────────
+    let activeRegion = 'all';
+    let searchQuery  = '';
+
+    document.querySelectorAll('[data-region]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            // Update active button
+            document.querySelectorAll('.region-tabs [data-region]').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            activeRegion = btn.dataset.region;
+            applyFilter();
+        });
+    });
+
+    document.getElementById('countrySearch').addEventListener('input', function () {
+        searchQuery = this.value.toLowerCase().trim();
+        applyFilter();
+    });
+
+    function applyFilter() {
+        grid.querySelectorAll('.country-card').forEach(function (card) {
+            const regionMatch = activeRegion === 'all' || card.dataset.region === activeRegion;
+            const nameMatch   = searchQuery === '' || card.dataset.name.includes(searchQuery)
+                                || card.dataset.code.toLowerCase().includes(searchQuery);
+            card.style.display = (regionMatch && nameMatch) ? '' : 'none';
+        });
+    }
+
+    // ── Tout sélectionner / désélectionner ─────────────────────────────────
+    document.getElementById('selectAll').addEventListener('click', function () {
+        grid.querySelectorAll('.country-card').forEach(function (card) {
+            if (card.style.display === 'none') return; // ignore filtered out
+            const cb = card.querySelector('input[type=checkbox]');
+            if (cb) { cb.checked = true; card.classList.add('selected'); }
+        });
+        updateCount();
+    });
+
+    document.getElementById('deselectAll').addEventListener('click', function () {
+        grid.querySelectorAll('.country-card').forEach(function (card) {
+            if (card.style.display === 'none') return;
+            const cb = card.querySelector('input[type=checkbox]');
+            if (cb) { cb.checked = false; card.classList.remove('selected'); }
+        });
+        updateCount();
+    });
+
+    // ── Outil de diagnostic ─────────────────────────────────────────────────
+    const diagBtn    = document.getElementById('diagBtn');
+    const diagInput  = document.getElementById('diagIpInput');
+    const diagResult = document.getElementById('diagResult');
+
+    diagBtn.addEventListener('click', function () {
+        const ip = diagInput.value.trim();
+        if (!ip) { diagInput.focus(); return; }
+
+        diagResult.classList.remove('d-none', 'has-error');
+        diagResult.textContent = 'Analyse en cours…';
+
+        fetch('{{ path('admin_security_access_diagnostic') }}?ip=' + encodeURIComponent(ip))
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                diagResult.classList.remove('d-none');
+                if (data.error) {
+                    diagResult.classList.add('has-error');
+                    diagResult.textContent = '⚠ ' + data.error;
+                } else {
+                    diagResult.classList.remove('has-error');
+                    diagResult.textContent = JSON.stringify(data, null, 2);
+                }
+            })
+            .catch(function (err) {
+                diagResult.classList.add('has-error');
+                diagResult.textContent = 'Erreur réseau : ' + err.message;
+            });
+    });
+
+    // Allow pressing Enter in diagnostic input
+    diagInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); diagBtn.click(); }
+    });
+
+    // Init count
+    updateCount();
+}());
+</script>
+{% endblock %}
