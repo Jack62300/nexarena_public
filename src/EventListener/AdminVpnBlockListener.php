@@ -35,7 +35,7 @@ class AdminVpnBlockListener
             return;
         }
 
-        if (!$this->settings->getBool('admin_vpn_block_enabled', true)) {
+        if (!$this->settings->getBool('admin_vpn_block_enabled', false)) {
             return;
         }
 

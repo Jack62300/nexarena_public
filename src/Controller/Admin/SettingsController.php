@@ -17,17 +17,6 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_RESPONSABLE')]
 class SettingsController extends AbstractController
 {
-    /**
-     * Clés gérées par une page dédiée — masquées du panneau settings générique.
-     */
-    private const MANAGED_ELSEWHERE = [
-        'country_block_enabled',
-        'vpn_block_enabled',
-        'admin_vpn_block_enabled',
-        'allowed_countries',
-        'trusted_ips',
-    ];
-
     private const CATEGORY_LABELS = [
         'general' => 'General',
         'banner' => 'Banniere & Accueil',
@@ -90,15 +79,7 @@ class SettingsController extends AbstractController
             }
         }
 
-        // Filtrer les clés gérées par des pages dédiées
         $settingsByCategory = $this->settingRepo->findAllGroupedByCategory();
-        foreach ($settingsByCategory as $cat => &$entries) {
-            $entries = array_filter(
-                $entries,
-                fn($s) => !in_array($s->getKey(), self::MANAGED_ELSEWHERE, true)
-            );
-        }
-        unset($entries);
 
         return $this->render('admin/settings/index.html.twig', [
             'settings_by_category' => $settingsByCategory,
@@ -207,8 +188,7 @@ class SettingsController extends AbstractController
         foreach ($settings as $setting) {
             $key = $setting->getKey();
 
-            // Skip clés gérées par des pages dédiées
-            if ($key === 'banner_slides' || in_array($key, self::MANAGED_ELSEWHERE, true)) {
+            if ($key === 'banner_slides') {
                 continue;
             }
 
