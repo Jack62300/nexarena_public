@@ -4,6 +4,7 @@ namespace App\EventListener;
 
 use App\Service\IpSecurityService;
 use App\Service\SettingsService;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
@@ -31,6 +32,7 @@ class IpAccessListener
     public function __construct(
         private IpSecurityService $ipSecurity,
         private SettingsService $settings,
+        private LoggerInterface $logger,
     ) {}
 
     public function __invoke(RequestEvent $event): void
@@ -49,18 +51,35 @@ class IpAccessListener
 
         $ip = $event->getRequest()->getClientIp() ?? '0.0.0.0';
 
+        $vpnBlockEnabled     = $this->settings->getBool('vpn_block_enabled', false);
+        $countryBlockEnabled = $this->settings->getBool('country_block_enabled', false);
+
+        $this->logger->debug('IpAccessListener check', [
+            'ip'                   => $ip,
+            'path'                 => $path,
+            'vpn_block_enabled'    => $vpnBlockEnabled,
+            'country_block_enabled'=> $countryBlockEnabled,
+        ]);
+
         // ── 1. Blocage VPN / Proxy / Tor (site entier) ──────────────────────
-        if ($this->settings->getBool('vpn_block_enabled', false)) {
-            if ($this->ipSecurity->isVpnOrProxy($ip)) {
+        if ($vpnBlockEnabled) {
+            $isVpn = $this->ipSecurity->isVpnOrProxy($ip);
+            $this->logger->debug('IpAccessListener VPN check', ['ip' => $ip, 'is_vpn' => $isVpn]);
+            if ($isVpn) {
+                $this->logger->warning('IpAccessListener: VPN bloqué', ['ip' => $ip, 'path' => $path]);
                 $event->setResponse($this->buildResponse('vpn', $ip));
                 return;
             }
         }
 
         // ── 2. Blocage par pays ──────────────────────────────────────────────
-        if ($this->settings->getBool('country_block_enabled', false)) {
-            if (!$this->ipSecurity->isCountryAllowed($ip)) {
-                $event->setResponse($this->buildResponse('country', $ip, $this->ipSecurity->getCountryCode($ip)));
+        if ($countryBlockEnabled) {
+            $country = $this->ipSecurity->getCountryCode($ip);
+            $allowed = $this->ipSecurity->isCountryAllowed($ip);
+            $this->logger->debug('IpAccessListener country check', ['ip' => $ip, 'country' => $country, 'allowed' => $allowed]);
+            if (!$allowed) {
+                $this->logger->warning('IpAccessListener: Pays bloqué', ['ip' => $ip, 'country' => $country, 'path' => $path]);
+                $event->setResponse($this->buildResponse('country', $ip, $country));
                 return;
             }
         }

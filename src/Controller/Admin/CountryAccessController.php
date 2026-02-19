@@ -2,9 +2,11 @@
 
 namespace App\Controller\Admin;
 
+use App\Service\IpSecurityService;
 use App\Service\SettingsService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -234,6 +236,7 @@ class CountryAccessController extends AbstractController
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly SettingsService $settings,
+        private readonly IpSecurityService $ipSecurity,
     ) {}
 
     #[Route('', name: 'index', methods: ['GET'])]
@@ -276,6 +279,69 @@ class CountryAccessController extends AbstractController
         $count = count($valid);
         $this->addFlash('success', "Configuration sauvegardée. $count pays autorisé(s).");
         return $this->redirectToRoute('admin_country_access_index');
+    }
+
+    /**
+     * Diagnostic : teste l'IP courante (ou une IP fournie) et retourne les résultats en JSON.
+     * GET /admin/securite/pays/diagnostic?ip=1.2.3.4&flush=1
+     */
+    #[Route('/diagnostic', name: 'diagnostic', methods: ['GET'])]
+    public function diagnostic(Request $request): JsonResponse
+    {
+        $ip = $request->query->get('ip') ?: ($request->getClientIp() ?? '0.0.0.0');
+
+        // Vider le cache si demandé
+        if ($request->query->getBoolean('flush')) {
+            $this->ipSecurity->clearCache($ip);
+        }
+
+        $apiKey      = $this->settings->get('ipqs_api_key', '');
+        $ipqsData    = $this->ipSecurity->getFullReport($ip);
+        $isVpn       = $this->ipSecurity->isVpnOrProxy($ip);
+        $country     = $this->ipSecurity->getCountryCode($ip);
+        $allowed     = $this->ipSecurity->isCountryAllowed($ip);
+
+        $allowedStr          = $this->settings->get('allowed_countries', '');
+        $countryBlockEnabled = $this->settings->getBool('country_block_enabled', false);
+        $vpnBlockEnabled     = $this->settings->getBool('vpn_block_enabled', false);
+        $adminVpnBlock       = $this->settings->getBool('admin_vpn_block_enabled', true);
+
+        $wouldBeBlockedVpn     = $vpnBlockEnabled && $isVpn;
+        $wouldBeBlockedCountry = $countryBlockEnabled && !$allowed;
+
+        return $this->json([
+            'ip_tested'              => $ip,
+            'ip_from_request'        => $request->getClientIp(),
+            'api_key_configured'     => !empty(trim($apiKey)),
+            'api_key_preview'        => empty(trim($apiKey)) ? '❌ NON CONFIGURÉE' : '✅ ' . substr($apiKey, 0, 8) . '...',
+            'settings' => [
+                'vpn_block_enabled'      => $vpnBlockEnabled,
+                'country_block_enabled'  => $countryBlockEnabled,
+                'admin_vpn_block_enabled'=> $adminVpnBlock,
+                'allowed_countries'      => $allowedStr ?: '(vide = tous autorisés)',
+            ],
+            'ipqs_result' => [
+                'success'     => $ipqsData['success'] ?? false,
+                'error'       => $ipqsData['error'] ?? false,
+                'country'     => $country ?: '(indéterminé)',
+                'vpn'         => $ipqsData['vpn'] ?? false,
+                'proxy'       => $ipqsData['proxy'] ?? false,
+                'tor'         => $ipqsData['tor'] ?? false,
+                'active_vpn'  => $ipqsData['active_vpn'] ?? false,
+                'active_tor'  => $ipqsData['active_tor'] ?? false,
+                'fraud_score' => $ipqsData['fraud_score'] ?? 0,
+                'isp'         => $ipqsData['ISP'] ?? '',
+                'city'        => ($ipqsData['city'] ?? '') . ', ' . ($ipqsData['region'] ?? ''),
+            ],
+            'verdict' => [
+                'is_vpn_detected'         => $isVpn,
+                'country_in_allowed_list' => $allowed,
+                'would_be_blocked_vpn'    => $wouldBeBlockedVpn,
+                'would_be_blocked_country'=> $wouldBeBlockedCountry,
+                'would_be_blocked_total'  => $wouldBeBlockedVpn || $wouldBeBlockedCountry,
+                'reason'                  => $wouldBeBlockedVpn ? 'VPN/proxy détecté' : ($wouldBeBlockedCountry ? "Pays $country non autorisé" : 'Aucun blocage actif'),
+            ],
+        ]);
     }
 
     // ─── Helpers ────────────────────────────────────────────────────────
