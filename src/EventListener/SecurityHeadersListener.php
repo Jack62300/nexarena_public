@@ -62,7 +62,7 @@ class SecurityHeadersListener
                 "connect-src 'self' https://www.paypal.com https://www.sandbox.paypal.com",
                 "object-src 'none'",
                 "base-uri 'self'",
-                "form-action 'self' https://www.paypal.com https://www.sandbox.paypal.com https://steamcommunity.com",
+                "form-action 'self' https://www.paypal.com https://www.sandbox.paypal.com https://steamcommunity.com https://discord.com",
                 "frame-ancestors 'self'",
                 "upgrade-insecure-requests",
             ]);
