@@ -53,6 +53,11 @@ class AdminVpnBlockListener
 
         $ip = $event->getRequest()->getClientIp() ?? '0.0.0.0';
 
+        // IP de confiance → bypass
+        if ($this->ipSecurity->isTrustedIp($ip)) {
+            return;
+        }
+
         if ($this->ipSecurity->isVpnOrProxy($ip)) {
             $event->setResponse(new Response(
                 $this->buildBlockPage($ip),

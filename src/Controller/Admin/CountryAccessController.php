@@ -249,6 +249,7 @@ class CountryAccessController extends AbstractController
             'blockEnabled'   => $this->settings->getBool('country_block_enabled', false),
             'vpnBlockSite'   => $this->settings->getBool('vpn_block_enabled', false),
             'adminVpnBlock'  => $this->settings->getBool('admin_vpn_block_enabled', true),
+            'trustedIps'     => $this->settings->get('trusted_ips', ''),
         ]);
     }
 
@@ -268,6 +269,12 @@ class CountryAccessController extends AbstractController
         );
         sort($valid);
         $this->saveSettingValue('allowed_countries', implode(',', $valid));
+
+        // ── IPs de confiance ─────────────────────────────────────────────
+        $rawTrusted = trim((string) $request->request->get('trusted_ips', ''));
+        // Normalise : trim chaque ligne, supprime les doublons et les vides
+        $lines = array_unique(array_filter(array_map('trim', preg_split('/[\r\n]+/', $rawTrusted))));
+        $this->saveSettingValue('trusted_ips', implode("\n", $lines));
 
         // ── Toggles ──────────────────────────────────────────────────────
         $this->saveSettingBool('country_block_enabled', $request->request->has('country_block_enabled'));
@@ -296,6 +303,7 @@ class CountryAccessController extends AbstractController
         }
 
         $apiKey      = $this->settings->get('ipqs_api_key', '');
+        $isTrusted   = $this->ipSecurity->isTrustedIp($ip);
         $ipqsData    = $this->ipSecurity->getFullReport($ip);
         $isVpn       = $this->ipSecurity->isVpnOrProxy($ip);
         $country     = $this->ipSecurity->getCountryCode($ip);
@@ -306,11 +314,12 @@ class CountryAccessController extends AbstractController
         $vpnBlockEnabled     = $this->settings->getBool('vpn_block_enabled', false);
         $adminVpnBlock       = $this->settings->getBool('admin_vpn_block_enabled', true);
 
-        $wouldBeBlockedVpn     = $vpnBlockEnabled && $isVpn;
-        $wouldBeBlockedCountry = $countryBlockEnabled && !$allowed;
+        $wouldBeBlockedVpn     = !$isTrusted && $vpnBlockEnabled && $isVpn;
+        $wouldBeBlockedCountry = !$isTrusted && $countryBlockEnabled && !$allowed;
 
         return $this->json([
             'ip_tested'              => $ip,
+            'is_trusted'             => $isTrusted,
             'ip_from_request'        => $request->getClientIp(),
             'api_key_configured'     => !empty(trim($apiKey)),
             'api_key_preview'        => empty(trim($apiKey)) ? '❌ NON CONFIGURÉE' : '✅ ' . substr($apiKey, 0, 8) . '...',

@@ -51,6 +51,12 @@ class IpAccessListener
 
         $ip = $event->getRequest()->getClientIp() ?? '0.0.0.0';
 
+        // ── IP de confiance → bypass total ──────────────────────────────────
+        if ($this->ipSecurity->isTrustedIp($ip)) {
+            $this->logger->debug('IpAccessListener: IP de confiance, bypass', ['ip' => $ip]);
+            return;
+        }
+
         $vpnBlockEnabled     = $this->settings->getBool('vpn_block_enabled', false);
         $countryBlockEnabled = $this->settings->getBool('country_block_enabled', false);
 

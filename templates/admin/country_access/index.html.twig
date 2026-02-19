@@ -242,6 +242,21 @@
                 </label>
             </div>
 
+            {# ── Whitelist IPs de confiance ── #}
+            <div style="margin-top:8px;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                    <i class="fas fa-shield-check" style="color:#45f882;"></i>
+                    <span style="font-size:.9rem;font-weight:600;color:var(--text-primary);">IPs de confiance (whitelist)</span>
+                </div>
+                <div style="font-size:.78rem;color:var(--text-secondary);margin-bottom:10px;">
+                    Ces IPs <strong>bypassent tous les checks</strong> (VPN, pays). Une entrée par ligne.<br>
+                    Supporte IP exacte <code>82.66.56.201</code> et plage CIDR <code>82.66.0.0/16</code>.
+                </div>
+                <textarea name="trusted_ips" rows="5"
+                    style="width:100%;padding:10px 13px;background:var(--bg-darker);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-size:.825rem;font-family:monospace;resize:vertical;line-height:1.6;"
+                    placeholder="82.66.56.201&#10;192.168.0.0/24&#10;10.0.0.1">{{ trustedIps }}</textarea>
+            </div>
+
         </div>
     </div>
 
@@ -545,6 +560,10 @@
         html += sep('Réseau');
         html += row('IP testée',         '<strong>' + d.ip_tested + '</strong>');
         html += row('IP vue par Symfony', d.ip_from_request || '<span class="ca-diag-warn">null</span>');
+        html += row('IP de confiance (whitelist)', d.is_trusted ? '<span class="ca-diag-ok">✅ OUI — bypass total actif</span>' : '<span style="color:var(--text-secondary);">non</span>');
+        if (d.is_trusted) {
+            html += '<div style="background:rgba(69,248,130,.08);border:1px solid rgba(69,248,130,.2);border-radius:8px;padding:10px 14px;margin:8px 0;font-size:.85rem;color:#45f882;"><i class="fas fa-shield-check me-1"></i><strong>IP whitelistée — aucun blocage ne s\'applique.</strong></div>';
+        }
 
         html += sep('Clé API IPQualityScore');
         html += row('Configurée', d.api_key_preview);

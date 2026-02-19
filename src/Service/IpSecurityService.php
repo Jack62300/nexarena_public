@@ -138,6 +138,68 @@ class IpSecurityService
     }
 
     /**
+     * Retourne true si l'IP est dans la liste blanche de confiance.
+     * Supporte les IPs exactes (ex: 82.66.56.201) et les plages CIDR (ex: 82.66.0.0/16).
+     * Liste lue depuis le setting `trusted_ips` (une entrée par ligne).
+     */
+    public function isTrustedIp(string $ip): bool
+    {
+        $raw = $this->settings->get('trusted_ips', '');
+        if (empty(trim($raw))) {
+            return false;
+        }
+
+        $entries = array_filter(array_map('trim', preg_split('/[\r\n,]+/', $raw)));
+
+        foreach ($entries as $entry) {
+            if ($this->ipMatchesEntry($ip, $entry)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Vérifie si une IP correspond à une entrée (IP exacte ou CIDR).
+     */
+    private function ipMatchesEntry(string $ip, string $entry): bool
+    {
+        $entry = trim($entry);
+        if ($entry === '') {
+            return false;
+        }
+
+        // Plage CIDR (ex: 82.66.0.0/16)
+        if (str_contains($entry, '/')) {
+            return $this->ipInCidr($ip, $entry);
+        }
+
+        // IP exacte
+        return $ip === $entry;
+    }
+
+    /**
+     * Vérifie si une IP est dans une plage CIDR (IPv4 uniquement).
+     */
+    private function ipInCidr(string $ip, string $cidr): bool
+    {
+        [$subnet, $bits] = explode('/', $cidr, 2);
+        $bits = (int) $bits;
+
+        $ipLong     = ip2long($ip);
+        $subnetLong = ip2long($subnet);
+
+        if ($ipLong === false || $subnetLong === false || $bits < 0 || $bits > 32) {
+            return false;
+        }
+
+        $mask = $bits === 0 ? 0 : (~0 << (32 - $bits));
+
+        return ($ipLong & $mask) === ($subnetLong & $mask);
+    }
+
+    /**
      * Retourne les données complètes pour le diagnostic (commande app:check-ip).
      */
     public function getFullReport(string $ip): array

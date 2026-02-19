@@ -127,6 +127,7 @@ class InitSettingsCommand extends Command
         ['key' => 'vpn_block_enabled', 'value' => '0', 'type' => 'boolean', 'label' => 'Bloquer VPN/Proxy sur tout le site', 'description' => 'Refuser l\'acces au site entier aux connexions VPN, proxy et Tor. Necessite la cle API IPQualityScore.', 'category' => 'securite', 'position' => 4],
         ['key' => 'country_block_enabled', 'value' => '0', 'type' => 'boolean', 'label' => 'Filtrage par pays active', 'description' => 'Bloquer les visiteurs dont le pays n\'est pas dans la liste des pays autorises. Necessite la cle API IPQualityScore.', 'category' => 'securite', 'position' => 5],
         ['key' => 'allowed_countries', 'value' => '', 'type' => 'text', 'label' => 'Pays autorises (codes ISO)', 'description' => 'Codes pays ISO 3166-1 alpha-2 separes par des virgules. Ex: FR,BE,CH,LU,MC,CA. Laisser vide = tous les pays autorises.', 'category' => 'securite', 'position' => 6],
+        ['key' => 'trusted_ips', 'value' => '', 'type' => 'textarea', 'label' => 'IPs de confiance (whitelist)', 'description' => 'IPs ou plages CIDR exemptees de tous les checks (VPN, pays). Une entree par ligne. Supporte IPv4 exacte (82.66.56.201) et CIDR (82.66.0.0/16).', 'category' => 'securite', 'position' => 7],
 
         // ========== PAIEMENT ==========
         ['key' => 'paypal_client_id', 'value' => '', 'type' => 'secret', 'label' => 'PayPal Client ID', 'description' => 'Client ID de l\'application PayPal (developer.paypal.com)', 'category' => 'paiement', 'position' => 0],

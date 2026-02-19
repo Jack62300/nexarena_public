@@ -25,6 +25,7 @@ class SettingsController extends AbstractController
         'vpn_block_enabled',
         'admin_vpn_block_enabled',
         'allowed_countries',
+        'trusted_ips',
     ];
 
     private const CATEGORY_LABELS = [
