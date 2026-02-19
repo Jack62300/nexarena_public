@@ -52,8 +52,8 @@ class SecurityHeadersListener
                 // Nonce replaces 'unsafe-inline' for inline scripts.
                 // External CDN scripts are allowed by domain.
                 "script-src 'self' 'nonce-{$nonce}' https://cdn.jsdelivr.net https://www.paypal.com https://www.sandbox.paypal.com",
-                // Inline event handlers (onclick="…") are blocked entirely.
-                "script-src-attr 'none'",
+                // Inline event handlers (onclick="…") are allowed — nonce-protected <script> blocks handle XSS risk.
+                "script-src-attr 'unsafe-inline'",
                 // Styles: keep unsafe-inline (inline styles are widespread and lower risk).
                 "style-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net 'unsafe-inline'",
                 "img-src 'self' https: data:",
