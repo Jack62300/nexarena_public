@@ -90,11 +90,12 @@ class IpSecurityService
             return false; // fail-open
         }
 
-        return !empty($data['vpn'])
-            || !empty($data['tor'])
-            || !empty($data['active_vpn'])
+        // On bloque uniquement les VPN/Tor actifs confirmés.
+        // Le champ "proxy" est volontairement exclu : IPQS le retourne true
+        // pour certains FAI grand public (Free, SFR…) générant des faux positifs.
+        return !empty($data['active_vpn'])
             || !empty($data['active_tor'])
-            || !empty($data['proxy']);
+            || (!empty($data['vpn']) && !empty($data['tor']));
     }
 
     /**
