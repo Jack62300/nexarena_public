@@ -172,7 +172,10 @@
         </div>
     </div>
 
-    <script>
+{% endblock %}
+
+{% block admin_js %}
+    <script nonce="{{ csp_nonce() }}">
     (function () {
         var csrfTokens = {
             {% for user in users %}
