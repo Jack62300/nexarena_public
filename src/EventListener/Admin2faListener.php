@@ -3,7 +3,6 @@
 namespace App\EventListener;
 
 use App\Entity\User;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
@@ -17,19 +16,12 @@ class Admin2faListener
     public function __construct(
         private TokenStorageInterface $tokenStorage,
         private UrlGeneratorInterface $urlGenerator,
-        #[Autowire('%kernel.environment%')]
-        private string $kernelEnvironment,
     ) {
     }
 
     public function __invoke(RequestEvent $event): void
     {
         if (!$event->isMainRequest()) {
-            return;
-        }
-
-        // Skip in dev environment
-        if ($this->kernelEnvironment === 'dev') {
             return;
         }
 
