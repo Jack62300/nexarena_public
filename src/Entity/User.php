@@ -116,6 +116,22 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     #[ORM\Column(nullable: true)]
     private ?array $gameUsernames = null;
 
+    #[ORM\Column]
+    private bool $isBanned = false;
+
+    #[ORM\Column(length: 500, nullable: true)]
+    private ?string $banReason = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $bannedAt = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $banExpiresAt = null;
+
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(onDelete: 'SET NULL')]
+    private ?User $bannedBy = null;
+
     #[ORM\Column(options: ['default' => '{"email":false,"discord":false,"steam":false,"twitch":false,"games":false,"servers":true}'])]
     private array $profileVisibility = [
         'email' => false,
@@ -614,6 +630,62 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     {
         $this->pendingDeviceIp = $ip;
         return $this;
+    }
+
+    public function isBanned(): bool
+    {
+        return $this->isBanned;
+    }
+
+    public function isCurrentlyBanned(): bool
+    {
+        if (!$this->isBanned) {
+            return false;
+        }
+
+        if ($this->banExpiresAt !== null && $this->banExpiresAt <= new \DateTimeImmutable()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public function getBanReason(): ?string
+    {
+        return $this->banReason;
+    }
+
+    public function getBannedAt(): ?\DateTimeImmutable
+    {
+        return $this->bannedAt;
+    }
+
+    public function getBanExpiresAt(): ?\DateTimeImmutable
+    {
+        return $this->banExpiresAt;
+    }
+
+    public function getBannedBy(): ?User
+    {
+        return $this->bannedBy;
+    }
+
+    public function ban(?string $reason, ?\DateTimeImmutable $expiresAt, User $bannedBy): void
+    {
+        $this->isBanned = true;
+        $this->banReason = $reason;
+        $this->bannedAt = new \DateTimeImmutable();
+        $this->banExpiresAt = $expiresAt;
+        $this->bannedBy = $bannedBy;
+    }
+
+    public function unban(): void
+    {
+        $this->isBanned = false;
+        $this->banReason = null;
+        $this->bannedAt = null;
+        $this->banExpiresAt = null;
+        $this->bannedBy = null;
     }
 
     #[ORM\PrePersist]

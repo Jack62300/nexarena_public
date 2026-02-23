@@ -15,6 +15,17 @@ class UserChecker implements UserCheckerInterface
             return;
         }
 
+        if ($user->isCurrentlyBanned()) {
+            $msg = 'Votre compte a été banni.';
+            if ($user->getBanReason()) {
+                $msg .= ' Raison : ' . $user->getBanReason() . '.';
+            }
+            if ($user->getBanExpiresAt()) {
+                $msg .= ' Expiration : ' . $user->getBanExpiresAt()->format('d/m/Y à H:i') . '.';
+            }
+            throw new CustomUserMessageAccountStatusException($msg);
+        }
+
         if (!$user->isEmailVerified()) {
             throw new CustomUserMessageAccountStatusException(
                 'Votre adresse email n\'est pas vérifiée. Vérifiez votre boîte mail pour activer votre compte.'

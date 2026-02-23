@@ -156,6 +156,76 @@ class UserController extends AbstractController
         return $this->redirectToRoute('admin_users_edit', ['id' => $user->getId()]);
     }
 
+    #[Route('/{id}/ban', name: 'ban', methods: ['POST'])]
+    #[IsGranted('ROLE_MANAGER')]
+    public function ban(User $user, Request $request): Response
+    {
+        if (!$this->isCsrfTokenValid('user_ban_' . $user->getId(), $request->request->get('_token'))) {
+            $this->addFlash('error', 'Token CSRF invalide.');
+            return $this->redirectToRoute('admin_users_list');
+        }
+
+        if ($user === $this->getUser()) {
+            $this->addFlash('error', 'Vous ne pouvez pas vous bannir vous-même.');
+            return $this->redirectToRoute('admin_users_list');
+        }
+
+        $roleHierarchy = ['ROLE_EDITEUR' => 1, 'ROLE_MANAGER' => 2, 'ROLE_RESPONSABLE' => 3, 'ROLE_DEVELOPPEUR' => 4, 'ROLE_FONDATEUR' => 5];
+        $currentUser = $this->getUser();
+        $currentMaxLevel = 0;
+        foreach ($currentUser->getRoles() as $r) {
+            $currentMaxLevel = max($currentMaxLevel, $roleHierarchy[$r] ?? 0);
+        }
+        $targetMaxLevel = 0;
+        foreach ($user->getRoles() as $r) {
+            $targetMaxLevel = max($targetMaxLevel, $roleHierarchy[$r] ?? 0);
+        }
+        if ($targetMaxLevel >= $currentMaxLevel) {
+            $this->addFlash('error', 'Vous ne pouvez pas bannir un utilisateur avec un rôle égal ou supérieur au vôtre.');
+            return $this->redirectToRoute('admin_users_list');
+        }
+
+        $type = $request->request->get('type', 'permanent');
+        $reason = trim($request->request->get('reason', '')) ?: null;
+
+        $expiresAt = null;
+        if ($type === 'temporary') {
+            $duration = max(1, min(365, $request->request->getInt('duration', 1)));
+            $unit = $request->request->get('duration_unit', 'days');
+            $interval = $unit === 'hours'
+                ? new \DateInterval('PT' . $duration . 'H')
+                : new \DateInterval('P' . $duration . 'D');
+            $expiresAt = (new \DateTimeImmutable())->add($interval);
+        }
+
+        $user->ban($reason, $expiresAt, $currentUser);
+        $this->em->flush();
+
+        $this->addFlash('success', sprintf(
+            'Utilisateur %s banni %s.',
+            $user->getUsername(),
+            $expiresAt ? 'jusqu\'au ' . $expiresAt->format('d/m/Y à H:i') : 'définitivement'
+        ));
+
+        return $this->redirectToRoute('admin_users_list');
+    }
+
+    #[Route('/{id}/unban', name: 'unban', methods: ['POST'])]
+    #[IsGranted('ROLE_MANAGER')]
+    public function unban(User $user, Request $request): Response
+    {
+        if (!$this->isCsrfTokenValid('user_unban_' . $user->getId(), $request->request->get('_token'))) {
+            $this->addFlash('error', 'Token CSRF invalide.');
+            return $this->redirectToRoute('admin_users_list');
+        }
+
+        $user->unban();
+        $this->em->flush();
+
+        $this->addFlash('success', 'Le ban de ' . $user->getUsername() . ' a été levé.');
+        return $this->redirectToRoute('admin_users_list');
+    }
+
     #[Route('/{id}/delete', name: 'delete', methods: ['POST'])]
     #[IsGranted('users.delete')]
     public function delete(User $user, Request $request): Response

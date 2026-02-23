@@ -22,7 +22,7 @@
             </thead>
             <tbody>
                 {% for user in users %}
-                    <tr>
+                    <tr {% if user.isCurrentlyBanned() %}style="opacity:.7;"{% endif %}>
                         <td>
                             <div style="display:flex;align-items:center;gap:10px;">
                                 {% set av = user_avatar(user) %}
@@ -33,7 +33,15 @@
                                         {{ user.username|slice(0, 1)|upper }}
                                     </div>
                                 {% endif %}
-                                {{ user.username }}
+                                <div>
+                                    {{ user.username }}
+                                    {% if user.isCurrentlyBanned() %}
+                                        <span style="display:inline-block;margin-left:6px;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:600;background:rgba(255,71,87,.15);color:#ff4757;border:1px solid rgba(255,71,87,.3);"
+                                              title="{{ user.banReason }}{% if user.banExpiresAt %} — expire le {{ user.banExpiresAt|date('d/m/Y H:i') }}{% endif %}">
+                                            <i class="fas fa-ban" style="font-size:9px;"></i> BANNI{% if user.banExpiresAt %} temp.{% endif %}
+                                        </span>
+                                    {% endif %}
+                                </div>
                             </div>
                         </td>
                         <td style="color:var(--text-secondary);">{{ user.email }}</td>
@@ -59,14 +67,35 @@
                         <td>
                             <div style="display:flex;gap:8px;">
                                 {% if is_granted('ROLE_RESPONSABLE') %}
-                                    <a href="{{ path('admin_users_edit', {id: user.id}) }}" class="btn-admin btn-admin--outline btn-admin--sm">
+                                    <a href="{{ path('admin_users_edit', {id: user.id}) }}" class="btn-admin btn-admin--outline btn-admin--sm" title="Modifier">
                                         <i class="fas fa-edit"></i>
                                     </a>
                                 {% endif %}
+
+                                {% if is_granted('ROLE_MANAGER') and user != app.user %}
+                                    {% if user.isCurrentlyBanned() %}
+                                        <form method="post" action="{{ path('admin_users_unban', {id: user.id}) }}" style="display:inline;" onsubmit="return confirm('Lever le ban de {{ user.username }} ?');">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('user_unban_' ~ user.id) }}">
+                                            <button type="submit" class="btn-admin btn-admin--sm" style="background:rgba(69,248,130,.15);color:#45f882;border:1px solid rgba(69,248,130,.3);" title="Lever le ban">
+                                                <i class="fas fa-unlock"></i>
+                                            </button>
+                                        </form>
+                                    {% else %}
+                                        <button type="button"
+                                                class="btn-admin btn-admin--sm js-ban-btn"
+                                                style="background:rgba(255,71,87,.12);color:#ff4757;border:1px solid rgba(255,71,87,.25);"
+                                                title="Bannir"
+                                                data-user-id="{{ user.id }}"
+                                                data-username="{{ user.username }}">
+                                            <i class="fas fa-ban"></i>
+                                        </button>
+                                    {% endif %}
+                                {% endif %}
+
                                 {% if is_granted('ROLE_FONDATEUR') and user != app.user %}
                                     <form method="post" action="{{ path('admin_users_delete', {id: user.id}) }}" onsubmit="return confirm('Supprimer cet utilisateur ?');" style="display:inline;">
                                         <input type="hidden" name="_token" value="{{ csrf_token('delete_' ~ user.id) }}">
-                                        <button type="submit" class="btn-admin btn-admin--sm" style="background:var(--danger);color:#fff;border:none;">
+                                        <button type="submit" class="btn-admin btn-admin--sm" style="background:var(--danger);color:#fff;border:none;" title="Supprimer">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </form>
@@ -84,4 +113,120 @@
             </tbody>
         </table>
     </div>
+
+    {# ── Ban modal ── #}
+    <div id="banModal" style="display:none;position:fixed;inset:0;z-index:1000;align-items:center;justify-content:center;">
+        <div style="position:absolute;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);" id="banModalBackdrop"></div>
+        <div style="position:relative;background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:32px;width:100%;max-width:460px;margin:16px;">
+            <h3 style="margin:0 0 4px;font-size:18px;">Bannir l'utilisateur</h3>
+            <p id="banModalSubtitle" style="color:var(--text-secondary);font-size:14px;margin:0 0 24px;"></p>
+
+            <form id="banForm" method="post">
+                <input type="hidden" name="_token" id="banCsrfToken">
+
+                <div style="margin-bottom:18px;">
+                    <label style="display:block;font-size:13px;font-weight:500;margin-bottom:10px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;">Type de ban</label>
+                    <div style="display:flex;gap:10px;">
+                        <label style="flex:1;cursor:pointer;">
+                            <input type="radio" name="type" value="permanent" checked onchange="toggleDuration(this)" style="display:none;">
+                            <div class="ban-type-card ban-type-card--active" data-value="permanent" style="border:2px solid var(--accent);border-radius:10px;padding:12px;text-align:center;font-size:14px;font-weight:600;">
+                                <i class="fas fa-infinity" style="display:block;font-size:20px;margin-bottom:4px;color:var(--accent);"></i>
+                                Permanent
+                            </div>
+                        </label>
+                        <label style="flex:1;cursor:pointer;">
+                            <input type="radio" name="type" value="temporary" onchange="toggleDuration(this)" style="display:none;">
+                            <div class="ban-type-card" data-value="temporary" style="border:2px solid var(--border);border-radius:10px;padding:12px;text-align:center;font-size:14px;font-weight:600;color:var(--text-secondary);">
+                                <i class="fas fa-clock" style="display:block;font-size:20px;margin-bottom:4px;"></i>
+                                Temporaire
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div id="durationGroup" style="display:none;margin-bottom:18px;">
+                    <label style="display:block;font-size:13px;font-weight:500;margin-bottom:8px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;">Durée</label>
+                    <div style="display:flex;gap:8px;">
+                        <input type="number" name="duration" min="1" max="365" value="7" style="flex:1;background:var(--bg-card-hover,rgba(255,255,255,.04));border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text-primary);font-size:15px;outline:none;">
+                        <select name="duration_unit" style="flex:1;background:var(--bg-card-hover,rgba(255,255,255,.04));border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text-primary);font-size:14px;outline:none;">
+                            <option value="hours">Heure(s)</option>
+                            <option value="days" selected>Jour(s)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:24px;">
+                    <label style="display:block;font-size:13px;font-weight:500;margin-bottom:8px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;">Raison <span style="font-weight:400;text-transform:none;">(optionnel)</span></label>
+                    <textarea name="reason" rows="3" maxlength="500" placeholder="Ex : spam, triche, comportement toxique…" style="width:100%;background:var(--bg-card-hover,rgba(255,255,255,.04));border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text-primary);font-size:14px;resize:vertical;outline:none;"></textarea>
+                </div>
+
+                <div style="display:flex;gap:10px;">
+                    <button type="button" id="banModalCancel" style="flex:1;padding:12px;background:transparent;border:1px solid var(--border);border-radius:10px;color:var(--text-secondary);font-size:14px;font-weight:600;cursor:pointer;">
+                        Annuler
+                    </button>
+                    <button type="submit" style="flex:1;padding:12px;background:#ff4757;border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;">
+                        <i class="fas fa-ban"></i> Confirmer le ban
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+    (function () {
+        var csrfTokens = {
+            {% for user in users %}
+                {% if is_granted('ROLE_MANAGER') and user != app.user and not user.isCurrentlyBanned() %}
+                    '{{ user.id }}': '{{ csrf_token('user_ban_' ~ user.id) }}',
+                {% endif %}
+            {% endfor %}
+        };
+        var banUrls = {
+            {% for user in users %}
+                {% if is_granted('ROLE_MANAGER') and user != app.user and not user.isCurrentlyBanned() %}
+                    '{{ user.id }}': '{{ path('admin_users_ban', {id: user.id}) }}',
+                {% endif %}
+            {% endfor %}
+        };
+
+        var modal = document.getElementById('banModal');
+
+        document.querySelectorAll('.js-ban-btn').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var userId = btn.dataset.userId;
+                var username = btn.dataset.username;
+                document.getElementById('banModalSubtitle').textContent = 'Utilisateur : ' + username;
+                document.getElementById('banForm').action = banUrls[userId];
+                document.getElementById('banCsrfToken').value = csrfTokens[userId];
+                // Reset form
+                document.querySelector('input[name="type"][value="permanent"]').checked = true;
+                document.getElementById('durationGroup').style.display = 'none';
+                document.querySelectorAll('.ban-type-card').forEach(function (c) {
+                    c.style.border = '2px solid var(--border)';
+                    c.style.color = 'var(--text-secondary)';
+                });
+                document.querySelector('.ban-type-card[data-value="permanent"]').style.border = '2px solid var(--accent)';
+                document.querySelector('.ban-type-card[data-value="permanent"]').style.color = 'inherit';
+                modal.style.display = 'flex';
+            });
+        });
+
+        document.getElementById('banModalCancel').addEventListener('click', closeModal);
+        document.getElementById('banModalBackdrop').addEventListener('click', closeModal);
+
+        function closeModal() {
+            modal.style.display = 'none';
+        }
+    }());
+
+    function toggleDuration(radio) {
+        var group = document.getElementById('durationGroup');
+        group.style.display = radio.value === 'temporary' ? 'block' : 'none';
+        document.querySelectorAll('.ban-type-card').forEach(function (c) {
+            var active = c.dataset.value === radio.value;
+            c.style.border = active ? '2px solid var(--accent)' : '2px solid var(--border)';
+            c.style.color = active ? 'inherit' : 'var(--text-secondary)';
+        });
+    }
+    </script>
 {% endblock %}
