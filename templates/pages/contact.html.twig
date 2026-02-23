@@ -1,0 +1,569 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Contact — {{ setting('site_name', 'Nexarena') }}{% endblock %}
+{% block meta_description %}Contactez l'équipe {{ setting('site_name', 'Nexarena') }} pour toute question, signalement, partenariat ou demande RGPD.{% endblock %}
+
+{% block body %}
+
+{# ===== HERO ===== #}
+<section class="nx-contact-hero">
+    <div class="nx-contact-hero__glow"></div>
+    <div class="container">
+        <nav class="nx-contact-breadcrumb">
+            <a href="{{ path('app_home') }}">Accueil</a>
+            <i class="fas fa-chevron-right"></i>
+            <span>Contact</span>
+        </nav>
+        <h1 class="nx-contact-hero__title">Nous <span>contacter</span></h1>
+        <p class="nx-contact-hero__sub">Une question, un signalement, un partenariat ? Notre équipe vous répond sous 2 à 5 jours ouvrés.</p>
+    </div>
+</section>
+
+{# ===== CONTENT ===== #}
+<section class="nx-contact-section">
+    <div class="container">
+        <div class="row g-5 justify-content-center">
+
+            {# ── FORMULAIRE ── #}
+            <div class="col-lg-7">
+
+                {% if success %}
+                <div class="nx-contact-success">
+                    <div class="nx-contact-success__icon">✅</div>
+                    <h2>Message envoyé !</h2>
+                    <p>Votre message a bien été transmis à notre équipe. Vous recevrez une copie par email. Nous vous répondrons dans les meilleurs délais.</p>
+                    <a href="{{ path('page_contact') }}" class="nx-contact-success__btn">Envoyer un autre message</a>
+                </div>
+                {% else %}
+
+                <div class="nx-contact-card">
+                    <div class="nx-contact-card__header">
+                        <i class="fas fa-paper-plane"></i>
+                        <span>Formulaire de contact</span>
+                    </div>
+
+                    <form method="post" action="{{ path('page_contact') }}" class="nx-contact-form" novalidate>
+                        <input type="hidden" name="_token" value="{{ csrf_token('contact_form') }}">
+
+                        {# Honeypot anti-bot (champ caché) #}
+                        <input type="text" name="website" style="display:none!important" tabindex="-1" autocomplete="off">
+
+                        {# ── Ligne Prénom / Nom ── #}
+                        <div class="nx-contact-row">
+                            <div class="nx-contact-field">
+                                <label class="nx-contact-label" for="prenom">
+                                    Prénom <span class="nx-contact-req">*</span>
+                                </label>
+                                <input type="text" id="prenom" name="prenom" class="nx-contact-input {{ errors.prenom is defined ? 'is-error' : '' }}"
+                                       value="{{ old.prenom ?? '' }}" placeholder="Jean" maxlength="50" required>
+                                {% if errors.prenom is defined %}
+                                    <span class="nx-contact-error">{{ errors.prenom }}</span>
+                                {% endif %}
+                            </div>
+                            <div class="nx-contact-field">
+                                <label class="nx-contact-label" for="nom">
+                                    Nom <span class="nx-contact-req">*</span>
+                                </label>
+                                <input type="text" id="nom" name="nom" class="nx-contact-input {{ errors.nom is defined ? 'is-error' : '' }}"
+                                       value="{{ old.nom ?? '' }}" placeholder="Dupont" maxlength="50" required>
+                                {% if errors.nom is defined %}
+                                    <span class="nx-contact-error">{{ errors.nom }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        {# ── Ligne Âge / Email ── #}
+                        <div class="nx-contact-row">
+                            <div class="nx-contact-field" style="flex:0 0 140px;">
+                                <label class="nx-contact-label" for="age">
+                                    Âge <span class="nx-contact-req">*</span>
+                                </label>
+                                <input type="number" id="age" name="age" class="nx-contact-input {{ errors.age is defined ? 'is-error' : '' }}"
+                                       value="{{ old.age ?? '' }}" placeholder="25" min="13" max="120" required>
+                                {% if errors.age is defined %}
+                                    <span class="nx-contact-error">{{ errors.age }}</span>
+                                {% endif %}
+                            </div>
+                            <div class="nx-contact-field">
+                                <label class="nx-contact-label" for="email">
+                                    Email <span class="nx-contact-req">*</span>
+                                </label>
+                                <input type="email" id="email" name="email" class="nx-contact-input {{ errors.email is defined ? 'is-error' : '' }}"
+                                       value="{{ old.email ?? (app.user ? app.user.email : '') }}"
+                                       placeholder="jean@exemple.com" maxlength="180" required>
+                                {% if errors.email is defined %}
+                                    <span class="nx-contact-error">{{ errors.email }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        {# ── Discord ID ── #}
+                        <div class="nx-contact-field">
+                            <label class="nx-contact-label" for="discord_id">
+                                Discord ID <span class="nx-contact-optional">(optionnel)</span>
+                                <span class="nx-contact-help" title="Votre identifiant numérique Discord. Dans Discord : Paramètres → Avancé → Mode développeur → Clic droit sur vous-même → Copier l'identifiant">
+                                    <i class="fas fa-question-circle"></i>
+                                </span>
+                            </label>
+                            <div class="nx-contact-input-icon">
+                                <i class="fab fa-discord nx-contact-input-icon__icon" style="color:#5865F2;"></i>
+                                <input type="text" id="discord_id" name="discord_id"
+                                       class="nx-contact-input nx-contact-input--icon {{ errors.discord_id is defined ? 'is-error' : '' }}"
+                                       value="{{ old.discord_id ?? '' }}"
+                                       placeholder="123456789012345678" maxlength="20"
+                                       pattern="\d{17,20}" inputmode="numeric">
+                            </div>
+                            {% if errors.discord_id is defined %}
+                                <span class="nx-contact-error">{{ errors.discord_id }}</span>
+                            {% else %}
+                                <span class="nx-contact-hint">17 à 20 chiffres — Activez le mode développeur Discord pour le trouver.</span>
+                            {% endif %}
+                        </div>
+
+                        {# ── Raison ── #}
+                        <div class="nx-contact-field">
+                            <label class="nx-contact-label" for="raison">
+                                Objet de votre demande <span class="nx-contact-req">*</span>
+                            </label>
+                            <div class="nx-contact-select-wrap">
+                                <select id="raison" name="raison" class="nx-contact-input nx-contact-select {{ errors.raison is defined ? 'is-error' : '' }}" required>
+                                    <option value="" disabled {{ old.raison is not defined or old.raison == '' ? 'selected' : '' }}>— Sélectionnez une raison —</option>
+                                    {% for key, label in reasons %}
+                                        <option value="{{ key }}" {{ (old.raison ?? '') == key ? 'selected' : '' }}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                                <i class="fas fa-chevron-down nx-contact-select-arrow"></i>
+                            </div>
+                            {% if errors.raison is defined %}
+                                <span class="nx-contact-error">{{ errors.raison }}</span>
+                            {% endif %}
+                        </div>
+
+                        {# ── Message ── #}
+                        <div class="nx-contact-field">
+                            <label class="nx-contact-label" for="message">
+                                Message <span class="nx-contact-req">*</span>
+                                <span class="nx-contact-counter" id="msgCounter">0 / 3000</span>
+                            </label>
+                            <textarea id="message" name="message"
+                                      class="nx-contact-input nx-contact-textarea {{ errors.message is defined ? 'is-error' : '' }}"
+                                      placeholder="Décrivez votre demande avec le plus de détails possible (minimum 20 caractères)…"
+                                      minlength="20" maxlength="3000" rows="6" required>{{ old.message ?? '' }}</textarea>
+                            {% if errors.message is defined %}
+                                <span class="nx-contact-error">{{ errors.message }}</span>
+                            {% endif %}
+                        </div>
+
+                        {# ── Mentions RGPD ── #}
+                        <p class="nx-contact-rgpd">
+                            <i class="fas fa-lock me-1"></i>
+                            Vos données sont utilisées uniquement pour traiter votre demande et ne sont jamais partagées avec des tiers.
+                            <a href="{{ path('page_cgu') }}">En savoir plus</a>
+                        </p>
+
+                        <button type="submit" class="nx-contact-submit">
+                            <i class="fas fa-paper-plane me-2"></i>
+                            Envoyer mon message
+                        </button>
+                    </form>
+                </div>
+
+                {% endif %}
+            </div>
+
+            {# ── INFOS LATÉRALES ── #}
+            <div class="col-lg-4 col-md-8">
+
+                <div class="nx-contact-info">
+                    <h3 class="nx-contact-info__title">Informations</h3>
+
+                    <div class="nx-contact-info__item">
+                        <div class="nx-contact-info__icon"><i class="fas fa-envelope"></i></div>
+                        <div>
+                            <span class="nx-contact-info__label">Email</span>
+                            <a href="mailto:{{ setting('contact_email', 'contact@nexarena.fr') }}" class="nx-contact-info__value">
+                                {{ setting('contact_email', 'contact@nexarena.fr') }}
+                            </a>
+                        </div>
+                    </div>
+
+                    {% if setting('social_discord') %}
+                    <div class="nx-contact-info__item">
+                        <div class="nx-contact-info__icon" style="background:rgba(88,101,242,.15);border-color:rgba(88,101,242,.3);">
+                            <i class="fab fa-discord" style="color:#5865F2;"></i>
+                        </div>
+                        <div>
+                            <span class="nx-contact-info__label">Discord</span>
+                            <a href="{{ setting('social_discord') }}" target="_blank" rel="noopener" class="nx-contact-info__value">
+                                Rejoindre notre serveur
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="nx-contact-info__item">
+                        <div class="nx-contact-info__icon" style="background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.25);">
+                            <i class="fas fa-clock" style="color:#fbbf24;"></i>
+                        </div>
+                        <div>
+                            <span class="nx-contact-info__label">Délai de réponse</span>
+                            <span class="nx-contact-info__value">2 à 5 jours ouvrés</span>
+                        </div>
+                    </div>
+                </div>
+
+                {# ── FAQ rapide ── #}
+                <div class="nx-contact-faq">
+                    <h3 class="nx-contact-faq__title"><i class="fas fa-question-circle me-2"></i>Questions fréquentes</h3>
+
+                    <div class="nx-contact-faq__item">
+                        <button class="nx-contact-faq__q" type="button">
+                            Comment ajouter mon serveur ?
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="nx-contact-faq__a">
+                            Créez un compte, connectez-vous puis cliquez sur <strong>"Ajouter"</strong> dans la barre de navigation. Votre serveur sera examiné par notre équipe.
+                        </div>
+                    </div>
+
+                    <div class="nx-contact-faq__item">
+                        <button class="nx-contact-faq__q" type="button">
+                            Comment signaler un abus ?
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="nx-contact-faq__a">
+                            Utilisez ce formulaire avec la raison <strong>"Signalement d'abus"</strong> et décrivez le problème avec le lien du contenu concerné.
+                        </div>
+                    </div>
+
+                    <div class="nx-contact-faq__item">
+                        <button class="nx-contact-faq__q" type="button">
+                            Comment exercer mes droits RGPD ?
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="nx-contact-faq__a">
+                            Sélectionnez <strong>"Demande RGPD"</strong> et précisez votre demande (accès, suppression, rectification). Nous traiterons votre demande sous 30 jours.
+                        </div>
+                    </div>
+
+                    <div class="nx-contact-faq__item">
+                        <button class="nx-contact-faq__q" type="button">
+                            Comment devenir partenaire ?
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="nx-contact-faq__a">
+                            Sélectionnez <strong>"Partenariat"</strong> et présentez votre projet. Notre équipe étudiera votre demande et vous contactera.
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block stylesheets %}
+<style>
+/* ── Hero ── */
+.nx-contact-hero {
+    position: relative;
+    padding: 100px 0 60px;
+    text-align: center;
+    overflow: hidden;
+}
+.nx-contact-hero__glow {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 0%, rgba(69,248,130,.07) 0%, transparent 65%);
+    pointer-events: none;
+}
+.nx-contact-breadcrumb {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    font-size: .8rem;
+    color: rgba(200,214,232,.45);
+    margin-bottom: 20px;
+}
+.nx-contact-breadcrumb a { color: rgba(200,214,232,.45); text-decoration: none; }
+.nx-contact-breadcrumb a:hover { color: #45f882; }
+.nx-contact-breadcrumb i { font-size: .65rem; }
+.nx-contact-hero__title {
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 900;
+    color: #fff;
+    margin-bottom: 16px;
+    letter-spacing: -.5px;
+}
+.nx-contact-hero__title span { color: #45f882; }
+.nx-contact-hero__sub {
+    font-size: 1rem;
+    color: rgba(200,214,232,.6);
+    max-width: 520px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+/* ── Section ── */
+.nx-contact-section { padding: 20px 0 80px; }
+
+/* ── Success ── */
+.nx-contact-success {
+    background: rgba(69,248,130,.06);
+    border: 1px solid rgba(69,248,130,.2);
+    border-radius: 20px;
+    padding: 56px 40px;
+    text-align: center;
+}
+.nx-contact-success__icon { font-size: 56px; margin-bottom: 20px; }
+.nx-contact-success h2 { font-size: 1.8rem; font-weight: 800; color: #45f882; margin-bottom: 14px; }
+.nx-contact-success p { color: rgba(200,214,232,.7); line-height: 1.7; margin-bottom: 28px; }
+.nx-contact-success__btn {
+    display: inline-block;
+    background: #45f882;
+    color: #050d18;
+    font-weight: 700;
+    padding: 12px 28px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-size: .95rem;
+    transition: opacity .2s;
+}
+.nx-contact-success__btn:hover { opacity: .85; color: #050d18; }
+
+/* ── Card formulaire ── */
+.nx-contact-card {
+    background: rgba(255,255,255,.025);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 20px;
+    overflow: hidden;
+}
+.nx-contact-card__header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 20px 28px;
+    border-bottom: 1px solid rgba(255,255,255,.07);
+    font-size: .95rem;
+    font-weight: 700;
+    color: #45f882;
+}
+.nx-contact-card__header i { font-size: 1.1rem; }
+
+/* ── Formulaire ── */
+.nx-contact-form { padding: 28px; }
+.nx-contact-row { display: flex; gap: 16px; }
+.nx-contact-row .nx-contact-field { flex: 1; }
+
+.nx-contact-field { margin-bottom: 20px; }
+.nx-contact-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: .82rem;
+    font-weight: 600;
+    color: rgba(200,214,232,.7);
+    margin-bottom: 7px;
+    letter-spacing: .3px;
+    text-transform: uppercase;
+}
+.nx-contact-req { color: #f87171; }
+.nx-contact-optional { color: rgba(200,214,232,.35); font-weight: 400; text-transform: none; font-size: .78rem; }
+.nx-contact-help { color: rgba(200,214,232,.35); cursor: help; }
+.nx-contact-counter { margin-left: auto; font-size: .75rem; color: rgba(200,214,232,.35); font-weight: 400; text-transform: none; }
+
+.nx-contact-input {
+    width: 100%;
+    background: rgba(255,255,255,.05);
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 10px;
+    padding: 11px 14px;
+    color: #fff;
+    font-size: .92rem;
+    transition: border-color .2s, box-shadow .2s;
+    outline: none;
+    -webkit-appearance: none;
+}
+.nx-contact-input:focus {
+    border-color: rgba(69,248,130,.4);
+    box-shadow: 0 0 0 3px rgba(69,248,130,.08);
+}
+.nx-contact-input.is-error { border-color: rgba(248,113,113,.5); }
+.nx-contact-input::placeholder { color: rgba(200,214,232,.25); }
+
+.nx-contact-input-icon { position: relative; }
+.nx-contact-input-icon__icon {
+    position: absolute;
+    left: 13px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1rem;
+    pointer-events: none;
+}
+.nx-contact-input--icon { padding-left: 38px; }
+
+.nx-contact-select-wrap { position: relative; }
+.nx-contact-select { cursor: pointer; padding-right: 36px; }
+.nx-contact-select option { background: #0d1b2d; color: #fff; }
+.nx-contact-select-arrow {
+    position: absolute;
+    right: 13px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    font-size: .75rem;
+    color: rgba(200,214,232,.4);
+}
+
+.nx-contact-textarea { resize: vertical; min-height: 130px; }
+
+.nx-contact-error { display: block; font-size: .78rem; color: #f87171; margin-top: 5px; }
+.nx-contact-hint { display: block; font-size: .75rem; color: rgba(200,214,232,.35); margin-top: 5px; }
+
+.nx-contact-rgpd {
+    font-size: .75rem;
+    color: rgba(200,214,232,.35);
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+.nx-contact-rgpd a { color: #45f882; text-decoration: none; }
+
+.nx-contact-submit {
+    width: 100%;
+    background: #45f882;
+    color: #050d18;
+    border: none;
+    border-radius: 10px;
+    padding: 13px 24px;
+    font-size: 1rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: opacity .2s, transform .15s;
+    letter-spacing: .2px;
+}
+.nx-contact-submit:hover { opacity: .88; transform: translateY(-1px); }
+
+/* ── Info latérale ── */
+.nx-contact-info {
+    background: rgba(255,255,255,.025);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 20px;
+    padding: 28px;
+    margin-bottom: 24px;
+}
+.nx-contact-info__title {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 20px;
+}
+.nx-contact-info__item {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 18px;
+}
+.nx-contact-info__item:last-child { margin-bottom: 0; }
+.nx-contact-info__icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(69,248,130,.1);
+    border: 1px solid rgba(69,248,130,.2);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: #45f882;
+    font-size: 1rem;
+}
+.nx-contact-info__label { display: block; font-size: .75rem; color: rgba(200,214,232,.4); margin-bottom: 3px; }
+.nx-contact-info__value { display: block; font-size: .88rem; color: #e2e8f0; text-decoration: none; font-weight: 600; }
+.nx-contact-info__value:hover { color: #45f882; }
+
+/* ── FAQ ── */
+.nx-contact-faq {
+    background: rgba(255,255,255,.025);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 20px;
+    padding: 28px;
+}
+.nx-contact-faq__title {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 18px;
+}
+.nx-contact-faq__item { border-bottom: 1px solid rgba(255,255,255,.06); }
+.nx-contact-faq__item:last-child { border-bottom: none; }
+.nx-contact-faq__q {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    background: none;
+    border: none;
+    color: rgba(200,214,232,.75);
+    font-size: .88rem;
+    font-weight: 600;
+    padding: 14px 0;
+    cursor: pointer;
+    text-align: left;
+    gap: 10px;
+    transition: color .2s;
+}
+.nx-contact-faq__q:hover, .nx-contact-faq__q.open { color: #45f882; }
+.nx-contact-faq__q i { font-size: .7rem; flex-shrink: 0; transition: transform .25s; }
+.nx-contact-faq__q.open i { transform: rotate(180deg); }
+.nx-contact-faq__a {
+    font-size: .83rem;
+    color: rgba(200,214,232,.55);
+    line-height: 1.65;
+    padding-bottom: 14px;
+    display: none;
+}
+.nx-contact-faq__a.open { display: block; }
+
+/* ── Responsive ── */
+@media (max-width: 576px) {
+    .nx-contact-row { flex-direction: column; gap: 0; }
+    .nx-contact-form { padding: 20px 16px; }
+    .nx-contact-hero { padding: 80px 0 40px; }
+}
+</style>
+{% endblock %}
+
+{% block javascripts %}
+<script nonce="{{ csp_nonce() }}">
+// Compteur de caractères message
+(function() {
+    var msg     = document.getElementById('message');
+    var counter = document.getElementById('msgCounter');
+    if (msg && counter) {
+        function update() { counter.textContent = msg.value.length + ' / 3000'; }
+        msg.addEventListener('input', update);
+        update();
+    }
+})();
+
+// FAQ accordion
+document.querySelectorAll('.nx-contact-faq__q').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        var answer = btn.nextElementSibling;
+        var isOpen = btn.classList.contains('open');
+        // Fermer tout
+        document.querySelectorAll('.nx-contact-faq__q').forEach(function(b) {
+            b.classList.remove('open');
+            b.nextElementSibling.classList.remove('open');
+        });
+        if (!isOpen) {
+            btn.classList.add('open');
+            answer.classList.add('open');
+        }
+    });
+});
+</script>
+{% endblock %}

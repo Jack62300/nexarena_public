@@ -52,6 +52,9 @@
                                     <li class="{{ _route starts with 'recruitment_' ? 'active' : '' }}">
                                         <a href="{{ path('recruitment_index') }}">Recrutement</a>
                                     </li>
+                                    <li class="{{ _route == 'page_contact' ? 'active' : '' }}">
+                                        <a href="{{ path('page_contact') }}">Contact</a>
+                                    </li>
                                    {% if premium_enabled() %}
                                     <li class="{{ _route starts with 'premium_' ? 'active' : '' }}">
                                         <a href="{{ path('premium_index') }}" class="nav-boutique">
@@ -242,12 +245,14 @@
                         {% if is_granted('ROLE_EDITEUR') %}
                             <a href="{{ path('admin_dashboard') }}" class="nx-mobile-user__admin"><i class="fas fa-shield-alt"></i> Administration</a>
                         {% endif %}
+                        <a href="{{ path('page_contact') }}"><i class="fas fa-envelope"></i> Contact</a>
                         <a href="{{ path('app_logout') }}" class="nx-mobile-user__logout"><i class="fas fa-sign-out-alt"></i> Deconnexion</a>
                     </div>
                 {% else %}
                     <div class="nx-mobile-user__links">
                         <a href="{{ path('app_login') }}" class="nx-mobile-user__cta"><i class="fas fa-sign-in-alt"></i> Connexion</a>
                         <a href="{{ path('app_register') }}"><i class="fas fa-user-plus"></i> Inscription</a>
+                        <a href="{{ path('page_contact') }}"><i class="fas fa-envelope"></i> Contact</a>
                     </div>
                 {% endif %}
             </div>
@@ -306,6 +311,7 @@
                 <div class="offCanvas__contact">
                     <h4 class="small-title">CONTACT</h4>
                     <ul class="offCanvas__contact-list list-wrap">
+                        <li><a href="{{ path('page_contact') }}"><i class="fas fa-paper-plane me-1"></i> Formulaire de contact</a></li>
                         <li><a href="mailto:{{ setting('contact_email', 'contact@nexarena.fr') }}">{{ setting('contact_email', 'contact@nexarena.fr') }}</a></li>
                     </ul>
                 </div>

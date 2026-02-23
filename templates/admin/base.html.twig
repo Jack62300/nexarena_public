@@ -105,7 +105,7 @@
             </div>
 
             {# ── Utilisateurs ── #}
-            {% set usersActive = _r starts with 'admin_users_' or _r starts with 'admin_votes_' or _r starts with 'admin_badges_' or _r starts with 'admin_blacklist_' %}
+            {% set usersActive = _r starts with 'admin_users_' or _r starts with 'admin_votes_' or _r starts with 'admin_badges_' or _r starts with 'admin_blacklist_' or _r starts with 'admin_ip_bans_' %}
             <div class="admin-sidebar__group admin-sidebar__group--cyan {{ usersActive ? 'open' : '' }}">
                 <button class="admin-sidebar__section" type="button">
                     <span><i class="fas fa-users"></i> Utilisateurs</span>
@@ -123,6 +123,13 @@
                     </a>
                     <a href="{{ path('admin_blacklist_index') }}" class="admin-sidebar__link {{ _r starts with 'admin_blacklist_' ? 'active' : '' }}">
                         <i class="fas fa-ban"></i> Listes noires
+                    </a>
+                    <a href="{{ path('admin_ip_bans_index') }}" class="admin-sidebar__link {{ _r starts with 'admin_ip_bans_' ? 'active' : '' }}">
+                        <i class="fas fa-network-wired"></i> Bans IP
+                        {% set ipBansCount = active_ip_bans_count() %}
+                        {% if ipBansCount > 0 %}
+                            <span class="badge bg-danger">{{ ipBansCount }}</span>
+                        {% endif %}
                     </a>
                 </div>
             </div>
