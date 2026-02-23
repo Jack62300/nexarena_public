@@ -31,6 +31,8 @@ class MaintenanceListener
         '/maintenance',
         '/oauth/',
         '/deconnexion',
+        '/2fa',
+        '/connexion',
     ];
 
     public function __construct(
