@@ -124,6 +124,13 @@
                     <a href="{{ path('admin_blacklist_index') }}" class="admin-sidebar__link {{ _r starts with 'admin_blacklist_' ? 'active' : '' }}">
                         <i class="fas fa-ban"></i> Listes noires
                     </a>
+                    <a href="{{ path('admin_users_bans') }}" class="admin-sidebar__link {{ _r == 'admin_users_bans' ? 'active' : '' }}">
+                        <i class="fas fa-ban"></i> Bans Utilisateurs
+                        {% set activeBansCount = banned_users_count() %}
+                        {% if activeBansCount > 0 %}
+                            <span class="badge bg-danger">{{ activeBansCount }}</span>
+                        {% endif %}
+                    </a>
                     <a href="{{ path('admin_ip_bans_index') }}" class="admin-sidebar__link {{ _r starts with 'admin_ip_bans_' ? 'active' : '' }}">
                         <i class="fas fa-network-wired"></i> Bans IP
                         {% set ipBansCount = active_ip_bans_count() %}

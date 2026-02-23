@@ -39,6 +39,24 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
             ->getOneOrNullResult();
     }
 
+    public function findBanned(): array
+    {
+        return $this->createQueryBuilder('u')
+            ->andWhere('u.isBanned = true')
+            ->orderBy('u.bannedAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function countBanned(): int
+    {
+        return (int) $this->createQueryBuilder('u')
+            ->select('COUNT(u.id)')
+            ->andWhere('u.isBanned = true')
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
     public function findByOAuthId(string $provider, string $oauthId): ?User
     {
         $field = match ($provider) {

@@ -34,6 +34,14 @@ class UserController extends AbstractController
         ]);
     }
 
+    #[Route('/bans', name: 'bans')]
+    public function bans(UserRepository $repo): Response
+    {
+        return $this->render('admin/users/bans.html.twig', [
+            'banned_users' => $repo->findBanned(),
+        ]);
+    }
+
     #[Route('/{id}/edit', name: 'edit')]
     #[IsGranted('users.edit')]
     public function edit(User $user, Request $request): Response

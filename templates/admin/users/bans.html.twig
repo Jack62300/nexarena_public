@@ -1,0 +1,95 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block page_title %}Bans Utilisateurs{% endblock %}
+{% block title %}Nexarena Admin - Bans Utilisateurs{% endblock %}
+
+{% block admin_body %}
+    <div class="admin-table">
+        <div class="admin-table__header">
+            <h3>Utilisateurs bannis</h3>
+            <span style="color:var(--text-secondary);font-size:13px;">{{ banned_users|length }} ban(s) actif(s) ou expiré(s)</span>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Utilisateur</th>
+                    <th>Raison</th>
+                    <th>Banni le</th>
+                    <th>Expire le</th>
+                    <th>Banni par</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in banned_users %}
+                    <tr>
+                        <td>
+                            <div style="display:flex;align-items:center;gap:10px;">
+                                {% set av = user_avatar(user) %}
+                                {% if av %}
+                                    <img src="{{ av starts with 'http' ? av : asset(av) }}" alt="" style="width:30px;height:30px;border-radius:50%;object-fit:cover;">
+                                {% else %}
+                                    <div style="width:30px;height:30px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;">
+                                        {{ user.username|slice(0, 1)|upper }}
+                                    </div>
+                                {% endif %}
+                                <div>
+                                    <div style="font-weight:600;">{{ user.username }}</div>
+                                    <div style="font-size:12px;color:var(--text-secondary);">{{ user.email }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="color:var(--text-secondary);max-width:200px;">
+                            {{ user.banReason ?: '—' }}
+                        </td>
+                        <td style="color:var(--text-secondary);font-size:13px;">
+                            {{ user.bannedAt ? user.bannedAt|date('d/m/Y H:i') : '—' }}
+                        </td>
+                        <td style="font-size:13px;">
+                            {% if user.banExpiresAt %}
+                                <span style="color:{% if user.isCurrentlyBanned() %}#f39c12{% else %}var(--text-secondary){% endif %};">
+                                    {{ user.banExpiresAt|date('d/m/Y H:i') }}
+                                </span>
+                            {% else %}
+                                <span style="color:#ff4757;font-weight:600;">Permanent</span>
+                            {% endif %}
+                        </td>
+                        <td style="color:var(--text-secondary);font-size:13px;">
+                            {{ user.bannedBy ? user.bannedBy.username : '—' }}
+                        </td>
+                        <td>
+                            {% if user.isCurrentlyBanned() %}
+                                <span style="display:inline-block;padding:3px 8px;border-radius:4px;font-size:12px;font-weight:600;background:rgba(255,71,87,.15);color:#ff4757;border:1px solid rgba(255,71,87,.3);">
+                                    <i class="fas fa-ban" style="font-size:9px;"></i> Actif
+                                </span>
+                            {% else %}
+                                <span style="display:inline-block;padding:3px 8px;border-radius:4px;font-size:12px;font-weight:600;background:rgba(255,255,255,.06);color:var(--text-secondary);border:1px solid var(--border);">
+                                    <i class="fas fa-clock" style="font-size:9px;"></i> Expiré
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if is_granted('ROLE_MANAGER') and user.isCurrentlyBanned() %}
+                                <form method="post" action="{{ path('admin_users_unban', {id: user.id}) }}" style="display:inline;" onsubmit="return confirm('Lever le ban de {{ user.username }} ?');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('user_unban_' ~ user.id) }}">
+                                    <button type="submit" class="btn-admin btn-admin--sm" style="background:rgba(69,248,130,.15);color:#45f882;border:1px solid rgba(69,248,130,.3);" title="Lever le ban">
+                                        <i class="fas fa-unlock"></i> Lever le ban
+                                    </button>
+                                </form>
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="7" style="text-align:center;color:var(--text-secondary);padding:30px;">
+                            Aucun utilisateur banni.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}
