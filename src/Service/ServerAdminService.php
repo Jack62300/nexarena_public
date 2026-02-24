@@ -293,12 +293,15 @@ class ServerAdminService
         $file  = self::ALLOWED_LOG_FILES[$key];
         $lines = max(10, min(2000, $lines));
 
-        $exists = $this->run('sudo /usr/bin/test -f ' . escapeshellarg($file));
-        if (!$exists['success']) {
-            return ['success' => true, 'output' => "(Fichier inexistant : {$file})\nAucun log enregistré pour le moment."];
+        $r = $this->run('sudo /usr/bin/tail -n ' . $lines . ' ' . escapeshellarg($file));
+
+        if (!$r['success']) {
+            if (str_contains($r['output'], 'No such file') || str_contains($r['output'], 'cannot open')) {
+                return ['success' => true, 'output' => "(Fichier inexistant : {$file})\nAucun log enregistré pour le moment."];
+            }
         }
 
-        return $this->run('sudo /usr/bin/tail -n ' . $lines . ' ' . escapeshellarg($file));
+        return $r;
     }
 
     public function searchLogFile(string $key, string $pattern, int $lines = 200): array
@@ -310,12 +313,17 @@ class ServerAdminService
         $file  = self::ALLOWED_LOG_FILES[$key];
         $lines = max(10, min(500, $lines));
 
-        $exists = $this->run('sudo /usr/bin/test -f ' . escapeshellarg($file));
-        if (!$exists['success']) {
-            return ['success' => true, 'output' => "(Fichier inexistant : {$file})"];
+        $r = $this->run('sudo /usr/bin/grep -i ' . escapeshellarg($pattern) . ' ' . escapeshellarg($file) . ' | /usr/bin/tail -n ' . $lines);
+
+        if (!$r['success']) {
+            if (str_contains($r['output'], 'No such file') || str_contains($r['output'], 'cannot open')) {
+                return ['success' => true, 'output' => "(Fichier inexistant : {$file})"];
+            }
+            // grep renvoie exit 1 quand aucun résultat — c'est normal
+            return ['success' => true, 'output' => $r['output'] ?: '(Aucun résultat)'];
         }
 
-        return $this->run('sudo /usr/bin/grep -i ' . escapeshellarg($pattern) . ' ' . escapeshellarg($file) . ' | /usr/bin/tail -n ' . $lines);
+        return $r;
     }
 
     // ── Symfony ───────────────────────────────────────────────
