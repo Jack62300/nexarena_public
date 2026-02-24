@@ -17,6 +17,7 @@ use App\Repository\DiscordSanctionRepository;
 use App\Repository\DiscordTicketRepository;
 use App\Repository\LivePromotionRepository;
 use App\Repository\UserRepository;
+use App\Service\ServerAdminService;
 use App\Service\SettingsService;
 use App\Service\StatsService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -43,6 +44,7 @@ class DiscordBotApiController extends AbstractController
         private SettingsService $settings,
         private UserRepository $userRepo,
         private CacheItemPoolInterface $cache,
+        private ServerAdminService $sas,
     ) {
     }
 
@@ -581,5 +583,46 @@ class DiscordBotApiController extends AbstractController
         $this->em->flush();
 
         return $this->json(['ok' => true]);
+    }
+
+    // ===== SERVER ADMIN (Ubuntu) =====
+
+    #[Route('/server-admin/firewall', name: 'server_admin_firewall', methods: ['GET'])]
+    public function serverAdminFirewall(Request $request): JsonResponse
+    {
+        $authError = $this->checkApiKey($request);
+        if ($authError) return $authError;
+
+        return $this->json($this->sas->getFirewallBannedIps());
+    }
+
+    #[Route('/server-admin/fail2ban', name: 'server_admin_fail2ban', methods: ['GET'])]
+    public function serverAdminFail2ban(Request $request): JsonResponse
+    {
+        $authError = $this->checkApiKey($request);
+        if ($authError) return $authError;
+
+        return $this->json($this->sas->getFail2banStatus());
+    }
+
+    #[Route('/server-admin/system-info', name: 'server_admin_system_info', methods: ['GET'])]
+    public function serverAdminSystemInfo(Request $request): JsonResponse
+    {
+        $authError = $this->checkApiKey($request);
+        if ($authError) return $authError;
+
+        return $this->json($this->sas->getSystemInfo());
+    }
+
+    #[Route('/server-admin/logs', name: 'server_admin_logs', methods: ['GET'])]
+    public function serverAdminLogs(Request $request): JsonResponse
+    {
+        $authError = $this->checkApiKey($request);
+        if ($authError) return $authError;
+
+        $key   = (string) $request->query->get('key', '');
+        $lines = min(50, max(1, (int) $request->query->get('lines', 10)));
+
+        return $this->json($this->sas->readLogFile($key, $lines));
     }
 }
