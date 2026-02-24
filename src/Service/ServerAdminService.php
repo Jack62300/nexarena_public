@@ -290,9 +290,15 @@ class ServerAdminService
             return ['success' => false, 'output' => 'Fichier non autorisé.'];
         }
 
+        $file  = self::ALLOWED_LOG_FILES[$key];
         $lines = max(10, min(2000, $lines));
 
-        return $this->run('sudo /usr/bin/tail -n ' . $lines . ' ' . escapeshellarg(self::ALLOWED_LOG_FILES[$key]));
+        $exists = $this->run('sudo /usr/bin/test -f ' . escapeshellarg($file));
+        if (!$exists['success']) {
+            return ['success' => true, 'output' => "(Fichier inexistant : {$file})\nAucun log enregistré pour le moment."];
+        }
+
+        return $this->run('sudo /usr/bin/tail -n ' . $lines . ' ' . escapeshellarg($file));
     }
 
     public function searchLogFile(string $key, string $pattern, int $lines = 200): array
@@ -301,11 +307,15 @@ class ServerAdminService
             return ['success' => false, 'output' => 'Fichier non autorisé.'];
         }
 
-        // Validate pattern is safe (no shell injection)
-        $safePattern = preg_quote($pattern, '/');
+        $file  = self::ALLOWED_LOG_FILES[$key];
         $lines = max(10, min(500, $lines));
 
-        return $this->run('sudo /usr/bin/grep -i ' . escapeshellarg($pattern) . ' ' . escapeshellarg(self::ALLOWED_LOG_FILES[$key]) . ' | /usr/bin/tail -n ' . $lines);
+        $exists = $this->run('sudo /usr/bin/test -f ' . escapeshellarg($file));
+        if (!$exists['success']) {
+            return ['success' => true, 'output' => "(Fichier inexistant : {$file})"];
+        }
+
+        return $this->run('sudo /usr/bin/grep -i ' . escapeshellarg($pattern) . ' ' . escapeshellarg($file) . ' | /usr/bin/tail -n ' . $lines);
     }
 
     // ── Symfony ───────────────────────────────────────────────
