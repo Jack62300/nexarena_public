@@ -200,7 +200,7 @@
     padding: 12px 14px;
     transition: transform .2s, box-shadow .2s;
     position: relative;
-    overflow: hidden;
+    cursor: default;
 }
 .pub-achievement:hover { transform:translateY(-2px); box-shadow:0 4px 20px rgba(0,0,0,.3); }
 .pub-achievement__icon {
@@ -214,6 +214,54 @@
 .pub-achievement__meta { display:flex; align-items:center; gap:6px; margin-top:2px; }
 .pub-achievement__rarity { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; }
 .pub-achievement__date { font-size:10px; color:#5a5c69; }
+/* ── Achievement tooltip ── */
+.ach-tt {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%);
+    width: 230px;
+    background: #0d1117;
+    border: 1px solid rgba(255,255,255,0.13);
+    border-radius: 10px;
+    padding: 12px 14px;
+    box-shadow: 0 8px 32px rgba(0,0,0,.6);
+    z-index: 200;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity .15s, transform .15s;
+    transform: translateX(-50%) translateY(4px);
+    text-align: left;
+}
+.pub-achievement:hover .ach-tt {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+.ach-tt__name { font-size:13px; font-weight:700; color:#e6edf3; margin-bottom:5px; }
+.ach-tt__desc { font-size:11px; color:#8b949e; line-height:1.5; margin-bottom:8px; }
+.ach-tt__footer { display:flex; align-items:center; justify-content:space-between; gap:6px; margin-top:6px; border-top:1px solid rgba(255,255,255,0.07); padding-top:7px; }
+.ach-tt__rarity { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; }
+.ach-tt__date { font-size:10px; color:#5a5c69; }
+/* Arrow pointing down */
+.ach-tt::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -6px;
+    border: 6px solid transparent;
+    border-top-color: rgba(255,255,255,0.13);
+}
+.ach-tt::before {
+    content: '';
+    position: absolute;
+    top: calc(100% - 1px);
+    left: 50%;
+    margin-left: -5px;
+    border: 5px solid transparent;
+    border-top-color: #0d1117;
+    z-index: 1;
+}
 
 /* ── Sidebar ── */
 .pub-sidebar-card {
@@ -430,6 +478,17 @@
                                                     {{ ua.achievement.rarityLabel }}
                                                 </span>
                                                 <span class="pub-achievement__date">· {{ ua.awardedAt|date('d/m/Y') }}</span>
+                                            </div>
+                                        </div>
+                                        {# ── Tooltip ── #}
+                                        <div class="ach-tt">
+                                            <div class="ach-tt__name">{{ ua.achievement.name }}</div>
+                                            {% if ua.achievement.description %}
+                                                <div class="ach-tt__desc">{{ ua.achievement.description }}</div>
+                                            {% endif %}
+                                            <div class="ach-tt__footer">
+                                                <span class="ach-tt__rarity" style="color:{{ rc }};">{{ ua.achievement.rarityLabel }}</span>
+                                                <span class="ach-tt__date">Obtenu le {{ ua.awardedAt|date('d/m/Y') }}</span>
                                             </div>
                                         </div>
                                     </div>
