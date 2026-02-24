@@ -317,8 +317,10 @@
     </div>
 
 </div>{# /padding #}
+{% endblock admin_body %}
 
-<script>
+{% block admin_js %}
+<script nonce="{{ csp_nonce() }}">
 const CSRF = '{{ csrf_token('server_admin') }}';
 const BASE = '{{ path('admin_server_admin_index') }}';
 
@@ -514,4 +516,4 @@ async function saveConfig() {
     toast(d.success ? 'Fichier enregistré.' : ('Erreur: ' + d.output), d.success);
 }
 </script>
-{% endblock admin_body %}
+{% endblock admin_js %}
