@@ -63,7 +63,7 @@
 @keyframes spin { to { transform:rotate(360deg); } }
 {% endblock %}
 
-{% block body %}
+{% block admin_body %}
 <div class="flash-toast" id="flashToast"></div>
 
 <div style="padding:1.5rem;">
@@ -514,4 +514,4 @@ async function saveConfig() {
     toast(d.success ? 'Fichier enregistré.' : ('Erreur: ' + d.output), d.success);
 }
 </script>
-{% endblock %}
+{% endblock admin_body %}
