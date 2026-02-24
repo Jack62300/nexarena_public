@@ -5,8 +5,7 @@
 
 {% block admin_css %}
 .form-group { margin-bottom: 20px; }
-.form-group:last-child { margin-bottom: 0; }
-.form-group > label {
+.form-group label {
     display: block;
     margin-bottom: 6px;
     font-size: 13px;
@@ -23,287 +22,109 @@
     border-radius: 6px;
     color: var(--text-primary);
     font-size: 14px;
-    transition: border-color .2s, box-shadow .2s;
+    transition: border-color .2s;
 }
-.form-control-admin:focus {
-    outline: none;
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(69,248,130,.1);
-}
-textarea.form-control-admin { resize: vertical; min-height: 90px; }
+.form-control-admin:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(69,248,130,.1); }
+textarea.form-control-admin { resize: vertical; }
 select.form-control-admin option { background: var(--bg-darker); }
-
-/* ── Rarity picker ── */
-.rarity-picker { display: flex; gap: 8px; flex-wrap: wrap; }
-.rarity-btn {
-    display: flex; align-items: center; gap: 8px;
-    padding: 8px 16px; border-radius: 8px; cursor: pointer;
-    border: 2px solid rgba(255,255,255,.08);
-    background: rgba(255,255,255,.03);
-    font-size: 13px; font-weight: 600;
-    color: var(--text-secondary);
-    transition: all .2s; user-select: none;
-}
-.rarity-btn:hover { border-color: rgba(255,255,255,.2); color: var(--text-primary); }
-.rarity-btn.active {
-    border-color: var(--rc);
-    background: color-mix(in srgb, var(--rc) 12%, transparent);
-    color: var(--rc);
-}
-.rarity-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-
-/* ── Icon upload ── */
-.icon-drop-zone {
-    display: flex; flex-direction: column; align-items: center;
-    padding: 20px 10px 12px; gap: 12px;
-}
-.icon-thumb {
-    width: 84px; height: 84px; border-radius: 14px;
-    object-fit: contain; border: 2px solid rgba(255,255,255,.12);
-    background: rgba(255,255,255,.03);
-}
-.icon-placeholder {
-    width: 84px; height: 84px; border-radius: 14px;
-    border: 2px dashed rgba(255,255,255,.15);
-    display: flex; align-items: center; justify-content: center;
-    background: rgba(255,255,255,.02);
-}
-
-/* ── User award tags ── */
-.ua-tags { display: flex; flex-wrap: wrap; gap: 8px; }
-.ua-tag {
-    display: inline-flex; align-items: center; gap: 8px;
-    background: rgba(255,255,255,.04);
-    border: 1px solid rgba(255,255,255,.08);
-    border-radius: 8px; padding: 6px 10px;
-}
-.ua-tag__name  { font-size: 13px; font-weight: 600; }
-.ua-tag__date  { font-size: 11px; color: var(--text-secondary); }
-.ua-tag__revoke {
-    background: none; border: none; cursor: pointer; padding: 0 2px;
-    color: var(--danger); font-size: 12px; line-height: 1;
-    opacity: .7; transition: opacity .15s;
-}
-.ua-tag__revoke:hover { opacity: 1; }
+.form-check-admin { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.form-check-admin input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); }
+.icon-preview { width: 72px; height: 72px; object-fit: contain; border-radius: 10px; border: 1px solid var(--border-color); margin-bottom: 8px; display: block; }
 {% endblock %}
 
 {% block admin_body %}
-<div style="max-width:960px;">
-
-    {# ── Page header ── #}
-    <div style="display:flex;align-items:center;gap:14px;margin-bottom:24px;">
-        <a href="{{ path('admin_achievements_list') }}" class="btn-admin btn-admin--outline btn-admin--sm">
-            <i class="fas fa-arrow-left"></i>
-        </a>
-        <div>
-            <h2 style="margin:0;font-size:20px;">
-                {{ achievement ? 'Modifier «&nbsp;' ~ achievement.name ~ '&nbsp;»' : 'Nouveau succès' }}
-            </h2>
-            <p style="margin:4px 0 0;color:var(--text-secondary);font-size:13px;">
-                {{ achievement
-                    ? 'Modifiez les informations, la rareté et le critère de ce succès.'
-                    : 'Configurez un nouveau succès attribuable automatiquement ou manuellement.' }}
-            </p>
-        </div>
-    </div>
-
-    {{ form_start(form, {attr: {enctype: 'multipart/form-data', novalidate: 'novalidate', id: 'achievementForm'}}) }}
-
-    <div style="display:grid;grid-template-columns:1fr 300px;gap:20px;align-items:start;">
-
-        {# ════════════ Colonne gauche ════════════ #}
-        <div>
-
-            {# Informations #}
-            <div class="admin-table" style="margin-bottom:16px;">
-                <div class="admin-table__header">
-                    <h3>
-                        <i class="fas fa-info-circle" style="color:var(--info);margin-right:8px;"></i>
-                        Informations
-                    </h3>
-                </div>
-                <div style="padding:22px;">
-                    <div class="form-group">
-                        <label>Nom du succès <span style="color:var(--danger);">*</span></label>
-                        {{ form_widget(form.name, {attr: {
-                            class: 'form-control-admin',
-                            placeholder: 'Ex: Pionnier, Premier vote, Vétéran…'
-                        }}) }}
-                        {{ form_errors(form.name) }}
-                    </div>
-                    <div class="form-group">
-                        <label>Description</label>
-                        {{ form_widget(form.description, {attr: {
-                            class: 'form-control-admin',
-                            placeholder: 'Décrivez comment obtenir ce succès…'
-                        }}) }}
-                        {{ form_errors(form.description) }}
-                    </div>
-                </div>
-            </div>
-
-            {# Rareté — select caché + picker visuel #}
-            <div class="admin-table" style="margin-bottom:16px;">
-                <div class="admin-table__header">
-                    <h3>
-                        <i class="fas fa-star" style="color:var(--warning);margin-right:8px;"></i>
-                        Rareté
-                    </h3>
-                </div>
-                <div style="padding:20px 22px;">
-
-                    {# Select Symfony caché — lie la valeur à l'entité #}
-                    {{ form_widget(form.rarity, {attr: {id: 'raritySelect', style: 'display:none;'}}) }}
-
-                    {# Picker visuel — met à jour le select via JS #}
-                    {% set rarities = {
-                        'common':    {label: 'Commun',     color: '#95a5a6'},
-                        'uncommon':  {label: 'Peu commun', color: '#2ecc71'},
-                        'rare':      {label: 'Rare',       color: '#3498db'},
-                        'epic':      {label: 'Épique',     color: '#9b59b6'},
-                        'legendary': {label: 'Légendaire', color: '#f39c12'}
-                    } %}
-                    {% set currentRarity = form.rarity.vars.data ?? 'common' %}
-
-                    <div class="rarity-picker" id="rarityPicker">
-                        {% for value, info in rarities %}
-                            <button type="button"
-                                    class="rarity-btn {{ currentRarity == value ? 'active' : '' }}"
-                                    data-value="{{ value }}"
-                                    style="--rc:{{ info.color }};">
-                                <span class="rarity-dot" style="background:{{ info.color }};"></span>
-                                {{ info.label }}
-                            </button>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-
-            {# Critère automatique #}
-            <div class="admin-table">
-                <div class="admin-table__header">
-                    <h3>
-                        <i class="fas fa-cogs" style="color:var(--accent);margin-right:8px;"></i>
-                        Critère automatique
-                    </h3>
-                </div>
-                <div style="padding:22px;">
-                    <p style="font-size:13px;color:var(--text-secondary);margin-bottom:18px;line-height:1.6;">
-                        Le succès sera attribué automatiquement dès que la condition est remplie.
-                        Laissez vide pour une attribution
-                        <strong style="color:var(--text-primary);">manuelle uniquement</strong>.
-                    </p>
-                    <div class="row g-3">
-                        <div class="col-8">
-                            <div class="form-group">
-                                <label>Type de critère</label>
-                                {{ form_widget(form.criteriaType, {attr: {
-                                    class: 'form-control-admin',
-                                    id: 'criteriaType'
-                                }}) }}
-                            </div>
-                        </div>
-                        <div class="col-4" id="thresholdWrapper">
-                            <div class="form-group">
-                                <label>Seuil</label>
-                                {{ form_widget(form.criteriaThreshold, {attr: {class: 'form-control-admin'}}) }}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-
-        {# ════════════ Colonne droite ════════════ #}
-        <div>
-
-            {# Icône #}
-            <div class="admin-table" style="margin-bottom:16px;">
-                <div class="admin-table__header">
-                    <h3>
-                        <i class="fas fa-image" style="color:var(--info);margin-right:8px;"></i>
-                        Icône
-                    </h3>
-                </div>
-                <div style="padding:16px 22px 20px;">
-                    <div class="icon-drop-zone">
-                        {% if achievement and achievement.iconFileName %}
-                            <img id="iconPreview"
-                                 src="{{ asset('uploads/achievements/' ~ achievement.iconFileName) }}"
-                                 class="icon-thumb"
-                                 style="border-color:{{ achievement.rarityColor }};"
-                                 alt="Aperçu">
-                        {% else %}
-                            <div id="iconPreviewFallback" class="icon-placeholder">
-                                <i class="fas fa-trophy"
-                                   style="font-size:28px;opacity:.25;color:var(--warning);"></i>
-                            </div>
-                            <img id="iconPreview" class="icon-thumb"
-                                 style="display:none;" alt="Aperçu">
-                        {% endif %}
-                    </div>
-                    {{ form_widget(form.iconFile, {attr: {
-                        class: 'form-control-admin',
-                        id: 'iconFile',
-                        style: 'color:var(--text-secondary);font-size:12px;padding:8px 12px;'
-                    }}) }}
-                    <small style="display:block;color:var(--text-secondary);font-size:11px;margin-top:6px;">
-                        JPEG, PNG, GIF, WebP, SVG — max 2 Mo
-                    </small>
-                    {{ form_errors(form.iconFile) }}
-                </div>
-            </div>
-
-            {# Statut #}
-            <div class="admin-table" style="margin-bottom:16px;">
-                <div class="admin-table__header">
-                    <h3>
-                        <i class="fas fa-toggle-on" style="color:var(--success);margin-right:8px;"></i>
-                        Statut
-                    </h3>
-                </div>
-                <div style="padding:16px 22px 18px;">
-                    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;">
-                        {{ form_widget(form.isActive) }}
-                        <span>Succès actif</span>
-                    </label>
-                    <small style="display:block;color:var(--text-secondary);font-size:12px;
-                                  margin-top:6px;padding-left:26px;">
-                        Visible et attribuable aux utilisateurs.
-                    </small>
-                </div>
-            </div>
-
-            {# Actions #}
-            <button type="submit" class="btn-admin btn-admin--primary"
-                    style="width:100%;justify-content:center;padding:11px 18px;font-size:14px;">
-                <i class="fas fa-save"></i>
-                {{ achievement ? 'Enregistrer les modifications' : 'Créer le succès' }}
-            </button>
-            <a href="{{ path('admin_achievements_list') }}"
-               class="btn-admin btn-admin--outline"
-               style="width:100%;justify-content:center;padding:10px 18px;margin-top:8px;">
-                Annuler
+<div style="max-width:800px;">
+    <div class="admin-table">
+        <div class="admin-table__header">
+            <h3>{{ achievement ? 'Modifier «&nbsp;' ~ achievement.name ~ '&nbsp;»' : 'Nouveau succès' }}</h3>
+            <a href="{{ path('admin_achievements_list') }}" class="btn-admin btn-admin--outline btn-admin--sm">
+                <i class="fas fa-arrow-left"></i> Retour
             </a>
+        </div>
 
+        <div style="padding:25px;">
+            {{ form_start(form, {attr: {enctype: 'multipart/form-data'}}) }}
+
+            <div class="form-group">
+                <label for="{{ form.name.vars.id }}">Nom du succès *</label>
+                {{ form_widget(form.name, {attr: {class: 'form-control-admin', placeholder: 'Ex: Pionnier, Premier vote…'}}) }}
+                {{ form_errors(form.name) }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.description.vars.id }}">Description</label>
+                {{ form_widget(form.description, {attr: {class: 'form-control-admin', rows: 3, placeholder: 'Comment obtenir ce succès…'}}) }}
+                {{ form_errors(form.description) }}
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="{{ form.rarity.vars.id }}">Rareté</label>
+                        {{ form_widget(form.rarity, {attr: {class: 'form-control-admin'}}) }}
+                        {{ form_errors(form.rarity) }}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="{{ form.criteriaType.vars.id }}">Critère automatique</label>
+                        {{ form_widget(form.criteriaType, {attr: {class: 'form-control-admin', id: 'criteriaType'}}) }}
+                        {{ form_errors(form.criteriaType) }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group" id="thresholdWrapper">
+                <label for="{{ form.criteriaThreshold.vars.id }}">Seuil (nombre requis)</label>
+                {{ form_widget(form.criteriaThreshold, {attr: {class: 'form-control-admin'}}) }}
+                <div style="font-size:11px;color:var(--text-secondary);margin-top:4px;">
+                    Nombre minimum pour déclencher l'attribution automatique.
+                </div>
+                {{ form_errors(form.criteriaThreshold) }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.iconFile.vars.id }}">Icône</label>
+                {% if achievement and achievement.iconFileName %}
+                    <img src="{{ asset('uploads/achievements/' ~ achievement.iconFileName) }}"
+                         alt="" class="icon-preview">
+                {% endif %}
+                {{ form_widget(form.iconFile, {attr: {style: 'color:var(--text-secondary);'}}) }}
+                {{ form_errors(form.iconFile) }}
+                <div style="font-size:11px;color:var(--text-secondary);margin-top:4px;">
+                    JPEG, PNG, GIF, WebP, SVG — max 2 Mo
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-check-admin">
+                    {{ form_widget(form.isActive) }}
+                    Succès actif (visible et attribuable)
+                </label>
+                {{ form_errors(form.isActive) }}
+            </div>
+
+            <div style="display:flex;gap:10px;padding-top:10px;border-top:1px solid var(--border-color);">
+                <button type="submit" class="btn-admin btn-admin--primary">
+                    <i class="fas fa-save"></i> {{ achievement ? 'Enregistrer' : 'Créer' }}
+                </button>
+                <a href="{{ path('admin_achievements_list') }}" class="btn-admin btn-admin--outline">
+                    Annuler
+                </a>
+            </div>
+
+            {{ form_end(form) }}
         </div>
     </div>
 
-    {{ form_end(form) }}
-
-    {# ══════════════════════════════════════════════════════════════
-       Utilisateurs ayant ce succès  (edit mode uniquement)
-    ══════════════════════════════════════════════════════════════ #}
+    {# ── Utilisateurs ayant ce succès (edit mode) ── #}
     {% if achievement %}
-    <div class="admin-table" style="margin-top:24px;">
+    <div class="admin-table" style="margin-top:20px;">
         <div class="admin-table__header">
             <h3>
-                <i class="fas fa-users" style="color:var(--accent);margin-right:8px;"></i>
+                <i class="fas fa-users" style="margin-right:6px;color:var(--accent);"></i>
                 Attribués
-                <span class="role-badge"
-                      style="background:rgba(69,248,130,.12);color:var(--accent);
-                             border:1px solid rgba(69,248,130,.25);margin-left:10px;">
+                <span class="role-badge" style="background:rgba(69,248,130,.12);color:var(--accent);border:1px solid rgba(69,248,130,.25);margin-left:8px;">
                     {{ awardedUsers|length }}
                 </span>
             </h3>
@@ -325,13 +146,15 @@ select.form-control-admin option { background: var(--bg-darker); }
             {% endif %}
         </div>
 
-        <div style="padding:20px 22px;">
+        <div style="padding:18px 22px;">
             {% if awardedUsers|length > 0 %}
-                <div class="ua-tags">
+                <div style="display:flex;flex-wrap:wrap;gap:8px;">
                     {% for ua in awardedUsers %}
-                        <div class="ua-tag">
-                            <span class="ua-tag__name">{{ ua.user.username }}</span>
-                            <span class="ua-tag__date">{{ ua.awardedAt|date('d/m/Y') }}</span>
+                        <div style="display:inline-flex;align-items:center;gap:8px;
+                                    background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+                                    border-radius:8px;padding:6px 10px;">
+                            <span style="font-size:13px;font-weight:600;">{{ ua.user.username }}</span>
+                            <span style="font-size:11px;color:var(--text-secondary);">{{ ua.awardedAt|date('d/m/Y') }}</span>
                             {% if is_granted('achievements.manage') %}
                                 <form method="post"
                                       action="{{ path('admin_achievements_revoke', {id: achievement.id, userId: ua.user.id}) }}"
@@ -339,7 +162,11 @@ select.form-control-admin option { background: var(--bg-darker); }
                                       onsubmit="return confirm('Révoquer ce succès de {{ ua.user.username }} ?');">
                                     <input type="hidden" name="_token"
                                            value="{{ csrf_token('achievement_revoke_' ~ achievement.id ~ '_' ~ ua.user.id) }}">
-                                    <button type="submit" class="ua-tag__revoke" title="Révoquer">
+                                    <button type="submit"
+                                            style="background:none;border:none;cursor:pointer;padding:0 2px;
+                                                   color:var(--danger);font-size:12px;line-height:1;opacity:.7;"
+                                            onmouseover="this.style.opacity=1"
+                                            onmouseout="this.style.opacity=.7">
                                         <i class="fas fa-times"></i>
                                     </button>
                                 </form>
@@ -348,11 +175,8 @@ select.form-control-admin option { background: var(--bg-darker); }
                     {% endfor %}
                 </div>
             {% else %}
-                <p style="text-align:center;color:var(--text-secondary);margin:0;
-                          padding:24px 0;font-size:13px;">
-                    <i class="fas fa-user-slash"
-                       style="display:block;font-size:26px;opacity:.15;margin-bottom:10px;"></i>
-                    Aucun utilisateur n'a encore obtenu ce succès.
+                <p style="color:var(--text-secondary);font-size:13px;margin:0;text-align:center;padding:20px 0;">
+                    Aucun utilisateur n'a encore ce succès.
                 </p>
             {% endif %}
         </div>
@@ -364,34 +188,6 @@ select.form-control-admin option { background: var(--bg-darker); }
 
 {% block admin_js %}
 <script nonce="{{ csp_nonce() }}">
-// ── Rarity picker ────────────────────────────────────────
-const raritySelect = document.getElementById('raritySelect');
-const rarityBtns   = document.querySelectorAll('#rarityPicker .rarity-btn');
-
-rarityBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-        rarityBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        raritySelect.value = btn.dataset.value;
-    });
-});
-
-// ── Icon live preview ────────────────────────────────────
-document.getElementById('iconFile')?.addEventListener('change', function () {
-    const file = this.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = e => {
-        const img      = document.getElementById('iconPreview');
-        const fallback = document.getElementById('iconPreviewFallback');
-        img.src = e.target.result;
-        img.style.display = 'block';
-        if (fallback) fallback.style.display = 'none';
-    };
-    reader.readAsDataURL(file);
-});
-
-// ── Show / hide threshold field ──────────────────────────
 const criteriaTypeEl   = document.getElementById('criteriaType');
 const thresholdWrapper = document.getElementById('thresholdWrapper');
 
