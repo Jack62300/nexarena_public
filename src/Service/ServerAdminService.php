@@ -4,7 +4,7 @@ namespace App\Service;
 
 class ServerAdminService
 {
-    private const PROJECT_DIR = '/var/www/html/nexarena';
+    private const PROJECT_DIR = '/var/www/nexarena';
 
     private const ALLOWED_SERVICES = ['nginx', 'php8.4-fpm', 'fail2ban', 'mariadb'];
 
