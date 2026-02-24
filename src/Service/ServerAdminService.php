@@ -510,4 +510,263 @@ class ServerAdminService
             'success'  => true,
         ];
     }
+
+    // ── Gestion utilisateurs Linux ────────────────────────────
+
+    private const USERNAME_REGEX = '/^[a-z_][a-z0-9_-]{0,30}$/';
+
+    private const RSA_KEY_REGEX = '/^(ssh-rsa|ssh-ed25519|ecdsa-sha2-nistp256|ecdsa-sha2-nistp384|ecdsa-sha2-nistp521|sk-ssh-ed25519@openssh\.com|sk-ecdsa-sha2-nistp256@openssh\.com)\s+[A-Za-z0-9+\/=]+(\s+\S+)?$/';
+
+    /** Groupes utiles exposables dans l'UI */
+    private const USEFUL_GROUPS = [
+        'sudo', 'adm', 'www-data', 'docker', 'nginx', 'ssl-cert',
+        'dialout', 'cdrom', 'audio', 'video', 'plugdev', 'staff',
+        'users', 'lxd', 'netdev',
+    ];
+
+    public function listLinuxUsers(): array
+    {
+        $passwd = $this->run('sudo /bin/cat /etc/passwd');
+        $users  = [];
+
+        foreach ($passwd['lines'] as $line) {
+            $p = explode(':', $line);
+            if (count($p) < 7) continue;
+
+            [$username, , $uid, , , $home, $shell] = $p;
+            $uid = (int) $uid;
+
+            // Only non-system users (UID 1000–60000)
+            if ($uid < 1000 || $uid > 60000) continue;
+            if (in_array($shell, ['/usr/sbin/nologin', '/bin/false', '/sbin/nologin'], true)) continue;
+
+            // Groups (no sudo needed)
+            $gr     = $this->run('id -Gn ' . escapeshellarg($username));
+            $groups = array_values(array_filter(explode(' ', trim($gr['output']))));
+            $isSudo = in_array('sudo', $groups, true);
+
+            // Check for RSA key
+            $keyR   = $this->run('sudo /bin/cat ' . escapeshellarg($home . '/.ssh/authorized_keys'));
+            $hasKey = $keyR['success'] && !empty(trim($keyR['output']));
+
+            // Password locked?
+            $passR    = $this->run('sudo /usr/bin/passwd -S ' . escapeshellarg($username));
+            $locked   = str_contains($passR['output'], ' L ');
+
+            $users[] = [
+                'username' => $username,
+                'uid'      => $uid,
+                'home'     => $home,
+                'shell'    => $shell,
+                'groups'   => $groups,
+                'isSudo'   => $isSudo,
+                'hasKey'   => $hasKey,
+                'locked'   => $locked,
+                'authMethod' => $hasKey ? 'rsa' : 'password',
+            ];
+        }
+
+        return $users;
+    }
+
+    public function getAvailableGroups(): array
+    {
+        $r      = $this->run('sudo /bin/cat /etc/group');
+        $groups = [];
+
+        foreach ($r['lines'] as $line) {
+            $p = explode(':', $line);
+            if (count($p) < 4) continue;
+            [$name, , $gid] = $p;
+            $gid = (int) $gid;
+
+            if ($gid >= 1000 || in_array($name, self::USEFUL_GROUPS, true)) {
+                $groups[] = ['name' => $name, 'gid' => $gid];
+            }
+        }
+
+        usort($groups, fn($a, $b) => strcmp($a['name'], $b['name']));
+
+        return $groups;
+    }
+
+    public function createLinuxUser(
+        string $username,
+        array  $groups,
+        bool   $isSudo,
+        string $authMethod,
+        string $credential
+    ): array {
+        if (!preg_match(self::USERNAME_REGEX, $username)) {
+            return ['success' => false, 'output' => 'Nom d\'utilisateur invalide (lettres minuscules, chiffres, _ et - uniquement).'];
+        }
+
+        // Validate RSA key if applicable
+        if ($authMethod === 'rsa' && !preg_match(self::RSA_KEY_REGEX, trim($credential))) {
+            return ['success' => false, 'output' => 'Clé RSA publique invalide (format attendu: ssh-rsa/ed25519 AAAA...).'];
+        }
+
+        if ($authMethod === 'password' && strlen($credential) < 8) {
+            return ['success' => false, 'output' => 'Le mot de passe doit faire au moins 8 caractères.'];
+        }
+
+        // Check already exists
+        $check = $this->run('id ' . escapeshellarg($username));
+        if ($check['success']) {
+            return ['success' => false, 'output' => "L'utilisateur '{$username}' existe déjà."];
+        }
+
+        // Create user with home dir
+        $r = $this->run('sudo /usr/sbin/useradd -m -s /bin/bash ' . escapeshellarg($username));
+        if (!$r['success']) {
+            return ['success' => false, 'output' => 'Erreur création: ' . $r['output']];
+        }
+
+        // Set credential
+        if ($authMethod === 'password') {
+            $this->runWithInput('sudo /usr/sbin/chpasswd', $username . ':' . $credential);
+        } else {
+            $home = '/home/' . $username;
+            $this->run('sudo /bin/mkdir -p ' . escapeshellarg($home . '/.ssh'));
+            $this->run('sudo /bin/chmod 700 ' . escapeshellarg($home . '/.ssh'));
+            $this->writeFileContent($home . '/.ssh/authorized_keys', trim($credential) . "\n");
+            $this->run('sudo /bin/chmod 600 ' . escapeshellarg($home . '/.ssh/authorized_keys'));
+            $this->run('sudo /bin/chown -R ' . escapeshellarg($username . ':' . $username) . ' ' . escapeshellarg($home . '/.ssh'));
+            // Lock password login when RSA is used
+            $this->run('sudo /usr/bin/passwd -l ' . escapeshellarg($username));
+        }
+
+        // Build groups list
+        $allGroups = array_values(array_unique(array_filter(array_map('trim', $groups))));
+        if ($isSudo && !in_array('sudo', $allGroups, true)) {
+            $allGroups[] = 'sudo';
+        }
+
+        foreach ($allGroups as $g) {
+            if (preg_match('/^[a-z_][a-z0-9_-]{0,31}$/', $g)) {
+                $this->run('sudo /usr/sbin/usermod -aG ' . escapeshellarg($g) . ' ' . escapeshellarg($username));
+            }
+        }
+
+        return ['success' => true, 'output' => "Utilisateur '{$username}' créé avec succès."];
+    }
+
+    public function updateLinuxUser(
+        string $username,
+        array  $groups,
+        bool   $isSudo,
+        string $authMethod,
+        string $credential
+    ): array {
+        if (!preg_match(self::USERNAME_REGEX, $username)) {
+            return ['success' => false, 'output' => 'Nom d\'utilisateur invalide.'];
+        }
+
+        // Security: don't touch system users
+        $idR = $this->run('id -u ' . escapeshellarg($username));
+        $uid = (int) trim($idR['output']);
+        if ($uid < 1000) {
+            return ['success' => false, 'output' => 'Modification d\'un utilisateur système refusée.'];
+        }
+
+        // Build supplementary groups
+        $allGroups = array_values(array_unique(array_filter(array_map('trim', $groups))));
+        if ($isSudo && !in_array('sudo', $allGroups, true)) {
+            $allGroups[] = 'sudo';
+        } elseif (!$isSudo) {
+            $allGroups = array_values(array_filter($allGroups, fn($g) => $g !== 'sudo'));
+        }
+
+        // Validate each group name
+        $safeGroups = array_filter($allGroups, fn($g) => preg_match('/^[a-z_][a-z0-9_-]{0,31}$/', $g));
+        $groupStr   = implode(',', $safeGroups);
+
+        $this->run('sudo /usr/sbin/usermod -G ' . escapeshellarg($groupStr) . ' ' . escapeshellarg($username));
+
+        // Update credential (only if provided)
+        $credential = trim($credential);
+        if ($credential !== '') {
+            if ($authMethod === 'rsa') {
+                if (!preg_match(self::RSA_KEY_REGEX, $credential)) {
+                    return ['success' => false, 'output' => 'Clé RSA publique invalide.'];
+                }
+                $homeR = $this->run('eval echo ~' . escapeshellarg($username));
+                $home  = trim($homeR['output']) ?: '/home/' . $username;
+
+                $this->run('sudo /bin/mkdir -p ' . escapeshellarg($home . '/.ssh'));
+                $this->run('sudo /bin/chmod 700 ' . escapeshellarg($home . '/.ssh'));
+                $this->writeFileContent($home . '/.ssh/authorized_keys', $credential . "\n");
+                $this->run('sudo /bin/chmod 600 ' . escapeshellarg($home . '/.ssh/authorized_keys'));
+                $this->run('sudo /bin/chown -R ' . escapeshellarg($username . ':' . $username) . ' ' . escapeshellarg($home . '/.ssh'));
+                $this->run('sudo /usr/bin/passwd -l ' . escapeshellarg($username));
+            } else {
+                if (strlen($credential) < 8) {
+                    return ['success' => false, 'output' => 'Le mot de passe doit faire au moins 8 caractères.'];
+                }
+                $this->runWithInput('sudo /usr/sbin/chpasswd', $username . ':' . $credential);
+                $this->run('sudo /usr/bin/passwd -u ' . escapeshellarg($username));
+            }
+        }
+
+        return ['success' => true, 'output' => "Utilisateur '{$username}' mis à jour."];
+    }
+
+    public function deleteLinuxUser(string $username): array
+    {
+        if (!preg_match(self::USERNAME_REGEX, $username)) {
+            return ['success' => false, 'output' => 'Nom d\'utilisateur invalide.'];
+        }
+
+        $idR = $this->run('id -u ' . escapeshellarg($username));
+        $uid = (int) trim($idR['output']);
+        if ($uid < 1000 || $uid === 65534) {
+            return ['success' => false, 'output' => 'Suppression d\'un utilisateur système refusée (UID < 1000).'];
+        }
+
+        $r = $this->run('sudo /usr/sbin/userdel -r ' . escapeshellarg($username));
+
+        return [
+            'success' => $r['success'],
+            'output'  => $r['success'] ? "Utilisateur '{$username}' supprimé avec son répertoire home." : $r['output'],
+        ];
+    }
+
+    // ── Helpers privés ───────────────────────────────────────
+
+    private function runWithInput(string $cmd, string $input): array
+    {
+        $desc = [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
+        $proc = proc_open($cmd, $desc, $pipes);
+
+        if (!is_resource($proc)) {
+            return ['success' => false, 'output' => 'Impossible d\'ouvrir le processus.'];
+        }
+
+        fwrite($pipes[0], $input . "\n");
+        fclose($pipes[0]);
+        $stdout = stream_get_contents($pipes[1]);
+        $stderr = stream_get_contents($pipes[2]);
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+        $exitCode = proc_close($proc);
+
+        return ['success' => $exitCode === 0, 'output' => $stdout ?: $stderr];
+    }
+
+    private function writeFileContent(string $path, string $content): bool
+    {
+        $desc = [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
+        $proc = proc_open('sudo /usr/bin/tee ' . escapeshellarg($path) . ' > /dev/null', $desc, $pipes);
+
+        if (!is_resource($proc)) {
+            return false;
+        }
+
+        fwrite($pipes[0], $content);
+        fclose($pipes[0]);
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+
+        return proc_close($proc) === 0;
+    }
 }

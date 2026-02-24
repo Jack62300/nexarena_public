@@ -1,0 +1,408 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block page_title %}Utilisateurs Linux{% endblock %}
+{% block title %}Nexarena Admin — Utilisateurs Linux{% endblock %}
+
+{% block admin_css %}
+.lu-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 9px; border-radius: 99px; font-size: .72rem; font-weight: 700;
+}
+.lu-sudo  { background: rgba(239,68,68,.15);  color: #f87171; border: 1px solid rgba(239,68,68,.3); }
+.lu-rsa   { background: rgba(34,197,94,.15);  color: #4ade80; border: 1px solid rgba(34,197,94,.3); }
+.lu-pass  { background: rgba(99,102,241,.15); color: #a5b4fc; border: 1px solid rgba(99,102,241,.3); }
+.lu-group { background: rgba(148,163,184,.1); color: #94a3b8; border: 1px solid rgba(148,163,184,.2); padding: 1px 7px; border-radius: 4px; font-size: .72rem; font-family: monospace; }
+
+.modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 9999;
+    background: rgba(0,0,0,.7); backdrop-filter: blur(3px);
+    align-items: center; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal-box {
+    background: #1a1a2e; border: 1px solid #2d2d4e; border-radius: 12px;
+    padding: 2rem; width: 100%; max-width: 580px; max-height: 90vh;
+    overflow-y: auto; position: relative;
+}
+.modal-box h4 { margin: 0 0 1.5rem; font-size: 1.1rem; color: #e2e8f0; }
+.modal-close {
+    position: absolute; top: 1rem; right: 1rem;
+    background: none; border: none; color: #8b8fa8; font-size: 1.2rem; cursor: pointer;
+}
+.modal-close:hover { color: #fff; }
+
+.auth-tabs { display: flex; gap: 8px; margin-bottom: 1rem; }
+.auth-tab {
+    flex: 1; padding: .5rem; border: 1px solid #333; border-radius: 6px;
+    background: #111126; color: #8b8fa8; cursor: pointer; font-size: .85rem;
+    text-align: center; transition: all .15s;
+}
+.auth-tab.active { border-color: #45f882; color: #45f882; background: rgba(69,248,130,.08); }
+
+.groups-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 6px; max-height: 180px; overflow-y: auto;
+    padding: 8px; background: #111126; border-radius: 6px; border: 1px solid #2d2d4e;
+}
+.groups-grid label {
+    display: flex; align-items: center; gap: 6px;
+    font-size: .82rem; color: #c0c7e8; cursor: pointer; padding: 4px 6px;
+    border-radius: 4px; transition: background .1s;
+}
+.groups-grid label:hover { background: rgba(255,255,255,.05); }
+.groups-grid input[type=checkbox] { accent-color: #45f882; }
+
+.cred-field { display: none; }
+.cred-field.show { display: block; }
+
+.action-btn {
+    padding: .3rem .7rem; border-radius: 6px; border: 1px solid; cursor: pointer;
+    font-size: .78rem; background: none; transition: all .15s;
+}
+.action-btn-edit  { color: #60a5fa; border-color: rgba(96,165,250,.3); }
+.action-btn-edit:hover  { background: rgba(96,165,250,.1); }
+.action-btn-del   { color: #f87171; border-color: rgba(248,113,113,.3); }
+.action-btn-del:hover  { background: rgba(248,113,113,.1); }
+{% endblock %}
+
+{% block admin_body %}
+<div class="admin-table">
+    <div class="admin-table__header">
+        <h3><i class="fas fa-users-cog me-2 text-info"></i>Utilisateurs Linux
+            <span class="badge bg-secondary ms-2">{{ users|length }}</span>
+        </h3>
+        <button class="btn btn-sm btn-success" onclick="openCreateModal()">
+            <i class="fas fa-plus me-1"></i>Nouvel utilisateur
+        </button>
+    </div>
+
+    <div class="p-3">
+        {% if users is empty %}
+            <div class="text-center py-5 text-muted">
+                <i class="fas fa-user-slash fa-3x mb-3 opacity-50"></i>
+                <p>Aucun utilisateur non-système trouvé (UID ≥ 1000).</p>
+            </div>
+        {% else %}
+            <div class="table-responsive">
+                <table class="table table-dark table-hover align-middle" style="font-size:.875rem;">
+                    <thead class="text-muted" style="font-size:.8rem; text-transform:uppercase; letter-spacing:.04em;">
+                        <tr>
+                            <th>Utilisateur</th>
+                            <th>UID</th>
+                            <th>Shell</th>
+                            <th>Groupes</th>
+                            <th>Sudo</th>
+                            <th>Auth</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in users %}
+                        <tr>
+                            <td>
+                                <div style="display:flex;align-items:center;gap:8px;">
+                                    <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;color:#fff;flex-shrink:0;">
+                                        {{ u.username|slice(0,1)|upper }}
+                                    </div>
+                                    <div>
+                                        <code style="color:#e2e8f0;">{{ u.username }}</code>
+                                        <br><small class="text-muted">{{ u.home }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><code class="text-muted">{{ u.uid }}</code></td>
+                            <td><code style="font-size:.75rem;color:#7dd3fc;">{{ u.shell }}</code></td>
+                            <td>
+                                <div style="display:flex;flex-wrap:wrap;gap:3px;max-width:240px;">
+                                    {% for g in u.groups %}
+                                        {% if g != 'sudo' %}
+                                            <span class="lu-group">{{ g }}</span>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </td>
+                            <td>
+                                {% if u.isSudo %}
+                                    <span class="lu-badge lu-sudo"><i class="fas fa-shield-alt"></i> sudo</span>
+                                {% else %}
+                                    <span class="text-muted" style="font-size:.8rem;">—</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if u.hasKey %}
+                                    <span class="lu-badge lu-rsa"><i class="fas fa-key"></i> RSA</span>
+                                    {% if u.locked %}<br><small class="text-muted" style="font-size:.72rem;">pass. verrouillé</small>{% endif %}
+                                {% else %}
+                                    <span class="lu-badge lu-pass"><i class="fas fa-lock"></i> Mot de passe</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <div style="display:flex;gap:6px;justify-content:flex-end;">
+                                    <button class="action-btn action-btn-edit"
+                                        onclick="openEditModal({{ {
+                                            username: u.username,
+                                            uid:      u.uid,
+                                            groups:   u.groups,
+                                            isSudo:   u.isSudo,
+                                            authMethod: u.authMethod
+                                        }|json_encode|e('html_attr') }})">
+                                        <i class="fas fa-pencil-alt me-1"></i>Modifier
+                                    </button>
+                                    <form method="post"
+                                          action="{{ path('admin_linux_users_delete', {username: u.username}) }}"
+                                          onsubmit="return confirm('Supprimer l\'utilisateur {{ u.username }} et son répertoire home ?\n\nCette action est IRRÉVERSIBLE.')">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('linux_user_del_' ~ u.username) }}">
+                                        <button type="submit" class="action-btn action-btn-del">
+                                            <i class="fas fa-trash me-1"></i>Supprimer
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+{# ════════════════════ MODAL CRÉATION ════════════════════ #}
+<div class="modal-overlay" id="createModal" onclick="closeOnBackdrop(event,'createModal')">
+    <div class="modal-box">
+        <button class="modal-close" onclick="closeModal('createModal')"><i class="fas fa-times"></i></button>
+        <h4><i class="fas fa-user-plus me-2 text-success"></i>Créer un utilisateur Linux</h4>
+
+        <form method="post" action="{{ path('admin_linux_users_create') }}" id="createForm">
+            <input type="hidden" name="_token" value="{{ csrf_token('linux_user') }}">
+
+            <div class="mb-3">
+                <label class="form-label">Nom d'utilisateur <span class="text-danger">*</span></label>
+                <input type="text" name="username" class="form-control font-monospace"
+                       placeholder="ex: deployer" required maxlength="31"
+                       pattern="^[a-z_][a-z0-9_\-]{0,30}$"
+                       title="Minuscules, chiffres, _ et - uniquement. Commence par une lettre ou _.">
+                <small class="text-muted">Minuscules, chiffres, _ et — uniquement</small>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Shell</label>
+                <select name="shell" class="form-select" disabled>
+                    <option value="/bin/bash" selected>/bin/bash</option>
+                </select>
+                <small class="text-muted">Shell fixé à /bin/bash</small>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Groupes supplémentaires</label>
+                <div class="groups-grid" id="createGroupsGrid">
+                    {% for g in groups %}
+                    <label>
+                        <input type="checkbox" name="groups[]" value="{{ g.name }}">
+                        {{ g.name }}<small class="text-muted ms-1">({{ g.gid }})</small>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" name="is_sudo" value="1" id="createSudo">
+                    <label class="form-check-label text-warning" for="createSudo">
+                        <i class="fas fa-shield-alt me-1"></i>Accès sudo (NOPASSWD requis séparément)
+                    </label>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Méthode d'authentification <span class="text-danger">*</span></label>
+                <div class="auth-tabs">
+                    <div class="auth-tab active" id="createTabPass" onclick="setAuthTab('create','password')">
+                        <i class="fas fa-lock me-1"></i>Mot de passe
+                    </div>
+                    <div class="auth-tab" id="createTabRsa" onclick="setAuthTab('create','rsa')">
+                        <i class="fas fa-key me-1"></i>Clé RSA publique
+                    </div>
+                </div>
+                <input type="hidden" name="auth_method" id="createAuthMethod" value="password">
+
+                <div class="cred-field show" id="createCredPassword">
+                    <input type="password" name="credential" id="createPassword"
+                           class="form-control" placeholder="Mot de passe (min 8 chars)"
+                           minlength="8" autocomplete="new-password">
+                </div>
+                <div class="cred-field" id="createCredRsa">
+                    <textarea name="credential" id="createRsa" class="form-control font-monospace"
+                              rows="4" placeholder="ssh-rsa AAAA... ou ssh-ed25519 AAAA..."
+                              style="font-size:.78rem;resize:vertical;"></textarea>
+                    <small class="text-muted">Collez la clé publique complète (ssh-rsa, ssh-ed25519, ecdsa-sha2-*)</small>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-success w-100" onclick="return validateCreateForm()">
+                <i class="fas fa-user-plus me-1"></i>Créer l'utilisateur
+            </button>
+        </form>
+    </div>
+</div>
+
+{# ════════════════════ MODAL MODIFICATION ════════════════════ #}
+<div class="modal-overlay" id="editModal" onclick="closeOnBackdrop(event,'editModal')">
+    <div class="modal-box">
+        <button class="modal-close" onclick="closeModal('editModal')"><i class="fas fa-times"></i></button>
+        <h4><i class="fas fa-user-edit me-2 text-info"></i>Modifier — <span id="editTitle">…</span></h4>
+
+        <form method="post" id="editForm" action="">
+            <input type="hidden" name="_token" value="{{ csrf_token('linux_user') }}">
+
+            <div class="mb-3">
+                <label class="form-label">Groupes supplémentaires</label>
+                <div class="groups-grid" id="editGroupsGrid">
+                    {% for g in groups %}
+                    <label>
+                        <input type="checkbox" name="groups[]" value="{{ g.name }}" class="edit-group-cb">
+                        {{ g.name }}<small class="text-muted ms-1">({{ g.gid }})</small>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" name="is_sudo" value="1" id="editSudo">
+                    <label class="form-check-label text-warning" for="editSudo">
+                        <i class="fas fa-shield-alt me-1"></i>Accès sudo
+                    </label>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Mettre à jour les credentials <span class="text-muted">(optionnel)</span></label>
+                <div class="auth-tabs">
+                    <div class="auth-tab active" id="editTabPass" onclick="setAuthTab('edit','password')">
+                        <i class="fas fa-lock me-1"></i>Mot de passe
+                    </div>
+                    <div class="auth-tab" id="editTabRsa" onclick="setAuthTab('edit','rsa')">
+                        <i class="fas fa-key me-1"></i>Clé RSA publique
+                    </div>
+                </div>
+                <input type="hidden" name="auth_method" id="editAuthMethod" value="password">
+
+                <div class="cred-field show" id="editCredPassword">
+                    <input type="password" name="credential" id="editPassword"
+                           class="form-control" placeholder="Laisser vide = ne pas modifier"
+                           autocomplete="new-password">
+                    <small class="text-muted">Laisser vide pour conserver le mot de passe actuel</small>
+                </div>
+                <div class="cred-field" id="editCredRsa">
+                    <textarea name="credential" id="editRsa" class="form-control font-monospace"
+                              rows="4" placeholder="Coller la nouvelle clé ou laisser vide"
+                              style="font-size:.78rem;resize:vertical;"></textarea>
+                    <small class="text-muted">Laisser vide pour conserver la clé actuelle</small>
+                </div>
+            </div>
+
+            <div class="p-3 rounded mb-3" style="background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.2);font-size:.82rem;color:#fca5a5;">
+                <i class="fas fa-exclamation-triangle me-1"></i>
+                Modifier les groupes remplace <strong>tous</strong> les groupes supplémentaires actuels.
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">
+                <i class="fas fa-save me-1"></i>Enregistrer les modifications
+            </button>
+        </form>
+    </div>
+</div>
+
+{# ════════════════════ SUDOERS INFO ════════════════════ #}
+<div class="p-3 mt-3">
+    <div class="admin-card p-4" style="border-color:rgba(251,191,36,.2);background:rgba(251,191,36,.04);">
+        <h6 class="text-warning mb-2"><i class="fas fa-info-circle me-1"></i>Configuration sudoers requise</h6>
+        <p class="text-muted mb-2" style="font-size:.85rem;">
+            Ajoutez ces lignes dans <code>/etc/sudoers.d/nexarena-admin</code> pour que la gestion des utilisateurs fonctionne :
+        </p>
+        <pre style="background:#111126;padding:1rem;border-radius:6px;font-size:.78rem;color:#a5b4fc;overflow-x:auto;">www-data ALL=(root) NOPASSWD: /usr/sbin/useradd *
+www-data ALL=(root) NOPASSWD: /usr/sbin/usermod *
+www-data ALL=(root) NOPASSWD: /usr/sbin/userdel *
+www-data ALL=(root) NOPASSWD: /usr/sbin/chpasswd
+www-data ALL=(root) NOPASSWD: /usr/bin/passwd *
+www-data ALL=(root) NOPASSWD: /bin/mkdir *
+www-data ALL=(root) NOPASSWD: /bin/chmod *
+www-data ALL=(root) NOPASSWD: /bin/chown *</pre>
+    </div>
+</div>
+{% endblock %}
+
+{% block admin_js %}
+<script nonce="{{ csp_nonce() }}">
+
+const ALL_GROUPS = {{ groups|map(g => g.name)|json_encode|raw }};
+
+// ── Modals ──────────────────────────────────────────────────────────────────
+
+function openModal(id)   { document.getElementById(id).classList.add('open'); }
+function closeModal(id)  { document.getElementById(id).classList.remove('open'); }
+function closeOnBackdrop(e, id) { if (e.target.id === id) closeModal(id); }
+
+function openCreateModal() {
+    // Reset form
+    document.getElementById('createForm').reset();
+    setAuthTab('create', 'password');
+    openModal('createModal');
+}
+
+function openEditModal(data) {
+    const u = typeof data === 'string' ? JSON.parse(data) : data;
+
+    document.getElementById('editTitle').textContent = u.username;
+    document.getElementById('editForm').action = '/admin/linux-users/' + encodeURIComponent(u.username) + '/update';
+    document.getElementById('editSudo').checked = !!u.isSudo;
+    document.getElementById('editPassword').value = '';
+    document.getElementById('editRsa').value = '';
+
+    // Set auth tab
+    setAuthTab('edit', u.authMethod === 'rsa' ? 'rsa' : 'password');
+
+    // Check current groups (excluding sudo which is handled by the toggle)
+    document.querySelectorAll('.edit-group-cb').forEach(cb => {
+        cb.checked = u.groups.includes(cb.value) && cb.value !== 'sudo';
+    });
+
+    openModal('editModal');
+}
+
+// ── Auth tabs ────────────────────────────────────────────────────────────────
+
+function setAuthTab(prefix, method) {
+    const isRsa = method === 'rsa';
+    document.getElementById(prefix + 'TabPass').classList.toggle('active', !isRsa);
+    document.getElementById(prefix + 'TabRsa').classList.toggle('active',  isRsa);
+    document.getElementById(prefix + 'AuthMethod').value = method;
+
+    document.getElementById(prefix + 'CredPassword').classList.toggle('show', !isRsa);
+    document.getElementById(prefix + 'CredRsa').classList.toggle('show',  isRsa);
+
+    // Toggle required
+    const passInput = document.getElementById(prefix + 'Password');
+    const rsaInput  = document.getElementById(prefix + 'Rsa');
+    if (passInput) passInput.required = (prefix === 'create' && !isRsa);
+    if (rsaInput)  rsaInput.required  = (prefix === 'create' && isRsa);
+}
+
+// ── Validation création ──────────────────────────────────────────────────────
+
+function validateCreateForm() {
+    const method = document.getElementById('createAuthMethod').value;
+    if (method === 'password') {
+        const pass = document.getElementById('createPassword').value;
+        if (pass.length < 8) { alert('Le mot de passe doit faire au moins 8 caractères.'); return false; }
+    } else {
+        const key = document.getElementById('createRsa').value.trim();
+        if (!key.match(/^(ssh-rsa|ssh-ed25519|ecdsa-sha2-nistp256|ecdsa-sha2-nistp384|ecdsa-sha2-nistp521)/)) {
+            alert('La clé RSA doit commencer par ssh-rsa, ssh-ed25519 ou ecdsa-sha2-*'); return false;
+        }
+    }
+    return true;
+}
+</script>
+{% endblock %}

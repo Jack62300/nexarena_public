@@ -218,7 +218,7 @@
 
             {# ── Technique ── #}
             {% if is_granted('ROLE_DEVELOPPEUR') %}
-            {% set techActive = _r starts with 'admin_webhooks_' or _r starts with 'admin_logs_' or _r starts with 'admin_server_admin_' %}
+            {% set techActive = _r starts with 'admin_webhooks_' or _r starts with 'admin_logs_' or _r starts with 'admin_server_admin_' or _r starts with 'admin_linux_users_' %}
             <div class="admin-sidebar__group admin-sidebar__group--red {{ techActive ? 'open' : '' }}">
                 <button class="admin-sidebar__section" type="button">
                     <span><i class="fas fa-code"></i> Technique</span>
@@ -233,6 +233,9 @@
                     </a>
                     <a href="{{ path('admin_server_admin_index') }}" class="admin-sidebar__link {{ _r starts with 'admin_server_admin_' ? 'active' : '' }}">
                         <i class="fas fa-server"></i> Serveur Ubuntu
+                    </a>
+                    <a href="{{ path('admin_linux_users_index') }}" class="admin-sidebar__link {{ _r starts with 'admin_linux_users_' ? 'active' : '' }}">
+                        <i class="fas fa-users-cog"></i> Utilisateurs Linux
                     </a>
                 </div>
             </div>
