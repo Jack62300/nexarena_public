@@ -21,8 +21,22 @@
                             {# ── Navigation ── #}
                             <div class="tgmenu__navbar-wrap tgmenu__main-menu d-none d-xl-flex">
                                 <ul class="navigation">
-                                    <li class="{{ _route == 'app_home' ? 'active' : '' }}">
+                                    <li class="menu-item-has-children {{ _route == 'app_home' or _route starts with 'articles_' or _route starts with 'plugins_' or _route starts with 'recruitment_' ? 'active' : '' }}">
                                         <a href="{{ path('app_home') }}">Accueil</a>
+                                        <ul class="sub-menu">
+                                            <li class="{{ _route == 'app_home' ? 'active' : '' }}">
+                                                <a href="{{ path('app_home') }}"><i class="fas fa-home" style="width:14px;margin-right:8px;opacity:.6;"></i>Accueil</a>
+                                            </li>
+                                            <li class="{{ _route starts with 'articles_' ? 'active' : '' }}">
+                                                <a href="{{ path('articles_list') }}"><i class="fas fa-newspaper" style="width:14px;margin-right:8px;opacity:.6;"></i>Actualités</a>
+                                            </li>
+                                            <li class="{{ _route starts with 'plugins_' ? 'active' : '' }}">
+                                                <a href="{{ path('plugins_index') }}"><i class="fas fa-puzzle-piece" style="width:14px;margin-right:8px;opacity:.6;"></i>Plugins</a>
+                                            </li>
+                                            <li class="{{ _route starts with 'recruitment_' ? 'active' : '' }}">
+                                                <a href="{{ path('recruitment_index') }}"><i class="fas fa-bullhorn" style="width:14px;margin-right:8px;opacity:.6;"></i>Recrutement</a>
+                                            </li>
+                                        </ul>
                                     </li>
                                     <li class="menu-item-has-children nx-cat-dropdown {{ _route starts with 'ranking_' ? 'active' : '' }}">
                                         <a href="#">Categories</a>
@@ -42,15 +56,6 @@
                                                 </li>
                                             {% endfor %}
                                         </ul>
-                                    </li>
-                                    <li class="{{ _route starts with 'articles_' ? 'active' : '' }}">
-                                        <a href="{{ path('articles_list') }}">Actualites</a>
-                                    </li>
-                                    <li class="{{ _route starts with 'plugins_' ? 'active' : '' }}">
-                                        <a href="{{ path('plugins_index') }}">Plugins</a>
-                                    </li>
-                                    <li class="{{ _route starts with 'recruitment_' ? 'active' : '' }}">
-                                        <a href="{{ path('recruitment_index') }}">Recrutement</a>
                                     </li>
                                     <li class="{{ _route == 'page_contact' ? 'active' : '' }}">
                                         <a href="{{ path('page_contact') }}">Contact</a>
@@ -292,7 +297,9 @@
                     <h4 class="small-title">LIENS RAPIDES</h4>
                     <ul class="offCanvas__contact-list list-wrap nx-quick-links">
                         <li><a href="{{ path('app_home') }}"><i class="fas fa-home"></i> Accueil</a></li>
-                        <li><a href="{{ path('articles_list') }}"><i class="fas fa-newspaper"></i> Actualites</a></li>
+                        <li><a href="{{ path('articles_list') }}"><i class="fas fa-newspaper"></i> Actualités</a></li>
+                        <li><a href="{{ path('plugins_index') }}"><i class="fas fa-puzzle-piece"></i> Plugins</a></li>
+                        <li><a href="{{ path('recruitment_index') }}"><i class="fas fa-bullhorn"></i> Recrutement</a></li>
                         {% if app.user %}
                             <li><a href="{{ path('user_servers_new') }}"><i class="fas fa-plus-circle"></i> Ajouter un serveur</a></li>
                             <li><a href="{{ path('user_servers_list') }}"><i class="fas fa-server"></i> Mes serveurs</a></li>
