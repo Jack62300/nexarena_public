@@ -55,6 +55,12 @@ class ServerAdminController extends AbstractController
         return $this->json($result);
     }
 
+    #[Route('/services/status', name: 'services_status', methods: ['GET'])]
+    public function servicesStatus(): JsonResponse
+    {
+        return $this->json($this->sas->getAllServicesStatus());
+    }
+
     #[Route('/service/log', name: 'service_log', methods: ['GET'])]
     public function serviceLog(Request $request): JsonResponse
     {

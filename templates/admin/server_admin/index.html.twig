@@ -69,13 +69,19 @@
 <div style="padding:1.5rem;">
 
     {# ── Onglets ── #}
-    <div class="tab-bar">
-        <button class="tab-btn active" onclick="showTab('system')"><i class="fas fa-server"></i> Système</button>
-        <button class="tab-btn" onclick="showTab('services')"><i class="fas fa-cogs"></i> Services</button>
-        <button class="tab-btn" onclick="showTab('firewall')"><i class="fas fa-shield-alt"></i> Firewall</button>
-        <button class="tab-btn" onclick="showTab('fail2ban')"><i class="fas fa-user-slash"></i> Fail2ban</button>
-        <button class="tab-btn" onclick="showTab('apt')"><i class="fas fa-box-open"></i> Paquets APT</button>
-        <button class="tab-btn" onclick="showTab('config')"><i class="fas fa-file-code"></i> Fichiers config</button>
+    <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:1.25rem;">
+        <div class="tab-bar" style="margin-bottom:0;flex:1;">
+            <button class="tab-btn active" onclick="showTab('system')"><i class="fas fa-server"></i> Système</button>
+            <button class="tab-btn" onclick="showTab('services')"><i class="fas fa-cogs"></i> Services</button>
+            <button class="tab-btn" onclick="showTab('firewall')"><i class="fas fa-shield-alt"></i> Firewall</button>
+            <button class="tab-btn" onclick="showTab('fail2ban')"><i class="fas fa-user-slash"></i> Fail2ban</button>
+            <button class="tab-btn" onclick="showTab('apt')"><i class="fas fa-box-open"></i> Paquets APT</button>
+            <button class="tab-btn" onclick="showTab('config')"><i class="fas fa-file-code"></i> Fichiers config</button>
+        </div>
+        <div style="font-size:.75rem;color:#8b8fa8;white-space:nowrap;text-align:right;">
+            <span id="autoRefreshStatus"><span class="spinner"></span> Actualisation auto</span><br>
+            <span id="lastRefreshed">—</span>
+        </div>
     </div>
 
     {# ══════════════════════ ONGLET SYSTÈME ══════════════════════ #}
@@ -249,11 +255,12 @@
             <div class="sa-card">
                 <div class="sa-card__label"><i class="fas fa-box-open"></i> Paquets à mettre à jour</div>
                 <div class="sa-card__val" id="aptCount">{{ upgradable.count }}</div>
-                <div style="display:flex;gap:.5rem;margin-top:.75rem;">
+                <div style="display:flex;gap:.5rem;margin-top:.75rem;flex-wrap:wrap;">
                     <button class="btn-sa btn-sa--blue" onclick="aptUpdate()"><i class="fas fa-sync-alt"></i> apt update</button>
-                    <button class="btn-sa btn-sa--green" onclick="aptUpgrade()" {% if upgradable.count == 0 %}disabled style="opacity:.5;cursor:not-allowed;"{% endif %}>
+                    <button class="btn-sa btn-sa--green" id="btnAptUpgrade" onclick="aptUpgrade()" {% if upgradable.count == 0 %}disabled style="opacity:.5;cursor:not-allowed;"{% endif %}>
                         <i class="fas fa-arrow-up"></i> apt upgrade
                     </button>
+                    <button class="btn-sa btn-sa--gray" onclick="refreshAptList()"><i class="fas fa-list"></i> Actualiser liste</button>
                 </div>
             </div>
         </div>
@@ -350,20 +357,48 @@ async function postJson(url, data) {
     return r.json();
 }
 
+// ── URL helper ───────────────────────────────────────────────────────────
+function url(path) { return BASE.replace(/\/+$/, '') + path; }
+
+// ── Dernière actualisation ────────────────────────────────────────────────
+function updateLastRefreshed() {
+    const now = new Date();
+    document.getElementById('lastRefreshed').textContent =
+        'Mis à jour ' + now.getHours().toString().padStart(2,'0') + ':' +
+        now.getMinutes().toString().padStart(2,'0') + ':' +
+        now.getSeconds().toString().padStart(2,'0');
+}
+
 // ── Système ──────────────────────────────────────────────────────────────
-async function refreshSystemInfo() {
-    const d = await (await fetch(BASE.replace(/\/$/, '') + '/../server-admin/system/info')).json();
-    document.getElementById('si-uptime').textContent  = d.uptime || '—';
-    document.getElementById('si-load1').textContent   = d.load['1m'];
-    document.getElementById('si-load5').textContent   = d.load['5m'];
-    document.getElementById('si-load15').textContent  = d.load['15m'];
-    document.getElementById('si-mem-pct').textContent    = d.memory.percent + '%';
-    document.getElementById('si-mem-detail').textContent = d.memory.used + ' Mo / ' + d.memory.total + ' Mo';
-    document.getElementById('si-mem-bar').style.width    = d.memory.percent + '%';
-    document.getElementById('si-disk-pct').textContent    = d.disk.percent + '%';
-    document.getElementById('si-disk-detail').textContent = d.disk.used + ' / ' + d.disk.total;
-    document.getElementById('si-disk-bar').style.width    = d.disk.percent + '%';
-    toast('Informations système actualisées.', true);
+async function refreshSystemInfo(silent) {
+    try {
+        const d = await (await fetch(url('/system/info'))).json();
+        document.getElementById('si-uptime').textContent  = d.uptime || '—';
+        document.getElementById('si-load1').textContent   = d.load['1m'];
+        document.getElementById('si-load5').textContent   = d.load['5m'];
+        document.getElementById('si-load15').textContent  = d.load['15m'];
+        document.getElementById('si-mem-pct').textContent    = d.memory.percent + '%';
+        document.getElementById('si-mem-detail').textContent = d.memory.used + ' Mo / ' + d.memory.total + ' Mo';
+        document.getElementById('si-mem-bar').style.width    = d.memory.percent + '%';
+        document.getElementById('si-disk-pct').textContent    = d.disk.percent + '%';
+        document.getElementById('si-disk-detail').textContent = d.disk.used + ' / ' + d.disk.total;
+        document.getElementById('si-disk-bar').style.width    = d.disk.percent + '%';
+        if (!silent) toast('Informations système actualisées.', true);
+        updateLastRefreshed();
+    } catch(e) {}
+}
+
+// ── Services status (auto-refresh) ───────────────────────────────────────
+async function refreshServicesStatus(silent) {
+    try {
+        const d = await (await fetch(url('/services/status'))).json();
+        for (const [svc, active] of Object.entries(d)) {
+            const key = svc.replaceAll('.','_').replaceAll('-','_');
+            const dot = document.getElementById('svcstatus-' + key);
+            if (dot) dot.className = 'svc-dot ' + (active ? 'svc-dot--on' : 'svc-dot--off');
+        }
+        updateLastRefreshed();
+    } catch(e) {}
 }
 
 // ── Services ─────────────────────────────────────────────────────────────
@@ -371,8 +406,7 @@ async function svcAction(action, svc) {
     const svcKey = svc.replaceAll('.','_').replaceAll('-','_');
     const dot = document.getElementById('svcstatus-' + svcKey);
     dot && (dot.style.opacity = '.3');
-    const url = BASE.replace(/\/+$/, '') + '/service/' + action;
-    const d = await postJson(url, { service: svc });
+    const d = await postJson(url('/service/' + action), { service: svc });
     if (dot) {
         dot.style.opacity = '1';
         dot.className = 'svc-dot ' + (d.success ? 'svc-dot--on' : 'svc-dot--off');
@@ -387,8 +421,7 @@ async function svcLog(svc) {
     sec.style.display = '';
     box.textContent = 'Chargement…';
     sec.scrollIntoView({ behavior:'smooth', block:'start' });
-    const url = BASE.replace(/\/+$/, '') + '/service/log?service=' + encodeURIComponent(svc);
-    const d = await (await fetch(url)).json();
+    const d = await (await fetch(url('/service/log?service=') + encodeURIComponent(svc))).json();
     box.textContent = d.output || '(vide)';
     box.scrollTop = box.scrollHeight;
 }
@@ -397,19 +430,19 @@ async function svcLog(svc) {
 async function firewallBan() {
     const ip = document.getElementById('banIpInput').value.trim();
     if (!ip) { toast('Entrez une adresse IP.', false); return; }
-    const d = await postJson(BASE.replace(/\/+$/, '') + '/firewall/ban', { ip });
+    const d = await postJson(url('/firewall/ban'), { ip });
     toast(d.success ? 'IP ' + ip + ' bannie.' : ('Erreur: ' + d.output), d.success);
     if (d.success) { document.getElementById('banIpInput').value = ''; refreshFirewall(); }
 }
 
 async function firewallUnban(ip) {
-    const d = await postJson(BASE.replace(/\/+$/, '') + '/firewall/unban', { ip });
+    const d = await postJson(url('/firewall/unban'), { ip });
     toast(d.success ? 'IP ' + ip + ' débannie.' : ('Erreur: ' + d.output), d.success);
     if (d.success) refreshFirewall();
 }
 
 async function refreshFirewall() {
-    const d = await (await fetch(BASE.replace(/\/+$/, '') + '/firewall/list')).json();
+    const d = await (await fetch(url('/firewall/list'))).json();
     const body = document.getElementById('fwBody');
     const empty = document.getElementById('fwEmpty');
     document.getElementById('fwCount').textContent = d.ips.length;
@@ -427,7 +460,7 @@ async function refreshFirewall() {
 
 // ── Fail2ban ─────────────────────────────────────────────────────────────
 async function f2bUnban(ip, jail) {
-    const d = await postJson(BASE.replace(/\/+$/, '') + '/fail2ban/unban', { ip, jail });
+    const d = await postJson(url('/fail2ban/unban'), { ip, jail });
     toast(d.success ? ip + ' débanni de ' + jail + '.' : ('Erreur: ' + d.output), d.success);
     if (d.success) refreshFail2ban();
 }
@@ -435,7 +468,7 @@ async function f2bUnban(ip, jail) {
 async function refreshFail2ban() {
     const box = document.getElementById('f2bContent');
     box.innerHTML = '<span class="spinner"></span> Chargement…';
-    const d = await (await fetch(BASE.replace(/\/+$/, '') + '/fail2ban/status')).json();
+    const d = await (await fetch(url('/fail2ban/status'))).json();
     if (!d.success) { box.innerHTML = '<p style="color:#e03131;">Erreur Fail2ban.</p>'; return; }
     const jails = d.jails;
     let html = '';
@@ -466,11 +499,11 @@ async function aptUpdate() {
     const log = document.getElementById('aptLog');
     sec.style.display = '';
     log.textContent = 'apt update en cours…';
-    const d = await postJson(BASE.replace(/\/+$/, '') + '/apt/update', {});
+    const d = await postJson(url('/apt/update'), {});
     log.textContent = d.output || '(vide)';
     toast(d.success ? 'apt update terminé.' : 'Erreur apt update.', d.success);
     if (d.success) {
-        const u = await (await fetch(BASE.replace(/\/+$/, '') + '/apt/upgradable')).json();
+        const u = await (await fetch(url('/apt/upgradable'))).json();
         document.getElementById('aptCount').textContent = u.count;
         const body = document.getElementById('aptBody');
         if (body) {
@@ -490,9 +523,30 @@ async function aptUpgrade() {
     const log = document.getElementById('aptLog');
     sec.style.display = '';
     log.textContent = 'apt upgrade en cours (peut prendre plusieurs minutes)…';
-    const d = await postJson(BASE.replace(/\/+$/, '') + '/apt/upgrade', {});
+    const d = await postJson(url('/apt/upgrade'), {});
     log.textContent = d.output || '(vide)';
     toast(d.success ? 'apt upgrade terminé.' : 'Erreur apt upgrade.', d.success);
+    if (d.success) await refreshAptList();
+}
+
+async function refreshAptList() {
+    try {
+        const u = await (await fetch(url('/apt/upgradable'))).json();
+        document.getElementById('aptCount').textContent = u.count;
+        const btn = document.getElementById('btnAptUpgrade');
+        if (btn) { btn.disabled = u.count === 0; btn.style.opacity = u.count === 0 ? '.5' : '1'; btn.style.cursor = u.count === 0 ? 'not-allowed' : ''; }
+        const body = document.getElementById('aptBody');
+        if (body) {
+            body.innerHTML = '';
+            u.packages.forEach(p => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${p.name}</td><td><span class="pkg-badge">${p.old}</span></td><td><span class="pkg-badge pkg-badge--new">${p.new}</span></td>`;
+                body.appendChild(tr);
+            });
+        }
+        toast('Liste APT actualisée (' + u.count + ' paquet(s)).', true);
+        updateLastRefreshed();
+    } catch(e) { toast('Erreur lors de l\'actualisation APT.', false); }
 }
 
 // ── Config ────────────────────────────────────────────────────────────────
@@ -500,7 +554,7 @@ async function loadConfig() {
     const key = document.getElementById('configKey').value;
     if (!key) return;
     document.getElementById('configStatus').textContent = 'Chargement…';
-    const d = await (await fetch(BASE.replace(/\/+$/, '') + '/config/read?key=' + encodeURIComponent(key))).json();
+    const d = await (await fetch(url('/config/read?key=') + encodeURIComponent(key))).json();
     document.getElementById('configContent').value = d.success ? d.output : ('ERREUR: ' + d.output);
     document.getElementById('configStatus').textContent = d.success ? 'Chargé.' : 'Erreur.';
 }
@@ -511,9 +565,25 @@ async function saveConfig() {
     if (!key) { toast('Sélectionnez un fichier d\'abord.', false); return; }
     if (!confirm('Enregistrer les modifications dans ' + key + ' ?')) return;
     document.getElementById('configStatus').textContent = 'Enregistrement…';
-    const d = await postJson(BASE.replace(/\/+$/, '') + '/config/write', { key, content });
+    const d = await postJson(url('/config/write'), { key, content });
     document.getElementById('configStatus').textContent = d.success ? 'Enregistré !' : 'Erreur.';
     toast(d.success ? 'Fichier enregistré.' : ('Erreur: ' + d.output), d.success);
 }
+
+// ── Auto-refresh ──────────────────────────────────────────────────────────
+// Système : toutes les 10s
+setInterval(() => refreshSystemInfo(true), 10000);
+// Services : toutes les 15s
+setInterval(() => refreshServicesStatus(true), 15000);
+// Firewall : toutes les 30s
+setInterval(() => refreshFirewall(), 30000);
+// Fail2ban : toutes les 30s
+setInterval(() => refreshFail2ban(), 30000);
+
+// Premier refresh silencieux au chargement
+(async () => {
+    await refreshSystemInfo(true);
+    await refreshServicesStatus(true);
+})();
 </script>
 {% endblock admin_js %}
