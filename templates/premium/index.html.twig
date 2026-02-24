@@ -101,7 +101,7 @@
                     <li><i class="fas fa-check"></i> Fonds d'ecran et decorations</li>
                     <li><i class="fas fa-check"></i> Deblocage permanent</li>
                 </ul>
-                <a href="{{ path('user_server_list') }}" class="prem-feat-card__btn prem-feat-card__btn--green">
+                <a href="{{ path('user_servers_list') }}" class="prem-feat-card__btn prem-feat-card__btn--green">
                     <i class="fas fa-server"></i> Gerer mes serveurs
                 </a>
             </div>
@@ -125,7 +125,7 @@
                     <li><i class="fas fa-check"></i> Configurateur visuel integre</li>
                     <li><i class="fas fa-check"></i> Deblocage permanent</li>
                 </ul>
-                <a href="{{ path('user_server_list') }}" class="prem-feat-card__btn prem-feat-card__btn--blue">
+                <a href="{{ path('user_servers_list') }}" class="prem-feat-card__btn prem-feat-card__btn--blue">
                     <i class="fas fa-server"></i> Gerer mes serveurs
                 </a>
             </div>
@@ -149,7 +149,7 @@
                     <li><i class="fas fa-check"></i> Vues + votes par heure</li>
                     <li><i class="fas fa-check"></i> Deblocage permanent</li>
                 </ul>
-                <a href="{{ path('user_server_list') }}" class="prem-feat-card__btn prem-feat-card__btn--purple">
+                <a href="{{ path('user_servers_list') }}" class="prem-feat-card__btn prem-feat-card__btn--purple">
                     <i class="fas fa-server"></i> Gerer mes serveurs
                 </a>
             </div>
@@ -174,7 +174,7 @@
                     <li><i class="fas fa-check"></i> Detection automatique du live</li>
                     <li><i class="fas fa-check"></i> Abonnement mensuel renouvelable</li>
                 </ul>
-                <a href="{{ path('user_server_list') }}" class="prem-feat-card__btn prem-feat-card__btn--twitch">
+                <a href="{{ path('user_servers_list') }}" class="prem-feat-card__btn prem-feat-card__btn--twitch">
                     <i class="fas fa-server"></i> Gerer mes serveurs
                 </a>
             </div>
@@ -288,8 +288,8 @@
                 Les NexBoost sont deduits automatiquement a la reservation. Vous pouvez choisir la duree (minimum 12h).
             </p>
             {% if app.user %}
-                <a href="{{ path('featured_booking') }}" class="prem-feat-card__btn prem-feat-card__btn--orange" style="width:auto;padding:14px 36px;">
-                    <i class="fas fa-rocket"></i> Reserver un emplacement
+                <a href="{{ path('user_servers_list') }}" class="prem-feat-card__btn prem-feat-card__btn--orange" style="width:auto;padding:14px 36px;">
+                    <i class="fas fa-rocket"></i> Booster mon serveur
                 </a>
             {% else %}
                 <a href="{{ path('app_login') }}" class="prem-feat-card__btn prem-feat-card__btn--orange" style="width:auto;padding:14px 36px;">
