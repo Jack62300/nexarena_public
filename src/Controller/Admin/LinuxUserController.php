@@ -10,7 +10,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/admin/linux-users', name: 'admin_linux_users_')]
-#[IsGranted('ROLE_DEVELOPPEUR')]
+#[IsGranted('ROLE_RESPONSABLE')]
 class LinuxUserController extends AbstractController
 {
     public function __construct(private ServerAdminService $sas) {}
