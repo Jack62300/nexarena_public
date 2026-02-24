@@ -6,7 +6,7 @@
 {% block admin_css %}
 .form-group { margin-bottom: 20px; }
 .form-group:last-child { margin-bottom: 0; }
-.form-group label {
+.form-group > label {
     display: block;
     margin-bottom: 6px;
     font-size: 13px;
@@ -35,18 +35,17 @@ select.form-control-admin option { background: var(--bg-darker); }
 
 /* ── Rarity picker ── */
 .rarity-picker { display: flex; gap: 8px; flex-wrap: wrap; }
-.rarity-radio  { display: none; }
-.rarity-lbl {
+.rarity-btn {
     display: flex; align-items: center; gap: 8px;
     padding: 8px 16px; border-radius: 8px; cursor: pointer;
     border: 2px solid rgba(255,255,255,.08);
     background: rgba(255,255,255,.03);
     font-size: 13px; font-weight: 600;
     color: var(--text-secondary);
-    transition: all .2s;
+    transition: all .2s; user-select: none;
 }
-.rarity-lbl:hover { border-color: rgba(255,255,255,.2); color: var(--text-primary); }
-.rarity-radio:checked + .rarity-lbl {
+.rarity-btn:hover { border-color: rgba(255,255,255,.2); color: var(--text-primary); }
+.rarity-btn.active {
     border-color: var(--rc);
     background: color-mix(in srgb, var(--rc) 12%, transparent);
     color: var(--rc);
@@ -56,7 +55,7 @@ select.form-control-admin option { background: var(--bg-darker); }
 /* ── Icon upload ── */
 .icon-drop-zone {
     display: flex; flex-direction: column; align-items: center;
-    padding: 20px 10px; gap: 12px;
+    padding: 20px 10px 12px; gap: 12px;
 }
 .icon-thumb {
     width: 84px; height: 84px; border-radius: 14px;
@@ -108,7 +107,7 @@ select.form-control-admin option { background: var(--bg-darker); }
         </div>
     </div>
 
-    {{ form_start(form, {attr: {enctype: 'multipart/form-data', novalidate: 'novalidate'}}) }}
+    {{ form_start(form, {attr: {enctype: 'multipart/form-data', novalidate: 'novalidate', id: 'achievementForm'}}) }}
 
     <div style="display:grid;grid-template-columns:1fr 300px;gap:20px;align-items:start;">
 
@@ -125,10 +124,7 @@ select.form-control-admin option { background: var(--bg-darker); }
                 </div>
                 <div style="padding:22px;">
                     <div class="form-group">
-                        <label>
-                            Nom du succès
-                            <span style="color:var(--danger);margin-left:2px;">*</span>
-                        </label>
+                        <label>Nom du succès <span style="color:var(--danger);">*</span></label>
                         {{ form_widget(form.name, {attr: {
                             class: 'form-control-admin',
                             placeholder: 'Ex: Pionnier, Premier vote, Vétéran…'
@@ -146,7 +142,7 @@ select.form-control-admin option { background: var(--bg-darker); }
                 </div>
             </div>
 
-            {# Rareté #}
+            {# Rareté — select caché + picker visuel #}
             <div class="admin-table" style="margin-bottom:16px;">
                 <div class="admin-table__header">
                     <h3>
@@ -155,26 +151,29 @@ select.form-control-admin option { background: var(--bg-darker); }
                     </h3>
                 </div>
                 <div style="padding:20px 22px;">
-                    <div class="rarity-picker">
-                        {% set rarities = {
-                            'common':    {label: 'Commun',     color: '#95a5a6'},
-                            'uncommon':  {label: 'Peu commun', color: '#2ecc71'},
-                            'rare':      {label: 'Rare',       color: '#3498db'},
-                            'epic':      {label: 'Épique',     color: '#9b59b6'},
-                            'legendary': {label: 'Légendaire', color: '#f39c12'}
-                        } %}
+
+                    {# Select Symfony caché — lie la valeur à l'entité #}
+                    {{ form_widget(form.rarity, {attr: {id: 'raritySelect', style: 'display:none;'}}) }}
+
+                    {# Picker visuel — met à jour le select via JS #}
+                    {% set rarities = {
+                        'common':    {label: 'Commun',     color: '#95a5a6'},
+                        'uncommon':  {label: 'Peu commun', color: '#2ecc71'},
+                        'rare':      {label: 'Rare',       color: '#3498db'},
+                        'epic':      {label: 'Épique',     color: '#9b59b6'},
+                        'legendary': {label: 'Légendaire', color: '#f39c12'}
+                    } %}
+                    {% set currentRarity = form.rarity.vars.data ?? 'common' %}
+
+                    <div class="rarity-picker" id="rarityPicker">
                         {% for value, info in rarities %}
-                            {% set isSelected = (form.rarity.vars.data == value) or (achievement is null and value == 'common') %}
-                            <input type="radio"
-                                   name="{{ form.rarity.vars.full_name }}"
-                                   id="rarity_{{ value }}"
-                                   value="{{ value }}"
-                                   class="rarity-radio"
-                                   {{ isSelected ? 'checked' : '' }}>
-                            <label for="rarity_{{ value }}" class="rarity-lbl" style="--rc:{{ info.color }};">
+                            <button type="button"
+                                    class="rarity-btn {{ currentRarity == value ? 'active' : '' }}"
+                                    data-value="{{ value }}"
+                                    style="--rc:{{ info.color }};">
                                 <span class="rarity-dot" style="background:{{ info.color }};"></span>
                                 {{ info.label }}
-                            </label>
+                            </button>
                         {% endfor %}
                     </div>
                 </div>
@@ -237,9 +236,11 @@ select.form-control-admin option { background: var(--bg-darker); }
                                  alt="Aperçu">
                         {% else %}
                             <div id="iconPreviewFallback" class="icon-placeholder">
-                                <i class="fas fa-trophy" style="font-size:28px;opacity:.25;color:var(--warning);"></i>
+                                <i class="fas fa-trophy"
+                                   style="font-size:28px;opacity:.25;color:var(--warning);"></i>
                             </div>
-                            <img id="iconPreview" class="icon-thumb" style="display:none;" alt="Aperçu">
+                            <img id="iconPreview" class="icon-thumb"
+                                 style="display:none;" alt="Aperçu">
                         {% endif %}
                     </div>
                     {{ form_widget(form.iconFile, {attr: {
@@ -267,7 +268,8 @@ select.form-control-admin option { background: var(--bg-darker); }
                         {{ form_widget(form.isActive) }}
                         <span>Succès actif</span>
                     </label>
-                    <small style="display:block;color:var(--text-secondary);font-size:12px;margin-top:6px;padding-left:26px;">
+                    <small style="display:block;color:var(--text-secondary);font-size:12px;
+                                  margin-top:6px;padding-left:26px;">
                         Visible et attribuable aux utilisateurs.
                     </small>
                 </div>
@@ -290,9 +292,9 @@ select.form-control-admin option { background: var(--bg-darker); }
 
     {{ form_end(form) }}
 
-    {# ══════════════════════════════════════════════
-       Utilisateurs ayant ce succès  (edit mode)
-    ══════════════════════════════════════════════ #}
+    {# ══════════════════════════════════════════════════════════════
+       Utilisateurs ayant ce succès  (edit mode uniquement)
+    ══════════════════════════════════════════════════════════════ #}
     {% if achievement %}
     <div class="admin-table" style="margin-top:24px;">
         <div class="admin-table__header">
@@ -346,7 +348,8 @@ select.form-control-admin option { background: var(--bg-darker); }
                     {% endfor %}
                 </div>
             {% else %}
-                <p style="text-align:center;color:var(--text-secondary);margin:0;padding:24px 0;font-size:13px;">
+                <p style="text-align:center;color:var(--text-secondary);margin:0;
+                          padding:24px 0;font-size:13px;">
                     <i class="fas fa-user-slash"
                        style="display:block;font-size:26px;opacity:.15;margin-bottom:10px;"></i>
                     Aucun utilisateur n'a encore obtenu ce succès.
@@ -361,7 +364,19 @@ select.form-control-admin option { background: var(--bg-darker); }
 
 {% block admin_js %}
 <script nonce="{{ csp_nonce() }}">
-// ── Icon live preview ────────────────────────────────
+// ── Rarity picker ────────────────────────────────────────
+const raritySelect = document.getElementById('raritySelect');
+const rarityBtns   = document.querySelectorAll('#rarityPicker .rarity-btn');
+
+rarityBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        rarityBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        raritySelect.value = btn.dataset.value;
+    });
+});
+
+// ── Icon live preview ────────────────────────────────────
 document.getElementById('iconFile')?.addEventListener('change', function () {
     const file = this.files[0];
     if (!file) return;
@@ -376,9 +391,9 @@ document.getElementById('iconFile')?.addEventListener('change', function () {
     reader.readAsDataURL(file);
 });
 
-// ── Show / hide threshold field ──────────────────────
-const criteriaTypeEl    = document.getElementById('criteriaType');
-const thresholdWrapper  = document.getElementById('thresholdWrapper');
+// ── Show / hide threshold field ──────────────────────────
+const criteriaTypeEl   = document.getElementById('criteriaType');
+const thresholdWrapper = document.getElementById('thresholdWrapper');
 
 function updateThreshold() {
     const val  = criteriaTypeEl?.value;
