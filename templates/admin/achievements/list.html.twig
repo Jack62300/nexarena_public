@@ -1,0 +1,109 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block page_title %}Succès{% endblock %}
+{% block title %}Nexarena Admin - Succès{% endblock %}
+
+{% block admin_body %}
+<div class="admin-table">
+    <div class="admin-table__header">
+        <h3>Succès / Achievements</h3>
+        <a href="{{ path('admin_achievements_new') }}" class="btn-admin btn-admin--primary">
+            <i class="fas fa-plus"></i> Ajouter
+        </a>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Image</th>
+                <th>Nom</th>
+                <th>Rareté</th>
+                <th>Critère</th>
+                <th>Seuil</th>
+                <th>Attribué</th>
+                <th>Statut</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for achievement in achievements %}
+                {% set rarityColor = achievement.rarityColor %}
+                <tr>
+                    <td>
+                        {% if achievement.iconFileName %}
+                            <img src="{{ asset('uploads/achievements/' ~ achievement.iconFileName) }}"
+                                 alt="{{ achievement.name }}"
+                                 style="width:40px;height:40px;object-fit:contain;border-radius:8px;border:2px solid {{ rarityColor }};">
+                        {% else %}
+                            <div style="width:40px;height:40px;border-radius:8px;border:2px solid {{ rarityColor }};display:flex;align-items:center;justify-content:center;">
+                                <i class="fas fa-trophy" style="color:{{ rarityColor }};font-size:16px;"></i>
+                            </div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <strong>{{ achievement.name }}</strong>
+                        {% if achievement.description %}
+                            <br><small style="color:var(--text-secondary);">{{ achievement.description|u.truncate(60, '…') }}</small>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:{{ rarityColor }}20;color:{{ rarityColor }};border:1px solid {{ rarityColor }}40;">
+                            {{ achievement.rarityLabel }}
+                        </span>
+                    </td>
+                    <td style="color:var(--text-secondary);font-size:12px;">
+                        {% if achievement.criteria %}
+                            {{ constant('App\\Entity\\Achievement::CRITERIA_LABELS')[achievement.criteria.type] ?? achievement.criteria.type }}
+                        {% else %}
+                            <span style="opacity:.4;">—</span>
+                        {% endif %}
+                    </td>
+                    <td style="color:var(--text-secondary);">
+                        {% if achievement.criteria.threshold is defined %}
+                            {{ achievement.criteria.threshold }}
+                        {% else %}
+                            <span style="opacity:.4;">—</span>
+                        {% endif %}
+                    </td>
+                    <td style="color:var(--text-secondary);">
+                        {{ achievement.userAchievements|length }}
+                    </td>
+                    <td>
+                        {% if achievement.isActive %}
+                            <span class="status-dot status-dot--active"></span>Actif
+                        {% else %}
+                            <span class="status-dot status-dot--inactive"></span>Inactif
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div style="display:flex;gap:8px;">
+                            <a href="{{ path('admin_achievements_edit', {id: achievement.id}) }}"
+                               class="btn-admin btn-admin--outline btn-admin--sm">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            {% if is_granted('ROLE_MANAGER') %}
+                                <form method="post"
+                                      action="{{ path('admin_achievements_delete', {id: achievement.id}) }}"
+                                      onsubmit="return confirm('Supprimer ce succès ?');"
+                                      style="display:inline;">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete_' ~ achievement.id) }}">
+                                    <button type="submit" class="btn-admin btn-admin--sm"
+                                            style="background:var(--danger);color:#fff;border:none;">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="8" style="text-align:center;color:var(--text-secondary);padding:40px;">
+                        <i class="fas fa-trophy" style="font-size:32px;opacity:.2;display:block;margin-bottom:10px;"></i>
+                        Aucun succès pour le moment.
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,225 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block page_title %}{{ achievement ? 'Modifier le succès' : 'Nouveau succès' }}{% endblock %}
+{% block title %}Nexarena Admin - Succès{% endblock %}
+
+{% block admin_css %}
+.rarity-picker { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:8px; }
+.rarity-option { display:none; }
+.rarity-label {
+    display:flex; align-items:center; gap:8px;
+    padding:8px 16px; border-radius:8px; cursor:pointer;
+    border:2px solid transparent; font-size:13px; font-weight:600;
+    transition:all .2s;
+}
+.rarity-option:checked + .rarity-label { border-color: var(--rc); background: color-mix(in srgb, var(--rc) 15%, transparent); }
+.rarity-option:not(:checked) + .rarity-label { background:rgba(255,255,255,.04); border-color:rgba(255,255,255,.1); color:var(--text-secondary); }
+.icon-preview { width:80px;height:80px;object-fit:contain;border-radius:12px;border:2px solid rgba(255,255,255,.1); }
+.form-section { background:var(--card-bg);border:1px solid var(--border-color);border-radius:12px;padding:24px;margin-bottom:20px; }
+.form-section h4 { margin:0 0 16px;font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;opacity:.6; }
+{% endblock %}
+
+{% block admin_body %}
+<div style="max-width:900px;">
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;">
+        <a href="{{ path('admin_achievements_list') }}" class="btn-admin btn-admin--outline btn-admin--sm">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <h2 style="margin:0;">{{ achievement ? 'Modifier «&nbsp;' ~ achievement.name ~ '&nbsp;»' : 'Nouveau succès' }}</h2>
+    </div>
+
+    {{ form_start(form, {attr: {enctype: 'multipart/form-data', novalidate: 'novalidate'}}) }}
+    <div style="display:grid;grid-template-columns:1fr 320px;gap:20px;">
+
+        {# ── Left column ── #}
+        <div>
+            <div class="form-section">
+                <h4>Informations</h4>
+
+                <div class="form-group mb-3">
+                    <label class="form-label">Nom du succès *</label>
+                    {{ form_widget(form.name, {attr: {class: 'form-control', placeholder: 'Ex: Premier serveur…'}}) }}
+                    {{ form_errors(form.name) }}
+                </div>
+
+                <div class="form-group mb-3">
+                    <label class="form-label">Description</label>
+                    {{ form_widget(form.description, {attr: {class: 'form-control', placeholder: 'Comment obtenir ce succès…'}}) }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Rareté</label>
+                    <div class="rarity-picker">
+                        {% set rarities = {
+                            'common':    {label: 'Commun',     color: '#95a5a6'},
+                            'uncommon':  {label: 'Peu commun', color: '#2ecc71'},
+                            'rare':      {label: 'Rare',       color: '#3498db'},
+                            'epic':      {label: 'Épique',     color: '#9b59b6'},
+                            'legendary': {label: 'Légendaire', color: '#f39c12'}
+                        } %}
+                        {% for value, info in rarities %}
+                            {% set isSelected = (form.rarity.vars.data == value) or (achievement is null and value == 'common') %}
+                            <input type="radio" name="{{ form.rarity.vars.full_name }}"
+                                   id="rarity_{{ value }}" value="{{ value }}"
+                                   class="rarity-option"
+                                   {{ isSelected ? 'checked' : '' }}>
+                            <label for="rarity_{{ value }}" class="rarity-label"
+                                   style="--rc:{{ info.color }};">
+                                <span style="width:10px;height:10px;border-radius:50%;background:{{ info.color }};flex-shrink:0;"></span>
+                                {{ info.label }}
+                            </label>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h4>Critère automatique</h4>
+                <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">
+                    Le succès sera attribué automatiquement dès que la condition est remplie.
+                    Laissez vide pour une attribution manuelle uniquement.
+                </p>
+
+                <div class="row g-3">
+                    <div class="col-7">
+                        <label class="form-label">Type de critère</label>
+                        {{ form_widget(form.criteriaType, {attr: {class: 'form-control', id: 'criteriaType'}}) }}
+                    </div>
+                    <div class="col-5" id="thresholdWrapper">
+                        <label class="form-label">Seuil</label>
+                        {{ form_widget(form.criteriaThreshold, {attr: {class: 'form-control'}}) }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# ── Right column ── #}
+        <div>
+            <div class="form-section">
+                <h4>Image / Logo</h4>
+                <div style="text-align:center;margin-bottom:16px;">
+                    {% if achievement and achievement.iconFileName %}
+                        <img id="iconPreview"
+                             src="{{ asset('uploads/achievements/' ~ achievement.iconFileName) }}"
+                             class="icon-preview" alt="Aperçu">
+                    {% else %}
+                        <div id="iconPreviewFallback"
+                             style="width:80px;height:80px;border-radius:12px;border:2px dashed rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;margin:0 auto;">
+                            <i class="fas fa-trophy" style="font-size:28px;opacity:.3;"></i>
+                        </div>
+                        <img id="iconPreview" style="display:none;" class="icon-preview" alt="Aperçu">
+                    {% endif %}
+                </div>
+                {{ form_widget(form.iconFile, {attr: {class: 'form-control', id: 'iconFile'}}) }}
+                <small style="color:var(--text-secondary);font-size:11px;">JPEG, PNG, GIF, WebP, SVG — max 2 Mo</small>
+                {{ form_errors(form.iconFile) }}
+            </div>
+
+            <div class="form-section">
+                <h4>Statut</h4>
+                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;">
+                    {{ form_widget(form.isActive) }}
+                    Succès actif (visible et attribuable)
+                </label>
+            </div>
+
+            <button type="submit" class="btn-admin btn-admin--primary" style="width:100%;">
+                <i class="fas fa-save"></i>
+                {{ achievement ? 'Enregistrer' : 'Créer le succès' }}
+            </button>
+        </div>
+    </div>
+    {{ form_end(form) }}
+
+    {# ── Awarded users (edit mode) ── #}
+    {% if achievement and awardedUsers|length > 0 %}
+    <div class="form-section" style="margin-top:20px;">
+        <h4>Utilisateurs ayant ce succès ({{ awardedUsers|length }})</h4>
+
+        {% if is_granted('achievements.manage') %}
+        <form method="post" action="{{ path('admin_achievements_award', {id: achievement.id}) }}"
+              style="display:flex;gap:8px;margin-bottom:16px;">
+            <input type="hidden" name="_token" value="{{ csrf_token('achievement_award_' ~ achievement.id) }}">
+            <input type="text" name="username" class="form-control" placeholder="Pseudo utilisateur"
+                   style="max-width:250px;" required>
+            <button type="submit" class="btn-admin btn-admin--primary btn-admin--sm">
+                <i class="fas fa-plus"></i> Attribuer
+            </button>
+        </form>
+        {% endif %}
+
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+            {% for ua in awardedUsers %}
+                <div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.04);
+                            border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:6px 12px;">
+                    <span style="font-size:13px;">{{ ua.user.username }}</span>
+                    <small style="color:var(--text-secondary);font-size:11px;">
+                        {{ ua.awardedAt|date('d/m/Y') }}
+                    </small>
+                    {% if is_granted('achievements.manage') %}
+                        <form method="post"
+                              action="{{ path('admin_achievements_revoke', {id: achievement.id, userId: ua.user.id}) }}"
+                              style="margin:0;"
+                              onsubmit="return confirm('Révoquer ce succès ?');">
+                            <input type="hidden" name="_token"
+                                   value="{{ csrf_token('achievement_revoke_' ~ achievement.id ~ '_' ~ ua.user.id) }}">
+                            <button type="submit"
+                                    style="background:none;border:none;color:var(--danger);cursor:pointer;padding:0;font-size:12px;">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% elseif achievement %}
+    <div class="form-section" style="margin-top:20px;">
+        <h4>Attribuer manuellement</h4>
+        {% if is_granted('achievements.manage') %}
+        <form method="post" action="{{ path('admin_achievements_award', {id: achievement.id}) }}"
+              style="display:flex;gap:8px;">
+            <input type="hidden" name="_token" value="{{ csrf_token('achievement_award_' ~ achievement.id) }}">
+            <input type="text" name="username" class="form-control" placeholder="Pseudo utilisateur"
+                   style="max-width:250px;" required>
+            <button type="submit" class="btn-admin btn-admin--primary btn-admin--sm">
+                <i class="fas fa-plus"></i> Attribuer
+            </button>
+        </form>
+        {% else %}
+            <p style="color:var(--text-secondary);font-size:13px;">Aucun utilisateur n'a encore ce succès.</p>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block admin_js %}
+<script nonce="{{ csp_nonce() }}">
+// Icon preview
+document.getElementById('iconFile')?.addEventListener('change', function() {
+    const file = this.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        const img = document.getElementById('iconPreview');
+        const fallback = document.getElementById('iconPreviewFallback');
+        img.src = e.target.result;
+        img.style.display = 'block';
+        if (fallback) fallback.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+});
+
+// Show/hide threshold field
+const criteriaTypeEl = document.getElementById('criteriaType');
+const thresholdWrapper = document.getElementById('thresholdWrapper');
+function updateThreshold() {
+    const val = criteriaTypeEl?.value;
+    const hide = !val || val === 'custom' || val === 'premium_purchase';
+    if (thresholdWrapper) thresholdWrapper.style.display = hide ? 'none' : '';
+}
+criteriaTypeEl?.addEventListener('change', updateThreshold);
+updateThreshold();
+</script>
+{% endblock %}

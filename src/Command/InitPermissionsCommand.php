@@ -58,9 +58,9 @@ class InitPermissionsCommand extends Command
         ['code' => 'tags.list',   'label' => 'Voir les tags',    'category' => 'tags'],
         ['code' => 'tags.manage', 'label' => 'Gerer les tags',   'category' => 'tags'],
 
-        // Badges
-        ['code' => 'badges.list',   'label' => 'Voir les badges',               'category' => 'badges'],
-        ['code' => 'badges.manage', 'label' => 'Gerer / attribuer les badges',  'category' => 'badges'],
+        // Achievements
+        ['code' => 'achievements.list',   'label' => 'Voir les succès',               'category' => 'achievements'],
+        ['code' => 'achievements.manage', 'label' => 'Gérer / attribuer les succès',  'category' => 'achievements'],
 
         // Plugins
         ['code' => 'plugins.list',   'label' => 'Voir les plugins',    'category' => 'plugins'],
@@ -137,7 +137,7 @@ class InitPermissionsCommand extends Command
                 'votes.list',
                 'comments.list',
                 'tags.list',
-                'badges.list',
+                'achievements.list',
                 'plugins.list',
                 'partners.list',
                 'recruitment.list',
@@ -158,7 +158,7 @@ class InitPermissionsCommand extends Command
                 'votes.list', 'votes.manage',
                 'comments.list', 'comments.moderate',
                 'tags.list', 'tags.manage',
-                'badges.list', 'badges.manage',
+                'achievements.list', 'achievements.manage',
                 'plugins.list', 'plugins.manage',
                 'partners.list', 'partners.manage',
                 'recruitment.list', 'recruitment.moderate',
@@ -184,7 +184,7 @@ class InitPermissionsCommand extends Command
                 'votes.list', 'votes.manage',
                 'comments.list', 'comments.moderate',
                 'tags.list', 'tags.manage',
-                'badges.list', 'badges.manage',
+                'achievements.list', 'achievements.manage',
                 'plugins.list', 'plugins.manage',
                 'partners.list', 'partners.manage',
                 'recruitment.list', 'recruitment.moderate',
@@ -213,7 +213,7 @@ class InitPermissionsCommand extends Command
                 'votes.list', 'votes.manage',
                 'comments.list', 'comments.moderate',
                 'tags.list', 'tags.manage',
-                'badges.list', 'badges.manage',
+                'achievements.list', 'achievements.manage',
                 'plugins.list', 'plugins.manage',
                 'partners.list', 'partners.manage',
                 'recruitment.list', 'recruitment.moderate',

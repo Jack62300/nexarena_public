@@ -142,9 +142,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
         'servers' => true,
     ];
 
-    /** @var Collection<int, UserBadge> */
-    #[ORM\OneToMany(targetEntity: UserBadge::class, mappedBy: 'user', orphanRemoval: true)]
-    private Collection $userBadges;
+    /** @var Collection<int, UserAchievement> */
+    #[ORM\OneToMany(targetEntity: UserAchievement::class, mappedBy: 'user', orphanRemoval: true)]
+    private Collection $userAchievements;
 
     /** @var Collection<int, Server> */
     #[ORM\OneToMany(targetEntity: Server::class, mappedBy: 'owner')]
@@ -158,7 +158,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     {
         $this->servers = new ArrayCollection();
         $this->serverCollaborations = new ArrayCollection();
-        $this->userBadges = new ArrayCollection();
+        $this->userAchievements = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -545,10 +545,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
         return $this->profileVisibility[$field] ?? false;
     }
 
-    /** @return Collection<int, UserBadge> */
-    public function getUserBadges(): Collection
+    /** @return Collection<int, UserAchievement> */
+    public function getUserAchievements(): Collection
     {
-        return $this->userBadges;
+        return $this->userAchievements;
     }
 
     public function isEmailVerified(): bool

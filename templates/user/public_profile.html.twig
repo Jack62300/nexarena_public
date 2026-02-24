@@ -188,28 +188,32 @@
 .pub-server-card__status--active { background:rgba(69,248,130,0.1); color:#45f882; }
 .pub-server-card__status--inactive { background:rgba(255,255,255,0.05); color:#5a5c69; }
 
-/* ── Badges ── */
-.pub-badges-grid { display:flex; flex-wrap:wrap; gap:12px; }
-.pub-badge {
+/* ── Achievements ── */
+.pub-achievements-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:12px; }
+.pub-achievement {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     background: rgba(255,255,255,0.03);
     border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 10px;
-    padding: 10px 14px;
-    transition: transform .2s;
+    border-radius: 12px;
+    padding: 12px 14px;
+    transition: transform .2s, box-shadow .2s;
+    position: relative;
+    overflow: hidden;
 }
-.pub-badge:hover { transform:translateY(-2px); }
-.pub-badge__icon {
-    width:34px; height:34px;
-    border-radius:8px;
+.pub-achievement:hover { transform:translateY(-2px); box-shadow:0 4px 20px rgba(0,0,0,.3); }
+.pub-achievement__icon {
+    width:42px; height:42px;
+    border-radius:10px;
     display:flex; align-items:center; justify-content:center;
-    font-size:16px; flex-shrink:0;
+    font-size:20px; flex-shrink:0;
 }
-.pub-badge__icon img { width:100%; height:100%; object-fit:contain; border-radius:6px; }
-.pub-badge__name { font-size:13px; font-weight:600; color:#e6edf3; }
-.pub-badge__date { font-size:11px; color:#5a5c69; }
+.pub-achievement__icon img { width:100%; height:100%; object-fit:contain; border-radius:8px; }
+.pub-achievement__name { font-size:13px; font-weight:600; color:#e6edf3; }
+.pub-achievement__meta { display:flex; align-items:center; gap:6px; margin-top:2px; }
+.pub-achievement__rarity { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; }
+.pub-achievement__date { font-size:10px; color:#5a5c69; }
 
 /* ── Sidebar ── */
 .pub-sidebar-card {
@@ -331,8 +335,8 @@
                     <div class="pub-stat__lbl">Serveurs</div>
                 </div>
                 <div class="pub-stat">
-                    <div class="pub-stat__val">{{ badges|length }}</div>
-                    <div class="pub-stat__lbl">Badges</div>
+                    <div class="pub-stat__val">{{ achievements|length }}</div>
+                    <div class="pub-stat__lbl">Succès</div>
                 </div>
                 <div class="pub-stat">
                     {% set totalVotes = 0 %}
@@ -402,24 +406,31 @@
                     </div>
                 {% endif %}
 
-                {# Badges #}
-                {% if badges|length > 0 %}
+                {# Achievements #}
+                {% if achievements|length > 0 %}
                     <div class="pub-section">
                         <div class="pub-section-card">
-                            <div class="pub-section-title"><i class="fas fa-award"></i> Badges ({{ badges|length }})</div>
-                            <div class="pub-badges-grid">
-                                {% for ub in badges %}
-                                    <div class="pub-badge" {% if ub.badge.color %}style="border-color:{{ ub.badge.color }}40;"{% endif %}>
-                                        <div class="pub-badge__icon" {% if ub.badge.color %}style="background:{{ ub.badge.color }}22;"{% endif %}>
-                                            {% if ub.badge.iconFileName %}
-                                                <img src="{{ asset('uploads/badges/' ~ ub.badge.iconFileName) }}" alt="{{ ub.badge.name }}">
+                            <div class="pub-section-title"><i class="fas fa-trophy"></i> Succès ({{ achievements|length }})</div>
+                            <div class="pub-achievements-grid">
+                                {% for ua in achievements %}
+                                    {% set rc = ua.achievement.rarityColor %}
+                                    <div class="pub-achievement" style="border-color:{{ rc }}30;">
+                                        <div class="pub-achievement__icon" style="background:{{ rc }}18;border:1.5px solid {{ rc }}40;">
+                                            {% if ua.achievement.iconFileName %}
+                                                <img src="{{ asset('uploads/achievements/' ~ ua.achievement.iconFileName) }}"
+                                                     alt="{{ ua.achievement.name }}">
                                             {% else %}
-                                                <i class="fas fa-award" {% if ub.badge.color %}style="color:{{ ub.badge.color }};"{% endif %}></i>
+                                                <i class="fas fa-trophy" style="color:{{ rc }};"></i>
                                             {% endif %}
                                         </div>
                                         <div>
-                                            <div class="pub-badge__name">{{ ub.badge.name }}</div>
-                                            <div class="pub-badge__date">{{ ub.awardedAt|time_ago('d/m/Y') }}</div>
+                                            <div class="pub-achievement__name">{{ ua.achievement.name }}</div>
+                                            <div class="pub-achievement__meta">
+                                                <span class="pub-achievement__rarity" style="color:{{ rc }};">
+                                                    {{ ua.achievement.rarityLabel }}
+                                                </span>
+                                                <span class="pub-achievement__date">· {{ ua.awardedAt|date('d/m/Y') }}</span>
+                                            </div>
                                         </div>
                                     </div>
                                 {% endfor %}

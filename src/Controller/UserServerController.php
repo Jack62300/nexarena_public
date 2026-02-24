@@ -23,6 +23,7 @@ use App\Repository\TagRepository;
 use App\Repository\TransactionRepository;
 use App\Repository\UserRepository;
 use App\Repository\VoteRepository;
+use App\Service\AchievementService;
 use App\Service\SettingsService;
 use App\Service\NetworkValidationService;
 use App\Service\NotificationService;
@@ -71,6 +72,7 @@ class UserServerController extends AbstractController
         private ServerDailyStatRepository $dailyStatRepo,
         private VoteRepository $voteRepo,
         private SettingsService $settingsService,
+        private AchievementService $achievementService,
     ) {
     }
 
@@ -184,6 +186,8 @@ class UserServerController extends AbstractController
                     ['name' => 'Categorie', 'value' => $server->getCategory() ? $server->getCategory()->getName() : '-', 'inline' => true],
                 ],
             ]);
+
+            $this->achievementService->checkAndAwardAchievements($this->getUser());
 
             $this->addFlash('success', 'Serveur cree avec succes ! Il sera visible apres approbation par un administrateur.');
             return $this->redirectToRoute('user_servers_manage', ['id' => $server->getId()]);

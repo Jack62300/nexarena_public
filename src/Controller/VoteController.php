@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Repository\ServerRepository;
+use App\Service\AchievementService;
 use App\Service\AntiBotService;
 use App\Service\SettingsService;
 use App\Service\VoteRewardService;
@@ -23,6 +24,7 @@ class VoteController extends AbstractController
         private SettingsService $settings,
         private AntiBotService $antiBotService,
         private VoteRewardService $voteRewardService,
+        private AchievementService $achievementService,
     ) {
     }
 
@@ -120,6 +122,10 @@ class VoteController extends AbstractController
         // Vote rewards
         if ($user) {
             $this->voteRewardService->calculateReward($user, $server, $vote);
+            $this->achievementService->checkAndAwardAchievements($user);
+        }
+        if ($server->getOwner()) {
+            $this->achievementService->checkAndAwardAchievements($server->getOwner());
         }
 
         $this->addFlash('success', 'Vote enregistre avec succes via Discord !');
@@ -192,6 +198,10 @@ class VoteController extends AbstractController
         // Vote rewards
         if ($user) {
             $this->voteRewardService->calculateReward($user, $server, $vote);
+            $this->achievementService->checkAndAwardAchievements($user);
+        }
+        if ($server->getOwner()) {
+            $this->achievementService->checkAndAwardAchievements($server->getOwner());
         }
 
         $this->addFlash('success', 'Vote enregistre avec succes via Steam !');
@@ -352,6 +362,10 @@ class VoteController extends AbstractController
 
             if ($user) {
                 $this->voteRewardService->calculateReward($user, $server, $vote);
+                $this->achievementService->checkAndAwardAchievements($user);
+            }
+            if ($server->getOwner()) {
+                $this->achievementService->checkAndAwardAchievements($server->getOwner());
             }
 
             $this->addFlash('success', 'Vote enregistre avec succes !');

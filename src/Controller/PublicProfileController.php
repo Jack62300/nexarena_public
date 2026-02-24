@@ -3,9 +3,9 @@
 namespace App\Controller;
 
 use App\Repository\ServerRepository;
-use App\Repository\UserBadgeRepository;
+use App\Repository\UserAchievementRepository;
 use App\Repository\UserRepository;
-use App\Service\BadgeService;
+use App\Service\AchievementService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -16,9 +16,9 @@ class PublicProfileController extends AbstractController
     public function show(
         string $username,
         UserRepository $userRepo,
-        UserBadgeRepository $userBadgeRepo,
+        UserAchievementRepository $userAchievementRepo,
         ServerRepository $serverRepo,
-        BadgeService $badgeService,
+        AchievementService $achievementService,
     ): Response {
         $profileUser = $userRepo->findOneByUsernameInsensitive($username);
         if (!$profileUser) {
@@ -28,12 +28,12 @@ class PublicProfileController extends AbstractController
         $currentUser = $this->getUser();
         $isOwnProfile = $currentUser && $currentUser->getId() === $profileUser->getId();
 
-        // Lazy badge check on own profile view
+        // Auto-check achievements when viewing own profile (fallback trigger)
         if ($isOwnProfile) {
-            $badgeService->checkAndAwardBadges($profileUser);
+            $achievementService->checkAndAwardAchievements($profileUser);
         }
 
-        $badges = $userBadgeRepo->findByUser($profileUser);
+        $achievements = $userAchievementRepo->findByUser($profileUser);
 
         $servers = [];
         if ($profileUser->isFieldVisible('servers') || $isOwnProfile) {
@@ -41,9 +41,9 @@ class PublicProfileController extends AbstractController
         }
 
         return $this->render('user/public_profile.html.twig', [
-            'profileUser' => $profileUser,
-            'badges' => $badges,
-            'servers' => $servers,
+            'profileUser'  => $profileUser,
+            'achievements' => $achievements,
+            'servers'      => $servers,
             'isOwnProfile' => $isOwnProfile,
         ]);
     }

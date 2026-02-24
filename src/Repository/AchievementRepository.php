@@ -2,40 +2,37 @@
 
 namespace App\Repository;
 
-use App\Entity\Badge;
+use App\Entity\Achievement;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
-/**
- * @extends ServiceEntityRepository<Badge>
- */
-class BadgeRepository extends ServiceEntityRepository
+class AchievementRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
-        parent::__construct($registry, Badge::class);
+        parent::__construct($registry, Achievement::class);
     }
 
-    /** @return Badge[] */
+    /** @return Achievement[] */
     public function findAllForAdmin(): array
     {
-        return $this->createQueryBuilder('b')
-            ->orderBy('b.createdAt', 'DESC')
+        return $this->createQueryBuilder('a')
+            ->orderBy('a.createdAt', 'DESC')
             ->getQuery()
             ->getResult();
     }
 
-    /** @return Badge[] */
+    /** @return Achievement[] */
     public function findAllActive(): array
     {
-        return $this->createQueryBuilder('b')
-            ->where('b.isActive = true')
-            ->orderBy('b.name', 'ASC')
+        return $this->createQueryBuilder('a')
+            ->andWhere('a.isActive = true')
+            ->orderBy('a.name', 'ASC')
             ->getQuery()
             ->getResult();
     }
 
-    public function findBySlug(string $slug): ?Badge
+    public function findBySlug(string $slug): ?Achievement
     {
         return $this->findOneBy(['slug' => $slug]);
     }
