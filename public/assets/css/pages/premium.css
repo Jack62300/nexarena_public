@@ -985,6 +985,509 @@
     padding: 0 4px;
 }
 
+/* ==========================================
+   NEW SECTIONS — Feature Cards, Positions, Recruitment
+   ========================================== */
+
+/* --- Generic section spacing --- */
+.prem-section {
+    padding: 60px 0;
+}
+
+/* --- Feature cards grid --- */
+.prem-feat-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+/* Individual feature card */
+.prem-feat-card {
+    position: relative;
+    background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
+    border: 1px solid var(--tg-border-1, #19222b);
+    border-radius: 20px;
+    padding: 28px;
+    transition: border-color 0.3s, transform 0.3s;
+    overflow: hidden;
+}
+
+.prem-feat-card:hover {
+    border-color: rgba(255,255,255,0.12);
+    transform: translateY(-4px);
+}
+
+/* Glow accents */
+.prem-feat-card__glow {
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    filter: blur(60px);
+    pointer-events: none;
+    opacity: 0.15;
+}
+.prem-feat-card__glow--green  { background: #45f882; }
+.prem-feat-card__glow--blue   { background: #63b3ed; }
+.prem-feat-card__glow--purple { background: #9f7aea; }
+.prem-feat-card__glow--twitch { background: #9146ff; }
+
+/* Card header row */
+.prem-feat-card__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.prem-feat-card__icon {
+    width: 52px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    font-size: 22px;
+    flex-shrink: 0;
+}
+
+.prem-feat-card__cost {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: rgba(255,215,0,0.08);
+    border: 1px solid rgba(255,215,0,0.2);
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #ffd700;
+    font-family: var(--tg-heading-font-family, 'Barlow', sans-serif);
+    white-space: nowrap;
+}
+
+.prem-feat-card__cost--dual {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    border-radius: 10px;
+    font-size: 12px;
+}
+
+.prem-feat-card__cost-or {
+    font-size: 10px;
+    color: #8b949e;
+    font-weight: 400;
+}
+
+/* Card body */
+.prem-feat-card__name {
+    font-family: var(--tg-heading-font-family, 'Barlow', sans-serif);
+    font-size: 20px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+}
+
+.prem-feat-card__desc {
+    color: var(--tg-body-color, #adb0bc);
+    font-size: 14px;
+    line-height: 1.65;
+    margin-bottom: 16px;
+}
+
+.prem-feat-card__desc strong {
+    color: #e0e0e0;
+}
+
+.prem-feat-card__perks {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.prem-feat-card__perks li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: #c9d1d9;
+}
+
+.prem-feat-card__perks li i {
+    color: #45f882;
+    font-size: 11px;
+    width: 14px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+/* Feature card CTA buttons */
+.prem-feat-card__btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 10px;
+    font-family: var(--tg-heading-font-family, 'Barlow', sans-serif);
+    font-weight: 700;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    z-index: 1;
+}
+
+.prem-feat-card__btn--green {
+    background: linear-gradient(135deg, rgba(69,248,130,0.15), rgba(69,248,130,0.08));
+    border: 1px solid rgba(69,248,130,0.25);
+    color: #45f882;
+}
+.prem-feat-card__btn--green:hover {
+    background: linear-gradient(135deg, rgba(69,248,130,0.25), rgba(69,248,130,0.15));
+    color: #45f882;
+    transform: translateY(-1px);
+}
+
+.prem-feat-card__btn--blue {
+    background: linear-gradient(135deg, rgba(99,179,237,0.15), rgba(99,179,237,0.08));
+    border: 1px solid rgba(99,179,237,0.25);
+    color: #63b3ed;
+}
+.prem-feat-card__btn--blue:hover {
+    background: linear-gradient(135deg, rgba(99,179,237,0.25), rgba(99,179,237,0.15));
+    color: #63b3ed;
+    transform: translateY(-1px);
+}
+
+.prem-feat-card__btn--purple {
+    background: linear-gradient(135deg, rgba(159,122,234,0.15), rgba(159,122,234,0.08));
+    border: 1px solid rgba(159,122,234,0.25);
+    color: #9f7aea;
+}
+.prem-feat-card__btn--purple:hover {
+    background: linear-gradient(135deg, rgba(159,122,234,0.25), rgba(159,122,234,0.15));
+    color: #9f7aea;
+    transform: translateY(-1px);
+}
+
+.prem-feat-card__btn--twitch {
+    background: linear-gradient(135deg, rgba(145,70,255,0.15), rgba(145,70,255,0.08));
+    border: 1px solid rgba(145,70,255,0.25);
+    color: #9146ff;
+}
+.prem-feat-card__btn--twitch:hover {
+    background: linear-gradient(135deg, rgba(145,70,255,0.25), rgba(145,70,255,0.15));
+    color: #9146ff;
+    transform: translateY(-1px);
+}
+
+.prem-feat-card__btn--orange {
+    background: linear-gradient(135deg, #ff6b35, #ff4500);
+    color: #fff;
+    border: none;
+}
+.prem-feat-card__btn--orange:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(255,107,53,0.35);
+    color: #fff;
+}
+
+/* --- Positions (mise en avant) --- */
+.prem-positions-wrap {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    max-width: 1100px;
+    margin: 0 auto 32px;
+}
+
+.prem-positions-block {
+    background: rgba(255,255,255,0.025);
+    border: 1px solid var(--tg-border-1, #19222b);
+    border-radius: 18px;
+    padding: 24px;
+}
+
+.prem-positions-block__header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 20px;
+}
+
+.prem-positions-block__icon {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.prem-positions-block__title {
+    font-family: var(--tg-heading-font-family, 'Barlow', sans-serif);
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.prem-positions-block__sub {
+    font-size: 12px;
+    color: var(--tg-body-color, #adb0bc);
+    margin-top: 2px;
+}
+
+.prem-slot-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+}
+
+.prem-slot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 14px 8px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    text-align: center;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.prem-slot:hover {
+    background: rgba(255,255,255,0.05);
+    border-color: rgba(255,255,255,0.1);
+}
+
+.prem-slot--pos1 { border-top: 2px solid rgba(255,215,0,0.4); }
+.prem-slot--pos2 { border-top: 2px solid rgba(192,192,192,0.3); }
+.prem-slot--pos3 { border-top: 2px solid rgba(205,127,50,0.3); }
+
+.prem-slot__medal {
+    font-size: 18px;
+    line-height: 1;
+}
+
+.prem-slot__pos {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--tg-body-color, #adb0bc);
+}
+
+.prem-slot__cost {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--tg-heading-font-family, 'Barlow', sans-serif);
+}
+
+.prem-slot__cost strong {
+    font-size: 18px;
+    font-weight: 800;
+    color: #fff;
+}
+
+.prem-slot__cost span {
+    font-size: 9px;
+    color: #8b949e;
+    display: none;
+}
+
+.prem-slot__per {
+    font-size: 9px;
+    color: #555d68;
+    line-height: 1.2;
+}
+
+.prem-positions-cta {
+    text-align: center;
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.prem-positions-cta__note {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #8b949e;
+}
+
+.prem-positions-cta__note i {
+    color: #63b3ed;
+    flex-shrink: 0;
+}
+
+/* --- Recruitment banner --- */
+.prem-recruit-wrap {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.prem-recruit-card {
+    display: flex;
+    gap: 0;
+    background: linear-gradient(135deg, rgba(237,137,54,0.06) 0%, rgba(255,255,255,0.02) 60%);
+    border: 1px solid rgba(237,137,54,0.2);
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.prem-recruit-card__side {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 36px 32px;
+    background: rgba(237,137,54,0.06);
+    border-right: 1px solid rgba(237,137,54,0.12);
+    flex-shrink: 0;
+}
+
+.prem-recruit-card__big-icon {
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(237,137,54,0.12);
+    border-radius: 20px;
+    font-size: 36px;
+    color: #ed8936;
+}
+
+.prem-recruit-card__body {
+    padding: 32px;
+    flex: 1;
+}
+
+.prem-recruit-card__title {
+    font-family: var(--tg-heading-font-family, 'Barlow', sans-serif);
+    font-size: 20px;
+    font-weight: 700;
+    color: #fff;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+}
+
+.prem-recruit-card__desc {
+    color: var(--tg-body-color, #adb0bc);
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+.prem-recruit-tiers {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.prem-recruit-tier {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    border-radius: 10px;
+    flex: 1;
+    min-width: 160px;
+}
+
+.prem-recruit-tier--free {
+    background: rgba(69,248,130,0.06);
+    border: 1px solid rgba(69,248,130,0.15);
+}
+
+.prem-recruit-tier--paid {
+    background: rgba(255,215,0,0.06);
+    border: 1px solid rgba(255,215,0,0.15);
+}
+
+.prem-recruit-tier__icon {
+    font-size: 20px;
+    color: #45f882;
+    flex-shrink: 0;
+}
+
+.prem-recruit-tier--paid .prem-recruit-tier__icon {
+    color: #ffd700;
+}
+
+.prem-recruit-tier__label {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #8b949e;
+    margin-bottom: 2px;
+}
+
+.prem-recruit-tier__value {
+    font-family: var(--tg-heading-font-family, 'Barlow', sans-serif);
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+}
+
+.prem-recruit-tier__arrow {
+    color: #555d68;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.prem-recruit-perks {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 22px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.prem-recruit-perks li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #c9d1d9;
+}
+
+.prem-recruit-perks li i {
+    color: #ed8936;
+    font-size: 11px;
+    width: 14px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
 /* --- Responsive --- */
 @media (max-width: 992px) {
     .premium-hero__title {
@@ -992,6 +1495,13 @@
     }
     .premium-plans {
         max-width: 700px;
+    }
+    .prem-feat-grid {
+        grid-template-columns: 1fr;
+        max-width: 600px;
+    }
+    .prem-positions-wrap {
+        grid-template-columns: 1fr;
     }
 }
 
@@ -1019,6 +1529,20 @@
     }
     .premium-features__grid {
         grid-template-columns: 1fr 1fr;
+    }
+    .prem-feat-grid {
+        grid-template-columns: 1fr;
+    }
+    .prem-recruit-card {
+        flex-direction: column;
+    }
+    .prem-recruit-card__side {
+        border-right: none;
+        border-bottom: 1px solid rgba(237,137,54,0.12);
+        padding: 24px;
+    }
+    .prem-recruit-perks {
+        grid-template-columns: 1fr;
     }
     .pp-modal {
         margin: 16px;
