@@ -395,12 +395,19 @@ class ServerAdminService
     // ── Réseau ────────────────────────────────────────────────
     public function getListeningPorts(): array
     {
-        $r = $this->run('sudo /usr/bin/ss -tulpn');
+        // Try both common paths for ss on Ubuntu
+        $r = $this->run('sudo ss -tulpn 2>/dev/null');
+        if (!$r['success'] || empty($r['output'])) {
+            $r = $this->run('sudo /usr/sbin/ss -tulpn 2>/dev/null');
+        }
+
         $ports = [];
         foreach ($r['lines'] as $line) {
-            if (preg_match('/^(tcp|udp)\s+\S+\s+\S+\s+(\S+)\s+\S+\s+users:\(\("?([^"]+)"?/', $line, $m)) {
+            // Format: Netid State Recv-Q Send-Q Local:Port Peer:Port [Process]
+            // tcp   LISTEN  0  128  0.0.0.0:22  0.0.0.0:*  users:(("sshd",pid=921,fd=3))
+            if (preg_match('/^(tcp|udp)\s+\S+\s+\d+\s+\d+\s+(\S+)\s+\S+\s+users:\(\("?([^",\)]+)/', $line, $m)) {
                 $ports[] = ['proto' => $m[1], 'local' => $m[2], 'process' => $m[3]];
-            } elseif (preg_match('/^(tcp|udp)\s+\S+\s+\S+\s+(\S+)\s+\S+$/', $line, $m)) {
+            } elseif (preg_match('/^(tcp|udp)\s+\S+\s+\d+\s+\d+\s+(\S+)/', $line, $m)) {
                 $ports[] = ['proto' => $m[1], 'local' => $m[2], 'process' => '—'];
             }
         }
@@ -410,14 +417,17 @@ class ServerAdminService
 
     public function getConnectionStats(): array
     {
-        $r = $this->run('sudo /usr/bin/ss -s');
+        $r = $this->run('sudo ss -s 2>/dev/null');
+        if (!$r['success'] || empty($r['output'])) {
+            $r = $this->run('sudo /usr/sbin/ss -s 2>/dev/null');
+        }
 
         return ['output' => $r['output'], 'success' => $r['success']];
     }
 
     public function getActiveHttpConnections(): array
     {
-        $r = $this->run('sudo /usr/bin/ss -tn state established \'( dport = :80 or dport = :443 or sport = :80 or sport = :443 )\'');
+        $r = $this->run("sudo ss -tn state established '( dport = :80 or dport = :443 or sport = :80 or sport = :443 )' 2>/dev/null");
         $count = max(0, count($r['lines']) - 1);
 
         return ['count' => $count, 'output' => $r['output'], 'success' => $r['success']];

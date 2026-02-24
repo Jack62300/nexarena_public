@@ -448,6 +448,7 @@
                     <tr><td colspan="3" style="text-align:center;color:#8b8fa8;padding:1rem;">Cliquez Actualiser</td></tr>
                 </tbody>
             </table>
+            <div class="log-box" id="portsRaw" style="display:none;margin-top:.75rem;"></div>
         </div>
         <div class="sa-section">
             <h3><i class="fas fa-chart-bar"></i> Statistiques connexions</h3>
@@ -865,13 +866,20 @@ async function refreshNetwork() {
 
     // Ports
     const body = document.getElementById('portsBody');
+    const rawBox = document.getElementById('portsRaw');
     body.innerHTML = '';
     if (ports.ports && ports.ports.length) {
+        if (rawBox) rawBox.style.display = 'none';
         ports.ports.forEach(p => {
             const tr = document.createElement('tr');
             tr.innerHTML = `<td><span style="background:${p.proto==='tcp'?'#1e3a5f':'#3a1e5f'};color:#90cdf4;border-radius:3px;padding:.1rem .4rem;font-size:.75rem;">${p.proto.toUpperCase()}</span></td><td>${p.local}</td><td>${p.process}</td>`;
             body.appendChild(tr);
         });
+    } else if (ports.raw) {
+        // Fallback: affiche le raw output
+        body.innerHTML = '';
+        if (rawBox) { rawBox.style.display = ''; rawBox.textContent = ports.raw; }
+        else body.innerHTML = `<tr><td colspan="3"><pre style="color:#c0c7e8;font-size:.78rem;margin:0;">${ports.raw}</pre></td></tr>`;
     } else {
         body.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#8b8fa8;">Aucun résultat.</td></tr>';
     }
