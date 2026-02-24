@@ -47,7 +47,9 @@
     </button>
 
     {# Header #}
-    {% include 'includes/_header.html.twig' %}
+    {% block header %}
+        {% include 'includes/_header.html.twig' %}
+    {% endblock %}
 
     {# Main Content #}
     <main class="main--area">
