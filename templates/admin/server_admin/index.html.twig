@@ -76,7 +76,13 @@
             <button class="tab-btn" onclick="showTab('firewall')"><i class="fas fa-shield-alt"></i> Firewall</button>
             <button class="tab-btn" onclick="showTab('fail2ban')"><i class="fas fa-user-slash"></i> Fail2ban</button>
             <button class="tab-btn" onclick="showTab('apt')"><i class="fas fa-box-open"></i> Paquets APT</button>
-            <button class="tab-btn" onclick="showTab('config')"><i class="fas fa-file-code"></i> Fichiers config</button>
+            <button class="tab-btn" onclick="showTab('logs')"><i class="fas fa-scroll"></i> Logs</button>
+            <button class="tab-btn" onclick="showTab('symfony')"><i class="fas fa-code"></i> Symfony</button>
+            <button class="tab-btn" onclick="showTab('processes')"><i class="fas fa-microchip"></i> Processus</button>
+            <button class="tab-btn" onclick="showTab('network')"><i class="fas fa-network-wired"></i> Réseau</button>
+            <button class="tab-btn" onclick="showTab('php')"><i class="fab fa-php"></i> PHP</button>
+            <button class="tab-btn" onclick="showTab('cron')"><i class="fas fa-clock"></i> Cron</button>
+            <button class="tab-btn" onclick="showTab('config')"><i class="fas fa-file-code"></i> Config</button>
         </div>
         <div style="font-size:.75rem;color:#8b8fa8;white-space:nowrap;text-align:right;">
             <span id="autoRefreshStatus"><span class="spinner"></span> Actualisation auto</span><br>
@@ -320,6 +326,203 @@
                 <i class="fas fa-exclamation-triangle"></i>
                 <b>Attention</b> — Toute modification incorrecte peut rendre le serveur inaccessible. Faites une sauvegarde avant d'éditer.
             </div>
+        </div>
+    </div>
+
+    {# ══════════════════════ ONGLET LOGS ══════════════════════ #}
+    <div class="tab-pane" id="tab-logs">
+        <div class="sa-section">
+            <h3><i class="fas fa-scroll"></i> Logs</h3>
+            <div style="display:flex;gap:.75rem;align-items:flex-end;flex-wrap:wrap;margin-bottom:1rem;">
+                <div>
+                    <label style="font-size:.78rem;color:#8b8fa8;display:block;margin-bottom:.35rem;">Source</label>
+                    <select class="config-select" id="logKey">
+                        {% set logLabels = {
+                            'symfony_prod': 'Symfony prod.log',
+                            'symfony_dev':  'Symfony dev.log',
+                            'nginx_access': 'Nginx access.log',
+                            'nginx_error':  'Nginx error.log',
+                            'php_fpm':      'PHP-FPM error.log',
+                            'mariadb':      'MariaDB error.log',
+                            'fail2ban':     'Fail2ban.log',
+                            'auth':         'Auth.log',
+                            'syslog':       'Syslog',
+                        } %}
+                        {% for key, label in logLabels %}
+                        <option value="{{ key }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label style="font-size:.78rem;color:#8b8fa8;display:block;margin-bottom:.35rem;">Lignes</label>
+                    <select class="config-select" id="logLines">
+                        <option value="100">100</option>
+                        <option value="300" selected>300</option>
+                        <option value="500">500</option>
+                        <option value="1000">1000</option>
+                    </select>
+                </div>
+                <button class="btn-sa btn-sa--blue" onclick="loadLog()"><i class="fas fa-download"></i> Charger</button>
+                <button class="btn-sa btn-sa--green" onclick="loadLog()" id="btnLogRefresh"><i class="fas fa-sync-alt"></i> Actualiser</button>
+            </div>
+            <div style="display:flex;gap:.75rem;align-items:flex-end;flex-wrap:wrap;margin-bottom:.75rem;">
+                <div style="flex:1;min-width:200px;">
+                    <label style="font-size:.78rem;color:#8b8fa8;display:block;margin-bottom:.35rem;">Rechercher dans le log</label>
+                    <input type="text" class="sa-input" id="logSearch" placeholder="ex: ERROR, 404, exception…">
+                </div>
+                <button class="btn-sa btn-sa--gray" onclick="searchLog()"><i class="fas fa-search"></i> Chercher</button>
+                <button class="btn-sa btn-sa--gray" onclick="clearLogSearch()"><i class="fas fa-times"></i> Effacer</button>
+            </div>
+            <div class="log-box" id="logContent" style="max-height:500px;">(Sélectionnez une source et cliquez Charger)</div>
+        </div>
+    </div>
+
+    {# ══════════════════════ ONGLET SYMFONY ══════════════════════ #}
+    <div class="tab-pane" id="tab-symfony">
+        <div class="sa-section">
+            <h3><i class="fas fa-code"></i> Symfony — Commandes</h3>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.75rem;margin-bottom:1rem;">
+                <button class="btn-sa btn-sa--blue" style="padding:.6rem 1rem;font-size:.85rem;" onclick="symfonyCmd('cache:clear')">
+                    <i class="fas fa-trash-alt"></i> cache:clear (prod)
+                </button>
+                <button class="btn-sa btn-sa--blue" style="padding:.6rem 1rem;font-size:.85rem;" onclick="symfonyCmd('cache:warmup')">
+                    <i class="fas fa-fire"></i> cache:warmup (prod)
+                </button>
+                <button class="btn-sa btn-sa--gray" style="padding:.6rem 1rem;font-size:.85rem;" onclick="symfonyCmd('migrations:status')">
+                    <i class="fas fa-database"></i> migrations:status
+                </button>
+                <button class="btn-sa btn-sa--orange" style="padding:.6rem 1rem;font-size:.85rem;" onclick="confirmSymfonyCmd('migrations:migrate','Lancer les migrations Doctrine ?')">
+                    <i class="fas fa-arrow-up"></i> migrations:migrate
+                </button>
+                <button class="btn-sa btn-sa--gray" style="padding:.6rem 1rem;font-size:.85rem;" onclick="symfonyCmd('messenger:stop')">
+                    <i class="fas fa-stop"></i> messenger:stop-workers
+                </button>
+                <button class="btn-sa btn-sa--gray" style="padding:.6rem 1rem;font-size:.85rem;" onclick="symfonyCmd('router:match')">
+                    <i class="fas fa-route"></i> debug:router
+                </button>
+            </div>
+            <div class="sa-section" id="symfonyOutput" style="display:none;margin-bottom:0;">
+                <h3><i class="fas fa-terminal"></i> Sortie : <span id="symfonyCmd">—</span></h3>
+                <div class="log-box" id="symfonyLog"></div>
+            </div>
+        </div>
+    </div>
+
+    {# ══════════════════════ ONGLET PROCESSUS ══════════════════════ #}
+    <div class="tab-pane" id="tab-processes">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+            <span style="font-size:.85rem;color:#8b8fa8;">Top 20 processus par CPU</span>
+            <button class="btn-sa btn-sa--blue" onclick="refreshProcesses()"><i class="fas fa-sync-alt"></i> Actualiser</button>
+        </div>
+        <div class="sa-section" style="padding:0;overflow:hidden;">
+            <table class="ip-table" id="procTable">
+                <thead>
+                    <tr>
+                        <th>User</th><th>PID</th><th>CPU%</th><th>MEM%</th><th>RSS (Ko)</th><th>Stat</th><th>Commande</th><th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="procBody">
+                    <tr><td colspan="8" style="text-align:center;color:#8b8fa8;padding:1.5rem;">Cliquez Actualiser pour charger</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {# ══════════════════════ ONGLET RÉSEAU ══════════════════════ #}
+    <div class="tab-pane" id="tab-network">
+        <div style="text-align:right;margin-bottom:1rem;">
+            <button class="btn-sa btn-sa--blue" onclick="refreshNetwork()"><i class="fas fa-sync-alt"></i> Actualiser</button>
+        </div>
+        <div class="sa-grid">
+            <div class="sa-card">
+                <div class="sa-card__label"><i class="fas fa-globe"></i> Connexions HTTP actives</div>
+                <div class="sa-card__val" id="httpConnCount">—</div>
+                <div class="sa-card__sub">(ports 80 + 443)</div>
+            </div>
+        </div>
+        <div class="sa-section">
+            <h3><i class="fas fa-plug"></i> Ports en écoute</h3>
+            <table class="ip-table" id="portsTable">
+                <thead><tr><th>Proto</th><th>Adresse locale</th><th>Processus</th></tr></thead>
+                <tbody id="portsBody">
+                    <tr><td colspan="3" style="text-align:center;color:#8b8fa8;padding:1rem;">Cliquez Actualiser</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="sa-section">
+            <h3><i class="fas fa-chart-bar"></i> Statistiques connexions</h3>
+            <div class="log-box" id="connStats" style="max-height:200px;">(Cliquez Actualiser)</div>
+        </div>
+    </div>
+
+    {# ══════════════════════ ONGLET PHP ══════════════════════ #}
+    <div class="tab-pane" id="tab-php">
+        <div class="sa-grid">
+            <div class="sa-card">
+                <div class="sa-card__label"><i class="fab fa-php"></i> Version PHP</div>
+                <div class="sa-card__val" style="font-size:1.1rem;">{{ phpInfo.version }}</div>
+            </div>
+            <div class="sa-card">
+                <div class="sa-card__label"><i class="fas fa-memory"></i> OPcache utilisé</div>
+                <div class="sa-card__val" id="opcUsed">{{ opcache.used_mb ?? '—' }} Mo</div>
+                <div class="sa-card__sub" id="opcDetail">{{ opcache.cached_scripts ?? '—' }} scripts en cache</div>
+                <div class="progress-bar-wrap">
+                    <div class="progress-bar-fill" id="opcBar"
+                         style="width:{{ opcache.percent ?? 0 }}%;background:{{ (opcache.percent ?? 0) > 85 ? '#e03131' : '#3b5bdb' }};"></div>
+                </div>
+            </div>
+            <div class="sa-card">
+                <div class="sa-card__label"><i class="fas fa-chart-line"></i> OPcache hits/misses</div>
+                <div class="sa-card__val" id="opcHits" style="font-size:1rem;">{{ opcache.hits ?? '—' }} / {{ opcache.misses ?? '—' }}</div>
+                <div class="sa-card__sub">hits / misses</div>
+            </div>
+        </div>
+
+        <div style="display:flex;gap:.75rem;margin-bottom:1rem;flex-wrap:wrap;">
+            <button class="btn-sa btn-sa--blue" onclick="refreshOpcache()"><i class="fas fa-sync-alt"></i> Actualiser OPcache</button>
+            <button class="btn-sa btn-sa--orange" onclick="resetOpcache()"><i class="fas fa-trash-alt"></i> Vider OPcache</button>
+        </div>
+
+        <div class="sa-section">
+            <h3><i class="fas fa-sliders-h"></i> Paramètres PHP clés</h3>
+            <table class="ip-table">
+                <thead><tr><th>Paramètre</th><th>Valeur</th></tr></thead>
+                <tbody>
+                    {% for key, val in phpInfo.ini %}
+                    <tr><td style="font-family:monospace;">{{ key }}</td><td style="font-family:monospace;color:#45f882;">{{ val }}</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="sa-section">
+            <h3><i class="fas fa-puzzle-piece"></i> Extensions PHP ({{ phpInfo.extensions|length }})</h3>
+            <div style="display:flex;flex-wrap:wrap;gap:.4rem;">
+                {% for ext in phpInfo.extensions %}
+                    {% if ext and not (ext starts with '[') %}
+                    <span style="background:#1e2535;border:1px solid #2d2f45;border-radius:4px;padding:.15rem .5rem;font-size:.75rem;font-family:monospace;color:#90cdf4;">{{ ext }}</span>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    {# ══════════════════════ ONGLET CRON ══════════════════════ #}
+    <div class="tab-pane" id="tab-cron">
+        <div style="text-align:right;margin-bottom:1rem;">
+            <button class="btn-sa btn-sa--blue" onclick="refreshCron()"><i class="fas fa-sync-alt"></i> Actualiser</button>
+        </div>
+        <div class="sa-section">
+            <h3><i class="fas fa-user-secret"></i> Crontab root</h3>
+            <div class="log-box" id="cronRoot">{{ sas is defined ? '' : '(Cliquez Actualiser)' }}</div>
+        </div>
+        <div class="sa-section">
+            <h3><i class="fas fa-globe"></i> Crontab www-data</h3>
+            <div class="log-box" id="cronWwwData">(Cliquez Actualiser)</div>
+        </div>
+        <div class="sa-section">
+            <h3><i class="fas fa-file-alt"></i> /etc/crontab (système)</h3>
+            <div class="log-box" id="cronSystem">(Cliquez Actualiser)</div>
         </div>
     </div>
 
@@ -568,6 +771,140 @@ async function saveConfig() {
     const d = await postJson(url('/config/write'), { key, content });
     document.getElementById('configStatus').textContent = d.success ? 'Enregistré !' : 'Erreur.';
     toast(d.success ? 'Fichier enregistré.' : ('Erreur: ' + d.output), d.success);
+}
+
+// ── Logs ─────────────────────────────────────────────────────────────────
+let logAutoRefreshTimer = null;
+
+async function loadLog() {
+    const key   = document.getElementById('logKey').value;
+    const lines = document.getElementById('logLines').value;
+    const box   = document.getElementById('logContent');
+    if (!key) return;
+    box.textContent = 'Chargement…';
+    const d = await (await fetch(url('/logs/read?key=') + encodeURIComponent(key) + '&lines=' + lines)).json();
+    box.textContent = d.success ? (d.output || '(vide)') : ('ERREUR: ' + d.output);
+    box.scrollTop = box.scrollHeight;
+}
+
+async function searchLog() {
+    const key = document.getElementById('logKey').value;
+    const q   = document.getElementById('logSearch').value.trim();
+    const box = document.getElementById('logContent');
+    if (!key || !q) { toast('Sélectionnez une source et entrez un terme.', false); return; }
+    box.textContent = 'Recherche en cours…';
+    const d = await (await fetch(url('/logs/search?key=') + encodeURIComponent(key) + '&q=' + encodeURIComponent(q))).json();
+    box.textContent = d.success ? (d.output || '(aucun résultat)') : ('ERREUR: ' + d.output);
+    box.scrollTop = box.scrollHeight;
+}
+
+function clearLogSearch() {
+    document.getElementById('logSearch').value = '';
+    loadLog();
+}
+
+// ── Symfony ───────────────────────────────────────────────────────────────
+async function symfonyCmd(cmd) {
+    const sec = document.getElementById('symfonyOutput');
+    const log = document.getElementById('symfonyLog');
+    document.getElementById('symfonyCmd').textContent = cmd;
+    sec.style.display = '';
+    log.textContent = 'Exécution en cours…';
+    sec.scrollIntoView({ behavior:'smooth', block:'start' });
+    const d = await postJson(url('/symfony/run'), { cmd });
+    log.textContent = d.output || '(vide)';
+    toast(d.success ? cmd + ' terminé.' : 'Erreur: ' + d.output.substring(0,80), d.success);
+}
+
+function confirmSymfonyCmd(cmd, msg) {
+    if (confirm(msg)) symfonyCmd(cmd);
+}
+
+// ── Processus ────────────────────────────────────────────────────────────
+async function refreshProcesses() {
+    const body = document.getElementById('procBody');
+    body.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#8b8fa8;padding:1rem;"><span class="spinner"></span> Chargement…</td></tr>';
+    const d = await (await fetch(url('/processes'))).json();
+    body.innerHTML = '';
+    if (!d.success || !d.processes.length) {
+        body.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#8b8fa8;padding:1rem;">Aucun processus.</td></tr>';
+        return;
+    }
+    d.processes.forEach(p => {
+        const tr = document.createElement('tr');
+        const cpuColor = parseFloat(p.cpu) > 50 ? '#e03131' : parseFloat(p.cpu) > 20 ? '#f08c00' : '#d0d4f0';
+        const killBtn = (p.user === 'www-data' || p.user === 'nginx')
+            ? `<button class="btn-sa btn-sa--red" onclick="killProc(${p.pid})"><i class="fas fa-times"></i></button>`
+            : `<span style="color:#555;font-size:.75rem;">—</span>`;
+        tr.innerHTML = `<td>${p.user}</td><td style="font-family:monospace;">${p.pid}</td>
+            <td style="color:${cpuColor};font-weight:600;">${p.cpu}%</td>
+            <td>${p.mem}%</td><td>${p.rss}</td><td>${p.stat}</td>
+            <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${p.command}">${p.command}</td>
+            <td>${killBtn}</td>`;
+        body.appendChild(tr);
+    });
+    updateLastRefreshed();
+}
+
+async function killProc(pid) {
+    if (!confirm('Envoyer SIGTERM au processus PID ' + pid + ' ?')) return;
+    const d = await postJson(url('/process/kill'), { pid });
+    toast(d.success ? 'Processus ' + pid + ' terminé.' : 'Erreur: ' + d.output, d.success);
+    if (d.success) refreshProcesses();
+}
+
+// ── Réseau ───────────────────────────────────────────────────────────────
+async function refreshNetwork() {
+    const [ports, stats] = await Promise.all([
+        (await fetch(url('/network/ports'))).json(),
+        (await fetch(url('/network/stats'))).json(),
+    ]);
+
+    // HTTP connections
+    document.getElementById('httpConnCount').textContent = stats.http?.count ?? '—';
+
+    // Ports
+    const body = document.getElementById('portsBody');
+    body.innerHTML = '';
+    if (ports.ports && ports.ports.length) {
+        ports.ports.forEach(p => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td><span style="background:${p.proto==='tcp'?'#1e3a5f':'#3a1e5f'};color:#90cdf4;border-radius:3px;padding:.1rem .4rem;font-size:.75rem;">${p.proto.toUpperCase()}</span></td><td>${p.local}</td><td>${p.process}</td>`;
+            body.appendChild(tr);
+        });
+    } else {
+        body.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#8b8fa8;">Aucun résultat.</td></tr>';
+    }
+
+    // Stats
+    document.getElementById('connStats').textContent = stats.connections?.output ?? '—';
+    updateLastRefreshed();
+}
+
+// ── PHP OPcache ───────────────────────────────────────────────────────────
+async function refreshOpcache() {
+    const d = await (await fetch(url('/php/opcache'))).json();
+    document.getElementById('opcUsed').textContent    = (d.used_mb ?? '—') + ' Mo';
+    document.getElementById('opcDetail').textContent  = (d.cached_scripts ?? '—') + ' scripts en cache';
+    document.getElementById('opcHits').textContent    = (d.hits ?? '—') + ' / ' + (d.misses ?? '—');
+    document.getElementById('opcBar').style.width     = (d.percent ?? 0) + '%';
+    toast('OPcache actualisé.', true);
+}
+
+async function resetOpcache() {
+    if (!confirm('Vider l\'OPcache ? Les prochaines requêtes recompileront les fichiers PHP.')) return;
+    const d = await postJson(url('/php/opcache-reset'), {});
+    toast(d.success ? 'OPcache vidé.' : 'Erreur: ' + d.output, d.success);
+    if (d.success) refreshOpcache();
+}
+
+// ── Cron ─────────────────────────────────────────────────────────────────
+async function refreshCron() {
+    const d = await (await fetch(url('/cron'))).json();
+    document.getElementById('cronRoot').textContent    = d.root    || '(vide)';
+    document.getElementById('cronWwwData').textContent = d['www-data'] || '(vide)';
+    document.getElementById('cronSystem').textContent  = d.system  || '(vide)';
+    updateLastRefreshed();
 }
 
 // ── Auto-refresh ──────────────────────────────────────────────────────────
