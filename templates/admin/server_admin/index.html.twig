@@ -1,0 +1,517 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Nexarena Admin — Serveur Ubuntu{% endblock %}
+{% block page_title %}Serveur Ubuntu{% endblock %}
+
+{% block admin_css %}
+.sa-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:1rem; margin-bottom:1.5rem; }
+.sa-card { background:var(--admin-card-bg,#1e1f2e); border:1px solid var(--admin-border,#2d2f45); border-radius:10px; padding:1.25rem; }
+.sa-card__label { font-size:.72rem; color:#8b8fa8; text-transform:uppercase; letter-spacing:.05em; margin-bottom:.4rem; }
+.sa-card__val { font-size:1.5rem; font-weight:700; color:#e0e0f0; }
+.sa-card__sub { font-size:.8rem; color:#8b8fa8; margin-top:.2rem; }
+.sa-section { background:var(--admin-card-bg,#1e1f2e); border:1px solid var(--admin-border,#2d2f45); border-radius:10px; padding:1.5rem; margin-bottom:1.5rem; }
+.sa-section h3 { font-size:1rem; font-weight:600; color:#e0e0f0; margin-bottom:1rem; display:flex; align-items:center; gap:.5rem; }
+.sa-section h3 i { color:#6c7af0; }
+.svc-row { display:flex; align-items:center; gap:.75rem; padding:.6rem 0; border-bottom:1px solid rgba(255,255,255,.04); }
+.svc-row:last-child { border-bottom:none; }
+.svc-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.svc-dot--on  { background:#45f882; box-shadow:0 0 6px #45f882; }
+.svc-dot--off { background:#e84b4b; }
+.svc-name { flex:1; font-size:.9rem; color:#d0d4f0; font-family:monospace; }
+.svc-btns { display:flex; gap:.4rem; }
+.btn-sa { padding:.25rem .65rem; font-size:.78rem; border-radius:5px; border:none; cursor:pointer; transition:.15s; font-weight:500; }
+.btn-sa--blue   { background:#3b5bdb; color:#fff; }
+.btn-sa--blue:hover { background:#4c6ef5; }
+.btn-sa--green  { background:#2f9e44; color:#fff; }
+.btn-sa--green:hover { background:#37b24d; }
+.btn-sa--red    { background:#c92a2a; color:#fff; }
+.btn-sa--red:hover { background:#e03131; }
+.btn-sa--gray   { background:#374151; color:#d0d4f0; }
+.btn-sa--gray:hover { background:#4b5563; }
+.btn-sa--orange { background:#d9480f; color:#fff; }
+.btn-sa--orange:hover { background:#e8590c; }
+.ip-table { width:100%; border-collapse:collapse; font-size:.85rem; }
+.ip-table th { color:#8b8fa8; font-weight:600; text-align:left; padding:.5rem .75rem; border-bottom:1px solid rgba(255,255,255,.07); font-size:.75rem; text-transform:uppercase; }
+.ip-table td { padding:.5rem .75rem; color:#d0d4f0; border-bottom:1px solid rgba(255,255,255,.04); font-family:monospace; }
+.ip-table tr:last-child td { border-bottom:none; }
+.log-box { background:#0d0e17; border:1px solid #2d2f45; border-radius:6px; padding:.75rem 1rem; font-size:.78rem; font-family:monospace; color:#c0c7e8; white-space:pre-wrap; word-break:break-all; max-height:350px; overflow-y:auto; margin-top:.75rem; }
+.sa-input { background:#0d0e17; border:1px solid #2d2f45; border-radius:6px; padding:.45rem .75rem; color:#e0e0f0; font-size:.85rem; width:100%; outline:none; }
+.sa-input:focus { border-color:#6c7af0; }
+.sa-textarea { background:#0d0e17; border:1px solid #2d2f45; border-radius:6px; padding:.6rem .75rem; color:#e0e0f0; font-size:.8rem; font-family:monospace; width:100%; outline:none; resize:vertical; min-height:300px; }
+.sa-textarea:focus { border-color:#6c7af0; }
+.pkg-badge { display:inline-block; background:#1e3a5f; color:#90cdf4; border-radius:4px; padding:.1rem .45rem; font-size:.75rem; font-family:monospace; }
+.pkg-badge--new { background:#1a3a2a; color:#68d391; }
+.progress-bar-wrap { background:#0d0e17; border-radius:4px; height:8px; overflow:hidden; margin-top:.3rem; }
+.progress-bar-fill { height:100%; border-radius:4px; transition:width .4s; }
+.jail-block { background:#0d0e17; border:1px solid #2d2f45; border-radius:8px; padding:1rem; margin-bottom:.75rem; }
+.jail-block h4 { font-size:.85rem; font-weight:600; color:#e0e0f0; font-family:monospace; margin-bottom:.6rem; }
+.jail-stats { display:flex; gap:1.5rem; flex-wrap:wrap; font-size:.82rem; color:#8b8fa8; margin-bottom:.6rem; }
+.jail-stats span b { color:#d0d4f0; }
+.tab-bar { display:flex; gap:.5rem; margin-bottom:1.25rem; flex-wrap:wrap; }
+.tab-btn { padding:.45rem 1rem; border-radius:6px; border:1px solid #2d2f45; background:transparent; color:#8b8fa8; font-size:.82rem; cursor:pointer; transition:.15s; }
+.tab-btn.active, .tab-btn:hover { background:#3b5bdb; border-color:#3b5bdb; color:#fff; }
+.tab-pane { display:none; }
+.tab-pane.active { display:block; }
+.flash-toast { position:fixed; bottom:1.5rem; right:1.5rem; z-index:9999; display:flex; flex-direction:column; gap:.5rem; }
+.toast-item { background:#1e1f2e; border:1px solid; border-radius:8px; padding:.75rem 1.25rem; font-size:.85rem; color:#e0e0f0; min-width:280px; animation:fadeIn .2s; }
+.toast-item--ok  { border-color:#2f9e44; }
+.toast-item--err { border-color:#c92a2a; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+.config-select { background:#0d0e17; border:1px solid #2d2f45; border-radius:6px; padding:.45rem .75rem; color:#e0e0f0; font-size:.85rem; outline:none; cursor:pointer; }
+.config-select:focus { border-color:#6c7af0; }
+.spinner { display:inline-block; width:14px; height:14px; border:2px solid rgba(255,255,255,.25); border-top-color:#fff; border-radius:50%; animation:spin .6s linear infinite; vertical-align:middle; margin-right:.3rem; }
+@keyframes spin { to { transform:rotate(360deg); } }
+{% endblock %}
+
+{% block body %}
+<div class="flash-toast" id="flashToast"></div>
+
+<div style="padding:1.5rem;">
+
+    {# ── Onglets ── #}
+    <div class="tab-bar">
+        <button class="tab-btn active" onclick="showTab('system')"><i class="fas fa-server"></i> Système</button>
+        <button class="tab-btn" onclick="showTab('services')"><i class="fas fa-cogs"></i> Services</button>
+        <button class="tab-btn" onclick="showTab('firewall')"><i class="fas fa-shield-alt"></i> Firewall</button>
+        <button class="tab-btn" onclick="showTab('fail2ban')"><i class="fas fa-user-slash"></i> Fail2ban</button>
+        <button class="tab-btn" onclick="showTab('apt')"><i class="fas fa-box-open"></i> Paquets APT</button>
+        <button class="tab-btn" onclick="showTab('config')"><i class="fas fa-file-code"></i> Fichiers config</button>
+    </div>
+
+    {# ══════════════════════ ONGLET SYSTÈME ══════════════════════ #}
+    <div class="tab-pane active" id="tab-system">
+
+        <div class="sa-grid">
+            <div class="sa-card">
+                <div class="sa-card__label"><i class="fas fa-clock"></i> Uptime</div>
+                <div class="sa-card__val" style="font-size:1.1rem;" id="si-uptime">{{ systemInfo.uptime ?: '—' }}</div>
+            </div>
+            <div class="sa-card">
+                <div class="sa-card__label"><i class="fas fa-microchip"></i> Charge CPU</div>
+                <div class="sa-card__val" id="si-load1">{{ systemInfo.load['1m'] }}</div>
+                <div class="sa-card__sub">5m: <b id="si-load5">{{ systemInfo.load['5m'] }}</b> | 15m: <b id="si-load15">{{ systemInfo.load['15m'] }}</b></div>
+            </div>
+            <div class="sa-card">
+                <div class="sa-card__label"><i class="fas fa-memory"></i> RAM</div>
+                <div class="sa-card__val" id="si-mem-pct">{{ systemInfo.memory.percent }}%</div>
+                <div class="sa-card__sub" id="si-mem-detail">{{ systemInfo.memory.used }} Mo / {{ systemInfo.memory.total }} Mo</div>
+                <div class="progress-bar-wrap">
+                    <div class="progress-bar-fill" id="si-mem-bar"
+                         style="width:{{ systemInfo.memory.percent }}%;
+                                background:{{ systemInfo.memory.percent > 85 ? '#e03131' : (systemInfo.memory.percent > 60 ? '#f08c00' : '#2f9e44') }};"></div>
+                </div>
+            </div>
+            <div class="sa-card">
+                <div class="sa-card__label"><i class="fas fa-hdd"></i> Disque /</div>
+                <div class="sa-card__val" id="si-disk-pct">{{ systemInfo.disk.percent }}%</div>
+                <div class="sa-card__sub" id="si-disk-detail">{{ systemInfo.disk.used }} / {{ systemInfo.disk.total }}</div>
+                <div class="progress-bar-wrap">
+                    <div class="progress-bar-fill" id="si-disk-bar"
+                         style="width:{{ systemInfo.disk.percent }}%;
+                                background:{{ systemInfo.disk.percent > 85 ? '#e03131' : (systemInfo.disk.percent > 60 ? '#f08c00' : '#2f9e44') }};"></div>
+                </div>
+            </div>
+        </div>
+
+        <div style="text-align:right;">
+            <button class="btn-sa btn-sa--blue" onclick="refreshSystemInfo()"><i class="fas fa-sync-alt"></i> Actualiser</button>
+        </div>
+    </div>
+
+    {# ══════════════════════ ONGLET SERVICES ══════════════════════ #}
+    <div class="tab-pane" id="tab-services">
+        <div class="sa-section">
+            <h3><i class="fas fa-cogs"></i> État des services</h3>
+
+            {% set serviceLabels = {'nginx': 'nginx', 'php8.4-fpm': 'php8.4-fpm', 'fail2ban': 'fail2ban', 'mariadb': 'mariadb'} %}
+            {% for svc, active in servicesStatus %}
+            <div class="svc-row" id="svcrow-{{ svc|replace({'.': '_', '-': '_'}) }}">
+                <div class="svc-dot {{ active ? 'svc-dot--on' : 'svc-dot--off' }}" id="svcstatus-{{ svc|replace({'.': '_', '-': '_'}) }}"></div>
+                <div class="svc-name">{{ svc }}</div>
+                <div class="svc-btns">
+                    <button class="btn-sa btn-sa--green" onclick="svcAction('restart','{{ svc }}')">
+                        <i class="fas fa-redo"></i> Restart
+                    </button>
+                    {% if svc in ['nginx', 'php8.4-fpm'] %}
+                    <button class="btn-sa btn-sa--blue" onclick="svcAction('reload','{{ svc }}')">
+                        <i class="fas fa-sync"></i> Reload
+                    </button>
+                    {% endif %}
+                    <button class="btn-sa btn-sa--gray" onclick="svcLog('{{ svc }}')">
+                        <i class="fas fa-scroll"></i> Logs
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="sa-section" id="logSection" style="display:none;">
+            <h3><i class="fas fa-scroll"></i> Journal : <span id="logTitle">—</span></h3>
+            <div class="log-box" id="logBox">Chargement…</div>
+        </div>
+    </div>
+
+    {# ══════════════════════ ONGLET FIREWALL ══════════════════════ #}
+    <div class="tab-pane" id="tab-firewall">
+
+        <div class="sa-section">
+            <h3><i class="fas fa-ban"></i> Bannir une IP (iptables f2b-global)</h3>
+            <div style="display:flex;gap:.75rem;align-items:flex-end;flex-wrap:wrap;">
+                <div style="flex:1;min-width:220px;">
+                    <label style="font-size:.78rem;color:#8b8fa8;display:block;margin-bottom:.35rem;">Adresse IP</label>
+                    <input type="text" class="sa-input" id="banIpInput" placeholder="ex: 1.2.3.4">
+                </div>
+                <button class="btn-sa btn-sa--red" onclick="firewallBan()"><i class="fas fa-ban"></i> Bannir</button>
+            </div>
+        </div>
+
+        <div class="sa-section">
+            <h3><i class="fas fa-shield-alt"></i> IPs bannies (<span id="fwCount">{{ firewall.ips|length }}</span>)
+                <button class="btn-sa btn-sa--gray" style="margin-left:auto;" onclick="refreshFirewall()"><i class="fas fa-sync-alt"></i></button>
+            </h3>
+
+            {% if firewall.ips is empty %}
+            <p style="color:#8b8fa8;font-size:.85rem;" id="fwEmpty">Aucune IP bannie.</p>
+            {% else %}
+            <p style="color:#8b8fa8;font-size:.85rem;" id="fwEmpty" style="display:none"></p>
+            {% endif %}
+
+            <table class="ip-table" id="fwTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Adresse IP</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="fwBody">
+                    {% for rule in firewall.ips %}
+                    <tr id="fwrow-{{ rule.ip|replace({'.': '_'}) }}">
+                        <td>{{ rule.num }}</td>
+                        <td>{{ rule.ip }}</td>
+                        <td><button class="btn-sa btn-sa--green" onclick="firewallUnban('{{ rule.ip }}')"><i class="fas fa-unlock"></i> Débannir</button></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {# ══════════════════════ ONGLET FAIL2BAN ══════════════════════ #}
+    <div class="tab-pane" id="tab-fail2ban">
+
+        <div style="text-align:right;margin-bottom:1rem;">
+            <button class="btn-sa btn-sa--blue" onclick="refreshFail2ban()"><i class="fas fa-sync-alt"></i> Actualiser</button>
+        </div>
+
+        <div id="f2bContent">
+        {% if fail2ban.success %}
+            {% for jail, data in fail2ban.jails %}
+            <div class="jail-block" id="jail-{{ jail }}">
+                <h4><i class="fas fa-lock" style="color:#6c7af0;"></i> {{ jail }}</h4>
+                <div class="jail-stats">
+                    <span>Échecs: <b>{{ data.failed_current }}</b> / {{ data.failed_total }} total</span>
+                    <span>Bannis: <b>{{ data.banned_current }}</b> / {{ data.banned_total }} total</span>
+                </div>
+                {% if data.banned_ips is not empty %}
+                <table class="ip-table" style="margin-top:.5rem;">
+                    <thead>
+                        <tr><th>IP bannie</th><th>Action</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for ip in data.banned_ips %}
+                        <tr>
+                            <td>{{ ip }}</td>
+                            <td><button class="btn-sa btn-sa--green" onclick="f2bUnban('{{ ip }}','{{ jail }}')">
+                                <i class="fas fa-unlock"></i> Débannir
+                            </button></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p style="color:#8b8fa8;font-size:.82rem;margin:0;">Aucune IP bannie dans ce jail.</p>
+                {% endif %}
+            </div>
+            {% else %}
+            <p style="color:#8b8fa8;">Aucun jail actif.</p>
+            {% endfor %}
+        {% else %}
+            <p style="color:#e03131;">Impossible de récupérer le statut Fail2ban.</p>
+        {% endif %}
+        </div>
+    </div>
+
+    {# ══════════════════════ ONGLET APT ══════════════════════ #}
+    <div class="tab-pane" id="tab-apt">
+
+        <div class="sa-grid" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr));">
+            <div class="sa-card">
+                <div class="sa-card__label"><i class="fas fa-box-open"></i> Paquets à mettre à jour</div>
+                <div class="sa-card__val" id="aptCount">{{ upgradable.count }}</div>
+                <div style="display:flex;gap:.5rem;margin-top:.75rem;">
+                    <button class="btn-sa btn-sa--blue" onclick="aptUpdate()"><i class="fas fa-sync-alt"></i> apt update</button>
+                    <button class="btn-sa btn-sa--green" onclick="aptUpgrade()" {% if upgradable.count == 0 %}disabled style="opacity:.5;cursor:not-allowed;"{% endif %}>
+                        <i class="fas fa-arrow-up"></i> apt upgrade
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        {% if upgradable.packages is not empty %}
+        <div class="sa-section">
+            <h3><i class="fas fa-list"></i> Paquets disponibles ({{ upgradable.count }})</h3>
+            <table class="ip-table" id="aptTable">
+                <thead>
+                    <tr><th>Paquet</th><th>Version actuelle</th><th>Nouvelle version</th></tr>
+                </thead>
+                <tbody id="aptBody">
+                    {% for pkg in upgradable.packages %}
+                    <tr>
+                        <td>{{ pkg.name }}</td>
+                        <td><span class="pkg-badge">{{ pkg.old }}</span></td>
+                        <td><span class="pkg-badge pkg-badge--new">{{ pkg.new }}</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        <div class="sa-section" id="aptLogSection" style="display:none;">
+            <h3><i class="fas fa-terminal"></i> Sortie APT</h3>
+            <div class="log-box" id="aptLog"></div>
+        </div>
+    </div>
+
+    {# ══════════════════════ ONGLET CONFIG ══════════════════════ #}
+    <div class="tab-pane" id="tab-config">
+
+        <div class="sa-section">
+            <h3><i class="fas fa-file-code"></i> Éditer un fichier de configuration</h3>
+
+            <div style="display:flex;gap:.75rem;align-items:flex-end;flex-wrap:wrap;margin-bottom:1rem;">
+                <div>
+                    <label style="font-size:.78rem;color:#8b8fa8;display:block;margin-bottom:.35rem;">Fichier</label>
+                    <select class="config-select" id="configKey" onchange="loadConfig()">
+                        <option value="">— Choisir —</option>
+                        {% for key, path in configFiles %}
+                        <option value="{{ key }}">{{ key }} ({{ path }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button class="btn-sa btn-sa--blue" onclick="loadConfig()"><i class="fas fa-upload"></i> Charger</button>
+            </div>
+
+            <textarea class="sa-textarea" id="configContent" placeholder="Sélectionnez un fichier pour l'éditer…" spellcheck="false"></textarea>
+
+            <div style="display:flex;gap:.75rem;margin-top:.75rem;flex-wrap:wrap;">
+                <button class="btn-sa btn-sa--green" onclick="saveConfig()"><i class="fas fa-save"></i> Enregistrer</button>
+                <span style="font-size:.78rem;color:#8b8fa8;align-self:center;" id="configStatus"></span>
+            </div>
+            <div style="margin-top:.5rem;padding:.6rem .8rem;background:#1a1b0a;border:1px solid #8b6914;border-radius:6px;font-size:.78rem;color:#f0c040;">
+                <i class="fas fa-exclamation-triangle"></i>
+                <b>Attention</b> — Toute modification incorrecte peut rendre le serveur inaccessible. Faites une sauvegarde avant d'éditer.
+            </div>
+        </div>
+    </div>
+
+</div>{# /padding #}
+
+<script>
+const CSRF = '{{ csrf_token('server_admin') }}';
+const BASE = '{{ path('admin_server_admin_index') }}';
+
+// ── Tabs ────────────────────────────────────────────────────────────────
+function showTab(name) {
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    event.target.closest('.tab-btn').classList.add('active');
+}
+
+// ── Toast ────────────────────────────────────────────────────────────────
+function toast(msg, ok) {
+    const el = document.createElement('div');
+    el.className = 'toast-item toast-item--' + (ok ? 'ok' : 'err');
+    el.innerHTML = '<i class="fas fa-' + (ok ? 'check-circle' : 'exclamation-circle') + '"></i> ' + msg;
+    document.getElementById('flashToast').appendChild(el);
+    setTimeout(() => el.remove(), 4500);
+}
+
+// ── POST helper ──────────────────────────────────────────────────────────
+async function postJson(url, data) {
+    const fd = new FormData();
+    fd.append('_token', CSRF);
+    for (const [k, v] of Object.entries(data)) fd.append(k, v);
+    const r = await fetch(url, { method:'POST', body: fd });
+    return r.json();
+}
+
+// ── Système ──────────────────────────────────────────────────────────────
+async function refreshSystemInfo() {
+    const d = await (await fetch(BASE.replace(/\/$/, '') + '/../server-admin/system/info')).json();
+    document.getElementById('si-uptime').textContent  = d.uptime || '—';
+    document.getElementById('si-load1').textContent   = d.load['1m'];
+    document.getElementById('si-load5').textContent   = d.load['5m'];
+    document.getElementById('si-load15').textContent  = d.load['15m'];
+    document.getElementById('si-mem-pct').textContent    = d.memory.percent + '%';
+    document.getElementById('si-mem-detail').textContent = d.memory.used + ' Mo / ' + d.memory.total + ' Mo';
+    document.getElementById('si-mem-bar').style.width    = d.memory.percent + '%';
+    document.getElementById('si-disk-pct').textContent    = d.disk.percent + '%';
+    document.getElementById('si-disk-detail').textContent = d.disk.used + ' / ' + d.disk.total;
+    document.getElementById('si-disk-bar').style.width    = d.disk.percent + '%';
+    toast('Informations système actualisées.', true);
+}
+
+// ── Services ─────────────────────────────────────────────────────────────
+async function svcAction(action, svc) {
+    const svcKey = svc.replaceAll('.','_').replaceAll('-','_');
+    const dot = document.getElementById('svcstatus-' + svcKey);
+    dot && (dot.style.opacity = '.3');
+    const url = BASE.replace(/\/+$/, '') + '/service/' + action;
+    const d = await postJson(url, { service: svc });
+    if (dot) {
+        dot.style.opacity = '1';
+        dot.className = 'svc-dot ' + (d.success ? 'svc-dot--on' : 'svc-dot--off');
+    }
+    toast((d.success ? svc + ' ' + (action==='restart'?'redémarré':'rechargé') + '.' : ('Erreur: ' + d.output)), d.success);
+}
+
+async function svcLog(svc) {
+    const sec = document.getElementById('logSection');
+    const box = document.getElementById('logBox');
+    document.getElementById('logTitle').textContent = svc;
+    sec.style.display = '';
+    box.textContent = 'Chargement…';
+    sec.scrollIntoView({ behavior:'smooth', block:'start' });
+    const url = BASE.replace(/\/+$/, '') + '/service/log?service=' + encodeURIComponent(svc);
+    const d = await (await fetch(url)).json();
+    box.textContent = d.output || '(vide)';
+    box.scrollTop = box.scrollHeight;
+}
+
+// ── Firewall ─────────────────────────────────────────────────────────────
+async function firewallBan() {
+    const ip = document.getElementById('banIpInput').value.trim();
+    if (!ip) { toast('Entrez une adresse IP.', false); return; }
+    const d = await postJson(BASE.replace(/\/+$/, '') + '/firewall/ban', { ip });
+    toast(d.success ? 'IP ' + ip + ' bannie.' : ('Erreur: ' + d.output), d.success);
+    if (d.success) { document.getElementById('banIpInput').value = ''; refreshFirewall(); }
+}
+
+async function firewallUnban(ip) {
+    const d = await postJson(BASE.replace(/\/+$/, '') + '/firewall/unban', { ip });
+    toast(d.success ? 'IP ' + ip + ' débannie.' : ('Erreur: ' + d.output), d.success);
+    if (d.success) refreshFirewall();
+}
+
+async function refreshFirewall() {
+    const d = await (await fetch(BASE.replace(/\/+$/, '') + '/firewall/list')).json();
+    const body = document.getElementById('fwBody');
+    const empty = document.getElementById('fwEmpty');
+    document.getElementById('fwCount').textContent = d.ips.length;
+    body.innerHTML = '';
+    if (d.ips.length === 0) { if(empty) empty.style.display=''; return; }
+    if (empty) empty.style.display = 'none';
+    d.ips.forEach(r => {
+        const tr = document.createElement('tr');
+        const safeKey = r.ip.replaceAll('.','_');
+        tr.id = 'fwrow-' + safeKey;
+        tr.innerHTML = `<td>${r.num}</td><td>${r.ip}</td><td><button class="btn-sa btn-sa--green" onclick="firewallUnban('${r.ip}')"><i class="fas fa-unlock"></i> Débannir</button></td>`;
+        body.appendChild(tr);
+    });
+}
+
+// ── Fail2ban ─────────────────────────────────────────────────────────────
+async function f2bUnban(ip, jail) {
+    const d = await postJson(BASE.replace(/\/+$/, '') + '/fail2ban/unban', { ip, jail });
+    toast(d.success ? ip + ' débanni de ' + jail + '.' : ('Erreur: ' + d.output), d.success);
+    if (d.success) refreshFail2ban();
+}
+
+async function refreshFail2ban() {
+    const box = document.getElementById('f2bContent');
+    box.innerHTML = '<span class="spinner"></span> Chargement…';
+    const d = await (await fetch(BASE.replace(/\/+$/, '') + '/fail2ban/status')).json();
+    if (!d.success) { box.innerHTML = '<p style="color:#e03131;">Erreur Fail2ban.</p>'; return; }
+    const jails = d.jails;
+    let html = '';
+    for (const [jail, data] of Object.entries(jails)) {
+        html += `<div class="jail-block"><h4><i class="fas fa-lock" style="color:#6c7af0;"></i> ${jail}</h4>
+        <div class="jail-stats">
+            <span>Échecs: <b>${data.failed_current}</b> / ${data.failed_total} total</span>
+            <span>Bannis: <b>${data.banned_current}</b> / ${data.banned_total} total</span>
+        </div>`;
+        if (data.banned_ips && data.banned_ips.length > 0) {
+            html += `<table class="ip-table" style="margin-top:.5rem;"><thead><tr><th>IP</th><th>Action</th></tr></thead><tbody>`;
+            data.banned_ips.forEach(ip => {
+                html += `<tr><td>${ip}</td><td><button class="btn-sa btn-sa--green" onclick="f2bUnban('${ip}','${jail}')"><i class="fas fa-unlock"></i> Débannir</button></td></tr>`;
+            });
+            html += `</tbody></table>`;
+        } else {
+            html += `<p style="color:#8b8fa8;font-size:.82rem;margin:0;">Aucune IP bannie.</p>`;
+        }
+        html += `</div>`;
+    }
+    if (!html) html = '<p style="color:#8b8fa8;">Aucun jail actif.</p>';
+    box.innerHTML = html;
+}
+
+// ── APT ───────────────────────────────────────────────────────────────────
+async function aptUpdate() {
+    const sec = document.getElementById('aptLogSection');
+    const log = document.getElementById('aptLog');
+    sec.style.display = '';
+    log.textContent = 'apt update en cours…';
+    const d = await postJson(BASE.replace(/\/+$/, '') + '/apt/update', {});
+    log.textContent = d.output || '(vide)';
+    toast(d.success ? 'apt update terminé.' : 'Erreur apt update.', d.success);
+    if (d.success) {
+        const u = await (await fetch(BASE.replace(/\/+$/, '') + '/apt/upgradable')).json();
+        document.getElementById('aptCount').textContent = u.count;
+        const body = document.getElementById('aptBody');
+        if (body) {
+            body.innerHTML = '';
+            u.packages.forEach(p => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${p.name}</td><td><span class="pkg-badge">${p.old}</span></td><td><span class="pkg-badge pkg-badge--new">${p.new}</span></td>`;
+                body.appendChild(tr);
+            });
+        }
+    }
+}
+
+async function aptUpgrade() {
+    if (!confirm('Lancer apt upgrade ? Cela mettra à jour tous les paquets listés.')) return;
+    const sec = document.getElementById('aptLogSection');
+    const log = document.getElementById('aptLog');
+    sec.style.display = '';
+    log.textContent = 'apt upgrade en cours (peut prendre plusieurs minutes)…';
+    const d = await postJson(BASE.replace(/\/+$/, '') + '/apt/upgrade', {});
+    log.textContent = d.output || '(vide)';
+    toast(d.success ? 'apt upgrade terminé.' : 'Erreur apt upgrade.', d.success);
+}
+
+// ── Config ────────────────────────────────────────────────────────────────
+async function loadConfig() {
+    const key = document.getElementById('configKey').value;
+    if (!key) return;
+    document.getElementById('configStatus').textContent = 'Chargement…';
+    const d = await (await fetch(BASE.replace(/\/+$/, '') + '/config/read?key=' + encodeURIComponent(key))).json();
+    document.getElementById('configContent').value = d.success ? d.output : ('ERREUR: ' + d.output);
+    document.getElementById('configStatus').textContent = d.success ? 'Chargé.' : 'Erreur.';
+}
+
+async function saveConfig() {
+    const key = document.getElementById('configKey').value;
+    const content = document.getElementById('configContent').value;
+    if (!key) { toast('Sélectionnez un fichier d\'abord.', false); return; }
+    if (!confirm('Enregistrer les modifications dans ' + key + ' ?')) return;
+    document.getElementById('configStatus').textContent = 'Enregistrement…';
+    const d = await postJson(BASE.replace(/\/+$/, '') + '/config/write', { key, content });
+    document.getElementById('configStatus').textContent = d.success ? 'Enregistré !' : 'Erreur.';
+    toast(d.success ? 'Fichier enregistré.' : ('Erreur: ' + d.output), d.success);
+}
+</script>
+{% endblock %}
