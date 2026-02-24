@@ -554,6 +554,11 @@ class UserServerController extends AbstractController
     {
         $this->requireAccess($server);
 
+        // JSON endpoint — verify it originates from our site (AJAX/XHR check)
+        if (!$request->isXmlHttpRequest() && $request->headers->get('X-Requested-With') !== 'XMLHttpRequest') {
+            return $this->json(['error' => 'Requete invalide'], 400);
+        }
+
         $data = json_decode($request->getContent(), true);
         $paypalOrderId = $data['orderID'] ?? '';
 

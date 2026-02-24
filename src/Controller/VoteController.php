@@ -331,10 +331,22 @@ class VoteController extends AbstractController
                 return $this->redirectToRoute('server_show', ['slug' => $slug]);
             }
 
+            // Rate limit: max 5 wrong attempts per captcha session
+            $attempts = (int) $request->getSession()->get('vote_captcha_attempts', 0);
+            if ($attempts >= 5) {
+                $request->getSession()->remove('vote_captcha_pending');
+                $request->getSession()->remove('vote_captcha_answer');
+                $request->getSession()->remove('vote_captcha_question');
+                $request->getSession()->remove('vote_captcha_attempts');
+                $this->addFlash('error', 'Trop de tentatives. Veuillez recommencer le vote.');
+                return $this->redirectToRoute('server_show', ['slug' => $slug]);
+            }
+
             $answer = $request->request->getInt('captcha_answer');
             $expected = $request->getSession()->get('vote_captcha_answer');
 
             if (!$this->antiBotService->verifyCaptcha($answer, (int) $expected)) {
+                $request->getSession()->set('vote_captcha_attempts', $attempts + 1);
                 // Regenerate captcha
                 $captcha = $this->antiBotService->generateCaptcha();
                 $request->getSession()->set('vote_captcha_answer', $captcha['answer']);
@@ -356,6 +368,7 @@ class VoteController extends AbstractController
             $request->getSession()->remove('vote_captcha_pending');
             $request->getSession()->remove('vote_captcha_answer');
             $request->getSession()->remove('vote_captcha_question');
+            $request->getSession()->remove('vote_captcha_attempts');
             $request->getSession()->remove('vote_fingerprint');
 
             $vote = $this->voteService->castVote($server, $ip, $username, $discordId, $steamId, $provider, $fingerprint, $user);

@@ -34,6 +34,7 @@ class GameCategoryController extends AbstractController
     }
 
     #[Route('/new', name: 'new')]
+    #[IsGranted('categories.create')]
     public function new(Request $request): Response
     {
         $category = new GameCategory();
@@ -73,6 +74,7 @@ class GameCategoryController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'edit')]
+    #[IsGranted('categories.edit')]
     public function edit(GameCategory $category, Request $request): Response
     {
         $form = $this->createForm(GameCategoryFormType::class, $category);

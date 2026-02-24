@@ -32,6 +32,7 @@ class ServerTypeController extends AbstractController
     }
 
     #[Route('/new', name: 'new')]
+    #[IsGranted('server_types.manage')]
     public function new(Request $request): Response
     {
         $serverType = new ServerType();
@@ -55,6 +56,7 @@ class ServerTypeController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'edit')]
+    #[IsGranted('server_types.manage')]
     public function edit(ServerType $serverType, Request $request): Response
     {
         $form = $this->createForm(ServerTypeFormType::class, $serverType);
