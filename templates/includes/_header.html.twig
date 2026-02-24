@@ -21,20 +21,56 @@
                             {# ── Navigation ── #}
                             <div class="tgmenu__navbar-wrap tgmenu__main-menu d-none d-xl-flex">
                                 <ul class="navigation">
-                                    <li class="menu-item-has-children {{ _route == 'app_home' or _route starts with 'articles_' or _route starts with 'plugins_' or _route starts with 'recruitment_' ? 'active' : '' }}">
+                                    <li class="menu-item-has-children nx-cat-dropdown {{ _route == 'app_home' or _route starts with 'articles_' or _route starts with 'plugins_' or _route starts with 'recruitment_' ? 'active' : '' }}">
                                         <a href="{{ path('app_home') }}">Accueil</a>
-                                        <ul class="sub-menu">
-                                            <li class="{{ _route == 'app_home' ? 'active' : '' }}">
-                                                <a href="{{ path('app_home') }}"><i class="fas fa-home" style="width:14px;margin-right:8px;opacity:.6;"></i>Accueil</a>
+                                        <ul class="sub-menu nx-cat-menu">
+                                            <li>
+                                                <a href="{{ path('app_home') }}" class="nx-cat-item">
+                                                    <span class="nx-cat-item__icon">
+                                                        <i class="fas fa-home"></i>
+                                                    </span>
+                                                    <span class="nx-cat-item__text">
+                                                        <span class="nx-cat-item__name">Accueil</span>
+                                                        <span class="nx-cat-item__sub">Page principale</span>
+                                                    </span>
+                                                    <span class="nx-cat-item__arrow"><i class="fas fa-chevron-right"></i></span>
+                                                </a>
                                             </li>
-                                            <li class="{{ _route starts with 'articles_' ? 'active' : '' }}">
-                                                <a href="{{ path('articles_list') }}"><i class="fas fa-newspaper" style="width:14px;margin-right:8px;opacity:.6;"></i>Actualités</a>
+                                            <li>
+                                                <a href="{{ path('articles_list') }}" class="nx-cat-item">
+                                                    <span class="nx-cat-item__icon">
+                                                        <i class="fas fa-newspaper"></i>
+                                                    </span>
+                                                    <span class="nx-cat-item__text">
+                                                        <span class="nx-cat-item__name">Actualités</span>
+                                                        <span class="nx-cat-item__sub">News & articles</span>
+                                                    </span>
+                                                    <span class="nx-cat-item__arrow"><i class="fas fa-chevron-right"></i></span>
+                                                </a>
                                             </li>
-                                            <li class="{{ _route starts with 'plugins_' ? 'active' : '' }}">
-                                                <a href="{{ path('plugins_index') }}"><i class="fas fa-puzzle-piece" style="width:14px;margin-right:8px;opacity:.6;"></i>Plugins</a>
+                                            <li>
+                                                <a href="{{ path('plugins_index') }}" class="nx-cat-item">
+                                                    <span class="nx-cat-item__icon">
+                                                        <i class="fas fa-puzzle-piece"></i>
+                                                    </span>
+                                                    <span class="nx-cat-item__text">
+                                                        <span class="nx-cat-item__name">Plugins</span>
+                                                        <span class="nx-cat-item__sub">Extensions & outils</span>
+                                                    </span>
+                                                    <span class="nx-cat-item__arrow"><i class="fas fa-chevron-right"></i></span>
+                                                </a>
                                             </li>
-                                            <li class="{{ _route starts with 'recruitment_' ? 'active' : '' }}">
-                                                <a href="{{ path('recruitment_index') }}"><i class="fas fa-bullhorn" style="width:14px;margin-right:8px;opacity:.6;"></i>Recrutement</a>
+                                            <li>
+                                                <a href="{{ path('recruitment_index') }}" class="nx-cat-item">
+                                                    <span class="nx-cat-item__icon">
+                                                        <i class="fas fa-bullhorn"></i>
+                                                    </span>
+                                                    <span class="nx-cat-item__text">
+                                                        <span class="nx-cat-item__name">Recrutement</span>
+                                                        <span class="nx-cat-item__sub">Rejoindre un serveur</span>
+                                                    </span>
+                                                    <span class="nx-cat-item__arrow"><i class="fas fa-chevron-right"></i></span>
+                                                </a>
                                             </li>
                                         </ul>
                                     </li>
