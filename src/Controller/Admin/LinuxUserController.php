@@ -33,7 +33,7 @@ class LinuxUserController extends AbstractController
         }
 
         $username   = trim((string) $request->request->get('username', ''));
-        $groups     = array_values(array_filter((array) $request->request->all()['groups'] ?? []));
+        $groups     = array_values(array_filter($request->request->all('groups')));
         $isSudo     = (bool) $request->request->get('is_sudo', false);
         $authMethod = $request->request->get('auth_method', 'password') === 'rsa' ? 'rsa' : 'password';
         $credential = trim((string) $request->request->get('credential', ''));
@@ -57,7 +57,7 @@ class LinuxUserController extends AbstractController
             return $this->redirectToRoute('admin_linux_users_index');
         }
 
-        $groups     = array_values(array_filter((array) $request->request->all()['groups'] ?? []));
+        $groups     = array_values(array_filter($request->request->all('groups')));
         $isSudo     = (bool) $request->request->get('is_sudo', false);
         $authMethod = $request->request->get('auth_method', 'password') === 'rsa' ? 'rsa' : 'password';
         $credential = trim((string) $request->request->get('credential', ''));
