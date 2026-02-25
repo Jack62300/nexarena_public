@@ -11,12 +11,12 @@ class DiscordBotService
 
     private function getBotUrl(): string
     {
-        return rtrim($this->settings->get('discord_bot_url', 'http://localhost:3050'), '/');
+        return rtrim($this->settings->get('discord_bot_url', 'http://localhost:3050') ?? 'http://localhost:3050', '/');
     }
 
     private function getApiKey(): string
     {
-        return $this->settings->get('discord_bot_api_key', '');
+        return $this->settings->get('discord_bot_api_key', '') ?? '';
     }
 
     private function isValidBotUrl(string $url): bool

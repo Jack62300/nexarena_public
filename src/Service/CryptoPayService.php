@@ -22,12 +22,12 @@ class CryptoPayService
 
     public function getPublishableKey(): string
     {
-        return $this->settings->get('crypto_pay_publishable_key', '');
+        return $this->settings->get('crypto_pay_publishable_key', '') ?? '';
     }
 
     private function getSecretKey(): string
     {
-        return $this->settings->get('crypto_pay_secret_key', '');
+        return $this->settings->get('crypto_pay_secret_key', '') ?? '';
     }
 
     private function getCaInfo(): string
@@ -90,7 +90,7 @@ class CryptoPayService
             ]);
         }
 
-        return $response ?: null;
+        return is_string($response) ? $response : null;
     }
 
     /**

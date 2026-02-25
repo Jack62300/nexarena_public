@@ -412,7 +412,7 @@ class VoteController extends AbstractController
         $response = curl_exec($ch);
         curl_close($ch);
 
-        return $response ?: null;
+        return is_string($response) ? $response : null;
     }
 
     private function discordTokenExchange(string $code, string $redirectUri): ?array

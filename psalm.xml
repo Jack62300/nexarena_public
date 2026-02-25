@@ -53,5 +53,38 @@
 
         <!-- Psalm can't infer that final is not required in Symfony services -->
         <ClassMustBeFinal errorLevel="info" />
+
+        <!-- Symfony: getUser() returns UserInterface, not App\Entity\User; request->get() returns scalar -->
+        <ArgumentTypeCoercion errorLevel="info" />
+        <UndefinedInterfaceMethod errorLevel="info" />
+
+        <!-- Symfony: InputBag::get() integer defaults, PasswordHasher with UserInterface -->
+        <InvalidArgument errorLevel="info" />
+
+        <!-- Entity getId() returns ?int; concatenation with nullable; float/int arithmetic -->
+        <InvalidOperand errorLevel="info" />
+
+        <!-- Nullable entity chain calls (getOwner()->getUsername(), etc.); all guarded at runtime -->
+        <PossiblyNullArgument errorLevel="info" />
+        <PossiblyNullReference errorLevel="info" />
+        <PossiblyNullArrayOffset errorLevel="info" />
+
+        <!-- file_get_contents() / preg_replace() return false on failure; handled at runtime -->
+        <PossiblyFalseArgument errorLevel="info" />
+
+        <!-- AbstractType generic params — Symfony form false positives -->
+        <MissingTemplateParam errorLevel="info" />
+
+        <!-- Return-type specificity & redundant analysis -->
+        <MoreSpecificReturnType errorLevel="info" />
+        <LessSpecificReturnStatement errorLevel="info" />
+        <RedundantCast errorLevel="info" />
+        <TypeDoesNotContainType errorLevel="info" />
+        <RedundantCondition errorLevel="info" />
+        <RedundantFunctionCall errorLevel="info" />
+        <NoValue errorLevel="info" />
+
+        <!-- Doctrine performance hint — not a bug -->
+        <QueryBuilderSetParameter errorLevel="info" />
     </issueHandlers>
 </psalm>

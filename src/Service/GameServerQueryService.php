@@ -140,7 +140,7 @@ class GameServerQueryService
         if (is_array($players)) {
             foreach ($players as $i => $p) {
                 $playerList[] = [
-                    'id' => $p['id'] ?? ($i + 1),
+                    'id' => $p['id'] ?? ((int) $i + 1),
                     'name' => $p['name'] ?? 'Inconnu',
                     'ping' => $p['ping'] ?? 0,
                 ];
@@ -466,7 +466,7 @@ class GameServerQueryService
         if (isset($status['players']['sample']) && is_array($status['players']['sample'])) {
             foreach ($status['players']['sample'] as $i => $p) {
                 $playerList[] = [
-                    'id' => $i + 1,
+                    'id' => (int) $i + 1,
                     'name' => $p['name'] ?? 'Inconnu',
                     'ping' => null,
                 ];
@@ -606,7 +606,7 @@ class GameServerQueryService
     private function mcCleanMotd(mixed $description): string
     {
         if (is_string($description)) {
-            return preg_replace('/§[0-9a-fk-or]/i', '', $description);
+            return (string) preg_replace('/§[0-9a-fk-or]/i', '', $description);
         }
         if (is_array($description) && isset($description['text'])) {
             $text = $description['text'];
@@ -615,7 +615,7 @@ class GameServerQueryService
                     $text .= $extra['text'] ?? '';
                 }
             }
-            return preg_replace('/§[0-9a-fk-or]/i', '', $text);
+            return (string) preg_replace('/§[0-9a-fk-or]/i', '', $text);
         }
         return '';
     }

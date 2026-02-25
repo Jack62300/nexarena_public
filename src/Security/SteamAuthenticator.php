@@ -4,7 +4,6 @@ namespace App\Security;
 
 use App\Repository\UserRepository;
 use App\Security\Exception\OAuthEmailRequiredException;
-use App\Service\OAuthRegistrationService;
 use App\Service\SettingsService;
 use App\Util\CurlHelper;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -25,7 +24,6 @@ class SteamAuthenticator extends AbstractAuthenticator
 
     public function __construct(
         private UrlGeneratorInterface $urlGenerator,
-        private OAuthRegistrationService $oauthService,
         private SettingsService $settings,
         private UserRepository $userRepository,
     ) {
