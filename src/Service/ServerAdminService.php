@@ -357,7 +357,7 @@ class ServerAdminService
         $processes = [];
         foreach ($r['lines'] as $line) {
             $parts = preg_split('/\s+/', trim($line), 11);
-            if (count($parts) >= 11) {
+            if ($parts !== false && count($parts) >= 11) {
                 $processes[] = [
                     'user'    => $parts[0],
                     'pid'     => $parts[1],
