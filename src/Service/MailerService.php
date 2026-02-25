@@ -17,8 +17,8 @@ class MailerService
 
     public function sendEmailVerification(User $user): void
     {
-        $siteName = $this->settings->get('site_name', 'Nexarena');
-        $siteEmail = $this->settings->get('site_email', 'noreply@nexarena.com');
+        $siteName  = $this->settings->get('site_name', 'Nexarena') ?? 'Nexarena';
+        $siteEmail = $this->settings->get('site_email', 'noreply@nexarena.com') ?? 'noreply@nexarena.com';
 
         $verifyUrl = $this->urlGenerator->generate(
             'app_verify_email',
@@ -30,7 +30,7 @@ class MailerService
 
         $email = (new Email())
             ->from(sprintf('%s <%s>', $siteName, $siteEmail))
-            ->to($user->getEmail())
+            ->to($user->getEmail() ?? '')
             ->subject('Vérifiez votre adresse email — ' . $siteName)
             ->html($html);
 
@@ -39,8 +39,8 @@ class MailerService
 
     public function sendDeviceVerification(User $user, string $newIp): void
     {
-        $siteName = $this->settings->get('site_name', 'Nexarena');
-        $siteEmail = $this->settings->get('site_email', 'noreply@nexarena.com');
+        $siteName  = $this->settings->get('site_name', 'Nexarena') ?? 'Nexarena';
+        $siteEmail = $this->settings->get('site_email', 'noreply@nexarena.com') ?? 'noreply@nexarena.com';
 
         $verifyUrl = $this->urlGenerator->generate(
             'app_verify_device',
@@ -52,7 +52,7 @@ class MailerService
 
         $email = (new Email())
             ->from(sprintf('%s <%s>', $siteName, $siteEmail))
-            ->to($user->getEmail())
+            ->to($user->getEmail() ?? '')
             ->subject('Nouvelle connexion détectée — ' . $siteName)
             ->html($html);
 
@@ -129,9 +129,9 @@ HTML;
         string $raison,
         string $message,
     ): void {
-        $siteName   = $this->settings->get('site_name', 'Nexarena');
-        $siteEmail  = $this->settings->get('site_email', 'noreply@nexarena.com');
-        $contactEmail = $this->settings->get('contact_email', 'contact@nexarena.fr');
+        $siteName     = $this->settings->get('site_name', 'Nexarena') ?? 'Nexarena';
+        $siteEmail    = $this->settings->get('site_email', 'noreply@nexarena.com') ?? 'noreply@nexarena.com';
+        $contactEmail = $this->settings->get('contact_email', 'contact@nexarena.fr') ?? 'contact@nexarena.fr';
 
         $html = $this->renderContactNotificationTemplate(
             $prenom, $nom, $age, $email, $discordId, $raison, $message, $siteName
@@ -149,7 +149,7 @@ HTML;
 
     public function sendContactConfirmation(string $prenom, string $email, string $raison): void
     {
-        $siteName  = $this->settings->get('site_name', 'Nexarena');
+        $siteName  = $this->settings->get('site_name', 'Nexarena') ?? 'Nexarena';
         $siteEmail = $this->settings->get('site_email', 'noreply@nexarena.com') ?? 'noreply@nexarena.com';
 
         $html = $this->renderContactConfirmationTemplate($prenom, $raison, $siteName);

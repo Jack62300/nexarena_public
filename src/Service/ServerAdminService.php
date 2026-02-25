@@ -62,15 +62,19 @@ class ServerAdminService
         $memData = ['used' => 0, 'total' => 0, 'percent' => 0];
         if (isset($mem['lines'][1])) {
             $p = preg_split('/\s+/', trim($mem['lines'][1]));
-            $total = (int)($p[1] ?? 0);
-            $used  = (int)($p[2] ?? 0);
-            $memData = ['total' => $total, 'used' => $used, 'percent' => $total > 0 ? (int) round((float) $used / $total * 100) : 0];
+            if ($p !== false) {
+                $total = (int)($p[1] ?? 0);
+                $used  = (int)($p[2] ?? 0);
+                $memData = ['total' => $total, 'used' => $used, 'percent' => $total > 0 ? (int) round((float) $used / (float) $total * 100.0) : 0];
+            }
         }
 
         $diskData = ['total' => '-', 'used' => '-', 'percent' => 0];
         if (isset($disk['lines'][1])) {
             $p = preg_split('/\s+/', trim($disk['lines'][1]));
-            $diskData = ['total' => $p[1] ?? '-', 'used' => $p[2] ?? '-', 'percent' => isset($p[4]) ? (int)rtrim($p[4], '%') : 0];
+            if ($p !== false) {
+                $diskData = ['total' => $p[1] ?? '-', 'used' => $p[2] ?? '-', 'percent' => isset($p[4]) ? (int)rtrim($p[4], '%') : 0];
+            }
         }
 
         $load = ['1m' => '-', '5m' => '-', '15m' => '-'];

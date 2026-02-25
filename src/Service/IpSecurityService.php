@@ -145,12 +145,13 @@ class IpSecurityService
      */
     public function isTrustedIp(string $ip): bool
     {
-        $raw = $this->settings->get('trusted_ips', '');
+        $raw = $this->settings->get('trusted_ips', '') ?? '';
         if (empty(trim($raw))) {
             return false;
         }
 
-        $entries = array_filter(array_map('trim', preg_split('/[\r\n,]+/', $raw)));
+        $split = preg_split('/[\r\n,]+/', $raw);
+        $entries = array_filter(array_map('trim', $split !== false ? $split : []));
 
         foreach ($entries as $entry) {
             if ($this->ipMatchesEntry($ip, $entry)) {
@@ -185,8 +186,9 @@ class IpSecurityService
      */
     private function ipInCidr(string $ip, string $cidr): bool
     {
-        [$subnet, $bits] = explode('/', $cidr, 2);
-        $bits = (int) $bits;
+        $parts  = explode('/', $cidr, 2);
+        $subnet = $parts[0];
+        $bits   = (int) ($parts[1] ?? 32);
 
         $ipLong     = ip2long($ip);
         $subnetLong = ip2long($subnet);
