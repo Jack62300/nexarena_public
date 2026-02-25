@@ -27,6 +27,7 @@ class IpAccessListener
         '/deconnexion',
         '/widget/',
         '/oauth/',
+        '/premium/crypto/webhook',
     ];
 
     public function __construct(
