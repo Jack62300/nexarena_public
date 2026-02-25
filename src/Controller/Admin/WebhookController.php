@@ -46,6 +46,16 @@ class WebhookController extends AbstractController
         'Commentaires' => [
             'comment.created' => 'Nouveau commentaire',
             'comment.flagged' => 'Commentaire signale',
+            'comment.flag_dismissed' => 'Signalement rejete par admin',
+            'comment.deleted' => 'Commentaire supprime par admin',
+        ],
+        'Recrutement — Moderation' => [
+            'recruitment.revision_requested' => 'Revision demandee',
+            'recruitment.rejected' => 'Annonce rejetee',
+        ],
+        'Recrutement — Candidatures' => [
+            'recruitment.application_accepted' => 'Candidature acceptee',
+            'recruitment.application_rejected' => 'Candidature refusee',
         ],
     ];
 
@@ -57,6 +67,8 @@ class WebhookController extends AbstractController
         'Premium' => 'fas fa-crown',
         'Recrutement' => 'fas fa-briefcase',
         'Commentaires' => 'fas fa-comments',
+        'Recrutement — Moderation' => 'fas fa-gavel',
+        'Recrutement — Candidatures' => 'fas fa-user-check',
     ];
 
     public function __construct(

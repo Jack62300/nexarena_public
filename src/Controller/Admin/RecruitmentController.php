@@ -102,6 +102,16 @@ class RecruitmentController extends AbstractController
         $listing->setRevisionReason($reason);
         $this->em->flush();
 
+        $this->webhookService->dispatch('recruitment.revision_requested', [
+            'title' => 'Revision demandee',
+            'fields' => [
+                ['name' => 'Annonce',       'value' => $listing->getTitle(),            'inline' => true],
+                ['name' => 'Serveur',       'value' => $listing->getServer()->getName(), 'inline' => true],
+                ['name' => 'Demandee par',  'value' => $this->getUser()->getUsername(),  'inline' => true],
+                ['name' => 'Raison',        'value' => mb_substr($reason, 0, 200),       'inline' => false],
+            ],
+        ]);
+
         $this->addFlash('success', 'Demande de revision envoyee.');
         return $this->redirectToRoute('admin_recruitment_show', ['id' => $listing->getId()]);
     }
@@ -124,6 +134,16 @@ class RecruitmentController extends AbstractController
         $listing->setStatus(RecruitmentListing::STATUS_REJECTED);
         $listing->setRejectionReason($reason);
         $this->em->flush();
+
+        $this->webhookService->dispatch('recruitment.rejected', [
+            'title' => 'Annonce rejetee',
+            'fields' => [
+                ['name' => 'Annonce',     'value' => $listing->getTitle(),            'inline' => true],
+                ['name' => 'Serveur',     'value' => $listing->getServer()->getName(), 'inline' => true],
+                ['name' => 'Rejete par',  'value' => $this->getUser()->getUsername(),  'inline' => true],
+                ['name' => 'Raison',      'value' => mb_substr($reason, 0, 200),       'inline' => false],
+            ],
+        ]);
 
         $this->addFlash('success', 'L\'annonce a ete rejetee.');
         return $this->redirectToRoute('admin_recruitment_show', ['id' => $listing->getId()]);

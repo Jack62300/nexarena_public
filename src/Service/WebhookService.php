@@ -108,6 +108,12 @@ class WebhookService
         'recruitment.application' => 'blue',
         'comment.created' => 'blue',
         'comment.flagged' => 'red',
+        'comment.flag_dismissed' => 'green',
+        'comment.deleted' => 'orange',
+        'recruitment.revision_requested' => 'orange',
+        'recruitment.rejected' => 'red',
+        'recruitment.application_accepted' => 'green',
+        'recruitment.application_rejected' => 'red',
     ];
 
     /**

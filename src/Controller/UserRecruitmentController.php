@@ -322,6 +322,15 @@ class UserRecruitmentController extends AbstractController
         $application->setReviewedAt(new \DateTimeImmutable());
         $this->em->flush();
 
+        $this->webhookService->dispatch('recruitment.application_accepted', [
+            'title' => 'Candidature acceptee',
+            'fields' => [
+                ['name' => 'Annonce',       'value' => $listing->getTitle(),              'inline' => true],
+                ['name' => 'Candidat',      'value' => $application->getApplicantName(),  'inline' => true],
+                ['name' => 'Accepte par',   'value' => $this->getUser()->getUsername(),   'inline' => true],
+            ],
+        ]);
+
         // Notify applicant
         if ($application->getApplicantUser()) {
             $this->notificationService->create(
@@ -353,6 +362,15 @@ class UserRecruitmentController extends AbstractController
         $application->setReviewedBy($this->getUser());
         $application->setReviewedAt(new \DateTimeImmutable());
         $this->em->flush();
+
+        $this->webhookService->dispatch('recruitment.application_rejected', [
+            'title' => 'Candidature refusee',
+            'fields' => [
+                ['name' => 'Annonce',      'value' => $listing->getTitle(),              'inline' => true],
+                ['name' => 'Candidat',     'value' => $application->getApplicantName(),  'inline' => true],
+                ['name' => 'Refuse par',   'value' => $this->getUser()->getUsername(),   'inline' => true],
+            ],
+        ]);
 
         // Notify applicant
         if ($application->getApplicantUser()) {

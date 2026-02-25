@@ -5,6 +5,7 @@ namespace App\Controller\Admin;
 use App\Entity\Comment;
 use App\Repository\CommentRepository;
 use App\Repository\ServerRepository;
+use App\Service\WebhookService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -18,6 +19,7 @@ class CommentController extends AbstractController
 {
     public function __construct(
         private EntityManagerInterface $em,
+        private WebhookService $webhookService,
     ) {
     }
 
@@ -57,10 +59,20 @@ class CommentController extends AbstractController
             return $this->redirectToRoute('admin_comments_flagged');
         }
 
+        $server = $comment->getServer();
         $comment->setIsDeleted(true);
         $comment->setDeletedAt(new \DateTimeImmutable());
         $comment->setDeletedBy($this->getUser());
         $this->em->flush();
+
+        $this->webhookService->dispatch('comment.deleted', [
+            'title' => 'Commentaire supprime par admin',
+            'fields' => [
+                ['name' => 'Serveur',       'value' => $server->getName(),                   'inline' => true],
+                ['name' => 'Auteur',        'value' => $comment->getAuthor()->getUsername(),  'inline' => true],
+                ['name' => 'Supprime par',  'value' => $this->getUser()->getUsername(),        'inline' => true],
+            ],
+        ]);
 
         $this->addFlash('success', 'Le commentaire signale a ete supprime.');
         return $this->redirectToRoute('admin_comments_flagged');
@@ -75,11 +87,21 @@ class CommentController extends AbstractController
             return $this->redirectToRoute('admin_comments_flagged');
         }
 
+        $server = $comment->getServer();
         $comment->setIsFlagged(false);
         $comment->setFlagReason(null);
         $comment->setFlaggedBy(null);
         $comment->setFlaggedAt(null);
         $this->em->flush();
+
+        $this->webhookService->dispatch('comment.flag_dismissed', [
+            'title' => 'Signalement rejete',
+            'fields' => [
+                ['name' => 'Serveur',      'value' => $server->getName(),                   'inline' => true],
+                ['name' => 'Auteur',       'value' => $comment->getAuthor()->getUsername(),  'inline' => true],
+                ['name' => 'Modere par',   'value' => $this->getUser()->getUsername(),        'inline' => true],
+            ],
+        ]);
 
         $this->addFlash('success', 'Le signalement a ete rejete.');
         return $this->redirectToRoute('admin_comments_flagged');
