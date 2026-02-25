@@ -23,11 +23,14 @@ class AvatarExtension extends AbstractExtension
      */
     public function getUserAvatar(?User $user): ?string
     {
-        if (!$user || !$user->getAvatar()) {
+        if (!$user) {
             return null;
         }
 
         $avatar = $user->getAvatar();
+        if (!$avatar) {
+            return null;
+        }
 
         if (str_starts_with($avatar, 'http')) {
             return $avatar;

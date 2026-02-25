@@ -27,7 +27,7 @@ class CountryFlagExtension extends AbstractExtension
 
         $emoji = '';
         foreach (str_split($code) as $letter) {
-            $emoji .= mb_chr(0x1F1E6 + ord($letter) - ord('A'));
+            $emoji .= (string) mb_chr(0x1F1E6 + ord($letter) - ord('A'));
         }
 
         return $emoji;

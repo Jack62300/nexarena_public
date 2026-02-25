@@ -45,7 +45,7 @@ class DateExtension extends AbstractExtension
         } elseif ($absolute < 129600) {
             // < 36 h → hier / demain
             $relative = $isFuture ? "demain" : "hier";
-        } elseif ($absolute < 86400 * 6.5) {
+        } elseif ($absolute < 86400.0 * 6.5) {
             // < ~6.5 jours
             $days = (int) round($absolute / 86400);
             $relative = $isFuture
@@ -60,13 +60,13 @@ class DateExtension extends AbstractExtension
                 : "il y a {$weeks} {$w}";
         } elseif ($absolute < 86400 * 345) {
             // < ~11.5 mois
-            $months = (int) round($absolute / (86400 * 30.5));
+            $months = (int) round((float) $absolute / (86400.0 * 30.5));
             $months = max(1, $months);
             $relative = $isFuture
                 ? "dans {$months} mois"
                 : "il y a {$months} mois";
         } else {
-            $years = (int) round($absolute / (86400 * 365.25));
+            $years = (int) round((float) $absolute / (86400.0 * 365.25));
             $years = max(1, $years);
             $y = $years > 1 ? 'ans' : 'an';
             $relative = $isFuture
