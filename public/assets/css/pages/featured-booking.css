@@ -452,6 +452,41 @@
     gap: 8px;
 }
 
+.fb-slot-btns--row {
+    flex-direction: row;
+}
+
+.fb-slot-hint {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 12px;
+    font-size: 11px;
+    color: #5a7a9c;
+}
+
+.fb-selected-days {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: 8px 0 4px;
+    max-height: 84px;
+    overflow-y: auto;
+}
+
+.fb-day-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    background: rgba(255,107,53,0.12);
+    border: 1px solid rgba(255,107,53,0.3);
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #ff6b35;
+    white-space: nowrap;
+}
+
 .fb-slot-btn {
     display: flex;
     align-items: center;

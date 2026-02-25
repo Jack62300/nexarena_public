@@ -90,10 +90,32 @@
                     </div>
                 </div>
 
-                {# Date strip (compact, 7 days at a time) #}
+                {# Slot choice — always visible #}
+                <div class="fb-card">
+                    <div class="fb-card__label"><i class="fas fa-clock"></i> Créneau</div>
+                    <div class="fb-slot-btns fb-slot-btns--row">
+                        <button type="button" class="fb-slot-btn fb-slot-btn--active" data-slot="night" onclick="selectSlot('night', this)">
+                            <i class="fas fa-moon"></i>
+                            <div><strong>Nuit</strong><span>00:00 – 12:00</span></div>
+                        </button>
+                        <button type="button" class="fb-slot-btn" data-slot="day" onclick="selectSlot('day', this)">
+                            <i class="fas fa-sun"></i>
+                            <div><strong>Jour</strong><span>12:00 – 00:00</span></div>
+                        </button>
+                        <button type="button" class="fb-slot-btn" data-slot="full" onclick="selectSlot('full', this)">
+                            <i class="fas fa-calendar-day"></i>
+                            <div><strong>Journée</strong><span>2 créneaux / jour</span></div>
+                        </button>
+                    </div>
+                    <div class="fb-slot-hint">
+                        <i class="fas fa-info-circle"></i> Cliquez sur les jours du calendrier pour les sélectionner ou désélectionner
+                    </div>
+                </div>
+
+                {# Date strip (7 days at a time, navigate with arrows) #}
                 <div class="fb-card">
                     <div class="fb-card__label-row">
-                        <div class="fb-card__label"><i class="fas fa-calendar-day"></i> Date</div>
+                        <div class="fb-card__label"><i class="fas fa-calendar-day"></i> Jours</div>
                         <span class="fb-strip-range" id="fbStripRange"></span>
                     </div>
                     <div class="fb-datepicker">
@@ -109,42 +131,6 @@
                     </div>
                 </div>
 
-                {# Slot + Period — shown after date selected #}
-                <div class="fb-card fb-options" id="fbOptions" style="display:none;">
-                    <div class="fb-options__inner">
-                        <div class="fb-options__group">
-                            <div class="fb-card__label"><i class="fas fa-clock"></i> Créneau de départ</div>
-                            <div class="fb-slot-btns" id="slotBtnsWrap">
-                                <button type="button" class="fb-slot-btn fb-slot-btn--active" data-slot="00:00" onclick="selectSlot('00:00', this)">
-                                    <i class="fas fa-moon"></i>
-                                    <div><strong>Nuit</strong><span>00:00 – 12:00</span></div>
-                                </button>
-                                <button type="button" class="fb-slot-btn" data-slot="12:00" onclick="selectSlot('12:00', this)">
-                                    <i class="fas fa-sun"></i>
-                                    <div><strong>Jour</strong><span>12:00 – 00:00</span></div>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="fb-options__group">
-                            <div class="fb-card__label"><i class="fas fa-calendar-week"></i> Période</div>
-                            <div class="fb-period-btns" id="periodBtnsWrap">
-                                <button type="button" class="fb-period-btn fb-period-btn--active" data-slots="1" onclick="selectPeriod(1, this)">
-                                    <strong>12h</strong><span>1 créneau</span>
-                                </button>
-                                <button type="button" class="fb-period-btn" data-slots="2" onclick="selectPeriod(2, this)">
-                                    <strong>1 jour</strong><span>2 créneaux</span>
-                                </button>
-                                <button type="button" class="fb-period-btn" data-slots="6" onclick="selectPeriod(6, this)">
-                                    <strong>3 jours</strong><span>6 créneaux</span>
-                                </button>
-                                <button type="button" class="fb-period-btn" data-slots="14" onclick="selectPeriod(14, this)">
-                                    <strong>1 semaine</strong><span>14 créneaux</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
             </div>
 
             {# ===== RIGHT — SUMMARY ===== #}
@@ -153,7 +139,7 @@
 
                     <div class="fb-summary__placeholder" id="fbSummaryPlaceholder">
                         <div class="fb-summary__ph-icon"><i class="fas fa-calendar-check"></i></div>
-                        <p>Choisissez une date<br>pour voir le récapitulatif</p>
+                        <p>Sélectionnez un ou plusieurs jours<br>dans le calendrier pour continuer</p>
                     </div>
 
                     <div class="fb-summary__content" id="fbSummaryContent" style="display:none;">
@@ -161,17 +147,17 @@
                             <i class="fas fa-bolt"></i> Récapitulatif
                         </div>
                         <div class="fb-summary__rows" id="fbSummaryRows"></div>
+                        <div class="fb-selected-days" id="fbDayChips"></div>
                         <div class="fb-summary__cost" id="fbSummaryCost">
                             <i class="fas fa-bolt"></i> <span id="fbCostNum">0</span> NexBoost
                         </div>
                         <div class="fb-summary__balance" id="fbSummaryBalance"></div>
-                        <form method="post" action="{{ path('featured_booking_book', {id: server.id}) }}" style="margin:0;">
+                        <form method="post" action="{{ path('featured_booking_book', {id: server.id}) }}" id="fbForm" style="margin:0;">
                             <input type="hidden" name="_token" value="{{ csrf_token('featured_booking') }}">
                             <input type="hidden" name="scope" id="confirmScope" value="homepage">
                             <input type="hidden" name="position" id="confirmPosition" value="1">
-                            <input type="hidden" name="startsAt" id="confirmStartsAt" value="">
-                            <input type="hidden" name="slots_count" id="confirmSlotsCount" value="1">
-                            <button type="submit" class="fb-summary__btn" id="confirmBtn">
+                            <div id="fbSlotsContainer"></div>
+                            <button type="submit" class="fb-summary__btn" id="confirmBtn" disabled>
                                 <i class="fas fa-crown"></i> Réserver maintenant
                             </button>
                         </form>
@@ -182,7 +168,7 @@
                     <i class="fas fa-lightbulb"></i>
                     <div>
                         <strong>Comment ça marche ?</strong><br>
-                        Chaque créneau = 12h d'exposition. Plus la position est haute (#1 en tête), plus elle coûte de NexBoost mais plus votre serveur est visible.
+                        Chaque créneau = 12h d'exposition. Cliquez plusieurs jours pour les sélectionner. La <strong>Journée</strong> réserve les 2 créneaux (00h–12h et 12h–00h). Plus la position est haute (#1), plus elle coûte mais plus votre serveur est visible.
                     </div>
                 </div>
             </div>
@@ -211,15 +197,20 @@
 
     var today = new Date();
     today.setHours(0, 0, 0, 0);
-    var stripOffset  = 0;
-    var selectedDate = null;
-    var selectedSlot = '00:00';
-    var slotsCount   = 1;   // number of 12h slots to book
+    var stripOffset = 0;
+
+    // Multi-select state
+    var selectedDays = new Set(); // Set<string> "YYYY-MM-DD"
+    var slotChoice   = 'night';   // 'night' | 'day' | 'full'
 
     var dayNames   = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
     var monthNames = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
 
     function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+
+    function dateToYMD(d) {
+        return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate());
+    }
 
     function buildSlotTakenFromAvailability(availability, pos) {
         var result = {};
@@ -229,17 +220,15 @@
 
     slotTaken = buildSlotTakenFromAvailability(homepageAvailability, 1);
 
-    // Compute range start/end dates based on selectedDate + selectedSlot + slotsCount
-    function getRangeDates() {
-        if (!selectedDate) return { start: null, end: null };
-        var start = new Date(selectedDate + 'T' + selectedSlot + ':00');
-        var endMs  = start.getTime() + slotsCount * 12 * 3600 * 1000;
-        var end    = new Date(endMs - 1); // last ms of last slot
-        return { start: start, end: end };
-    }
+    // Slots per day based on slotChoice
+    function slotsPerDay() { return slotChoice === 'full' ? 2 : 1; }
 
-    function dateToYMD(d) {
-        return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate());
+    // Check if a day is disabled for current slotChoice
+    function isDayUnavailable(morningTaken, morningMine, afternoonTaken, afternoonMine) {
+        if (slotChoice === 'night') return morningTaken   && !morningMine;
+        if (slotChoice === 'day')   return afternoonTaken && !afternoonMine;
+        if (slotChoice === 'full')  return (morningTaken && !morningMine) || (afternoonTaken && !afternoonMine);
+        return false;
     }
 
     // ---- DATE STRIP ----
@@ -258,10 +247,6 @@
 
         document.getElementById('navPrev').disabled = stripOffset <= 0;
 
-        var range = getRangeDates();
-        var rangeStartYMD = range.start ? dateToYMD(range.start) : null;
-        var rangeEndYMD   = range.end   ? dateToYMD(range.end)   : null;
-
         for (var i = 0; i < 7; i++) {
             var d = new Date(startDate);
             d.setDate(startDate.getDate() + i);
@@ -269,10 +254,10 @@
             var dateStr = dateToYMD(d);
             var isPast  = d < today;
 
-            var morningKey   = dateStr + ' 00:00';
-            var afternoonKey = dateStr + ' 12:00';
-            var morningTaken   = slotTaken[morningKey]   || false;
-            var afternoonTaken = slotTaken[afternoonKey] || false;
+            var morningKey     = dateStr + ' 00:00';
+            var afternoonKey   = dateStr + ' 12:00';
+            var morningTaken   = slotTaken[morningKey]             || false;
+            var afternoonTaken = slotTaken[afternoonKey]           || false;
             var morningMine    = serverBookedSlots.indexOf(morningKey)   !== -1;
             var afternoonMine  = serverBookedSlots.indexOf(afternoonKey) !== -1;
 
@@ -283,39 +268,25 @@
             if (isPast) {
                 card.classList.add('fb-day-card--past');
                 card.disabled = true;
-            } else if (morningMine && afternoonMine) {
-                card.classList.add('fb-day-card--mine');
-                card.setAttribute('data-date', dateStr);
-                card.addEventListener('click', function() { selectDateFn(this.getAttribute('data-date')); });
-            } else if ((morningTaken || morningMine) && (afternoonTaken || afternoonMine)) {
+            } else if (isDayUnavailable(morningTaken, morningMine, afternoonTaken, afternoonMine)) {
                 card.classList.add('fb-day-card--full');
                 card.disabled = true;
+            } else if (selectedDays.has(dateStr)) {
+                card.classList.add('fb-day-card--selected');
+                card.setAttribute('data-date', dateStr);
+                card.addEventListener('click', function() { toggleDay(this.getAttribute('data-date')); });
             } else {
                 card.classList.add('fb-day-card--available');
                 card.setAttribute('data-date', dateStr);
-                card.addEventListener('click', function() { selectDateFn(this.getAttribute('data-date')); });
-            }
-
-            // Range highlight
-            if (rangeStartYMD && rangeEndYMD && dateStr >= rangeStartYMD && dateStr <= rangeEndYMD) {
-                card.classList.remove('fb-day-card--available','fb-day-card--mine');
-                if (dateStr === rangeStartYMD && dateStr === rangeEndYMD) {
-                    card.classList.add('fb-day-card--selected');
-                } else if (dateStr === rangeStartYMD) {
-                    card.classList.add('fb-day-card--range-start');
-                } else if (dateStr === rangeEndYMD) {
-                    card.classList.add('fb-day-card--range-end');
-                } else {
-                    card.classList.add('fb-day-card--range-mid');
-                }
+                card.addEventListener('click', function() { toggleDay(this.getAttribute('data-date')); });
             }
 
             card.innerHTML =
                 '<div class="fb-day-card__dow">' + dayNames[d.getDay()] + '</div>' +
                 '<div class="fb-day-card__num">' + d.getDate() + '</div>' +
                 '<div class="fb-day-card__dots">' +
-                    '<span class="fb-day-dot ' + getDotClass(morningTaken, morningMine, isPast) + '" title="00h-12h"></span>' +
-                    '<span class="fb-day-dot ' + getDotClass(afternoonTaken, afternoonMine, isPast) + '" title="12h-00h"></span>' +
+                    '<span class="fb-day-dot ' + getDotClass(morningTaken, morningMine, isPast) + '" title="00h–12h"></span>' +
+                    '<span class="fb-day-dot ' + getDotClass(afternoonTaken, afternoonMine, isPast) + '" title="12h–00h"></span>' +
                 '</div>';
 
             strip.appendChild(card);
@@ -336,6 +307,17 @@
         renderStrip();
     };
 
+    // ---- TOGGLE DAY ----
+    function toggleDay(dateStr) {
+        if (selectedDays.has(dateStr)) {
+            selectedDays.delete(dateStr);
+        } else {
+            selectedDays.add(dateStr);
+        }
+        renderStrip();
+        updateSummary();
+    }
+
     // ---- SCOPE & POSITION ----
     function updateCostDisplay() {
         currentCosts = currentScope === 'homepage' ? homepageCosts : gameCosts;
@@ -351,15 +333,27 @@
         fetch(url)
             .then(function(r) { return r.json(); })
             .then(function(data) {
-                slotTaken         = data.slot_taken         || {};
+                slotTaken         = data.slot_taken          || {};
                 serverBookedSlots = data.server_booked_slots || [];
                 costPer12h        = data.cost_per_12h        || 1;
-                selectedDate = null;
-                hideSummary();
-                document.getElementById('fbOptions').style.display = 'none';
+                // Remove days that are now unavailable
+                pruneUnavailableDays();
                 renderStrip();
+                updateSummary();
             })
             .catch(function() {});
+    }
+
+    function pruneUnavailableDays() {
+        selectedDays.forEach(function(dateStr) {
+            var mt = slotTaken[dateStr + ' 00:00'] || false;
+            var at = slotTaken[dateStr + ' 12:00'] || false;
+            var mm = serverBookedSlots.indexOf(dateStr + ' 00:00') !== -1;
+            var am = serverBookedSlots.indexOf(dateStr + ' 12:00') !== -1;
+            if (isDayUnavailable(mt, mm, at, am)) {
+                selectedDays.delete(dateStr);
+            }
+        });
     }
 
     window.selectScope = function(scope, btn) {
@@ -367,6 +361,7 @@
         document.querySelectorAll('.fb-scope-tab').forEach(function(el) { el.classList.remove('fb-scope-tab--active'); });
         btn.classList.add('fb-scope-tab--active');
         document.getElementById('confirmScope').value = scope;
+        selectedDays.clear();
         updateCostDisplay();
         loadAvailability();
     };
@@ -379,72 +374,22 @@
         costPer12h = currentCosts[pos] || 1;
 
         if (currentScope === 'homepage') {
-            slotTaken    = buildSlotTakenFromAvailability(homepageAvailability, pos);
-            selectedDate = null;
-            hideSummary();
-            document.getElementById('fbOptions').style.display = 'none';
+            slotTaken = buildSlotTakenFromAvailability(homepageAvailability, pos);
+            pruneUnavailableDays();
             renderStrip();
+            updateSummary();
         } else {
             loadAvailability();
         }
     };
 
-    // ---- DATE & SLOT SELECTION ----
-    function selectDateFn(dateStr) {
-        selectedDate = dateStr;
-        renderStrip();
-        updateSlotButtons();
-        updatePeriodButtons();
-        document.getElementById('fbOptions').style.display = '';
-        updateSummary();
-    }
-
-    function updateSlotButtons() {
-        if (!selectedDate) return;
-        var morningKey   = selectedDate + ' 00:00';
-        var afternoonKey = selectedDate + ' 12:00';
-        var morningTaken   = slotTaken[morningKey]   || false;
-        var afternoonTaken = slotTaken[afternoonKey] || false;
-        var morningMine    = serverBookedSlots.indexOf(morningKey)   !== -1;
-        var afternoonMine  = serverBookedSlots.indexOf(afternoonKey) !== -1;
-
-        var btns = document.querySelectorAll('.fb-slot-btn');
-        btns.forEach(function(btn) {
-            var slot  = btn.getAttribute('data-slot');
-            var taken = (slot === '00:00') ? morningTaken  : afternoonTaken;
-            var mine  = (slot === '00:00') ? morningMine   : afternoonMine;
-            btn.classList.remove('fb-slot-btn--active','fb-slot-btn--mine','fb-slot-btn--taken');
-            btn.disabled = false;
-            if (mine)        { btn.classList.add('fb-slot-btn--mine');  btn.disabled = true; }
-            else if (taken)  { btn.classList.add('fb-slot-btn--taken'); btn.disabled = true; }
-        });
-
-        var morningOk   = !morningTaken   && !morningMine;
-        var afternoonOk = !afternoonTaken && !afternoonMine;
-        if (morningOk)        { selectedSlot = '00:00'; btns[0].classList.add('fb-slot-btn--active'); }
-        else if (afternoonOk) { selectedSlot = '12:00'; btns[1].classList.add('fb-slot-btn--active'); }
-    }
-
-    function updatePeriodButtons() {
-        // just re-render strip so range highlight updates; buttons already rendered in HTML
-        renderStrip();
-        updateSummary();
-    }
-
-    window.selectSlot = function(slot, btn) {
-        if (btn.disabled) return;
-        selectedSlot = slot;
-        document.querySelectorAll('.fb-slot-btn:not(:disabled)').forEach(function(el) { el.classList.remove('fb-slot-btn--active'); });
+    // ---- SLOT CHOICE ----
+    window.selectSlot = function(choice, btn) {
+        slotChoice = choice;
+        document.querySelectorAll('.fb-slot-btn').forEach(function(el) { el.classList.remove('fb-slot-btn--active'); });
         btn.classList.add('fb-slot-btn--active');
-        renderStrip();
-        updateSummary();
-    };
-
-    window.selectPeriod = function(n, btn) {
-        slotsCount = n;
-        document.querySelectorAll('.fb-period-btn').forEach(function(el) { el.classList.remove('fb-period-btn--active'); });
-        btn.classList.add('fb-period-btn--active');
-        document.getElementById('confirmSlotsCount').value = n;
+        // Auto-deselect days that are now unavailable for the new slot choice
+        pruneUnavailableDays();
         renderStrip();
         updateSummary();
     };
@@ -455,41 +400,27 @@
         document.getElementById('fbSummaryContent').style.display = 'none';
     }
 
-    function formatDate(dateStr) {
-        var p = dateStr.split('-');
-        return p[2] + '/' + p[1] + '/' + p[0];
-    }
-
     function updateSummary() {
-        if (!selectedDate) return;
+        if (selectedDays.size === 0) {
+            hideSummary();
+            return;
+        }
 
-        var startKey = selectedDate + ' ' + selectedSlot;
-        var taken    = slotTaken[startKey] || false;
-        var mine     = serverBookedSlots.indexOf(startKey) !== -1;
-        var canBook  = !taken && !mine;
+        var nDays  = selectedDays.size;
+        var nSlots = nDays * slotsPerDay();
+        var cost   = nSlots * costPer12h;
 
-        var totalCost  = slotsCount * costPer12h;
+        var slotLabel  = slotChoice === 'night' ? 'Nuit (00:00 – 12:00)'
+                       : slotChoice === 'day'   ? 'Jour (12:00 – 00:00)'
+                       : 'Journée (00:00 – 00:00)';
         var scopeLabel = currentScope === 'homepage' ? "Page d'accueil" : serverGcName;
-        var slotLabel  = selectedSlot === '00:00' ? '00:00 – 12:00' : '12:00 – 00:00';
-
-        // Compute end date/time
-        var startDt = new Date(selectedDate + 'T' + selectedSlot + ':00');
-        var endDt   = new Date(startDt.getTime() + slotsCount * 12 * 3600 * 1000);
-        var endStr  = pad2(endDt.getDate()) + '/' + pad2(endDt.getMonth()+1) + '/' + endDt.getFullYear()
-                    + ' ' + pad2(endDt.getHours()) + ':00';
-
-        var periodLabel = slotsCount === 1  ? '12h (1 créneau)'
-                        : slotsCount === 2  ? '1 jour (2 créneaux)'
-                        : slotsCount === 6  ? '3 jours (6 créneaux)'
-                        : slotsCount === 14 ? '1 semaine (14 créneaux)'
-                        : (slotsCount * 12) + 'h (' + slotsCount + ' créneaux)';
 
         var rows = [
-            { icon: 'fa-bullseye',        label: 'Emplacement', val: scopeLabel },
-            { icon: 'fa-trophy',          label: 'Position',    val: '#' + currentPosition },
-            { icon: 'fa-play-circle',     label: 'Début',       val: formatDate(selectedDate) + ' ' + selectedSlot },
-            { icon: 'fa-stop-circle',     label: 'Fin',         val: endStr },
-            { icon: 'fa-calendar-week',   label: 'Période',     val: periodLabel },
+            { icon: 'fa-bullseye',    label: 'Emplacement',         val: scopeLabel },
+            { icon: 'fa-trophy',      label: 'Position',            val: '#' + currentPosition },
+            { icon: 'fa-clock',       label: 'Créneau',             val: slotLabel },
+            { icon: 'fa-calendar',    label: 'Jours sélectionnés',  val: nDays + ' jour' + (nDays > 1 ? 's' : '') },
+            { icon: 'fa-layer-group', label: 'Total créneaux',      val: nSlots + ' créneau' + (nSlots > 1 ? 'x' : '') },
         ];
 
         var rowsHtml = rows.map(function(r) {
@@ -498,12 +429,21 @@
                  + '<span class="fb-sum-row__val">' + r.val + '</span>'
                  + '</div>';
         }).join('');
-
         document.getElementById('fbSummaryRows').innerHTML = rowsHtml;
-        document.getElementById('fbCostNum').textContent = totalCost;
-        document.getElementById('fbSummaryCost').style.color = canBook ? '#ff6b35' : '#e74a3b';
 
-        var balanceOk = userBoostBalance >= totalCost;
+        // Day chips
+        var sortedDays = Array.from(selectedDays).sort();
+        var chipsHtml = sortedDays.map(function(d) {
+            var p = d.split('-');
+            return '<span class="fb-day-chip">' + p[2] + '/' + p[1] + '</span>';
+        }).join('');
+        document.getElementById('fbDayChips').innerHTML = chipsHtml;
+
+        // Cost
+        document.getElementById('fbCostNum').textContent = cost;
+
+        // Balance
+        var balanceOk = userBoostBalance >= cost;
         var balEl = document.getElementById('fbSummaryBalance');
         if (!balanceOk) {
             balEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Solde insuffisant (' + userBoostBalance + ' NexBoost disponibles)';
@@ -514,15 +454,39 @@
         }
 
         var confirmBtn = document.getElementById('confirmBtn');
-        confirmBtn.disabled = !canBook || !balanceOk;
-
-        document.getElementById('confirmScope').value      = currentScope;
-        document.getElementById('confirmPosition').value   = currentPosition;
-        document.getElementById('confirmStartsAt').value   = selectedDate + ' ' + selectedSlot;
-        document.getElementById('confirmSlotsCount').value = slotsCount;
+        confirmBtn.disabled = !balanceOk;
 
         document.getElementById('fbSummaryPlaceholder').style.display = 'none';
-        document.getElementById('fbSummaryContent').style.display     = '';
+        document.getElementById('fbSummaryContent').style.display = '';
+    }
+
+    // ---- FORM SUBMIT — inject slots[] ----
+    document.getElementById('fbForm').addEventListener('submit', function(e) {
+        var container = document.getElementById('fbSlotsContainer');
+        container.innerHTML = '';
+
+        if (selectedDays.size === 0) {
+            e.preventDefault();
+            return;
+        }
+
+        var sortedDays = Array.from(selectedDays).sort();
+        sortedDays.forEach(function(dateStr) {
+            if (slotChoice === 'night' || slotChoice === 'full') {
+                addSlotInput(dateStr + ' 00:00');
+            }
+            if (slotChoice === 'day' || slotChoice === 'full') {
+                addSlotInput(dateStr + ' 12:00');
+            }
+        });
+    });
+
+    function addSlotInput(value) {
+        var inp = document.createElement('input');
+        inp.type  = 'hidden';
+        inp.name  = 'slots[]';
+        inp.value = value;
+        document.getElementById('fbSlotsContainer').appendChild(inp);
     }
 
     // ---- INIT ----

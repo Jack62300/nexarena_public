@@ -144,10 +144,9 @@ class FeaturedBookingController extends AbstractController
             return $this->redirectToRoute('featured_booking', ['id' => $server->getId()]);
         }
 
-        $scope      = $request->request->get('scope', FeaturedBooking::SCOPE_HOMEPAGE);
-        $position   = $request->request->getInt('position', 1);
-        $startsAtStr = $request->request->get('startsAt', '');
-        $slotsCount = $request->request->getInt('slots_count', 1);
+        $scope    = $request->request->get('scope', FeaturedBooking::SCOPE_HOMEPAGE);
+        $position = $request->request->getInt('position', 1);
+        $slotsRaw = $request->request->all('slots');
 
         if (!in_array($scope, [FeaturedBooking::SCOPE_HOMEPAGE, FeaturedBooking::SCOPE_GAME], true)) {
             $this->addFlash('danger', 'Scope invalide.');
@@ -157,66 +156,84 @@ class FeaturedBookingController extends AbstractController
             $this->addFlash('danger', 'Position invalide.');
             return $this->redirectToRoute('featured_booking', ['id' => $server->getId()]);
         }
-        if (!preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/', $startsAtStr)) {
-            $this->addFlash('danger', 'Date invalide.');
+        if (empty($slotsRaw) || count($slotsRaw) > 28) {
+            $this->addFlash('danger', 'Sélectionnez entre 1 et 28 créneaux.');
             return $this->redirectToRoute('featured_booking', ['id' => $server->getId()]);
         }
-        if ($slotsCount < 1 || $slotsCount > 14) {
-            $this->addFlash('danger', 'Nombre de créneaux invalide (1–14).');
-            return $this->redirectToRoute('featured_booking', ['id' => $server->getId()]);
+
+        // Validate & parse each slot datetime
+        $slotStarts = [];
+        $today = new \DateTime('today 00:00');
+        foreach ($slotsRaw as $raw) {
+            if (!preg_match('/^\d{4}-\d{2}-\d{2} (00|12):00$/', (string) $raw)) {
+                $this->addFlash('danger', 'Format de créneau invalide.');
+                return $this->redirectToRoute('featured_booking', ['id' => $server->getId()]);
+            }
+            try {
+                $dt = new \DateTime($raw);
+            } catch (\Exception) {
+                $this->addFlash('danger', 'Date invalide.');
+                return $this->redirectToRoute('featured_booking', ['id' => $server->getId()]);
+            }
+            if ($dt < $today) {
+                $this->addFlash('danger', 'Impossible de réserver dans le passé.');
+                return $this->redirectToRoute('featured_booking', ['id' => $server->getId()]);
+            }
+            $slotStarts[] = $dt;
         }
+
+        // Deduplicate & sort
+        $seen = [];
+        $unique = [];
+        foreach ($slotStarts as $dt) {
+            $key = $dt->format('Y-m-d H:i');
+            if (!isset($seen[$key])) {
+                $seen[$key] = true;
+                $unique[]   = $dt;
+            }
+        }
+        usort($unique, fn($a, $b) => $a <=> $b);
+        $slotStarts = $unique;
 
         // For game scope, always use the server's own gameCategory
         $gc = null;
         if ($scope === FeaturedBooking::SCOPE_GAME) {
             $gc = $server->getGameCategory();
             if (!$gc) {
-                $this->addFlash('danger', 'Ce serveur n\'a pas de categorie de jeu.');
+                $this->addFlash('danger', "Ce serveur n'a pas de catégorie de jeu.");
                 return $this->redirectToRoute('featured_booking', ['id' => $server->getId()]);
             }
-        }
-
-        try {
-            $startsAt = new \DateTime($startsAtStr);
-        } catch (\Exception) {
-            $this->addFlash('danger', 'Format de date invalide.');
-            return $this->redirectToRoute('featured_booking', ['id' => $server->getId()]);
         }
 
         // Check total cost upfront
         $costPerSlot = $this->premiumService->getPositionCost($scope, $position);
-        $totalCost   = $costPerSlot * $slotsCount;
+        $totalCost   = $costPerSlot * count($slotStarts);
         if (!$server->hasEnoughBoostTokens($totalCost)) {
-            $this->addFlash('danger', 'NexBoost insuffisants sur le serveur (besoin : ' . $totalCost . '). Déposez des NexBoost depuis la page de gestion.');
+            $this->addFlash('danger', 'NexBoost insuffisants (besoin : ' . $totalCost . '). Déposez des NexBoost depuis la gestion du serveur.');
             return $this->redirectToRoute('featured_booking', ['id' => $server->getId()]);
         }
 
-        // Pre-validate all slots availability before booking anything
-        $slotStarts = [];
-        $cursor = clone $startsAt;
-        for ($i = 0; $i < $slotsCount; $i++) {
-            $check = $this->premiumService->canBookPosition($server, $scope, $position, $cursor, 12, $gc);
+        // Pre-validate ALL slots before booking any
+        foreach ($slotStarts as $slotDt) {
+            $check = $this->premiumService->canBookPosition($server, $scope, $position, $slotDt, 12, $gc);
             if (!$check['can']) {
-                $this->addFlash('danger', 'Le créneau du ' . $cursor->format('d/m H:i') . ' est déjà pris ou indisponible.');
+                $this->addFlash('danger', 'Le créneau du ' . $slotDt->format('d/m H:i') . ' est déjà pris ou indisponible.');
                 return $this->redirectToRoute('featured_booking', ['id' => $server->getId()]);
             }
-            $slotStarts[] = clone $cursor;
-            $cursor->modify('+12 hours');
         }
 
-        // Book all slots
+        // Book all
         $user = $this->getUser();
-        foreach ($slotStarts as $slotStart) {
-            $this->premiumService->bookPosition($server, $user, $scope, $position, $slotStart, 12, $gc);
+        foreach ($slotStarts as $slotDt) {
+            $this->premiumService->bookPosition($server, $user, $scope, $position, $slotDt, 12, $gc);
         }
 
-        $endsAt = (clone end($slotStarts))->modify('+12 hours');
+        $n          = count($slotStarts);
         $scopeLabel = $scope === FeaturedBooking::SCOPE_HOMEPAGE ? "Page d'accueil" : $gc->getName();
-        if ($slotsCount === 1) {
-            $this->addFlash('success', 'Position #' . $position . ' réservée (' . $scopeLabel . ') du ' . $startsAt->format('d/m/Y H:i') . ' au ' . $endsAt->format('d/m/Y H:i') . ' !');
-        } else {
-            $this->addFlash('success', $slotsCount . ' créneaux réservés sur la position #' . $position . ' (' . $scopeLabel . ') — du ' . $startsAt->format('d/m/Y H:i') . ' au ' . $endsAt->format('d/m/Y H:i') . ' · ' . $totalCost . ' NexBoost débités.');
-        }
+        $this->addFlash('success',
+            $n . ' créneau' . ($n > 1 ? 'x' : '') . ' réservé' . ($n > 1 ? 's' : '') .
+            ' — Position #' . $position . ' (' . $scopeLabel . ') · ' . $totalCost . ' NexBoost débités.'
+        );
 
         return $this->redirectToRoute('featured_booking', ['id' => $server->getId()]);
     }
