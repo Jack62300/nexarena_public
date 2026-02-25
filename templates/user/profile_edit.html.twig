@@ -524,6 +524,82 @@
                     </div>
                 </div>
 
+                {# ── Twitch Live Premium ── #}
+                <div class="ep-sidebar-card" style="border-color:rgba(145,70,255,0.25);">
+                    <div class="ep-sidebar-title" style="color:#9146ff;border-bottom-color:rgba(145,70,255,0.2);">
+                        <i class="fab fa-twitch" style="color:#9146ff;"></i> Twitch Live
+                        <span style="margin-left:auto;font-size:10px;padding:2px 7px;border-radius:4px;background:rgba(145,70,255,0.12);color:#9146ff;border:1px solid rgba(145,70,255,0.25);font-weight:700;letter-spacing:.3px;">PREMIUM</span>
+                    </div>
+
+                    {% if twitch_sub and twitch_sub.isActive() %}
+                        {# Active subscription #}
+                        <div style="text-align:center;padding:8px 0 14px;">
+                            <div style="width:44px;height:44px;border-radius:50%;background:rgba(145,70,255,0.15);border:2px solid #9146ff;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;">
+                                <i class="fab fa-twitch" style="font-size:20px;color:#9146ff;"></i>
+                            </div>
+                            <div style="font-size:13px;font-weight:700;color:#e6edf3;margin-bottom:4px;">Live actif sur votre profil</div>
+                            <div style="font-size:12px;color:#8b949e;">
+                                Expire dans <strong style="color:#9146ff;">{{ twitch_sub.getDaysRemaining() }} jour{{ twitch_sub.getDaysRemaining() > 1 ? 's' : '' }}</strong>
+                            </div>
+                            {% if twitch_sub.autoRenew %}
+                                <div style="margin-top:6px;font-size:11px;color:#45f882;"><i class="fas fa-sync-alt"></i> Renouvellement auto activé</div>
+                            {% else %}
+                                <div style="margin-top:6px;font-size:11px;color:#8b949e;"><i class="fas fa-pause-circle"></i> Pas de renouvellement auto</div>
+                            {% endif %}
+                        </div>
+                        <form method="post" action="{{ path('user_profile_twitch_cancel') }}">
+                            <input type="hidden" name="_token" value="{{ csrf_token('profile_twitch_cancel') }}">
+                            <button type="submit" style="width:100%;padding:8px;border-radius:8px;background:rgba(201,49,74,0.08);border:1px solid rgba(201,49,74,0.25);color:#c9314a;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;"
+                                    onmouseover="this.style.background='rgba(201,49,74,0.14)'" onmouseout="this.style.background='rgba(201,49,74,0.08)'">
+                                <i class="fas fa-times-circle"></i> Annuler l'abonnement
+                            </button>
+                        </form>
+                    {% else %}
+                        {# Not subscribed #}
+                        <p style="font-size:12px;color:#8b949e;line-height:1.6;margin-bottom:14px;">
+                            Affichez votre stream Twitch en direct sur votre page de profil public.
+                        </p>
+
+                        {% if not app.user.twitchUsername %}
+                            <div style="padding:10px 12px;background:rgba(240,160,48,0.08);border:1px solid rgba(240,160,48,0.2);border-radius:8px;font-size:12px;color:#f0a030;margin-bottom:12px;">
+                                <i class="fas fa-exclamation-triangle"></i> Renseignez d'abord votre pseudo Twitch dans la section Réseaux ci-dessus.
+                            </div>
+                        {% endif %}
+
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:rgba(145,70,255,0.06);border:1px solid rgba(145,70,255,0.15);border-radius:8px;margin-bottom:12px;">
+                            <span style="font-size:12px;color:#c9d1d9;">Coût mensuel</span>
+                            <span style="font-size:14px;font-weight:800;color:#9146ff;">{{ twitch_cost_tokens }} <span style="font-size:11px;">NexBits</span></span>
+                        </div>
+
+                        {% if twitch_gated %}
+                            <div style="font-size:11px;color:#5a7a9c;margin-bottom:10px;display:flex;align-items:center;gap:5px;">
+                                <i class="fas fa-wallet" style="color:#45f882;"></i>
+                                Votre solde : <strong style="color:#45f882;">{{ app.user.tokenBalance }} NexBits</strong>
+                            </div>
+                            <form method="post" action="{{ path('user_profile_twitch_subscribe') }}">
+                                <input type="hidden" name="_token" value="{{ csrf_token('profile_twitch_subscribe') }}">
+                                <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:#8b949e;margin-bottom:10px;cursor:pointer;">
+                                    <input type="checkbox" name="auto_renew" value="1" style="accent-color:#9146ff;"> Renouveler automatiquement
+                                </label>
+                                <button type="submit"
+                                        {% if not app.user.twitchUsername or app.user.tokenBalance < twitch_cost_tokens %}disabled{% endif %}
+                                        style="width:100%;padding:9px;border-radius:8px;background:{% if app.user.twitchUsername and app.user.tokenBalance >= twitch_cost_tokens %}linear-gradient(135deg,#9146ff,#6d28d9){% else %}rgba(145,70,255,0.15){% endif %};border:none;color:{% if app.user.twitchUsername and app.user.tokenBalance >= twitch_cost_tokens %}#fff{% else %}rgba(145,70,255,0.4){% endif %};font-size:13px;font-weight:700;cursor:{% if app.user.twitchUsername and app.user.tokenBalance >= twitch_cost_tokens %}pointer{% else %}not-allowed{% endif %};">
+                                    <i class="fab fa-twitch"></i> Activer Twitch Live
+                                </button>
+                            </form>
+                            {% if app.user.tokenBalance < twitch_cost_tokens %}
+                                <div style="margin-top:8px;text-align:center;font-size:11px;color:#5a7a9c;">
+                                    NexBits insuffisants. <a href="{{ path('premium_index') }}" style="color:#9146ff;">Recharger →</a>
+                                </div>
+                            {% endif %}
+                        {% else %}
+                            <div style="padding:10px 12px;background:rgba(69,248,130,0.06);border:1px solid rgba(69,248,130,0.15);border-radius:8px;font-size:12px;color:#45f882;">
+                                <i class="fas fa-unlock"></i> Fonctionnalité gratuite — contactez un admin pour l'activer.
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+
                 {# ── Raccourcis ── #}
                 <div class="ep-sidebar-card">
                     <div class="ep-sidebar-title"><i class="fas fa-bolt"></i> Raccourcis</div>

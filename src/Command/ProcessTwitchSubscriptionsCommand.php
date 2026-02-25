@@ -25,12 +25,13 @@ class ProcessTwitchSubscriptionsCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
 
-        $results = $this->premiumService->processExpiredTwitchSubscriptions();
+        $serverResults = $this->premiumService->processExpiredTwitchSubscriptions();
+        $userResults   = $this->premiumService->processExpiredUserTwitchSubscriptions();
 
         $io->success(sprintf(
-            'Twitch subscriptions: %d renewed, %d expired.',
-            $results['renewed'],
-            $results['expired']
+            'Server Twitch: %d renewed, %d expired. | Profile Twitch: %d renewed, %d expired.',
+            $serverResults['renewed'], $serverResults['expired'],
+            $userResults['renewed'],   $userResults['expired']
         ));
 
         return Command::SUCCESS;

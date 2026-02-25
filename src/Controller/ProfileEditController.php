@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Repository\UserRepository;
+use App\Service\PremiumService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -16,6 +17,7 @@ class ProfileEditController extends AbstractController
     public function __construct(
         private EntityManagerInterface $em,
         private UserRepository $userRepo,
+        private PremiumService $premiumService,
     ) {
     }
 
@@ -26,7 +28,65 @@ class ProfileEditController extends AbstractController
             return $this->handleForm($request);
         }
 
-        return $this->render('user/profile_edit.html.twig');
+        /** @var \App\Entity\User $user */
+        $user    = $this->getUser();
+        $twitchSub = $this->premiumService->getUserTwitchSubscription($user);
+
+        return $this->render('user/profile_edit.html.twig', [
+            'twitch_sub'          => $twitchSub,
+            'twitch_gated'        => $this->premiumService->isUserTwitchLiveGated(),
+            'twitch_cost_tokens'  => $this->premiumService->getUserTwitchLiveCostTokens(),
+        ]);
+    }
+
+    #[Route('/profil/twitch-subscribe', name: 'user_profile_twitch_subscribe', methods: ['POST'])]
+    public function twitchSubscribe(Request $request): Response
+    {
+        if (!$this->isCsrfTokenValid('profile_twitch_subscribe', $request->request->get('_token'))) {
+            $this->addFlash('error', 'Token CSRF invalide.');
+            return $this->redirectToRoute('user_profile_edit');
+        }
+
+        /** @var \App\Entity\User $user */
+        $user = $this->getUser();
+
+        if (!$user->getTwitchUsername()) {
+            $this->addFlash('error', 'Renseignez d\'abord votre pseudo Twitch dans les réseaux sociaux.');
+            return $this->redirectToRoute('user_profile_edit');
+        }
+
+        $autoRenew = $request->request->getBoolean('auto_renew');
+        $result    = $this->premiumService->subscribeUserTwitchLiveWithTokens($user);
+
+        if ($result) {
+            $sub = $this->premiumService->getUserTwitchSubscription($user);
+            if ($sub) {
+                $sub->setAutoRenew($autoRenew);
+                $this->em->flush();
+            }
+            $this->addFlash('success', 'Twitch Live activé sur votre profil pour 30 jours !');
+        } else {
+            $cost = $this->premiumService->getUserTwitchLiveCostTokens();
+            $this->addFlash('error', 'NexBits insuffisants. Il vous faut ' . $cost . ' NexBits.');
+        }
+
+        return $this->redirectToRoute('user_profile_edit');
+    }
+
+    #[Route('/profil/twitch-cancel', name: 'user_profile_twitch_cancel', methods: ['POST'])]
+    public function twitchCancel(Request $request): Response
+    {
+        if (!$this->isCsrfTokenValid('profile_twitch_cancel', $request->request->get('_token'))) {
+            $this->addFlash('error', 'Token CSRF invalide.');
+            return $this->redirectToRoute('user_profile_edit');
+        }
+
+        /** @var \App\Entity\User $user */
+        $user = $this->getUser();
+        $this->premiumService->cancelUserTwitchLive($user);
+        $this->addFlash('success', 'Abonnement Twitch Live annulé. Il reste actif jusqu\'à son expiration.');
+
+        return $this->redirectToRoute('user_profile_edit');
     }
 
     private function handleForm(Request $request): Response
@@ -79,11 +139,11 @@ class ProfileEditController extends AbstractController
 
         // Visibility toggles
         $visibility = [
-            'email' => (bool) $request->request->get('vis_email'),
+            'email'   => (bool) $request->request->get('vis_email'),
             'discord' => (bool) $request->request->get('vis_discord'),
-            'steam' => (bool) $request->request->get('vis_steam'),
-            'twitch' => (bool) $request->request->get('vis_twitch'),
-            'games' => (bool) $request->request->get('vis_games'),
+            'steam'   => (bool) $request->request->get('vis_steam'),
+            'twitch'  => (bool) $request->request->get('vis_twitch'),
+            'games'   => (bool) $request->request->get('vis_games'),
             'servers' => (bool) $request->request->get('vis_servers'),
         ];
         $user->setProfileVisibility($visibility);

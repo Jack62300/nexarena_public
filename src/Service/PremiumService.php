@@ -10,11 +10,13 @@ use App\Entity\ServerPremiumFeature;
 use App\Entity\Transaction;
 use App\Entity\TwitchSubscription;
 use App\Entity\User;
+use App\Entity\UserTwitchSubscription;
 use App\Repository\FeaturedBookingRepository;
 use App\Repository\RecruitmentListingRepository;
 use App\Repository\ServerPremiumFeatureRepository;
 use App\Repository\TransactionRepository;
 use App\Repository\TwitchSubscriptionRepository;
+use App\Repository\UserTwitchSubscriptionRepository;
 use App\Service\WebhookService;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -28,6 +30,7 @@ class PremiumService
         private TransactionRepository $transactionRepo,
         private RecruitmentListingRepository $recruitmentRepo,
         private TwitchSubscriptionRepository $twitchSubRepo,
+        private UserTwitchSubscriptionRepository $userTwitchSubRepo,
         private WebhookService $webhookService,
     ) {
     }
@@ -558,6 +561,119 @@ class PremiumService
             }
 
             $sub->setStatus(TwitchSubscription::STATUS_EXPIRED);
+            $results['expired']++;
+        }
+
+        $this->em->flush();
+        return $results;
+    }
+
+    // ──────────────────────────────────────────────
+    // User profile Twitch Live subscription
+    // ──────────────────────────────────────────────
+
+    public function isUserTwitchLiveGated(): bool
+    {
+        if (!$this->isPremiumEnabled()) {
+            return false;
+        }
+        return $this->settings->getBool('premium_profile_twitch_gate_enabled', true);
+    }
+
+    public function getUserTwitchLiveCostTokens(): int
+    {
+        return $this->settings->getInt('premium_profile_twitch_cost_tokens', 100);
+    }
+
+    public function getUserTwitchSubscription(User $user): ?UserTwitchSubscription
+    {
+        return $this->userTwitchSubRepo->findByUser($user);
+    }
+
+    public function hasUserTwitchLiveActive(User $user): bool
+    {
+        if (!$this->isUserTwitchLiveGated()) {
+            return true;
+        }
+        $sub = $this->userTwitchSubRepo->findByUser($user);
+        return $sub !== null && $sub->isActive();
+    }
+
+    public function subscribeUserTwitchLiveWithTokens(User $user): bool
+    {
+        $cost = $this->getUserTwitchLiveCostTokens();
+        if (!$user->hasEnoughTokens($cost)) {
+            return false;
+        }
+
+        $user->removeTokens($cost);
+
+        $sub = $this->userTwitchSubRepo->findByUser($user);
+        if ($sub) {
+            $expiresAt = $sub->isActive() ? $sub->getExpiresAt() : null;
+            $base = $expiresAt instanceof \DateTimeImmutable ? $expiresAt : new \DateTimeImmutable();
+            $sub->setExpiresAt($base->modify('+30 days'));
+            $sub->setStatus(UserTwitchSubscription::STATUS_ACTIVE);
+            $sub->setRenewedAt(new \DateTimeImmutable());
+            $sub->setPaymentMethod('nexbits');
+        } else {
+            $sub = new UserTwitchSubscription();
+            $sub->setUser($user);
+            $sub->setExpiresAt((new \DateTimeImmutable())->modify('+30 days'));
+            $sub->setPaymentMethod('nexbits');
+            $this->em->persist($sub);
+        }
+
+        $tx = new Transaction();
+        $tx->setUser($user);
+        $tx->setType(Transaction::TYPE_SPEND);
+        $tx->setTokensAmount(-$cost);
+        $tx->setDescription('Twitch Live Profil (30j) - ' . $user->getUsername());
+        $this->em->persist($tx);
+
+        $this->em->flush();
+        return true;
+    }
+
+    public function cancelUserTwitchLive(User $user): void
+    {
+        $sub = $this->userTwitchSubRepo->findByUser($user);
+        if ($sub) {
+            $sub->setAutoRenew(false);
+            $sub->setStatus(UserTwitchSubscription::STATUS_CANCELLED);
+            $this->em->flush();
+        }
+    }
+
+    public function processExpiredUserTwitchSubscriptions(): array
+    {
+        $results = ['expired' => 0, 'renewed' => 0];
+
+        $expired = $this->userTwitchSubRepo->findExpired();
+        foreach ($expired as $sub) {
+            if ($sub->isAutoRenew() && $sub->getPaymentMethod() === 'nexbits') {
+                $user = $sub->getUser();
+                $cost = $this->getUserTwitchLiveCostTokens();
+
+                if ($user && $user->hasEnoughTokens($cost)) {
+                    $user->removeTokens($cost);
+                    $sub->setExpiresAt((new \DateTimeImmutable())->modify('+30 days'));
+                    $sub->setStatus(UserTwitchSubscription::STATUS_ACTIVE);
+                    $sub->setRenewedAt(new \DateTimeImmutable());
+
+                    $tx = new Transaction();
+                    $tx->setUser($user);
+                    $tx->setType(Transaction::TYPE_SPEND);
+                    $tx->setTokensAmount(-$cost);
+                    $tx->setDescription('Renouvellement Twitch Live Profil (auto) - ' . $user->getUsername());
+                    $this->em->persist($tx);
+
+                    $results['renewed']++;
+                    continue;
+                }
+            }
+
+            $sub->setStatus(UserTwitchSubscription::STATUS_EXPIRED);
             $results['expired']++;
         }
 

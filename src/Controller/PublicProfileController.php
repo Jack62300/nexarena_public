@@ -6,6 +6,7 @@ use App\Repository\ServerRepository;
 use App\Repository\UserAchievementRepository;
 use App\Repository\UserRepository;
 use App\Service\AchievementService;
+use App\Service\PremiumService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -19,6 +20,7 @@ class PublicProfileController extends AbstractController
         UserAchievementRepository $userAchievementRepo,
         ServerRepository $serverRepo,
         AchievementService $achievementService,
+        PremiumService $premiumService,
     ): Response {
         $profileUser = $userRepo->findOneByUsernameInsensitive($username);
         if (!$profileUser) {
@@ -40,11 +42,15 @@ class PublicProfileController extends AbstractController
             $servers = $serverRepo->findActiveByOwner($profileUser);
         }
 
+        $hasTwitchLive = $profileUser->getTwitchUsername()
+            && $premiumService->hasUserTwitchLiveActive($profileUser);
+
         return $this->render('user/public_profile.html.twig', [
-            'profileUser'  => $profileUser,
-            'achievements' => $achievements,
-            'servers'      => $servers,
-            'isOwnProfile' => $isOwnProfile,
+            'profileUser'   => $profileUser,
+            'achievements'  => $achievements,
+            'servers'       => $servers,
+            'isOwnProfile'  => $isOwnProfile,
+            'hasTwitchLive' => $hasTwitchLive,
         ]);
     }
 }
