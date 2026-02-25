@@ -411,7 +411,7 @@ class PremiumController extends AbstractController
             'planId'    => $planId,
         ]);
 
-        if ($status === Transaction::CRYPTO_STATUS_CAPTURED) {
+        if (in_array($status, [Transaction::CRYPTO_STATUS_CAPTURED, Transaction::CRYPTO_STATUS_SUCCEEDED], true)) {
             $this->premiumService->creditTokensFromCryptoPurchase($user, $plan, $paymentId, $status);
             $this->webhookService->dispatch('payment.completed', [
                 'title' => 'Paiement Crypto.com Pay',

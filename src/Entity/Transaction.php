@@ -22,6 +22,7 @@ class Transaction
     public const PAYPAL_STATUS_PENDING = 'PENDING';
 
     public const CRYPTO_STATUS_CAPTURED  = 'captured';
+    public const CRYPTO_STATUS_SUCCEEDED = 'succeeded'; // mode test Crypto.com
     public const CRYPTO_STATUS_PENDING   = 'pending';
     public const CRYPTO_STATUS_CANCELLED = 'cancelled';
 

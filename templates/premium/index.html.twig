@@ -545,7 +545,7 @@
             <div class="boutique-plans">
                 {% for plan in defaultPlans %}
                     {% set hasPaypal = plan.price > 0 %}
-                    {% set hasNexbits = plan.nexbitsPrice > 0 %}
+                    {% set hasNexbits = false %}
                     {% set isPopular = loop.length > 1 and loop.index == 2 %}
                     <div class="boutique-card{% if isPopular %} boutique-card--popular{% endif %}">
                         {% if isPopular %}
@@ -603,7 +603,7 @@
                                 data-plan-currency="{{ plan.currency }}"
                                 data-plan-tokens="{{ plan.tokensGiven }}"
                                 data-plan-boost="{{ plan.boostTokensGiven }}"
-                                data-plan-nexbits-price="{{ plan.nexbitsPrice }}"
+                                data-plan-nexbits-price="0"
                                 onclick="openPayment(this)">
                                 <i class="fas fa-shopping-cart"></i> Acheter maintenant
                             </button>
