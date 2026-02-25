@@ -883,7 +883,9 @@
         var methodCount = (hasPaypal ? 1 : 0) + (hasNexbits ? 1 : 0) + (hasCrypto ? 1 : 0);
         tabsEl.style.display = methodCount > 1 ? '' : 'none';
 
-        // Show/hide crypto tab button
+        // Show/hide tab buttons
+        var nexbitsTabBtn = document.querySelector('.pp-modal__tab[data-tab="nexbits"]');
+        if (nexbitsTabBtn) nexbitsTabBtn.style.display = hasNexbits ? '' : 'none';
         var cryptoTabBtn = document.querySelector('.pp-modal__tab[data-tab="crypto"]');
         if (cryptoTabBtn) cryptoTabBtn.style.display = hasCrypto ? '' : 'none';
 
