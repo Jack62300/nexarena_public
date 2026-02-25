@@ -26,7 +26,8 @@
                     <th>Montant</th>
                     <th>NexBits</th>
                     <th>NexBoost</th>
-                    <th>PayPal</th>
+                    <th>Paiement</th>
+                    <th>Ref. paiement</th>
                     <th>Description</th>
                 </tr>
             </thead>
@@ -87,8 +88,26 @@
                                 <span style="color:var(--text-secondary);">—</span>
                             {% endif %}
                         </td>
-                        <td style="font-size:11px;color:var(--text-secondary);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                            {{ tx.paypalOrderId ?: '—' }}
+                        <td>
+                            {% set method = tx.paymentMethod %}
+                            {% if method == 'paypal' %}
+                                <span style="background:#003087;color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;white-space:nowrap;">
+                                    <i class="fab fa-paypal"></i> PayPal
+                                </span>
+                            {% elseif method == 'crypto' %}
+                                <span style="background:#f7931a;color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;white-space:nowrap;">
+                                    <i class="fas fa-coins"></i> Crypto
+                                </span>
+                            {% elseif method == 'stripe' %}
+                                <span style="background:#635bff;color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;white-space:nowrap;">
+                                    <i class="fab fa-stripe-s"></i> Stripe
+                                </span>
+                            {% else %}
+                                <span style="color:var(--text-secondary);">—</span>
+                            {% endif %}
+                        </td>
+                        <td style="font-size:11px;color:var(--text-secondary);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="{{ tx.paymentId }}">
+                            {{ tx.paymentId ?: '—' }}
                         </td>
                         <td style="font-size:12px;color:var(--text-secondary);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
                             {{ tx.description ?: '—' }}
@@ -96,7 +115,7 @@
                     </tr>
                 {% else %}
                     <tr>
-                        <td colspan="10" style="text-align:center;color:var(--text-secondary);padding:30px;">
+                        <td colspan="11" style="text-align:center;color:var(--text-secondary);padding:30px;">
                             Aucune transaction pour le moment.
                         </td>
                     </tr>

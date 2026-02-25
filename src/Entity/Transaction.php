@@ -30,6 +30,10 @@ class Transaction
     public const STRIPE_STATUS_OPEN     = 'open';
     public const STRIPE_STATUS_EXPIRED  = 'expired';
 
+    public const PAYMENT_METHOD_PAYPAL = 'paypal';
+    public const PAYMENT_METHOD_CRYPTO = 'crypto';
+    public const PAYMENT_METHOD_STRIPE = 'stripe';
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -287,6 +291,31 @@ class Transaction
     public function getCreatedAt(): ?\DateTimeImmutable
     {
         return $this->createdAt;
+    }
+
+    /**
+     * Returns the payment method used (paypal/crypto/stripe) based on which ID is set.
+     */
+    public function getPaymentMethod(): ?string
+    {
+        if ($this->stripeSessionId !== null) {
+            return self::PAYMENT_METHOD_STRIPE;
+        }
+        if ($this->cryptoPaymentId !== null) {
+            return self::PAYMENT_METHOD_CRYPTO;
+        }
+        if ($this->paypalOrderId !== null) {
+            return self::PAYMENT_METHOD_PAYPAL;
+        }
+        return null;
+    }
+
+    /**
+     * Returns the provider-side transaction/order ID, whichever is set.
+     */
+    public function getPaymentId(): ?string
+    {
+        return $this->stripeSessionId ?? $this->cryptoPaymentId ?? $this->paypalOrderId;
     }
 
     #[ORM\PrePersist]
