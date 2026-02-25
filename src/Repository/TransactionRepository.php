@@ -112,6 +112,25 @@ class TransactionRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
     }
 
+    public function findByCryptoPaymentId(string $paymentId): ?Transaction
+    {
+        return $this->createQueryBuilder('t')
+            ->where('t.cryptoPaymentId = :id')
+            ->setParameter('id', $paymentId)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    public function findPendingByCryptoPaymentId(string $paymentId): ?Transaction
+    {
+        return $this->createQueryBuilder('t')
+            ->where('t.cryptoPaymentId = :id')
+            ->andWhere('t.isCredited = false')
+            ->setParameter('id', $paymentId)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
     /**
      * @return Transaction[]
      */

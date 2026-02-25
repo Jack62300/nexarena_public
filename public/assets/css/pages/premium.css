@@ -1563,6 +1563,71 @@
 }
 
 /* ==========================================
+   CRYPTO.COM PAY TAB
+   ========================================== */
+
+.pp-crypto-logo {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 14px;
+}
+
+.pp-crypto-logo img {
+    height: 32px;
+    object-fit: contain;
+}
+
+.pp-crypto-fallback {
+    align-items: center;
+    gap: 8px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #1199fa;
+}
+
+.pp-crypto-fallback i {
+    color: #1199fa;
+}
+
+.pp-crypto-desc {
+    font-size: 13px;
+    color: var(--tg-body-color, #adb0bc);
+    text-align: center;
+    margin-bottom: 16px;
+    line-height: 1.5;
+}
+
+.pp-modal__crypto-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 14px 24px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #1199fa, #0d7dd4);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: var(--tg-heading-font-family, 'Barlow', sans-serif);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.pp-modal__crypto-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(17,153,250,0.35);
+}
+
+.pp-modal__crypto-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* ==========================================
    TAB NAVIGATION
    ========================================== */
 

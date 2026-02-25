@@ -72,6 +72,10 @@ services:
         arguments:
             $projectDir: '%kernel.project_dir%'
 
+    App\Service\CryptoPayService:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+
     App\Service\RecruitmentService:
         arguments:
             $projectDir: '%kernel.project_dir%'

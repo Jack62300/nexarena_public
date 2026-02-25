@@ -796,6 +796,73 @@ class PremiumService
         return true;
     }
 
+    // =============================================
+    // CRYPTO.COM PAY
+    // =============================================
+
+    public function creditTokensFromCryptoPurchase(
+        User $user,
+        PremiumPlan $plan,
+        string $cryptoPaymentId,
+        string $cryptoStatus,
+    ): Transaction {
+        $isCaptured = $cryptoStatus === Transaction::CRYPTO_STATUS_CAPTURED;
+
+        if ($isCaptured) {
+            $user->addTokens($plan->getTokensGiven());
+            $user->addBoostTokens($plan->getBoostTokensGiven());
+        }
+
+        $tx = new Transaction();
+        $tx->setUser($user);
+        $tx->setPlan($plan);
+        $tx->setType(Transaction::TYPE_PURCHASE);
+        $tx->setAmount($plan->getPrice());
+        $tx->setCurrency($plan->getCurrency());
+        $tx->setTokensAmount($plan->getTokensGiven());
+        $tx->setBoostTokensAmount($plan->getBoostTokensGiven());
+        $tx->setCryptoPaymentId($cryptoPaymentId);
+        $tx->setCryptoStatus($cryptoStatus);
+        $tx->setIsCredited($isCaptured);
+        $tx->setCreditedAt($isCaptured ? new \DateTimeImmutable() : null);
+        $tx->setDescription('Achat du plan ' . $plan->getName() . ' (Crypto.com Pay)' . ($isCaptured ? '' : ' — en attente'));
+
+        $this->em->persist($tx);
+        $this->em->flush();
+
+        return $tx;
+    }
+
+    public function completePendingCryptoTransaction(Transaction $tx): bool
+    {
+        if ($tx->isCredited()) {
+            return false;
+        }
+
+        $user = $tx->getUser();
+        if (!$user) {
+            return false;
+        }
+
+        $user->addTokens($tx->getTokensAmount());
+        $user->addBoostTokens($tx->getBoostTokensAmount());
+
+        $tx->setIsCredited(true);
+        $tx->setCreditedAt(new \DateTimeImmutable());
+        $tx->setCryptoStatus(Transaction::CRYPTO_STATUS_CAPTURED);
+
+        $this->em->flush();
+
+        return true;
+    }
+
+    public function isCryptoPaymentAlreadyCaptured(string $cryptoPaymentId): bool
+    {
+        $existing = $this->transactionRepo->findByCryptoPaymentId($cryptoPaymentId);
+
+        return $existing !== null && $existing->isCredited();
+    }
+
     public function processRefund(User $user, string $paypalOrderId, string $description): void
     {
         $tokens = 0;

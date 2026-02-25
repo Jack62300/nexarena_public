@@ -8,6 +8,8 @@ use App\Entity\User;
 use App\Repository\PremiumPlanRepository;
 use App\Repository\ServerRepository;
 use App\Repository\TransactionRepository;
+use App\Repository\UserRepository;
+use App\Service\CryptoPayService;
 use App\Service\PayPalService;
 use App\Service\PremiumService;
 use App\Service\WebhookService;
@@ -17,6 +19,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -25,10 +28,12 @@ class PremiumController extends AbstractController
     public function __construct(
         private EntityManagerInterface $em,
         private PayPalService $paypal,
+        private CryptoPayService $crypto,
         private PremiumService $premiumService,
         private PremiumPlanRepository $planRepo,
         private TransactionRepository $transactionRepo,
         private ServerRepository $serverRepo,
+        private UserRepository $userRepo,
         private LoggerInterface $logger,
         private WebhookService $webhookService,
     ) {}
@@ -47,6 +52,7 @@ class PremiumController extends AbstractController
             'paypal_client_id' => $this->paypal->getClientId(),
             'paypal_currency' => $this->paypal->getCurrency(),
             'is_sandbox' => $this->paypal->isSandbox(),
+            'crypto_enabled' => $this->crypto->isEnabled(),
             'userServers' => $userServers,
         ]);
     }
@@ -298,6 +304,208 @@ class PremiumController extends AbstractController
         }
 
         return new JsonResponse(['status' => 'ok']);
+    }
+
+    // =============================================
+    // CRYPTO.COM PAY
+    // =============================================
+
+    #[Route('/premium/crypto/create', name: 'premium_create_crypto_order', methods: ['POST'])]
+    #[IsGranted('ROLE_USER')]
+    public function createCryptoOrder(Request $request): JsonResponse
+    {
+        if (!$this->crypto->isEnabled()) {
+            return new JsonResponse(['error' => 'Paiement crypto non active.'], 400);
+        }
+
+        $data   = json_decode($request->getContent(), true);
+        $planId = (int) ($data['planId'] ?? 0);
+
+        $plan = $this->planRepo->find($planId);
+        if (!$plan || !$plan->isActive() || (float) $plan->getPrice() <= 0) {
+            return new JsonResponse(['error' => 'Plan introuvable, inactif ou sans prix.'], 400);
+        }
+
+        /** @var User $user */
+        $user = $this->getUser();
+
+        $amountCents = (int) round((float) $plan->getPrice() * 100);
+        $orderId     = 'nx-plan-' . $plan->getId() . '-u-' . $user->getId() . '-' . time();
+
+        $returnUrl = $this->generateUrl('premium_crypto_return', [], UrlGeneratorInterface::ABSOLUTE_URL);
+        $cancelUrl = $this->generateUrl('premium_index', [], UrlGeneratorInterface::ABSOLUTE_URL);
+
+        $payment = $this->crypto->createPayment(
+            $amountCents,
+            $plan->getCurrency(),
+            'Nexarena - ' . $plan->getName(),
+            $orderId,
+            $plan->getId(),
+            $user->getId(),
+            $returnUrl,
+            $cancelUrl,
+        );
+
+        if (!$payment || !isset($payment['id'], $payment['payment_url'])) {
+            $this->logger->error('Premium: CryptoPay createPayment returned null.', ['planId' => $planId]);
+            return new JsonResponse(['error' => 'Erreur Crypto.com Pay. Veuillez reessayer.'], 500);
+        }
+
+        // Store in session for the return flow
+        $request->getSession()->set('crypto_payment_id', $payment['id']);
+        $request->getSession()->set('crypto_plan_id', $plan->getId());
+
+        $this->logger->info('Premium: CryptoPay payment created.', [
+            'paymentId' => $payment['id'],
+            'planId'    => $planId,
+        ]);
+
+        return new JsonResponse([
+            'paymentId'  => $payment['id'],
+            'paymentUrl' => $payment['payment_url'],
+        ]);
+    }
+
+    #[Route('/premium/crypto/return', name: 'premium_crypto_return')]
+    #[IsGranted('ROLE_USER')]
+    public function cryptoReturn(Request $request): Response
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        // payment_id can come from query string (Crypto.com redirect) or session
+        $paymentId = $request->query->get('payment_id')
+            ?? $request->getSession()->get('crypto_payment_id');
+        $planId = (int) ($request->getSession()->get('crypto_plan_id', 0));
+
+        if (!$paymentId) {
+            $this->addFlash('danger', 'Paiement invalide. Veuillez reessayer.');
+            return $this->redirectToRoute('premium_index');
+        }
+
+        // Idempotency check
+        if ($this->premiumService->isCryptoPaymentAlreadyCaptured($paymentId)) {
+            $this->cleanCryptoSession($request);
+            return $this->redirectToRoute('premium_success');
+        }
+
+        $plan = $planId ? $this->planRepo->find($planId) : null;
+        if (!$plan) {
+            $this->addFlash('danger', 'Plan introuvable. Contactez le support si votre paiement a ete debite.');
+            $this->cleanCryptoSession($request);
+            return $this->redirectToRoute('premium_index');
+        }
+
+        $payment = $this->crypto->getPayment($paymentId);
+        if (!$payment) {
+            $this->addFlash('danger', 'Impossible de verifier le paiement. Contactez le support avec votre Payment ID : ' . htmlspecialchars($paymentId));
+            $this->cleanCryptoSession($request);
+            return $this->redirectToRoute('premium_index');
+        }
+
+        $status = $payment['status'] ?? '';
+
+        $this->logger->info('Premium: CryptoPay return.', [
+            'paymentId' => $paymentId,
+            'status'    => $status,
+            'planId'    => $planId,
+        ]);
+
+        if ($status === Transaction::CRYPTO_STATUS_CAPTURED) {
+            $this->premiumService->creditTokensFromCryptoPurchase($user, $plan, $paymentId, $status);
+            $this->webhookService->dispatch('payment.completed', [
+                'title' => 'Paiement Crypto.com Pay',
+                'fields' => [
+                    ['name' => 'Utilisateur', 'value' => $user->getUsername(), 'inline' => true],
+                    ['name' => 'Plan', 'value' => $plan->getName(), 'inline' => true],
+                    ['name' => 'Montant', 'value' => $plan->getPrice() . ' ' . $plan->getCurrency(), 'inline' => true],
+                    ['name' => 'Payment ID', 'value' => $paymentId, 'inline' => false],
+                ],
+            ]);
+            $this->cleanCryptoSession($request);
+            return $this->redirectToRoute('premium_success');
+        }
+
+        if (in_array($status, [Transaction::CRYPTO_STATUS_PENDING, 'processing'], true)) {
+            // Save pending transaction; webhook will complete it
+            $this->premiumService->creditTokensFromCryptoPurchase($user, $plan, $paymentId, $status);
+            $this->cleanCryptoSession($request);
+            return $this->redirectToRoute('premium_success', ['crypto_pending' => '1']);
+        }
+
+        // cancelled, expired or unknown
+        $this->cleanCryptoSession($request);
+        $this->addFlash('danger', 'Paiement annule ou expire (statut : ' . htmlspecialchars($status) . ').');
+        return $this->redirectToRoute('premium_index');
+    }
+
+    #[Route('/premium/crypto/webhook', name: 'premium_crypto_webhook', methods: ['POST'])]
+    public function cryptoWebhook(Request $request): JsonResponse
+    {
+        $body      = $request->getContent();
+        $signature = $request->headers->get('X-Signature', '');
+
+        if (!$this->crypto->verifyWebhookSignature($body, $signature)) {
+            $this->logger->warning('CryptoPay webhook: signature invalide.');
+            return new JsonResponse(['error' => 'Signature invalide.'], 401);
+        }
+
+        $event     = json_decode($body, true);
+        $eventType = $event['type'] ?? '';
+
+        if ($eventType === 'payment.captured') {
+            $paymentId = $event['data']['id'] ?? null;
+            if (!$paymentId) {
+                return new JsonResponse(['status' => 'ok']);
+            }
+
+            // If there's a pending transaction, complete it
+            $pendingTx = $this->transactionRepo->findPendingByCryptoPaymentId($paymentId);
+            if ($pendingTx) {
+                $completed = $this->premiumService->completePendingCryptoTransaction($pendingTx);
+                if ($completed && $pendingTx->getUser()) {
+                    $this->webhookService->dispatch('payment.completed', [
+                        'title' => 'Crypto.com Pay confirme (webhook)',
+                        'fields' => [
+                            ['name' => 'Utilisateur', 'value' => $pendingTx->getUser()->getUsername(), 'inline' => true],
+                            ['name' => 'Plan', 'value' => $pendingTx->getPlan()?->getName() ?? '-', 'inline' => true],
+                        ],
+                    ]);
+                }
+                return new JsonResponse(['status' => 'ok']);
+            }
+
+            // No transaction found yet (user never hit the return URL) → create it now
+            if (!$this->premiumService->isCryptoPaymentAlreadyCaptured($paymentId)) {
+                $planId = (int) ($event['data']['metadata']['plan_id'] ?? 0);
+                $userId = (int) ($event['data']['metadata']['user_id'] ?? 0);
+
+                $plan = $planId ? $this->planRepo->find($planId) : null;
+                $user = $userId ? $this->userRepo->find($userId) : null;
+
+                if ($plan && $user) {
+                    $this->premiumService->creditTokensFromCryptoPurchase(
+                        $user,
+                        $plan,
+                        $paymentId,
+                        Transaction::CRYPTO_STATUS_CAPTURED
+                    );
+                    $this->logger->info('CryptoPay webhook: paiement credite via webhook (retour manque).', [
+                        'paymentId' => $paymentId,
+                        'userId'    => $userId,
+                        'planId'    => $planId,
+                    ]);
+                }
+            }
+        }
+
+        return new JsonResponse(['status' => 'ok']);
+    }
+
+    private function cleanCryptoSession(Request $request): void
+    {
+        $request->getSession()->remove('crypto_payment_id');
+        $request->getSession()->remove('crypto_plan_id');
     }
 
     #[Route('/premium/succes', name: 'premium_success')]

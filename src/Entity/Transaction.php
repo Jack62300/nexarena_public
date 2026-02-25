@@ -21,6 +21,10 @@ class Transaction
     public const PAYPAL_STATUS_COMPLETED = 'COMPLETED';
     public const PAYPAL_STATUS_PENDING = 'PENDING';
 
+    public const CRYPTO_STATUS_CAPTURED  = 'captured';
+    public const CRYPTO_STATUS_PENDING   = 'pending';
+    public const CRYPTO_STATUS_CANCELLED = 'cancelled';
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -58,6 +62,12 @@ class Transaction
 
     #[ORM\Column(length: 50, nullable: true)]
     private ?string $paypalStatus = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $cryptoPaymentId = null;
+
+    #[ORM\Column(length: 50, nullable: true)]
+    private ?string $cryptoStatus = null;
 
     #[ORM\Column(length: 500, nullable: true)]
     private ?string $description = null;
@@ -183,6 +193,28 @@ class Transaction
     public function setPaypalStatus(?string $paypalStatus): static
     {
         $this->paypalStatus = $paypalStatus;
+        return $this;
+    }
+
+    public function getCryptoPaymentId(): ?string
+    {
+        return $this->cryptoPaymentId;
+    }
+
+    public function setCryptoPaymentId(?string $cryptoPaymentId): static
+    {
+        $this->cryptoPaymentId = $cryptoPaymentId;
+        return $this;
+    }
+
+    public function getCryptoStatus(): ?string
+    {
+        return $this->cryptoStatus;
+    }
+
+    public function setCryptoStatus(?string $cryptoStatus): static
+    {
+        $this->cryptoStatus = $cryptoStatus;
         return $this;
     }
 

@@ -715,7 +715,7 @@
         </div>
         <div class="pp-modal__divider"></div>
 
-        {# Tabs (visible only if NexBits price > 0) #}
+        {# Tabs #}
         <div class="pp-modal__tabs" id="ppTabs" style="display:none;">
             <button type="button" class="pp-modal__tab pp-modal__tab--active" data-tab="paypal" onclick="switchPayTab('paypal')">
                 <i class="fab fa-paypal"></i> PayPal
@@ -723,6 +723,11 @@
             <button type="button" class="pp-modal__tab" data-tab="nexbits" onclick="switchPayTab('nexbits')">
                 <i class="fas fa-coins"></i> NexBits
             </button>
+            {% if crypto_enabled %}
+            <button type="button" class="pp-modal__tab" data-tab="crypto" onclick="switchPayTab('crypto')">
+                <i class="fas fa-bitcoin-sign"></i> Crypto
+            </button>
+            {% endif %}
         </div>
 
         {# PayPal tab content #}
@@ -772,6 +777,27 @@
                 <i class="fas fa-lock"></i> Debit instantane du solde NexBits selectionne
             </div>
         </div>
+
+        {% if crypto_enabled %}
+        {# Crypto tab content #}
+        <div class="pp-modal__tab-content" id="ppTabCrypto" style="display:none;">
+            <div class="pp-crypto-logo">
+                <img src="https://pay.crypto.com/static/media/crypto-pay-logo.png" alt="Crypto.com Pay" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                <div class="pp-crypto-fallback" style="display:none;">
+                    <i class="fas fa-coins"></i> <span>Crypto.com Pay</span>
+                </div>
+            </div>
+            <p class="pp-crypto-desc">Payez avec vos cryptomonnaies (BTC, ETH, USDT, CRO et plus) via Crypto.com Pay.</p>
+            <div class="pp-modal__amount" id="ppCryptoPrice"></div>
+            <button type="button" class="pp-modal__crypto-btn" id="ppCryptoBtn" onclick="payCrypto()">
+                <i class="fas fa-arrow-right"></i> <span id="ppCryptoBtnLabel">Payer avec Crypto.com</span>
+            </button>
+            <div class="pp-modal__nexbits-error" id="ppCryptoError" style="display:none;"></div>
+            <div class="pp-modal__secure">
+                <i class="fas fa-lock"></i> Redirection securisee vers Crypto.com Pay
+            </div>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endif %}
@@ -842,6 +868,7 @@
 
         var hasPaypal = planPrice > 0;
         var hasNexbits = nexbitsPrice > 0;
+        var hasCrypto = {% if crypto_enabled %}planPrice > 0{% else %}false{% endif %};
         var hasBoth = hasPaypal && hasNexbits;
 
         document.getElementById('ppPlanName').textContent = planName;
@@ -851,12 +878,23 @@
         if (parseInt(planBoost) > 0) details.push(planBoost + ' NexBoost');
         document.getElementById('ppPlanDetail').textContent = details.join(' + ');
 
-        // Tabs: show only if both payment methods available
+        // Tabs: show if more than one payment method
         var tabsEl = document.getElementById('ppTabs');
-        if (hasBoth) {
-            tabsEl.style.display = '';
-        } else {
-            tabsEl.style.display = 'none';
+        var methodCount = (hasPaypal ? 1 : 0) + (hasNexbits ? 1 : 0) + (hasCrypto ? 1 : 0);
+        tabsEl.style.display = methodCount > 1 ? '' : 'none';
+
+        // Show/hide crypto tab button
+        var cryptoTabBtn = document.querySelector('.pp-modal__tab[data-tab="crypto"]');
+        if (cryptoTabBtn) cryptoTabBtn.style.display = hasCrypto ? '' : 'none';
+
+        // Crypto tab content
+        if (hasCrypto) {
+            document.getElementById('ppCryptoPrice').innerHTML = planPrice.toFixed(2) + ' <span>' + planCurrency + '</span>';
+            document.getElementById('ppCryptoBtnLabel').textContent = 'Payer ' + planPrice.toFixed(2) + ' ' + planCurrency + ' en Crypto';
+            var cryptoErrorEl = document.getElementById('ppCryptoError');
+            if (cryptoErrorEl) cryptoErrorEl.style.display = 'none';
+            var cryptoBtn = document.getElementById('ppCryptoBtn');
+            if (cryptoBtn) { cryptoBtn.disabled = false; }
         }
 
         // PayPal tab content
@@ -883,16 +921,22 @@
             updateNexbitsBtn();
         }
 
-        // Show the right tab first: PayPal if available, otherwise NexBits
+        // Show the right tab first: PayPal if available, otherwise NexBits, otherwise Crypto
         if (hasPaypal) {
             switchPayTab('paypal');
-        } else {
+        } else if (hasNexbits) {
             switchPayTab('nexbits');
+        } else if (hasCrypto) {
+            switchPayTab('crypto');
         }
 
         // Show/hide tab contents for single-method plans
         document.getElementById('ppTabPaypal').style.display = hasPaypal ? '' : 'none';
         document.getElementById('ppTabNexbits').style.display = (!hasPaypal && hasNexbits) ? '' : 'none';
+        var cryptoTabContent = document.getElementById('ppTabCrypto');
+        if (cryptoTabContent) {
+            cryptoTabContent.style.display = (!hasPaypal && !hasNexbits && hasCrypto) ? '' : 'none';
+        }
 
         document.getElementById('ppOverlay').classList.add('active');
         document.body.style.overflow = 'hidden';
@@ -994,6 +1038,43 @@
         });
         document.getElementById('ppTabPaypal').style.display = tab === 'paypal' ? '' : 'none';
         document.getElementById('ppTabNexbits').style.display = tab === 'nexbits' ? '' : 'none';
+        var cryptoContent = document.getElementById('ppTabCrypto');
+        if (cryptoContent) cryptoContent.style.display = tab === 'crypto' ? '' : 'none';
+    };
+
+    window.payCrypto = function() {
+        var btn = document.getElementById('ppCryptoBtn');
+        var errorEl = document.getElementById('ppCryptoError');
+        if (btn.disabled) return;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparation...';
+        if (errorEl) errorEl.style.display = 'none';
+
+        fetch('{{ path("premium_create_crypto_order") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({ planId: currentPlanId })
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(json) {
+            if (json.error) {
+                if (errorEl) { errorEl.textContent = json.error; errorEl.style.display = ''; }
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-arrow-right"></i> <span id="ppCryptoBtnLabel">Payer avec Crypto.com</span>';
+            } else {
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Redirection...';
+                window.location.href = json.paymentUrl;
+            }
+        })
+        .catch(function() {
+            if (errorEl) { errorEl.textContent = 'Une erreur est survenue. Veuillez reessayer.'; errorEl.style.display = ''; }
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-arrow-right"></i> <span>Payer avec Crypto.com</span>';
+        });
     };
 
     window.buyWithNexbits = function() {

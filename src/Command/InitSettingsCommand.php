@@ -135,6 +135,10 @@ class InitSettingsCommand extends Command
         ['key' => 'paypal_sandbox_mode', 'value' => '1', 'type' => 'boolean', 'label' => 'Mode Sandbox', 'description' => 'Utiliser l\'environnement sandbox PayPal pour les tests (desactiver en production)', 'category' => 'paiement', 'position' => 2],
         ['key' => 'paypal_webhook_id', 'value' => '', 'type' => 'secret', 'label' => 'PayPal Webhook ID', 'description' => 'ID du webhook configure dans le dashboard PayPal (pour verification signature)', 'category' => 'paiement', 'position' => 3],
         ['key' => 'payment_currency', 'value' => 'EUR', 'type' => 'text', 'label' => 'Devise', 'description' => 'Code devise ISO pour les paiements (EUR, USD, etc.)', 'category' => 'paiement', 'position' => 4],
+        ['key' => 'crypto_pay_enabled', 'value' => '0', 'type' => 'boolean', 'label' => 'Activer Crypto.com Pay', 'description' => 'Afficher le bouton de paiement Crypto.com Pay dans la boutique', 'category' => 'paiement', 'position' => 5],
+        ['key' => 'crypto_pay_publishable_key', 'value' => '', 'type' => 'secret', 'label' => 'Crypto.com Pay - Clef Publiable (pk_...)', 'description' => 'Clef publiable depuis le dashboard Crypto.com Pay', 'category' => 'paiement', 'position' => 6],
+        ['key' => 'crypto_pay_secret_key', 'value' => '', 'type' => 'secret', 'label' => 'Crypto.com Pay - Clef Secrete (sk_...)', 'description' => 'Clef secrete depuis le dashboard Crypto.com Pay (ne jamais partager)', 'category' => 'paiement', 'position' => 7],
+        ['key' => 'crypto_pay_webhook_secret', 'value' => '', 'type' => 'secret', 'label' => 'Crypto.com Pay - Secret Webhook', 'description' => 'Secret pour verifier la signature des webhooks entrants', 'category' => 'paiement', 'position' => 8],
 
         // ========== PREMIUM ==========
         ['key' => 'premium_theme_cost', 'value' => '50', 'type' => 'number', 'label' => 'Cout deblocage theme (NexBits)', 'description' => 'Nombre de NexBits pour debloquer le theme personnalise sur un serveur', 'category' => 'premium', 'position' => 0],
