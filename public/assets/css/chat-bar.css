@@ -13,7 +13,16 @@
     pointer-events: none;
 }
 
-/* ── Header toggle button ───────────────────────────────── */
+/* ── Contacts strip ──────────────────────────────────────── */
+#nxc-contacts {
+    display: flex;
+    align-items: flex-end;
+    gap: 5px;
+    padding-left: 8px;
+    pointer-events: all;
+}
+
+/* ── Header toggle button (rightmost anchor) ─────────────── */
 #nxc-header {
     background: #0f1c2d;
     border: 1px solid #253d56;
@@ -31,22 +40,13 @@
     color: #e6edf3;
     user-select: none;
     min-width: 128px;
-    margin-right: 6px;
+    margin-left: 8px;
     transition: background .15s;
     flex-shrink: 0;
     box-shadow: -2px -2px 12px rgba(0,0,0,.35);
 }
 #nxc-header:hover { background: #162231; }
 #nxc-header i { color: #45f882; font-size: 15px; }
-
-/* ── Contacts strip ──────────────────────────────────────── */
-#nxc-contacts {
-    display: flex;
-    align-items: flex-end;
-    gap: 5px;
-    padding-right: 10px;
-    pointer-events: all;
-}
 
 /* ── Contact bubble ──────────────────────────────────────── */
 .nxc-bubble {

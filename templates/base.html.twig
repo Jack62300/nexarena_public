@@ -192,14 +192,14 @@
     {% if app.user %}
     <link rel="stylesheet" href="{{ asset('assets/css/chat-bar.css') }}">
 
-    {# Desktop bar #}
+    {# Desktop bar — contacts on the LEFT, "Messages" button anchored to the RIGHT #}
     <div id="nxc-bar" style="display:none;">
+        <div id="nxc-contacts"></div>
         <div id="nxc-header">
             <i class="fas fa-comments"></i>
             <span>Messages</span>
             <span id="nxc-total-badge" class="nxc-badge" style="display:none;"></span>
         </div>
-        <div id="nxc-contacts"></div>
     </div>
 
     {# Mobile FAB #}
