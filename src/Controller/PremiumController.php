@@ -521,7 +521,7 @@ class PremiumController extends AbstractController
     public function stripeCheckout(Request $request): JsonResponse
     {
         if (!$this->stripe->isEnabled()) {
-            return new JsonResponse(['error' => '[DEBUG] stripe_enabled=false'], 400);
+            return new JsonResponse(['error' => 'Stripe non disponible.'], 400);
         }
 
         $data   = json_decode($request->getContent(), true);
@@ -529,7 +529,7 @@ class PremiumController extends AbstractController
 
         $plan = $this->planRepo->find($planId);
         if (!$plan || !$plan->isActive() || (float) $plan->getPrice() <= 0) {
-            return new JsonResponse(['error' => '[DEBUG] Plan invalide id=' . $planId], 400);
+            return new JsonResponse(['error' => 'Plan invalide.'], 400);
         }
 
         /** @var User $user */
@@ -541,7 +541,7 @@ class PremiumController extends AbstractController
         $successUrl    = $baseReturnUrl . '?session_id={CHECKOUT_SESSION_ID}';
         $cancelUrl     = $this->generateUrl('premium_index', [], UrlGeneratorInterface::ABSOLUTE_URL);
 
-        $debugInfo = $this->stripe->createCheckoutSessionDebug(
+        $session = $this->stripe->createCheckoutSession(
             $amountCents,
             $plan->getCurrency(),
             'Nexarena - ' . $plan->getName(),
@@ -551,14 +551,9 @@ class PremiumController extends AbstractController
             $cancelUrl,
         );
 
-        if (!isset($debugInfo['session'])) {
-            return new JsonResponse([
-                'error'  => 'Erreur Stripe : ' . ($debugInfo['error'] ?? 'inconnue'),
-                'detail' => $debugInfo,
-            ], 500);
+        if (!$session) {
+            return new JsonResponse(['error' => 'Erreur Stripe. Veuillez reessayer.'], 500);
         }
-
-        $session = $debugInfo['session'];
 
         $request->getSession()->set('stripe_session_id', $session['id']);
         $request->getSession()->set('stripe_plan_id', $plan->getId());
