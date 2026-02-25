@@ -79,7 +79,7 @@ class PayPalService
             'responseLength' => strlen((string) $response),
         ]);
 
-        return $response ?: null;
+        return is_string($response) ? $response : null;
     }
 
     private function getAccessToken(): ?string
@@ -241,7 +241,7 @@ class PayPalService
 
     public function getClientId(): string
     {
-        return $this->settings->get('paypal_client_id', '');
+        return $this->settings->get('paypal_client_id', '') ?? '';
     }
 
     public function isSandbox(): bool
@@ -251,6 +251,6 @@ class PayPalService
 
     public function getCurrency(): string
     {
-        return $this->settings->get('payment_currency', 'EUR');
+        return $this->settings->get('payment_currency', 'EUR') ?? 'EUR';
     }
 }

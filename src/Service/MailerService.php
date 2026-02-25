@@ -61,7 +61,7 @@ class MailerService
 
     private function renderEmailVerificationTemplate(User $user, string $verifyUrl, string $siteName): string
     {
-        $username = htmlspecialchars($user->getUsername(), ENT_QUOTES);
+        $username = htmlspecialchars($user->getUsername() ?? '', ENT_QUOTES);
         $verifyUrl = htmlspecialchars($verifyUrl, ENT_QUOTES);
         $siteName = htmlspecialchars($siteName, ENT_QUOTES);
         $year = date('Y');
@@ -150,7 +150,7 @@ HTML;
     public function sendContactConfirmation(string $prenom, string $email, string $raison): void
     {
         $siteName  = $this->settings->get('site_name', 'Nexarena');
-        $siteEmail = $this->settings->get('site_email', 'noreply@nexarena.com');
+        $siteEmail = $this->settings->get('site_email', 'noreply@nexarena.com') ?? 'noreply@nexarena.com';
 
         $html = $this->renderContactConfirmationTemplate($prenom, $raison, $siteName);
 
@@ -298,7 +298,7 @@ HTML;
 
     private function renderDeviceVerificationTemplate(User $user, string $verifyUrl, string $newIp, string $siteName): string
     {
-        $username = htmlspecialchars($user->getUsername(), ENT_QUOTES);
+        $username = htmlspecialchars($user->getUsername() ?? '', ENT_QUOTES);
         $verifyUrl = htmlspecialchars($verifyUrl, ENT_QUOTES);
         $newIp = htmlspecialchars($newIp, ENT_QUOTES);
         $siteName = htmlspecialchars($siteName, ENT_QUOTES);
