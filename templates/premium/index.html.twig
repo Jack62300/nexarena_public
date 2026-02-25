@@ -69,462 +69,638 @@
 </section>
 {% endif %}
 
-{# ==========================================
-   SECTION 1 — FONCTIONNALITES SERVEUR
-   ========================================== #}
-<section class="prem-section" style="padding-top: 60px;">
+{# ===== TAB NAVIGATION ===== #}
+<div class="nx-tabs-wrapper">
     <div class="container">
-        <div class="premium-section-header">
-            <div class="premium-section-header__badge" style="background:rgba(69,248,130,0.1);color:#45f882;"><i class="fas fa-unlock"></i></div>
-            <div class="premium-plans-section__title">Fonctionnalites Serveur</div>
-            <p class="premium-section-header__sub">Debloquez des options exclusives pour votre serveur en une seule fois</p>
-        </div>
+        <nav class="nx-tab-nav" role="tablist">
+            <button type="button" class="nx-tab-btn active" data-tab="all" onclick="switchTab('all')" role="tab">
+                <i class="fas fa-th-large"></i>
+                <span>Tout</span>
+            </button>
+            <button type="button" class="nx-tab-btn" data-tab="features" onclick="switchTab('features')" role="tab">
+                <i class="fas fa-unlock"></i>
+                <span>Fonctionnalites</span>
+            </button>
+            <button type="button" class="nx-tab-btn" data-tab="selection" onclick="switchTab('selection')" role="tab">
+                <i class="fas fa-rocket"></i>
+                <span>Selection Premium</span>
+            </button>
+            <button type="button" class="nx-tab-btn" data-tab="recruitment" onclick="switchTab('recruitment')" role="tab">
+                <i class="fas fa-bullhorn"></i>
+                <span>Recrutement</span>
+            </button>
+        </nav>
+    </div>
+</div>
 
-        <div class="prem-feat-grid">
+{# ==========================================
+   PANEL : TOUT
+   ========================================== #}
+<div class="nx-tab-panel active" id="tab-all">
+    <section class="prem-section" style="padding-top: 50px; padding-bottom: 40px;">
+        <div class="container">
 
-            {# — Theme personnalise — #}
-            <div class="prem-feat-card">
-                <div class="prem-feat-card__glow prem-feat-card__glow--green"></div>
-                <div class="prem-feat-card__header">
-                    <div class="prem-feat-card__icon" style="background:rgba(69,248,130,0.1);color:#45f882;">
+            {# Mini feature cards 2x2 #}
+            <div class="prem-all__section-title">
+                <i class="fas fa-unlock" style="color:#45f882;"></i> Fonctionnalites Serveur
+            </div>
+            <div class="prem-all-grid">
+
+                <div class="prem-all-card">
+                    <div class="prem-all-card__icon" style="background:rgba(69,248,130,0.1);color:#45f882;">
                         <i class="fas fa-palette"></i>
                     </div>
-                    <div class="prem-feat-card__cost">
-                        <i class="fas fa-coins" style="color:#ffd700;"></i>
-                        {{ setting('premium_theme_cost', '50') }} NexBits
+                    <div class="prem-all-card__content">
+                        <div class="prem-all-card__name">Theme personnalise</div>
+                        <div class="prem-all-card__desc">25 themes exclusifs pour la page de votre serveur</div>
+                        <div class="prem-all-card__cost">
+                            <i class="fas fa-coins" style="color:#ffd700;"></i>
+                            {{ setting('premium_theme_cost', '50') }} NexBits — deblocage permanent
+                        </div>
                     </div>
+                    <button type="button" class="prem-all-card__cta" onclick="switchTab('features')">
+                        Voir <i class="fas fa-arrow-right"></i>
+                    </button>
                 </div>
-                <h3 class="prem-feat-card__name">Theme personnalise</h3>
-                <p class="prem-feat-card__desc">Choisissez parmi <strong>25 themes exclusifs</strong> pour habiller la page de votre serveur : Minecraft, GTA, FiveM, CS2, Valorant, Rust, ARK, et bien d'autres. Chaque theme dispose de couleurs, fonds et effets uniques.</p>
-                <ul class="prem-feat-card__perks">
-                    <li><i class="fas fa-check"></i> 25 themes gamings disponibles</li>
-                    <li><i class="fas fa-check"></i> Fonds d'ecran et decorations</li>
-                    <li><i class="fas fa-check"></i> Deblocage permanent</li>
-                </ul>
-                <a href="{{ path('user_servers_list') }}" class="prem-feat-card__btn prem-feat-card__btn--green">
-                    <i class="fas fa-server"></i> Gerer mes serveurs
-                </a>
-            </div>
 
-            {# — Widget integrable — #}
-            <div class="prem-feat-card">
-                <div class="prem-feat-card__glow prem-feat-card__glow--blue"></div>
-                <div class="prem-feat-card__header">
-                    <div class="prem-feat-card__icon" style="background:rgba(99,179,237,0.1);color:#63b3ed;">
+                <div class="prem-all-card">
+                    <div class="prem-all-card__icon" style="background:rgba(99,179,237,0.1);color:#63b3ed;">
                         <i class="fas fa-code"></i>
                     </div>
-                    <div class="prem-feat-card__cost">
-                        <i class="fas fa-coins" style="color:#ffd700;"></i>
-                        {{ setting('premium_widget_cost', '50') }} NexBits
+                    <div class="prem-all-card__content">
+                        <div class="prem-all-card__name">Widget integrable</div>
+                        <div class="prem-all-card__desc">Widget dynamique pour votre site ou forum</div>
+                        <div class="prem-all-card__cost">
+                            <i class="fas fa-coins" style="color:#ffd700;"></i>
+                            {{ setting('premium_widget_cost', '50') }} NexBits — deblocage permanent
+                        </div>
                     </div>
+                    <button type="button" class="prem-all-card__cta" onclick="switchTab('features')">
+                        Voir <i class="fas fa-arrow-right"></i>
+                    </button>
                 </div>
-                <h3 class="prem-feat-card__name">Widget integrable</h3>
-                <p class="prem-feat-card__desc">Integrez un <strong>widget dynamique</strong> de votre serveur sur votre site web ou forum. Affiche en temps reel le nom, logo, nombre de votes et statut du serveur. Personnalisable en couleur et style.</p>
-                <ul class="prem-feat-card__perks">
-                    <li><i class="fas fa-check"></i> Widget carte ou classement joueurs</li>
-                    <li><i class="fas fa-check"></i> Configurateur visuel integre</li>
-                    <li><i class="fas fa-check"></i> Deblocage permanent</li>
-                </ul>
-                <a href="{{ path('user_servers_list') }}" class="prem-feat-card__btn prem-feat-card__btn--blue">
-                    <i class="fas fa-server"></i> Gerer mes serveurs
-                </a>
-            </div>
 
-            {# — Statistiques avancees — #}
-            <div class="prem-feat-card">
-                <div class="prem-feat-card__glow prem-feat-card__glow--purple"></div>
-                <div class="prem-feat-card__header">
-                    <div class="prem-feat-card__icon" style="background:rgba(159,122,234,0.1);color:#9f7aea;">
+                <div class="prem-all-card">
+                    <div class="prem-all-card__icon" style="background:rgba(159,122,234,0.1);color:#9f7aea;">
                         <i class="fas fa-chart-line"></i>
                     </div>
-                    <div class="prem-feat-card__cost">
-                        <i class="fas fa-coins" style="color:#ffd700;"></i>
-                        {{ setting('premium_stats_cost', '100') }} NexBits
+                    <div class="prem-all-card__content">
+                        <div class="prem-all-card__name">Statistiques avancees</div>
+                        <div class="prem-all-card__desc">Dashboard analytique : vues, votes, plateformes</div>
+                        <div class="prem-all-card__cost">
+                            <i class="fas fa-coins" style="color:#ffd700;"></i>
+                            {{ setting('premium_stats_cost', '100') }} NexBits — deblocage permanent
+                        </div>
                     </div>
+                    <button type="button" class="prem-all-card__cta" onclick="switchTab('features')">
+                        Voir <i class="fas fa-arrow-right"></i>
+                    </button>
                 </div>
-                <h3 class="prem-feat-card__name">Statistiques avancees</h3>
-                <p class="prem-feat-card__desc">Acces a un <strong>tableau de bord analytique</strong> complet : evolution des vues journalieres, votes sur 30 jours, distribution par heure, repartition par plateforme (Discord / Steam). Optimisez votre strategie !</p>
-                <ul class="prem-feat-card__perks">
-                    <li><i class="fas fa-check"></i> Graphiques interactifs (30 jours)</li>
-                    <li><i class="fas fa-check"></i> Vues + votes par heure</li>
-                    <li><i class="fas fa-check"></i> Deblocage permanent</li>
-                </ul>
-                <a href="{{ path('user_servers_list') }}" class="prem-feat-card__btn prem-feat-card__btn--purple">
-                    <i class="fas fa-server"></i> Gerer mes serveurs
-                </a>
-            </div>
 
-            {# — Twitch Live — #}
-            <div class="prem-feat-card">
-                <div class="prem-feat-card__glow prem-feat-card__glow--twitch"></div>
-                <div class="prem-feat-card__header">
-                    <div class="prem-feat-card__icon" style="background:rgba(145,70,255,0.1);color:#9146ff;">
+                <div class="prem-all-card">
+                    <div class="prem-all-card__icon" style="background:rgba(145,70,255,0.1);color:#9146ff;">
                         <i class="fab fa-twitch"></i>
                     </div>
-                    <div class="prem-feat-card__cost prem-feat-card__cost--dual">
-                        <span><i class="fas fa-coins" style="color:#ffd700;"></i> {{ setting('premium_twitch_live_cost_tokens', '100') }} NexBits/mois</span>
-                        <span class="prem-feat-card__cost-or">ou</span>
-                        <span><i class="fas fa-euro-sign" style="color:#45f882;"></i> {{ setting('premium_twitch_live_cost_eur', '4.99') }} €/mois</span>
+                    <div class="prem-all-card__content">
+                        <div class="prem-all-card__name">Twitch Live</div>
+                        <div class="prem-all-card__desc">Stream Twitch integre sur votre page serveur</div>
+                        <div class="prem-all-card__cost">
+                            <i class="fas fa-coins" style="color:#ffd700;"></i>
+                            {{ setting('premium_twitch_live_cost_tokens', '100') }} NexBits/mois
+                            <span style="color:#555d68;margin:0 5px;">ou</span>
+                            <i class="fas fa-euro-sign" style="color:#45f882;"></i>
+                            {{ setting('premium_twitch_live_cost_eur', '4.99') }} €/mois
+                        </div>
                     </div>
+                    <button type="button" class="prem-all-card__cta" onclick="switchTab('features')">
+                        Voir <i class="fas fa-arrow-right"></i>
+                    </button>
                 </div>
-                <h3 class="prem-feat-card__name">Twitch Live</h3>
-                <p class="prem-feat-card__desc">Affichez votre <strong>stream Twitch en direct</strong> sur la page de votre serveur. Integre automatiquement le lecteur Twitch quand vous etes en live pour attirer plus de joueurs.</p>
-                <ul class="prem-feat-card__perks">
-                    <li><i class="fas fa-check"></i> Lecteur Twitch integre sur la page</li>
-                    <li><i class="fas fa-check"></i> Detection automatique du live</li>
-                    <li><i class="fas fa-check"></i> Abonnement mensuel renouvelable</li>
-                </ul>
-                <a href="{{ path('user_servers_list') }}" class="prem-feat-card__btn prem-feat-card__btn--twitch">
-                    <i class="fas fa-server"></i> Gerer mes serveurs
-                </a>
-            </div>
 
-        </div>{# /prem-feat-grid #}
-    </div>
-</section>
+            </div>{# /prem-all-grid #}
 
-<div class="premium-separator"><div class="container"><div class="premium-separator__line"></div></div></div>
-
-{# ==========================================
-   SECTION 2 — MISE EN AVANT (SELECTION PREMIUM)
-   ========================================== #}
-<section class="prem-section">
-    <div class="container">
-        <div class="premium-section-header">
-            <div class="premium-section-header__badge" style="background:rgba(255,190,24,0.12);color:#ffbe18;"><i class="fas fa-rocket"></i></div>
-            <div class="premium-plans-section__title">Selection Premium — Mise en Avant</div>
-            <p class="premium-section-header__sub">Occupez une position privilegiee et soyez vu en premier par des milliers de joueurs</p>
-        </div>
-
-        <div class="prem-positions-wrap">
-
-            {# Homepage positions #}
-            <div class="prem-positions-block">
-                <div class="prem-positions-block__header">
-                    <div class="prem-positions-block__icon" style="background:rgba(255,190,24,0.1);color:#ffbe18;">
-                        <i class="fas fa-home"></i>
+            {# Band: Selection Premium #}
+            <div class="prem-all-band prem-all-band--selection">
+                <div class="prem-all-band__left">
+                    <div class="prem-all-band__icon" style="background:rgba(255,190,24,0.1);color:#ffbe18;">
+                        <i class="fas fa-rocket"></i>
                     </div>
                     <div>
-                        <div class="prem-positions-block__title">Page d'accueil</div>
-                        <div class="prem-positions-block__sub">Positions 1 a 5 · Visible par tous les visiteurs</div>
+                        <div class="prem-all-band__title">Selection Premium</div>
+                        <div class="prem-all-band__sub">Positionnez votre serveur en tete — page d'accueil ou categorie de jeu</div>
                     </div>
                 </div>
-                <div class="prem-slot-grid">
-                    {% set hp_costs = [
-                        setting('premium_homepage_pos1_cost', '10'),
-                        setting('premium_homepage_pos2_cost', '8'),
-                        setting('premium_homepage_pos3_cost', '6'),
-                        setting('premium_homepage_pos4_cost', '4'),
-                        setting('premium_homepage_pos5_cost', '2')
-                    ] %}
+                <div class="prem-all-band__slots">
                     {% for pos in 1..5 %}
-                        {% set cost = hp_costs[pos - 1] %}
-                        <div class="prem-slot prem-slot--pos{{ pos }}">
-                            <div class="prem-slot__medal">
-                                {% if pos == 1 %}<i class="fas fa-medal" style="color:#ffd700;"></i>
-                                {% elseif pos == 2 %}<i class="fas fa-medal" style="color:#c0c0c0;"></i>
-                                {% elseif pos == 3 %}<i class="fas fa-medal" style="color:#cd7f32;"></i>
-                                {% else %}<i class="fas fa-star" style="color:#8b949e;"></i>
-                                {% endif %}
-                            </div>
-                            <div class="prem-slot__pos">Position {{ pos }}</div>
-                            <div class="prem-slot__cost">
-                                <i class="fas fa-bolt" style="color:#ff6b35;"></i>
-                                <strong>{{ cost }}</strong>
-                                <span>NexBoost</span>
-                            </div>
-                            <div class="prem-slot__per">par tranche de 12h</div>
+                        <div class="prem-all-slot prem-all-slot--pos{{ pos }}">
+                            {% if pos == 1 %}<i class="fas fa-medal" style="color:#ffd700;font-size:16px;"></i>
+                            {% elseif pos == 2 %}<i class="fas fa-medal" style="color:#c0c0c0;font-size:16px;"></i>
+                            {% elseif pos == 3 %}<i class="fas fa-medal" style="color:#cd7f32;font-size:16px;"></i>
+                            {% else %}<span class="prem-all-slot__num">#{{ pos }}</span>
+                            {% endif %}
+                            <span class="prem-all-slot__label">Pos {{ pos }}</span>
                         </div>
                     {% endfor %}
                 </div>
+                <button type="button" class="prem-all-band__cta" onclick="switchTab('selection')">
+                    Decouvrir <i class="fas fa-arrow-right"></i>
+                </button>
             </div>
 
-            {# Game category positions #}
-            <div class="prem-positions-block">
-                <div class="prem-positions-block__header">
-                    <div class="prem-positions-block__icon" style="background:rgba(69,248,130,0.1);color:#45f882;">
-                        <i class="fas fa-gamepad"></i>
-                    </div>
-                    <div>
-                        <div class="prem-positions-block__title">Page de categorie de jeu</div>
-                        <div class="prem-positions-block__sub">Positions 1 a 5 · Ciblez votre communaute</div>
-                    </div>
-                </div>
-                <div class="prem-slot-grid">
-                    {% set gm_costs = [
-                        setting('premium_game_pos1_cost', '5'),
-                        setting('premium_game_pos2_cost', '4'),
-                        setting('premium_game_pos3_cost', '3'),
-                        setting('premium_game_pos4_cost', '2'),
-                        setting('premium_game_pos5_cost', '1')
-                    ] %}
-                    {% for pos in 1..5 %}
-                        {% set cost = gm_costs[pos - 1] %}
-                        <div class="prem-slot prem-slot--pos{{ pos }}">
-                            <div class="prem-slot__medal">
-                                {% if pos == 1 %}<i class="fas fa-medal" style="color:#ffd700;"></i>
-                                {% elseif pos == 2 %}<i class="fas fa-medal" style="color:#c0c0c0;"></i>
-                                {% elseif pos == 3 %}<i class="fas fa-medal" style="color:#cd7f32;"></i>
-                                {% else %}<i class="fas fa-star" style="color:#8b949e;"></i>
-                                {% endif %}
-                            </div>
-                            <div class="prem-slot__pos">Position {{ pos }}</div>
-                            <div class="prem-slot__cost">
-                                <i class="fas fa-bolt" style="color:#ff6b35;"></i>
-                                <strong>{{ cost }}</strong>
-                                <span>NexBoost</span>
-                            </div>
-                            <div class="prem-slot__per">par tranche de 12h</div>
-                        </div>
-                    {% endfor %}
-                </div>
-            </div>
-
-        </div>{# /prem-positions-wrap #}
-
-        <div class="prem-positions-cta">
-            <p class="prem-positions-cta__note">
-                <i class="fas fa-info-circle"></i>
-                Les NexBoost sont deduits automatiquement a la reservation. Vous pouvez choisir la duree (minimum 12h).
-            </p>
-            {% if app.user %}
-                <a href="{{ path('user_servers_list') }}" class="prem-feat-card__btn prem-feat-card__btn--orange" style="width:auto;padding:14px 36px;">
-                    <i class="fas fa-rocket"></i> Booster mon serveur
-                </a>
-            {% else %}
-                <a href="{{ path('app_login') }}" class="prem-feat-card__btn prem-feat-card__btn--orange" style="width:auto;padding:14px 36px;">
-                    <i class="fas fa-sign-in-alt"></i> Connexion requise
-                </a>
-            {% endif %}
-        </div>
-    </div>
-</section>
-
-<div class="premium-separator"><div class="container"><div class="premium-separator__line"></div></div></div>
-
-{# ==========================================
-   SECTION 3 — RECRUTEMENT
-   ========================================== #}
-<section class="prem-section">
-    <div class="container">
-        <div class="premium-section-header">
-            <div class="premium-section-header__badge" style="background:rgba(237,137,54,0.12);color:#ed8936;"><i class="fas fa-bullhorn"></i></div>
-            <div class="premium-plans-section__title">Annonces de Recrutement</div>
-            <p class="premium-section-header__sub">Publiez des annonces pour recruter des joueurs directement sur votre serveur</p>
-        </div>
-
-        <div class="prem-recruit-wrap">
-            <div class="prem-recruit-card">
-                <div class="prem-recruit-card__side">
-                    <div class="prem-recruit-card__big-icon">
+            {# Band: Recrutement #}
+            <div class="prem-all-band prem-all-band--recruit">
+                <div class="prem-all-band__left">
+                    <div class="prem-all-band__icon" style="background:rgba(237,137,54,0.1);color:#ed8936;">
                         <i class="fas fa-users"></i>
                     </div>
-                </div>
-                <div class="prem-recruit-card__body">
-                    <h3 class="prem-recruit-card__title">Recrutez des joueurs facilement</h3>
-                    <p class="prem-recruit-card__desc">Creez des formulaires de candidature personnalises, gerez les candidats directement depuis votre espace serveur et communiquez via le chat integre.</p>
-
-                    <div class="prem-recruit-tiers">
-                        <div class="prem-recruit-tier prem-recruit-tier--free">
-                            <div class="prem-recruit-tier__icon"><i class="fas fa-gift"></i></div>
-                            <div>
-                                <div class="prem-recruit-tier__label">INCLUS GRATUITEMENT</div>
-                                <div class="prem-recruit-tier__value">{{ setting('premium_recruitment_free_limit', '2') }} annonces actives</div>
-                            </div>
-                        </div>
-                        <div class="prem-recruit-tier__arrow"><i class="fas fa-plus"></i></div>
-                        <div class="prem-recruit-tier prem-recruit-tier--paid">
-                            <div class="prem-recruit-tier__icon"><i class="fas fa-coins" style="color:#ffd700;"></i></div>
-                            <div>
-                                <div class="prem-recruit-tier__label">ANNONCE SUPPLEMENTAIRE</div>
-                                <div class="prem-recruit-tier__value">{{ setting('premium_recruitment_cost', '50') }} NexBits / annonce</div>
-                            </div>
+                    <div>
+                        <div class="prem-all-band__title">Annonces de Recrutement</div>
+                        <div class="prem-all-band__sub">
+                            <span class="prem-all-band__free">
+                                <i class="fas fa-gift"></i>
+                                {{ setting('premium_recruitment_free_limit', '2') }} annonces gratuites incluses
+                            </span>
+                            <span class="prem-all-band__extra">
+                                + {{ setting('premium_recruitment_cost', '50') }} NexBits par annonce supplementaire
+                            </span>
                         </div>
                     </div>
+                </div>
+                <button type="button" class="prem-all-band__cta prem-all-band__cta--orange" onclick="switchTab('recruitment')">
+                    Decouvrir <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
 
-                    <ul class="prem-recruit-perks">
-                        <li><i class="fas fa-check"></i> Formulaire de candidature personnalise</li>
-                        <li><i class="fas fa-check"></i> Gestion des candidatures et chat integre</li>
-                        <li><i class="fas fa-check"></i> Notification Discord automatique</li>
-                        <li><i class="fas fa-check"></i> Visible dans la section Recrutement publique</li>
+        </div>
+    </section>
+</div>
+
+{# ==========================================
+   PANEL : FONCTIONNALITES
+   ========================================== #}
+<div class="nx-tab-panel" id="tab-features">
+    <section class="prem-section" style="padding-top: 50px;">
+        <div class="container">
+            <div class="premium-section-header">
+                <div class="premium-section-header__badge" style="background:rgba(69,248,130,0.1);color:#45f882;"><i class="fas fa-unlock"></i></div>
+                <div class="premium-plans-section__title">Fonctionnalites Serveur</div>
+                <p class="premium-section-header__sub">Debloquez des options exclusives pour votre serveur en une seule fois</p>
+            </div>
+
+            <div class="prem-feat-grid">
+
+                {# — Theme personnalise — #}
+                <div class="prem-feat-card">
+                    <div class="prem-feat-card__glow prem-feat-card__glow--green"></div>
+                    <div class="prem-feat-card__header">
+                        <div class="prem-feat-card__icon" style="background:rgba(69,248,130,0.1);color:#45f882;">
+                            <i class="fas fa-palette"></i>
+                        </div>
+                        <div class="prem-feat-card__cost">
+                            <i class="fas fa-coins" style="color:#ffd700;"></i>
+                            {{ setting('premium_theme_cost', '50') }} NexBits
+                        </div>
+                    </div>
+                    <h3 class="prem-feat-card__name">Theme personnalise</h3>
+                    <p class="prem-feat-card__desc">Choisissez parmi <strong>25 themes exclusifs</strong> pour habiller la page de votre serveur : Minecraft, GTA, FiveM, CS2, Valorant, Rust, ARK, et bien d'autres. Chaque theme dispose de couleurs, fonds et effets uniques.</p>
+                    <ul class="prem-feat-card__perks">
+                        <li><i class="fas fa-check"></i> 25 themes gamings disponibles</li>
+                        <li><i class="fas fa-check"></i> Fonds d'ecran et decorations</li>
+                        <li><i class="fas fa-check"></i> Deblocage permanent</li>
                     </ul>
-
-                    <a href="{{ path('recruitment_index') }}" class="prem-feat-card__btn prem-feat-card__btn--orange" style="width:auto;display:inline-flex;">
-                        <i class="fas fa-bullhorn"></i> Voir les annonces
+                    <a href="{{ path('user_servers_list') }}" class="prem-feat-card__btn prem-feat-card__btn--green">
+                        <i class="fas fa-server"></i> Gerer mes serveurs
                     </a>
+                </div>
+
+                {# — Widget integrable — #}
+                <div class="prem-feat-card">
+                    <div class="prem-feat-card__glow prem-feat-card__glow--blue"></div>
+                    <div class="prem-feat-card__header">
+                        <div class="prem-feat-card__icon" style="background:rgba(99,179,237,0.1);color:#63b3ed;">
+                            <i class="fas fa-code"></i>
+                        </div>
+                        <div class="prem-feat-card__cost">
+                            <i class="fas fa-coins" style="color:#ffd700;"></i>
+                            {{ setting('premium_widget_cost', '50') }} NexBits
+                        </div>
+                    </div>
+                    <h3 class="prem-feat-card__name">Widget integrable</h3>
+                    <p class="prem-feat-card__desc">Integrez un <strong>widget dynamique</strong> de votre serveur sur votre site web ou forum. Affiche en temps reel le nom, logo, nombre de votes et statut du serveur. Personnalisable en couleur et style.</p>
+                    <ul class="prem-feat-card__perks">
+                        <li><i class="fas fa-check"></i> Widget carte ou classement joueurs</li>
+                        <li><i class="fas fa-check"></i> Configurateur visuel integre</li>
+                        <li><i class="fas fa-check"></i> Deblocage permanent</li>
+                    </ul>
+                    <a href="{{ path('user_servers_list') }}" class="prem-feat-card__btn prem-feat-card__btn--blue">
+                        <i class="fas fa-server"></i> Gerer mes serveurs
+                    </a>
+                </div>
+
+                {# — Statistiques avancees — #}
+                <div class="prem-feat-card">
+                    <div class="prem-feat-card__glow prem-feat-card__glow--purple"></div>
+                    <div class="prem-feat-card__header">
+                        <div class="prem-feat-card__icon" style="background:rgba(159,122,234,0.1);color:#9f7aea;">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="prem-feat-card__cost">
+                            <i class="fas fa-coins" style="color:#ffd700;"></i>
+                            {{ setting('premium_stats_cost', '100') }} NexBits
+                        </div>
+                    </div>
+                    <h3 class="prem-feat-card__name">Statistiques avancees</h3>
+                    <p class="prem-feat-card__desc">Acces a un <strong>tableau de bord analytique</strong> complet : evolution des vues journalieres, votes sur 30 jours, distribution par heure, repartition par plateforme (Discord / Steam). Optimisez votre strategie !</p>
+                    <ul class="prem-feat-card__perks">
+                        <li><i class="fas fa-check"></i> Graphiques interactifs (30 jours)</li>
+                        <li><i class="fas fa-check"></i> Vues + votes par heure</li>
+                        <li><i class="fas fa-check"></i> Deblocage permanent</li>
+                    </ul>
+                    <a href="{{ path('user_servers_list') }}" class="prem-feat-card__btn prem-feat-card__btn--purple">
+                        <i class="fas fa-server"></i> Gerer mes serveurs
+                    </a>
+                </div>
+
+                {# — Twitch Live — #}
+                <div class="prem-feat-card">
+                    <div class="prem-feat-card__glow prem-feat-card__glow--twitch"></div>
+                    <div class="prem-feat-card__header">
+                        <div class="prem-feat-card__icon" style="background:rgba(145,70,255,0.1);color:#9146ff;">
+                            <i class="fab fa-twitch"></i>
+                        </div>
+                        <div class="prem-feat-card__cost prem-feat-card__cost--dual">
+                            <span><i class="fas fa-coins" style="color:#ffd700;"></i> {{ setting('premium_twitch_live_cost_tokens', '100') }} NexBits/mois</span>
+                            <span class="prem-feat-card__cost-or">ou</span>
+                            <span><i class="fas fa-euro-sign" style="color:#45f882;"></i> {{ setting('premium_twitch_live_cost_eur', '4.99') }} €/mois</span>
+                        </div>
+                    </div>
+                    <h3 class="prem-feat-card__name">Twitch Live</h3>
+                    <p class="prem-feat-card__desc">Affichez votre <strong>stream Twitch en direct</strong> sur la page de votre serveur. Integre automatiquement le lecteur Twitch quand vous etes en live pour attirer plus de joueurs.</p>
+                    <ul class="prem-feat-card__perks">
+                        <li><i class="fas fa-check"></i> Lecteur Twitch integre sur la page</li>
+                        <li><i class="fas fa-check"></i> Detection automatique du live</li>
+                        <li><i class="fas fa-check"></i> Abonnement mensuel renouvelable</li>
+                    </ul>
+                    <a href="{{ path('user_servers_list') }}" class="prem-feat-card__btn prem-feat-card__btn--twitch">
+                        <i class="fas fa-server"></i> Gerer mes serveurs
+                    </a>
+                </div>
+
+            </div>{# /prem-feat-grid #}
+        </div>
+    </section>
+</div>
+
+{# ==========================================
+   PANEL : SELECTION PREMIUM
+   ========================================== #}
+<div class="nx-tab-panel" id="tab-selection">
+    <section class="prem-section" style="padding-top: 50px;">
+        <div class="container">
+            <div class="premium-section-header">
+                <div class="premium-section-header__badge" style="background:rgba(255,190,24,0.12);color:#ffbe18;"><i class="fas fa-rocket"></i></div>
+                <div class="premium-plans-section__title">Selection Premium — Mise en Avant</div>
+                <p class="premium-section-header__sub">Occupez une position privilegiee et soyez vu en premier par des milliers de joueurs</p>
+            </div>
+
+            <div class="prem-positions-wrap">
+
+                {# Homepage positions #}
+                <div class="prem-positions-block">
+                    <div class="prem-positions-block__header">
+                        <div class="prem-positions-block__icon" style="background:rgba(255,190,24,0.1);color:#ffbe18;">
+                            <i class="fas fa-home"></i>
+                        </div>
+                        <div>
+                            <div class="prem-positions-block__title">Page d'accueil</div>
+                            <div class="prem-positions-block__sub">Positions 1 a 5 · Visible par tous les visiteurs</div>
+                        </div>
+                    </div>
+                    <div class="prem-slot-grid">
+                        {% set hp_costs = [
+                            setting('premium_homepage_pos1_cost', '10'),
+                            setting('premium_homepage_pos2_cost', '8'),
+                            setting('premium_homepage_pos3_cost', '6'),
+                            setting('premium_homepage_pos4_cost', '4'),
+                            setting('premium_homepage_pos5_cost', '2')
+                        ] %}
+                        {% for pos in 1..5 %}
+                            {% set cost = hp_costs[pos - 1] %}
+                            <div class="prem-slot prem-slot--pos{{ pos }}">
+                                <div class="prem-slot__medal">
+                                    {% if pos == 1 %}<i class="fas fa-medal" style="color:#ffd700;"></i>
+                                    {% elseif pos == 2 %}<i class="fas fa-medal" style="color:#c0c0c0;"></i>
+                                    {% elseif pos == 3 %}<i class="fas fa-medal" style="color:#cd7f32;"></i>
+                                    {% else %}<i class="fas fa-star" style="color:#8b949e;"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="prem-slot__pos">Position {{ pos }}</div>
+                                <div class="prem-slot__cost">
+                                    <i class="fas fa-bolt" style="color:#ff6b35;"></i>
+                                    <strong>{{ cost }}</strong>
+                                    <span>NexBoost</span>
+                                </div>
+                                <div class="prem-slot__per">par tranche de 12h</div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                {# Game category positions #}
+                <div class="prem-positions-block">
+                    <div class="prem-positions-block__header">
+                        <div class="prem-positions-block__icon" style="background:rgba(69,248,130,0.1);color:#45f882;">
+                            <i class="fas fa-gamepad"></i>
+                        </div>
+                        <div>
+                            <div class="prem-positions-block__title">Page de categorie de jeu</div>
+                            <div class="prem-positions-block__sub">Positions 1 a 5 · Ciblez votre communaute</div>
+                        </div>
+                    </div>
+                    <div class="prem-slot-grid">
+                        {% set gm_costs = [
+                            setting('premium_game_pos1_cost', '5'),
+                            setting('premium_game_pos2_cost', '4'),
+                            setting('premium_game_pos3_cost', '3'),
+                            setting('premium_game_pos4_cost', '2'),
+                            setting('premium_game_pos5_cost', '1')
+                        ] %}
+                        {% for pos in 1..5 %}
+                            {% set cost = gm_costs[pos - 1] %}
+                            <div class="prem-slot prem-slot--pos{{ pos }}">
+                                <div class="prem-slot__medal">
+                                    {% if pos == 1 %}<i class="fas fa-medal" style="color:#ffd700;"></i>
+                                    {% elseif pos == 2 %}<i class="fas fa-medal" style="color:#c0c0c0;"></i>
+                                    {% elseif pos == 3 %}<i class="fas fa-medal" style="color:#cd7f32;"></i>
+                                    {% else %}<i class="fas fa-star" style="color:#8b949e;"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="prem-slot__pos">Position {{ pos }}</div>
+                                <div class="prem-slot__cost">
+                                    <i class="fas fa-bolt" style="color:#ff6b35;"></i>
+                                    <strong>{{ cost }}</strong>
+                                    <span>NexBoost</span>
+                                </div>
+                                <div class="prem-slot__per">par tranche de 12h</div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+            </div>{# /prem-positions-wrap #}
+
+            <div class="prem-positions-cta">
+                <p class="prem-positions-cta__note">
+                    <i class="fas fa-info-circle"></i>
+                    Les NexBoost sont deduits automatiquement a la reservation. Vous pouvez choisir la duree (minimum 12h).
+                </p>
+                {% if app.user %}
+                    <a href="{{ path('user_servers_list') }}" class="prem-feat-card__btn prem-feat-card__btn--orange" style="width:auto;padding:14px 36px;">
+                        <i class="fas fa-rocket"></i> Booster mon serveur
+                    </a>
+                {% else %}
+                    <a href="{{ path('app_login') }}" class="prem-feat-card__btn prem-feat-card__btn--orange" style="width:auto;padding:14px 36px;">
+                        <i class="fas fa-sign-in-alt"></i> Connexion requise
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+</div>
+
+{# ==========================================
+   PANEL : RECRUTEMENT
+   ========================================== #}
+<div class="nx-tab-panel" id="tab-recruitment">
+    <section class="prem-section" style="padding-top: 50px;">
+        <div class="container">
+            <div class="premium-section-header">
+                <div class="premium-section-header__badge" style="background:rgba(237,137,54,0.12);color:#ed8936;"><i class="fas fa-bullhorn"></i></div>
+                <div class="premium-plans-section__title">Annonces de Recrutement</div>
+                <p class="premium-section-header__sub">Publiez des annonces pour recruter des joueurs directement sur votre serveur</p>
+            </div>
+
+            <div class="prem-recruit-wrap">
+                <div class="prem-recruit-card">
+                    <div class="prem-recruit-card__side">
+                        <div class="prem-recruit-card__big-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                    </div>
+                    <div class="prem-recruit-card__body">
+                        <h3 class="prem-recruit-card__title">Recrutez des joueurs facilement</h3>
+                        <p class="prem-recruit-card__desc">Creez des formulaires de candidature personnalises, gerez les candidats directement depuis votre espace serveur et communiquez via le chat integre.</p>
+
+                        <div class="prem-recruit-tiers">
+                            <div class="prem-recruit-tier prem-recruit-tier--free">
+                                <div class="prem-recruit-tier__icon"><i class="fas fa-gift"></i></div>
+                                <div>
+                                    <div class="prem-recruit-tier__label">INCLUS GRATUITEMENT</div>
+                                    <div class="prem-recruit-tier__value">{{ setting('premium_recruitment_free_limit', '2') }} annonces actives</div>
+                                </div>
+                            </div>
+                            <div class="prem-recruit-tier__arrow"><i class="fas fa-plus"></i></div>
+                            <div class="prem-recruit-tier prem-recruit-tier--paid">
+                                <div class="prem-recruit-tier__icon"><i class="fas fa-coins" style="color:#ffd700;"></i></div>
+                                <div>
+                                    <div class="prem-recruit-tier__label">ANNONCE SUPPLEMENTAIRE</div>
+                                    <div class="prem-recruit-tier__value">{{ setting('premium_recruitment_cost', '50') }} NexBits / annonce</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <ul class="prem-recruit-perks">
+                            <li><i class="fas fa-check"></i> Formulaire de candidature personnalise</li>
+                            <li><i class="fas fa-check"></i> Gestion des candidatures et chat integre</li>
+                            <li><i class="fas fa-check"></i> Notification Discord automatique</li>
+                            <li><i class="fas fa-check"></i> Visible dans la section Recrutement publique</li>
+                        </ul>
+
+                        <a href="{{ path('recruitment_index') }}" class="prem-feat-card__btn prem-feat-card__btn--orange" style="width:auto;display:inline-flex;">
+                            <i class="fas fa-bullhorn"></i> Voir les annonces
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</section>
-
-<div class="premium-separator"><div class="container"><div class="premium-separator__line"></div></div></div>
+    </section>
+</div>
 
 {# ==========================================
-   SECTION 4 — PACKS DE RECHARGE
+   BOUTIQUE (toujours visible)
    ========================================== #}
-{% if defaultPlans|length > 0 %}
-<section class="premium-plans-section">
+<div class="boutique-section">
     <div class="container">
-        <div class="premium-section-header">
-            <div class="premium-section-header__badge premium-section-header__badge--shop"><i class="fas fa-shopping-bag"></i></div>
-            <div class="premium-plans-section__title">Packs de Recharge</div>
-            <p class="premium-section-header__sub">Rechargez votre solde NexBits et NexBoost pour acceder aux fonctionnalites</p>
+        <div class="boutique-header">
+            <div class="boutique-header__icon">
+                <i class="fas fa-shopping-bag"></i>
+            </div>
+            <div>
+                <div class="boutique-header__title">BOUTIQUE</div>
+                <div class="boutique-header__sub">Rechargez votre solde NexBits et NexBoost pour acceder aux fonctionnalites</div>
+            </div>
         </div>
-        <div class="premium-plans">
-            {% for plan in defaultPlans %}
-                {% set hasPaypal = plan.price > 0 %}
-                {% set hasNexbits = plan.nexbitsPrice > 0 %}
-                {% set isPopular = loop.length > 1 and loop.index == 2 %}
-                <div class="premium-card{% if isPopular %} premium-card--popular{% endif %}">
-                    {% if isPopular %}
-                        <div class="premium-card__popular-tag">Populaire</div>
-                    {% endif %}
 
-                    <div class="premium-card__icon{% if not plan.iconFileName %} premium-card__icon--default{% endif %}">
-                        {% if plan.iconFileName %}
-                            <img src="{{ asset('uploads/plans/' ~ plan.iconFileName) }}" alt="{{ plan.name }}">
-                        {% else %}
-                            <i class="fas fa-gem"></i>
+        {% if defaultPlans|length > 0 %}
+            <div class="boutique-plans">
+                {% for plan in defaultPlans %}
+                    {% set hasPaypal = plan.price > 0 %}
+                    {% set hasNexbits = plan.nexbitsPrice > 0 %}
+                    {% set isPopular = loop.length > 1 and loop.index == 2 %}
+                    <div class="boutique-card{% if isPopular %} boutique-card--popular{% endif %}">
+                        {% if isPopular %}
+                            <div class="boutique-card__popular-tag">Populaire</div>
                         {% endif %}
-                    </div>
 
-                    <h3 class="premium-card__name">{{ plan.name }}</h3>
-                    <p class="premium-card__desc">{{ plan.description }}</p>
+                        <div class="boutique-card__icon{% if not plan.iconFileName %} boutique-card__icon--default{% endif %}">
+                            {% if plan.iconFileName %}
+                                <img src="{{ asset('uploads/plans/' ~ plan.iconFileName) }}" alt="{{ plan.name }}">
+                            {% else %}
+                                <i class="fas fa-gem"></i>
+                            {% endif %}
+                        </div>
 
-                    <div class="premium-card__price-wrap">
-                        {% if hasPaypal %}
-                            <div class="premium-card__price">
-                                {{ plan.price }}<span class="premium-card__price-currency">{{ plan.currency }}</span>
-                            </div>
-                            {% if hasNexbits %}
-                                <div class="premium-card__price-alt">
-                                    ou <i class="fas fa-coins" style="color:#ffd700;"></i> <strong>{{ plan.nexbitsPrice }}</strong> NexBits
+                        <h3 class="boutique-card__name">{{ plan.name }}</h3>
+                        <p class="boutique-card__desc">{{ plan.description }}</p>
+
+                        <div class="boutique-card__price-wrap">
+                            {% if hasPaypal %}
+                                <div class="boutique-card__price">
+                                    {{ plan.price }}<span class="boutique-card__price-currency">{{ plan.currency }}</span>
+                                </div>
+                                {% if hasNexbits %}
+                                    <div class="boutique-card__price-alt">
+                                        ou <i class="fas fa-coins" style="color:#ffd700;"></i> <strong>{{ plan.nexbitsPrice }}</strong> NexBits
+                                    </div>
+                                {% endif %}
+                            {% elseif hasNexbits %}
+                                <div class="boutique-card__price">
+                                    {{ plan.nexbitsPrice }}<span class="boutique-card__price-currency"><i class="fas fa-coins" style="color:#ffd700;"></i> NexBits</span>
                                 </div>
                             {% endif %}
-                        {% elseif hasNexbits %}
-                            <div class="premium-card__price">
-                                {{ plan.nexbitsPrice }}<span class="premium-card__price-currency"><i class="fas fa-coins" style="color:#ffd700;"></i> NexBits</span>
-                            </div>
-                        {% endif %}
-                    </div>
+                        </div>
 
-                    <div class="premium-card__tokens">
-                        {% if plan.tokensGiven > 0 %}
-                            <div class="premium-card__token-row">
-                                <i class="fas fa-coins" style="color:var(--tg-theme-secondary, #ffbe18);"></i>
-                                <span class="token-amount">{{ plan.tokensGiven }}</span> NexBits inclus
-                            </div>
-                        {% endif %}
-                        {% if plan.boostTokensGiven > 0 %}
-                            <div class="premium-card__token-row">
-                                <i class="fas fa-bolt" style="color:#ff6b35;"></i>
-                                <span class="token-amount">{{ plan.boostTokensGiven }}</span> NexBoost inclus
-                            </div>
-                        {% endif %}
-                    </div>
-
-                    {% if app.user %}
-                        <button type="button" class="premium-card__buy-btn" data-plan-id="{{ plan.id }}" data-plan-name="{{ plan.name }}" data-plan-price="{{ plan.price }}" data-plan-currency="{{ plan.currency }}" data-plan-tokens="{{ plan.tokensGiven }}" data-plan-boost="{{ plan.boostTokensGiven }}" data-plan-nexbits-price="{{ plan.nexbitsPrice }}" onclick="openPayment(this)">
-                            <i class="fas fa-shopping-cart"></i> Acheter maintenant
-                        </button>
-                    {% else %}
-                        <a href="{{ path('app_login') }}" class="premium-card__buy-btn premium-card__buy-btn--login">
-                            <i class="fas fa-sign-in-alt"></i> Connexion requise
-                        </a>
-                    {% endif %}
-                </div>
-            {% endfor %}
-        </div>
-    </div>
-</section>
-{% endif %}
-
-{# ===== OFFRES SPECIALES ===== #}
-{% if customPlans|length > 0 %}
-<div class="premium-separator"><div class="container"><div class="premium-separator__line"></div></div></div>
-<section class="premium-plans-section">
-    <div class="container">
-        <div class="premium-section-header">
-            <div class="premium-section-header__badge" style="background:rgba(255,107,53,0.15);color:#ff6b35;"><i class="fas fa-fire"></i></div>
-            <div class="premium-plans-section__title">Offres Speciales</div>
-            <p class="premium-section-header__sub">Packs et offres exclusives en edition limitee</p>
-        </div>
-        <div class="premium-plans">
-            {% for plan in customPlans %}
-                {% set hasPaypal = plan.price > 0 %}
-                {% set hasNexbits = plan.nexbitsPrice > 0 %}
-                <div class="premium-card">
-                    <div class="premium-card__icon{% if not plan.iconFileName %} premium-card__icon--default{% endif %}">
-                        {% if plan.iconFileName %}
-                            <img src="{{ asset('uploads/plans/' ~ plan.iconFileName) }}" alt="{{ plan.name }}">
-                        {% else %}
-                            <i class="fas fa-fire"></i>
-                        {% endif %}
-                    </div>
-
-                    <h3 class="premium-card__name">{{ plan.name }}</h3>
-                    <p class="premium-card__desc">{{ plan.description }}</p>
-
-                    <div class="premium-card__price-wrap">
-                        {% if hasPaypal %}
-                            <div class="premium-card__price">
-                                {{ plan.price }}<span class="premium-card__price-currency">{{ plan.currency }}</span>
-                            </div>
-                            {% if hasNexbits %}
-                                <div class="premium-card__price-alt">
-                                    ou <i class="fas fa-coins" style="color:#ffd700;"></i> <strong>{{ plan.nexbitsPrice }}</strong> NexBits
+                        <div class="boutique-card__tokens">
+                            {% if plan.tokensGiven > 0 %}
+                                <div class="boutique-card__token-row">
+                                    <i class="fas fa-coins" style="color:#ffbe18;"></i>
+                                    <span class="token-amount">{{ plan.tokensGiven }}</span> NexBits inclus
                                 </div>
                             {% endif %}
-                        {% elseif hasNexbits %}
-                            <div class="premium-card__price">
-                                {{ plan.nexbitsPrice }}<span class="premium-card__price-currency"><i class="fas fa-coins" style="color:#ffd700;"></i> NexBits</span>
-                            </div>
+                            {% if plan.boostTokensGiven > 0 %}
+                                <div class="boutique-card__token-row">
+                                    <i class="fas fa-bolt" style="color:#ff6b35;"></i>
+                                    <span class="token-amount">{{ plan.boostTokensGiven }}</span> NexBoost inclus
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        {% if app.user %}
+                            <button type="button" class="boutique-card__buy-btn"
+                                data-plan-id="{{ plan.id }}"
+                                data-plan-name="{{ plan.name }}"
+                                data-plan-price="{{ plan.price }}"
+                                data-plan-currency="{{ plan.currency }}"
+                                data-plan-tokens="{{ plan.tokensGiven }}"
+                                data-plan-boost="{{ plan.boostTokensGiven }}"
+                                data-plan-nexbits-price="{{ plan.nexbitsPrice }}"
+                                onclick="openPayment(this)">
+                                <i class="fas fa-shopping-cart"></i> Acheter maintenant
+                            </button>
+                        {% else %}
+                            <a href="{{ path('app_login') }}" class="boutique-card__buy-btn boutique-card__buy-btn--login">
+                                <i class="fas fa-sign-in-alt"></i> Connexion requise
+                            </a>
                         {% endif %}
                     </div>
+                {% endfor %}
+            </div>
+        {% endif %}
 
-                    <div class="premium-card__tokens">
-                        {% if plan.tokensGiven > 0 %}
-                            <div class="premium-card__token-row">
-                                <i class="fas fa-coins" style="color:var(--tg-theme-secondary, #ffbe18);"></i>
-                                <span class="token-amount">{{ plan.tokensGiven }}</span> NexBits inclus
-                            </div>
-                        {% endif %}
-                        {% if plan.boostTokensGiven > 0 %}
-                            <div class="premium-card__token-row">
-                                <i class="fas fa-bolt" style="color:#ff6b35;"></i>
-                                <span class="token-amount">{{ plan.boostTokensGiven }}</span> NexBoost inclus
-                            </div>
+        {% if customPlans|length > 0 %}
+            <div class="boutique-specials-header">
+                <div class="boutique-specials-header__icon"><i class="fas fa-fire"></i></div>
+                <div class="boutique-specials-header__title">Offres Speciales</div>
+                <div class="boutique-specials-header__sub">Packs et offres exclusives en edition limitee</div>
+            </div>
+            <div class="boutique-plans">
+                {% for plan in customPlans %}
+                    {% set hasPaypal = plan.price > 0 %}
+                    {% set hasNexbits = plan.nexbitsPrice > 0 %}
+                    <div class="boutique-card">
+                        <div class="boutique-card__icon{% if not plan.iconFileName %} boutique-card__icon--default{% endif %}">
+                            {% if plan.iconFileName %}
+                                <img src="{{ asset('uploads/plans/' ~ plan.iconFileName) }}" alt="{{ plan.name }}">
+                            {% else %}
+                                <i class="fas fa-fire"></i>
+                            {% endif %}
+                        </div>
+
+                        <h3 class="boutique-card__name">{{ plan.name }}</h3>
+                        <p class="boutique-card__desc">{{ plan.description }}</p>
+
+                        <div class="boutique-card__price-wrap">
+                            {% if hasPaypal %}
+                                <div class="boutique-card__price">
+                                    {{ plan.price }}<span class="boutique-card__price-currency">{{ plan.currency }}</span>
+                                </div>
+                                {% if hasNexbits %}
+                                    <div class="boutique-card__price-alt">
+                                        ou <i class="fas fa-coins" style="color:#ffd700;"></i> <strong>{{ plan.nexbitsPrice }}</strong> NexBits
+                                    </div>
+                                {% endif %}
+                            {% elseif hasNexbits %}
+                                <div class="boutique-card__price">
+                                    {{ plan.nexbitsPrice }}<span class="boutique-card__price-currency"><i class="fas fa-coins" style="color:#ffd700;"></i> NexBits</span>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="boutique-card__tokens">
+                            {% if plan.tokensGiven > 0 %}
+                                <div class="boutique-card__token-row">
+                                    <i class="fas fa-coins" style="color:#ffbe18;"></i>
+                                    <span class="token-amount">{{ plan.tokensGiven }}</span> NexBits inclus
+                                </div>
+                            {% endif %}
+                            {% if plan.boostTokensGiven > 0 %}
+                                <div class="boutique-card__token-row">
+                                    <i class="fas fa-bolt" style="color:#ff6b35;"></i>
+                                    <span class="token-amount">{{ plan.boostTokensGiven }}</span> NexBoost inclus
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        {% if app.user %}
+                            <button type="button" class="boutique-card__buy-btn"
+                                data-plan-id="{{ plan.id }}"
+                                data-plan-name="{{ plan.name }}"
+                                data-plan-price="{{ plan.price }}"
+                                data-plan-currency="{{ plan.currency }}"
+                                data-plan-tokens="{{ plan.tokensGiven }}"
+                                data-plan-boost="{{ plan.boostTokensGiven }}"
+                                data-plan-nexbits-price="{{ plan.nexbitsPrice }}"
+                                onclick="openPayment(this)">
+                                <i class="fas fa-shopping-cart"></i> Acheter maintenant
+                            </button>
+                        {% else %}
+                            <a href="{{ path('app_login') }}" class="boutique-card__buy-btn boutique-card__buy-btn--login">
+                                <i class="fas fa-sign-in-alt"></i> Connexion requise
+                            </a>
                         {% endif %}
                     </div>
+                {% endfor %}
+            </div>
+        {% endif %}
 
-                    {% if app.user %}
-                        <button type="button" class="premium-card__buy-btn" data-plan-id="{{ plan.id }}" data-plan-name="{{ plan.name }}" data-plan-price="{{ plan.price }}" data-plan-currency="{{ plan.currency }}" data-plan-tokens="{{ plan.tokensGiven }}" data-plan-boost="{{ plan.boostTokensGiven }}" data-plan-nexbits-price="{{ plan.nexbitsPrice }}" onclick="openPayment(this)">
-                            <i class="fas fa-shopping-cart"></i> Acheter maintenant
-                        </button>
-                    {% else %}
-                        <a href="{{ path('app_login') }}" class="premium-card__buy-btn premium-card__buy-btn--login">
-                            <i class="fas fa-sign-in-alt"></i> Connexion requise
-                        </a>
-                    {% endif %}
-                </div>
-            {% endfor %}
-        </div>
+        {% if defaultPlans|length == 0 and customPlans|length == 0 %}
+            <div class="premium-empty">
+                <div class="premium-empty__icon"><i class="fas fa-box-open"></i></div>
+                <p class="premium-empty__text">Aucun pack de recharge disponible pour le moment.</p>
+            </div>
+        {% endif %}
     </div>
-</section>
-{% endif %}
-
-{# ===== EMPTY STATE ===== #}
-{% if defaultPlans|length == 0 and customPlans|length == 0 %}
-<section class="premium-plans-section">
-    <div class="container">
-        <div class="premium-empty">
-            <div class="premium-empty__icon"><i class="fas fa-box-open"></i></div>
-            <p class="premium-empty__text">Aucun pack de recharge disponible pour le moment.</p>
-        </div>
-    </div>
-</section>
-{% endif %}
+</div>
 
 {# ===== PAYMENT MODAL ===== #}
 {% set allPlans = defaultPlans|merge(customPlans) %}
@@ -878,4 +1054,19 @@
 })();
 </script>
 {% endif %}
+
+<script nonce="{{ csp_nonce() }}">
+window.switchTab = function(id) {
+    document.querySelectorAll('.nx-tab-btn').forEach(function(b) {
+        b.classList.toggle('active', b.getAttribute('data-tab') === id);
+    });
+    document.querySelectorAll('.nx-tab-panel').forEach(function(p) {
+        p.classList.remove('active');
+    });
+    var panel = document.getElementById('tab-' + id);
+    if (panel) panel.classList.add('active');
+};
+// Default tab on load
+switchTab('all');
+</script>
 {% endblock %}
