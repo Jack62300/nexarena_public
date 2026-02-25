@@ -334,6 +334,26 @@
                 <form method="post" action="{{ path('user_profile_edit') }}" id="editForm">
                     <input type="hidden" name="_token" value="{{ csrf_token('profile_edit') }}">
 
+                    {# ── Pseudo ── #}
+                    <div class="ep-card">
+                        <div class="ep-card__title"><i class="fas fa-at"></i> Pseudo</div>
+                        <div class="ep-group" style="margin-bottom:0;">
+                            <label class="ep-label" for="usernameInput"><i class="fas fa-user"></i> Nom d'utilisateur</label>
+                            <input type="text" id="usernameInput" name="username" class="ep-input"
+                                   value="{{ app.user.username }}"
+                                   minlength="3" maxlength="30"
+                                   pattern="[a-zA-Z0-9_\-]+"
+                                   placeholder="MonPseudo"
+                                   autocomplete="username"
+                                   oninput="updateUsernamePreview(this.value)">
+                            <div style="margin-top:8px;font-size:12px;color:#3d5068;display:flex;align-items:center;gap:6px;">
+                                <i class="fas fa-info-circle" style="color:#45f882;"></i>
+                                3 à 30 caractères — lettres, chiffres, <code style="background:#0d1b2d;padding:1px 5px;border-radius:3px;color:#8b949e;">_</code> et <code style="background:#0d1b2d;padding:1px 5px;border-radius:3px;color:#8b949e;">-</code> uniquement.
+                                Votre URL de profil : <span id="usernamePreviewUrl" style="color:#45f882;"></span>
+                            </div>
+                        </div>
+                    </div>
+
                     {# ── Bio ── #}
                     <div class="ep-card">
                         <div class="ep-card__title"><i class="fas fa-quote-left"></i> Présentation</div>
@@ -610,5 +630,27 @@ function updateGameKey(input) {
         nameInput.value = val;
     }
 }
+
+// ── Username preview URL ──
+var baseProfileUrl = '{{ url('profile_show', {username: '__USERNAME__'})|replace({'__USERNAME__': '__USERNAME__'}) }}';
+function updateUsernamePreview(val) {
+    var el = document.getElementById('usernamePreviewUrl');
+    if (!el) return;
+    var valid = /^[a-zA-Z0-9_\-]{3,30}$/.test(val);
+    if (valid) {
+        el.textContent = baseProfileUrl.replace('__USERNAME__', val);
+        el.style.color = '#45f882';
+    } else if (val.length > 0) {
+        el.textContent = 'Format invalide';
+        el.style.color = '#e74a3b';
+    } else {
+        el.textContent = '';
+    }
+}
+// Init on load
+document.addEventListener('DOMContentLoaded', function() {
+    var inp = document.getElementById('usernameInput');
+    if (inp) updateUsernamePreview(inp.value);
+});
 </script>
 {% endblock %}

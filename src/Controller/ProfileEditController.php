@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -14,6 +15,7 @@ class ProfileEditController extends AbstractController
 {
     public function __construct(
         private EntityManagerInterface $em,
+        private UserRepository $userRepo,
     ) {
     }
 
@@ -34,7 +36,23 @@ class ProfileEditController extends AbstractController
             return $this->redirectToRoute('user_profile_edit');
         }
 
+        /** @var \App\Entity\User $user */
         $user = $this->getUser();
+
+        // Username
+        $newUsername = trim((string) $request->request->get('username', ''));
+        if ($newUsername !== '' && $newUsername !== $user->getUsername()) {
+            if (!preg_match('/^[a-zA-Z0-9_\-]{3,30}$/', $newUsername)) {
+                $this->addFlash('error', 'Pseudo invalide : 3 à 30 caractères, lettres, chiffres, _ et - uniquement.');
+                return $this->redirectToRoute('user_profile_edit');
+            }
+            $existing = $this->userRepo->findOneByUsernameInsensitive($newUsername);
+            if ($existing !== null && $existing->getId() !== $user->getId()) {
+                $this->addFlash('error', 'Ce pseudo est déjà utilisé.');
+                return $this->redirectToRoute('user_profile_edit');
+            }
+            $user->setUsername($newUsername);
+        }
 
         // Bio (HTML from Quill)
         $bio = $request->request->get('bio');
