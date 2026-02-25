@@ -40,7 +40,7 @@ setfacl -R -m u:$WEB_USER:rX .
 setfacl -dR -m u:$WEB_USER:rX .
 
 echo "➡️ Redémarrage PHP-FPM et Nginx"
-systemctl restart php8.3-fpm
+systemctl restart php8.4-fpm
 systemctl restart nginx
 
 echo "✅ Permissions Symfony configurées avec succès !"
