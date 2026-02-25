@@ -100,7 +100,10 @@ class SettingsService
         $this->cache = [];
         $settings = $this->repository->findAll();
         foreach ($settings as $setting) {
-            $this->cache[$setting->getKey()] = $setting;
+            $key = $setting->getKey();
+            if ($key !== null) {
+                $this->cache[$key] = $setting;
+            }
         }
     }
 }

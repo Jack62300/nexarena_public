@@ -32,13 +32,15 @@ class SettingsEnvVarProcessor implements EnvVarProcessorInterface
         if ($settingKey) {
             try {
                 $setting = $this->settingRepo->findByKey($settingKey);
-                if ($setting && $setting->getValue() !== '') {
+                if ($setting) {
                     $value = $setting->getValue();
-                    // Decrypt if encrypted
-                    if ($setting->getType() === Setting::TYPE_SECRET && $this->encryptionService->isEncrypted($value)) {
-                        return $this->encryptionService->decrypt($value);
+                    if ($value !== null && $value !== '') {
+                        // Decrypt if encrypted
+                        if ($setting->getType() === Setting::TYPE_SECRET && $this->encryptionService->isEncrypted($value)) {
+                            return $this->encryptionService->decrypt($value);
+                        }
+                        return $value;
                     }
-                    return $value;
                 }
             } catch (\Throwable) {
                 // DB not available yet (first boot, migrations not run) — fall through to env

@@ -2,9 +2,6 @@
 
 namespace App\Service;
 
-use App\Repository\ArticleRepository;
-use App\Repository\CategoryRepository;
-use App\Repository\GameCategoryRepository;
 use App\Repository\ServerRepository;
 use App\Repository\TransactionRepository;
 use App\Repository\UserRepository;
@@ -18,9 +15,6 @@ class StatsService
 
     public function __construct(
         private UserRepository $userRepository,
-        private ArticleRepository $articleRepository,
-        private GameCategoryRepository $gameCategoryRepository,
-        private CategoryRepository $categoryRepository,
         private ServerRepository $serverRepository,
         private VoteRepository $voteRepository,
         private TransactionRepository $transactionRepository,
@@ -99,7 +93,7 @@ class StatsService
                 return $this->userRepository->createQueryBuilder('u')
                     ->select('COUNT(u.id)')
                     ->where('u.createdAt >= :today')
-                    ->setParameter('today', $today)
+                    ->setParameter('today', $today, Types::DATETIME_IMMUTABLE)
                     ->getQuery()
                     ->getSingleScalarResult();
             },
@@ -123,7 +117,7 @@ class StatsService
                 return $this->voteRepository->createQueryBuilder('v')
                     ->select('COUNT(v.id)')
                     ->where('v.votedAt >= :start')
-                    ->setParameter('start', $start)
+                    ->setParameter('start', $start, Types::DATETIME_IMMUTABLE)
                     ->getQuery()
                     ->getSingleScalarResult();
             },
@@ -147,7 +141,7 @@ class StatsService
     }
 
     /**
-     * @return array<int, array{month: string, total: float}>
+     * @return array<int, array{month: string, total: float, count: int}>
      */
     public function getRevenueByMonth(int $months = 12): array
     {
