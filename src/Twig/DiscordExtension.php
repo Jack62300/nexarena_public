@@ -50,11 +50,14 @@ class DiscordExtension extends AbstractExtension
 
     public function isDiscordMember(?User $user): bool
     {
-        if (!$user || !$user->getDiscordId()) {
+        if (!$user) {
             return false;
         }
 
         $discordId = $user->getDiscordId();
+        if (!$discordId) {
+            return false;
+        }
 
         return $this->cache->get('discord_member_' . $discordId, function (ItemInterface $item) use ($discordId) {
             $item->expiresAfter(3600); // 1h cache

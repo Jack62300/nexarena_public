@@ -27,7 +27,7 @@ class NavigationExtension extends AbstractExtension
     /**
      * Returns parent categories with only the top N most active game categories (by server count).
      *
-     * @return array<array{category: \App\Entity\Category, gameCategories: \App\Entity\GameCategory[]}>
+     * @return array<array{category: \App\Entity\Category, gameCategories: \App\Entity\GameCategory[], allGameCategories: \App\Entity\GameCategory[], serverCounts: array<int, int>, hasMore: bool}>
      */
     public function getNavCategories(): array
     {
@@ -40,15 +40,15 @@ class NavigationExtension extends AbstractExtension
 
             // Sort by server count descending
             usort($gameCategories, function ($a, $b) use ($serverCounts) {
-                $countA = $serverCounts[$a->getId()] ?? 0;
-                $countB = $serverCounts[$b->getId()] ?? 0;
+                $countA = $serverCounts[$a->getId() ?? 0] ?? 0;
+                $countB = $serverCounts[$b->getId() ?? 0] ?? 0;
                 return $countB <=> $countA;
             });
 
             // Keep only top N with at least 1 server
             $topGames = [];
             foreach ($gameCategories as $gc) {
-                $count = $serverCounts[$gc->getId()] ?? 0;
+                $count = $serverCounts[$gc->getId() ?? 0] ?? 0;
                 if ($count > 0 && count($topGames) < self::MAX_SUBCATEGORIES) {
                     $topGames[] = $gc;
                 }

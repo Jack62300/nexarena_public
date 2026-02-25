@@ -61,8 +61,8 @@ class RoleExtension extends AbstractExtension
             return '<span class="role-badge" style="background:#5a5c6922;color:#8b949e;border:1px solid #5a5c6944;">Utilisateur</span>';
         }
 
-        $color = htmlspecialchars($role->getColor(), ENT_QUOTES);
-        $name = htmlspecialchars($role->getName(), ENT_QUOTES);
+        $color = htmlspecialchars($role->getColor() ?? '#8b949e', ENT_QUOTES);
+        $name = htmlspecialchars($role->getName() ?? '', ENT_QUOTES);
 
         return sprintf(
             '<span class="role-badge" style="background:%s22;color:%s;border:1px solid %s44;">%s</span>',
@@ -82,7 +82,10 @@ class RoleExtension extends AbstractExtension
         $this->roleCache = [];
         $roles = $this->roleRepository->findAll();
         foreach ($roles as $role) {
-            $this->roleCache[$role->getTechnicalName()] = $role;
+            $technicalName = $role->getTechnicalName();
+            if ($technicalName !== null) {
+                $this->roleCache[$technicalName] = $role;
+            }
         }
     }
 }
