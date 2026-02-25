@@ -215,7 +215,7 @@ select.form-control-admin option { background: var(--bg-darker); }
 
 {% block admin_js %}
 <script nonce="{{ csp_nonce() }}">
-const criteriaTypeEl   = document.getElementById('criteriaType');
+const criteriaTypeEl   = document.getElementById('{{ form.criteriaType.vars.id }}');
 const thresholdWrapper = document.getElementById('thresholdWrapper');
 
 function updateThreshold() {
