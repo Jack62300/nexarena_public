@@ -12,6 +12,7 @@ use App\Repository\UserRepository;
 use App\Service\CryptoPayService;
 use App\Service\PayPalService;
 use App\Service\PremiumService;
+use App\Service\StripeService;
 use App\Service\WebhookService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -29,6 +30,7 @@ class PremiumController extends AbstractController
         private EntityManagerInterface $em,
         private PayPalService $paypal,
         private CryptoPayService $crypto,
+        private StripeService $stripe,
         private PremiumService $premiumService,
         private PremiumPlanRepository $planRepo,
         private TransactionRepository $transactionRepo,
@@ -53,6 +55,8 @@ class PremiumController extends AbstractController
             'paypal_currency' => $this->paypal->getCurrency(),
             'is_sandbox' => $this->paypal->isSandbox(),
             'crypto_enabled' => $this->crypto->isEnabled(),
+            'stripe_enabled' => $this->stripe->isEnabled(),
+            'stripe_publishable_key' => $this->stripe->getPublishableKey(),
             'userServers' => $userServers,
         ]);
     }
@@ -506,6 +510,220 @@ class PremiumController extends AbstractController
     {
         $request->getSession()->remove('crypto_payment_id');
         $request->getSession()->remove('crypto_plan_id');
+    }
+
+    // =============================================
+    // STRIPE
+    // =============================================
+
+    #[Route('/premium/stripe/checkout', name: 'premium_stripe_checkout', methods: ['POST'])]
+    #[IsGranted('ROLE_USER')]
+    public function stripeCheckout(Request $request): JsonResponse
+    {
+        if (!$this->stripe->isEnabled()) {
+            return new JsonResponse(['error' => 'Paiement Stripe non active.'], 400);
+        }
+
+        $data   = json_decode($request->getContent(), true);
+        $planId = (int) ($data['planId'] ?? 0);
+
+        $plan = $this->planRepo->find($planId);
+        if (!$plan || !$plan->isActive() || (float) $plan->getPrice() <= 0) {
+            return new JsonResponse(['error' => 'Plan introuvable, inactif ou sans prix.'], 400);
+        }
+
+        /** @var User $user */
+        $user = $this->getUser();
+
+        $amountCents = (int) round((float) $plan->getPrice() * 100);
+
+        $successUrl = $this->generateUrl(
+            'premium_stripe_return',
+            ['session_id' => '{CHECKOUT_SESSION_ID}'],
+            UrlGeneratorInterface::ABSOLUTE_URL
+        );
+        $cancelUrl = $this->generateUrl('premium_index', [], UrlGeneratorInterface::ABSOLUTE_URL);
+
+        $session = $this->stripe->createCheckoutSession(
+            $amountCents,
+            $plan->getCurrency(),
+            'Nexarena - ' . $plan->getName(),
+            $plan->getId(),
+            $user->getId(),
+            $successUrl,
+            $cancelUrl,
+        );
+
+        if (!$session || !isset($session['id'], $session['url'])) {
+            $this->logger->error('Premium: Stripe createCheckoutSession returned null.', ['planId' => $planId]);
+            return new JsonResponse(['error' => 'Erreur Stripe. Veuillez reessayer.'], 500);
+        }
+
+        $request->getSession()->set('stripe_session_id', $session['id']);
+        $request->getSession()->set('stripe_plan_id', $plan->getId());
+
+        $this->logger->info('Premium: Stripe session created.', [
+            'sessionId' => $session['id'],
+            'planId'    => $planId,
+        ]);
+
+        return new JsonResponse([
+            'sessionId'  => $session['id'],
+            'sessionUrl' => $session['url'],
+        ]);
+    }
+
+    #[Route('/premium/stripe/return', name: 'premium_stripe_return')]
+    #[IsGranted('ROLE_USER')]
+    public function stripeReturn(Request $request): Response
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        $sessionId = $request->query->get('session_id')
+            ?? $request->getSession()->get('stripe_session_id');
+        $planId = (int) ($request->getSession()->get('stripe_plan_id', 0));
+
+        if (!$sessionId) {
+            $this->addFlash('danger', 'Session Stripe invalide. Veuillez reessayer.');
+            return $this->redirectToRoute('premium_index');
+        }
+
+        // Idempotency check
+        if ($this->premiumService->isStripeSessionAlreadyCaptured($sessionId)) {
+            $this->cleanStripeSession($request);
+            return $this->redirectToRoute('premium_success');
+        }
+
+        $plan = $planId ? $this->planRepo->find($planId) : null;
+        if (!$plan) {
+            $this->addFlash('danger', 'Plan introuvable. Contactez le support si votre paiement a ete debite.');
+            $this->cleanStripeSession($request);
+            return $this->redirectToRoute('premium_index');
+        }
+
+        $session = $this->stripe->retrieveCheckoutSession($sessionId);
+        if (!$session) {
+            $this->addFlash('danger', 'Impossible de verifier le paiement. Contactez le support avec votre Session ID : ' . htmlspecialchars($sessionId));
+            $this->cleanStripeSession($request);
+            return $this->redirectToRoute('premium_index');
+        }
+
+        $paymentStatus = $session['payment_status'] ?? '';
+        $status        = $session['status'] ?? '';
+
+        $this->logger->info('Premium: Stripe return.', [
+            'sessionId'     => $sessionId,
+            'status'        => $status,
+            'paymentStatus' => $paymentStatus,
+            'planId'        => $planId,
+        ]);
+
+        if ($paymentStatus === 'paid') {
+            $this->premiumService->creditTokensFromStripePurchase($user, $plan, $sessionId, Transaction::STRIPE_STATUS_COMPLETE);
+            $this->webhookService->dispatch('payment.completed', [
+                'title' => 'Paiement Stripe',
+                'fields' => [
+                    ['name' => 'Utilisateur', 'value' => $user->getUsername(), 'inline' => true],
+                    ['name' => 'Plan', 'value' => $plan->getName(), 'inline' => true],
+                    ['name' => 'Montant', 'value' => $plan->getPrice() . ' ' . $plan->getCurrency(), 'inline' => true],
+                    ['name' => 'Session ID', 'value' => $sessionId, 'inline' => false],
+                ],
+            ]);
+            $this->cleanStripeSession($request);
+            return $this->redirectToRoute('premium_success');
+        }
+
+        if ($status === 'open' || $paymentStatus === 'unpaid') {
+            $this->cleanStripeSession($request);
+            $this->addFlash('danger', 'Paiement annule ou non complete. Vous pouvez reessayer depuis la boutique.');
+            return $this->redirectToRoute('premium_index');
+        }
+
+        $this->cleanStripeSession($request);
+        $this->addFlash('danger', 'Paiement Stripe non confirme (statut : ' . htmlspecialchars($paymentStatus) . '). Contactez le support si vous avez ete debite.');
+        return $this->redirectToRoute('premium_index');
+    }
+
+    #[Route('/premium/stripe/webhook', name: 'premium_stripe_webhook', methods: ['POST'])]
+    public function stripeWebhook(Request $request): JsonResponse
+    {
+        $body      = $request->getContent();
+        $sigHeader = $request->headers->get('Stripe-Signature', '');
+
+        if (!$this->stripe->verifyWebhookSignature($body, $sigHeader)) {
+            $this->logger->warning('Stripe webhook: signature invalide.');
+            return new JsonResponse(['error' => 'Signature invalide.'], 401);
+        }
+
+        $event     = json_decode($body, true);
+        $eventType = $event['type'] ?? '';
+
+        if ($eventType === 'checkout.session.completed') {
+            $sessionData   = $event['data']['object'] ?? [];
+            $sessionId     = $sessionData['id'] ?? null;
+            $paymentStatus = $sessionData['payment_status'] ?? '';
+
+            if (!$sessionId || $paymentStatus !== 'paid') {
+                return new JsonResponse(['status' => 'ok']);
+            }
+
+            // If there's already a completed transaction, skip
+            if ($this->premiumService->isStripeSessionAlreadyCaptured($sessionId)) {
+                return new JsonResponse(['status' => 'ok']);
+            }
+
+            // Complete a pending transaction if it exists
+            $pendingTx = $this->transactionRepo->findPendingByStripeSessionId($sessionId);
+            if ($pendingTx) {
+                $completed = $this->premiumService->completePendingStripeTransaction($pendingTx);
+                if ($completed && $pendingTx->getUser()) {
+                    $this->webhookService->dispatch('payment.completed', [
+                        'title' => 'Stripe confirme (webhook)',
+                        'fields' => [
+                            ['name' => 'Utilisateur', 'value' => $pendingTx->getUser()->getUsername(), 'inline' => true],
+                            ['name' => 'Plan', 'value' => $pendingTx->getPlan()?->getName() ?? '-', 'inline' => true],
+                        ],
+                    ]);
+                }
+                return new JsonResponse(['status' => 'ok']);
+            }
+
+            // User never hit the return URL → create transaction now from metadata
+            $planId = (int) ($sessionData['metadata']['plan_id'] ?? 0);
+            $userId = (int) ($sessionData['metadata']['user_id'] ?? 0);
+
+            $plan = $planId ? $this->planRepo->find($planId) : null;
+            $user = $userId ? $this->userRepo->find($userId) : null;
+
+            if ($plan && $user) {
+                $this->premiumService->creditTokensFromStripePurchase(
+                    $user,
+                    $plan,
+                    $sessionId,
+                    Transaction::STRIPE_STATUS_COMPLETE
+                );
+                $this->logger->info('Stripe webhook: paiement credite via webhook (retour manque).', [
+                    'sessionId' => $sessionId,
+                    'userId'    => $userId,
+                    'planId'    => $planId,
+                ]);
+            } else {
+                $this->logger->error('Stripe webhook: plan ou user introuvable dans metadata.', [
+                    'sessionId' => $sessionId,
+                    'planId'    => $planId,
+                    'userId'    => $userId,
+                ]);
+            }
+        }
+
+        return new JsonResponse(['status' => 'ok']);
+    }
+
+    private function cleanStripeSession(Request $request): void
+    {
+        $request->getSession()->remove('stripe_session_id');
+        $request->getSession()->remove('stripe_plan_id');
     }
 
     #[Route('/premium/succes', name: 'premium_success')]

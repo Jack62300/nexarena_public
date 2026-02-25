@@ -139,6 +139,10 @@ class InitSettingsCommand extends Command
         ['key' => 'crypto_pay_publishable_key', 'value' => '', 'type' => 'secret', 'label' => 'Crypto.com Pay - Clef Publiable (pk_...)', 'description' => 'Clef publiable depuis le dashboard Crypto.com Pay', 'category' => 'paiement', 'position' => 6],
         ['key' => 'crypto_pay_secret_key', 'value' => '', 'type' => 'secret', 'label' => 'Crypto.com Pay - Clef Secrete (sk_...)', 'description' => 'Clef secrete depuis le dashboard Crypto.com Pay (ne jamais partager)', 'category' => 'paiement', 'position' => 7],
         ['key' => 'crypto_pay_webhook_secret', 'value' => '', 'type' => 'secret', 'label' => 'Crypto.com Pay - Secret Webhook', 'description' => 'Secret pour verifier la signature des webhooks entrants', 'category' => 'paiement', 'position' => 8],
+        ['key' => 'stripe_enabled', 'value' => '0', 'type' => 'boolean', 'label' => 'Activer Stripe', 'description' => 'Afficher le bouton de paiement Stripe dans la boutique', 'category' => 'paiement', 'position' => 9],
+        ['key' => 'stripe_publishable_key', 'value' => '', 'type' => 'secret', 'label' => 'Stripe - Clef Publiable (pk_...)', 'description' => 'Clef publiable depuis le dashboard Stripe (stripe.com/dashboard)', 'category' => 'paiement', 'position' => 10],
+        ['key' => 'stripe_secret_key', 'value' => '', 'type' => 'secret', 'label' => 'Stripe - Clef Secrete (sk_...)', 'description' => 'Clef secrete depuis le dashboard Stripe (ne jamais partager)', 'category' => 'paiement', 'position' => 11],
+        ['key' => 'stripe_webhook_secret', 'value' => '', 'type' => 'secret', 'label' => 'Stripe - Secret Webhook (whsec_...)', 'description' => 'Secret pour verifier la signature des webhooks Stripe entrants', 'category' => 'paiement', 'position' => 12],
 
         // ========== PREMIUM ==========
         ['key' => 'premium_theme_cost', 'value' => '50', 'type' => 'number', 'label' => 'Cout deblocage theme (NexBits)', 'description' => 'Nombre de NexBits pour debloquer le theme personnalise sur un serveur', 'category' => 'premium', 'position' => 0],

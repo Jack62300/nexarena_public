@@ -131,6 +131,25 @@ class TransactionRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
     }
 
+    public function findByStripeSessionId(string $sessionId): ?Transaction
+    {
+        return $this->createQueryBuilder('t')
+            ->where('t.stripeSessionId = :id')
+            ->setParameter('id', $sessionId)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    public function findPendingByStripeSessionId(string $sessionId): ?Transaction
+    {
+        return $this->createQueryBuilder('t')
+            ->where('t.stripeSessionId = :id')
+            ->andWhere('t.isCredited = false')
+            ->setParameter('id', $sessionId)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
     /**
      * @return Transaction[]
      */

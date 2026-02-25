@@ -728,6 +728,11 @@
                 <i class="fas fa-bitcoin-sign"></i> Crypto
             </button>
             {% endif %}
+            {% if stripe_enabled %}
+            <button type="button" class="pp-modal__tab" data-tab="stripe" onclick="switchPayTab('stripe')">
+                <i class="fab fa-stripe-s"></i> Stripe
+            </button>
+            {% endif %}
         </div>
 
         {# PayPal tab content #}
@@ -795,6 +800,24 @@
             <div class="pp-modal__nexbits-error" id="ppCryptoError" style="display:none;"></div>
             <div class="pp-modal__secure">
                 <i class="fas fa-lock"></i> Redirection securisee vers Crypto.com Pay
+            </div>
+        </div>
+        {% endif %}
+
+        {% if stripe_enabled %}
+        {# Stripe tab content #}
+        <div class="pp-modal__tab-content" id="ppTabStripe" style="display:none;">
+            <div class="pp-crypto-logo">
+                <i class="fab fa-stripe" style="font-size:2rem;color:#635bff;"></i>
+            </div>
+            <p class="pp-crypto-desc">Payez par carte bancaire (Visa, Mastercard, etc.) via Stripe, la plateforme de paiement securisee.</p>
+            <div class="pp-modal__amount" id="ppStripePrice"></div>
+            <button type="button" class="pp-modal__crypto-btn" id="ppStripeBtn" onclick="payStripe()" style="background:linear-gradient(135deg,#635bff,#4f46e5);">
+                <i class="fas fa-credit-card"></i> <span id="ppStripeBtnLabel">Payer avec Stripe</span>
+            </button>
+            <div class="pp-modal__nexbits-error" id="ppStripeError" style="display:none;"></div>
+            <div class="pp-modal__secure">
+                <i class="fas fa-lock"></i> Redirection securisee vers Stripe
             </div>
         </div>
         {% endif %}
@@ -869,6 +892,7 @@
         var hasPaypal = planPrice > 0;
         var hasNexbits = nexbitsPrice > 0;
         var hasCrypto = {% if crypto_enabled %}planPrice > 0{% else %}false{% endif %};
+        var hasStripe = {% if stripe_enabled %}planPrice > 0{% else %}false{% endif %};
         var hasBoth = hasPaypal && hasNexbits;
 
         document.getElementById('ppPlanName').textContent = planName;
@@ -880,7 +904,7 @@
 
         // Tabs: show if more than one payment method
         var tabsEl = document.getElementById('ppTabs');
-        var methodCount = (hasPaypal ? 1 : 0) + (hasNexbits ? 1 : 0) + (hasCrypto ? 1 : 0);
+        var methodCount = (hasPaypal ? 1 : 0) + (hasNexbits ? 1 : 0) + (hasCrypto ? 1 : 0) + (hasStripe ? 1 : 0);
         tabsEl.style.display = methodCount > 1 ? '' : 'none';
 
         // Show/hide tab buttons
@@ -888,6 +912,8 @@
         if (nexbitsTabBtn) nexbitsTabBtn.style.display = hasNexbits ? '' : 'none';
         var cryptoTabBtn = document.querySelector('.pp-modal__tab[data-tab="crypto"]');
         if (cryptoTabBtn) cryptoTabBtn.style.display = hasCrypto ? '' : 'none';
+        var stripeTabBtn = document.querySelector('.pp-modal__tab[data-tab="stripe"]');
+        if (stripeTabBtn) stripeTabBtn.style.display = hasStripe ? '' : 'none';
 
         // Crypto tab content
         if (hasCrypto) {
@@ -897,6 +923,18 @@
             if (cryptoErrorEl) cryptoErrorEl.style.display = 'none';
             var cryptoBtn = document.getElementById('ppCryptoBtn');
             if (cryptoBtn) { cryptoBtn.disabled = false; }
+        }
+
+        // Stripe tab content
+        if (hasStripe) {
+            var stripePriceEl = document.getElementById('ppStripePrice');
+            if (stripePriceEl) stripePriceEl.innerHTML = planPrice.toFixed(2) + ' <span>' + planCurrency + '</span>';
+            var stripeBtnLabel = document.getElementById('ppStripeBtnLabel');
+            if (stripeBtnLabel) stripeBtnLabel.textContent = 'Payer ' + planPrice.toFixed(2) + ' ' + planCurrency + ' par carte';
+            var stripeErrorEl = document.getElementById('ppStripeError');
+            if (stripeErrorEl) stripeErrorEl.style.display = 'none';
+            var stripeBtn = document.getElementById('ppStripeBtn');
+            if (stripeBtn) { stripeBtn.disabled = false; }
         }
 
         // PayPal tab content
@@ -923,13 +961,15 @@
             updateNexbitsBtn();
         }
 
-        // Show the right tab first: PayPal if available, otherwise NexBits, otherwise Crypto
+        // Show the right tab first: PayPal > NexBits > Crypto > Stripe
         if (hasPaypal) {
             switchPayTab('paypal');
         } else if (hasNexbits) {
             switchPayTab('nexbits');
         } else if (hasCrypto) {
             switchPayTab('crypto');
+        } else if (hasStripe) {
+            switchPayTab('stripe');
         }
 
         // Show/hide tab contents for single-method plans
@@ -938,6 +978,10 @@
         var cryptoTabContent = document.getElementById('ppTabCrypto');
         if (cryptoTabContent) {
             cryptoTabContent.style.display = (!hasPaypal && !hasNexbits && hasCrypto) ? '' : 'none';
+        }
+        var stripeTabContent = document.getElementById('ppTabStripe');
+        if (stripeTabContent) {
+            stripeTabContent.style.display = (!hasPaypal && !hasNexbits && !hasCrypto && hasStripe) ? '' : 'none';
         }
 
         document.getElementById('ppOverlay').classList.add('active');
@@ -1042,6 +1086,8 @@
         document.getElementById('ppTabNexbits').style.display = tab === 'nexbits' ? '' : 'none';
         var cryptoContent = document.getElementById('ppTabCrypto');
         if (cryptoContent) cryptoContent.style.display = tab === 'crypto' ? '' : 'none';
+        var stripeContent = document.getElementById('ppTabStripe');
+        if (stripeContent) stripeContent.style.display = tab === 'stripe' ? '' : 'none';
     };
 
     window.payCrypto = function() {
@@ -1076,6 +1122,41 @@
             if (errorEl) { errorEl.textContent = 'Une erreur est survenue. Veuillez reessayer.'; errorEl.style.display = ''; }
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-arrow-right"></i> <span>Payer avec Crypto.com</span>';
+        });
+    };
+
+    window.payStripe = function() {
+        var btn = document.getElementById('ppStripeBtn');
+        var errorEl = document.getElementById('ppStripeError');
+        if (!btn || btn.disabled) return;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparation...';
+        if (errorEl) errorEl.style.display = 'none';
+
+        fetch('{{ path("premium_stripe_checkout") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({ planId: currentPlanId })
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(json) {
+            if (json.error) {
+                if (errorEl) { errorEl.textContent = json.error; errorEl.style.display = ''; }
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-credit-card"></i> <span id="ppStripeBtnLabel">Payer avec Stripe</span>';
+            } else {
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Redirection vers Stripe...';
+                window.location.href = json.sessionUrl;
+            }
+        })
+        .catch(function() {
+            if (errorEl) { errorEl.textContent = 'Une erreur est survenue. Veuillez reessayer.'; errorEl.style.display = ''; }
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-credit-card"></i> <span>Payer avec Stripe</span>';
         });
     };
 

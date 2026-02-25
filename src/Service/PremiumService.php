@@ -865,6 +865,73 @@ class PremiumService
         return $existing !== null && $existing->isCredited();
     }
 
+    // =============================================
+    // STRIPE
+    // =============================================
+
+    public function creditTokensFromStripePurchase(
+        User $user,
+        PremiumPlan $plan,
+        string $stripeSessionId,
+        string $stripeStatus,
+    ): Transaction {
+        $isPaid = $stripeStatus === Transaction::STRIPE_STATUS_COMPLETE;
+
+        if ($isPaid) {
+            $user->addTokens($plan->getTokensGiven());
+            $user->addBoostTokens($plan->getBoostTokensGiven());
+        }
+
+        $tx = new Transaction();
+        $tx->setUser($user);
+        $tx->setPlan($plan);
+        $tx->setType(Transaction::TYPE_PURCHASE);
+        $tx->setAmount($plan->getPrice());
+        $tx->setCurrency($plan->getCurrency());
+        $tx->setTokensAmount($plan->getTokensGiven());
+        $tx->setBoostTokensAmount($plan->getBoostTokensGiven());
+        $tx->setStripeSessionId($stripeSessionId);
+        $tx->setStripeStatus($stripeStatus);
+        $tx->setIsCredited($isPaid);
+        $tx->setCreditedAt($isPaid ? new \DateTimeImmutable() : null);
+        $tx->setDescription('Achat du plan ' . $plan->getName() . ' (Stripe)' . ($isPaid ? '' : ' — en attente'));
+
+        $this->em->persist($tx);
+        $this->em->flush();
+
+        return $tx;
+    }
+
+    public function completePendingStripeTransaction(Transaction $tx): bool
+    {
+        if ($tx->isCredited()) {
+            return false;
+        }
+
+        $user = $tx->getUser();
+        if (!$user) {
+            return false;
+        }
+
+        $user->addTokens($tx->getTokensAmount());
+        $user->addBoostTokens($tx->getBoostTokensAmount());
+
+        $tx->setIsCredited(true);
+        $tx->setCreditedAt(new \DateTimeImmutable());
+        $tx->setStripeStatus(Transaction::STRIPE_STATUS_COMPLETE);
+
+        $this->em->flush();
+
+        return true;
+    }
+
+    public function isStripeSessionAlreadyCaptured(string $stripeSessionId): bool
+    {
+        $existing = $this->transactionRepo->findByStripeSessionId($stripeSessionId);
+
+        return $existing !== null && $existing->isCredited();
+    }
+
     public function processRefund(User $user, string $paypalOrderId, string $description): void
     {
         $tokens = 0;

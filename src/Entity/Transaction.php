@@ -26,6 +26,10 @@ class Transaction
     public const CRYPTO_STATUS_PENDING   = 'pending';
     public const CRYPTO_STATUS_CANCELLED = 'cancelled';
 
+    public const STRIPE_STATUS_COMPLETE = 'complete';
+    public const STRIPE_STATUS_OPEN     = 'open';
+    public const STRIPE_STATUS_EXPIRED  = 'expired';
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -69,6 +73,12 @@ class Transaction
 
     #[ORM\Column(length: 50, nullable: true)]
     private ?string $cryptoStatus = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $stripeSessionId = null;
+
+    #[ORM\Column(length: 50, nullable: true)]
+    private ?string $stripeStatus = null;
 
     #[ORM\Column(length: 500, nullable: true)]
     private ?string $description = null;
@@ -216,6 +226,28 @@ class Transaction
     public function setCryptoStatus(?string $cryptoStatus): static
     {
         $this->cryptoStatus = $cryptoStatus;
+        return $this;
+    }
+
+    public function getStripeSessionId(): ?string
+    {
+        return $this->stripeSessionId;
+    }
+
+    public function setStripeSessionId(?string $stripeSessionId): static
+    {
+        $this->stripeSessionId = $stripeSessionId;
+        return $this;
+    }
+
+    public function getStripeStatus(): ?string
+    {
+        return $this->stripeStatus;
+    }
+
+    public function setStripeStatus(?string $stripeStatus): static
+    {
+        $this->stripeStatus = $stripeStatus;
         return $this;
     }
 
