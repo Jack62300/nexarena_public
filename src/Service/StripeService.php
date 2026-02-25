@@ -135,6 +135,101 @@ class StripeService
     }
 
     /**
+     * Debug version of createCheckoutSession: returns detailed error info instead of null.
+     * Remove after debugging.
+     *
+     * @return array{session?: array, error?: string, httpCode?: int, curlError?: string, secretKeyEmpty?: bool, response?: string}
+     */
+    public function createCheckoutSessionDebug(
+        int    $amountCents,
+        string $currency,
+        string $productName,
+        int    $planId,
+        int    $userId,
+        string $successUrl,
+        string $cancelUrl,
+    ): array {
+        $secretKey = $this->getSecretKey();
+        if (!$secretKey) {
+            return ['error' => 'Secret key is empty', 'secretKeyEmpty' => true];
+        }
+
+        $url = self::API_BASE . '/checkout/sessions';
+
+        $fields = [
+            'mode'                                           => 'payment',
+            'line_items[0][quantity]'                        => 1,
+            'line_items[0][price_data][currency]'            => strtolower($currency),
+            'line_items[0][price_data][unit_amount]'         => $amountCents,
+            'line_items[0][price_data][product_data][name]'  => mb_substr($productName, 0, 250),
+            'success_url'                                    => $successUrl,
+            'cancel_url'                                     => $cancelUrl,
+            'metadata[plan_id]'                              => $planId,
+            'metadata[user_id]'                              => $userId,
+            'payment_method_types[0]'                        => 'card',
+        ];
+
+        $ch = curl_init($url);
+        if ($ch === false) {
+            return ['error' => 'curl_init failed'];
+        }
+
+        $opts = [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT        => 30,
+            CURLOPT_CONNECTTIMEOUT => 10,
+            CURLOPT_FOLLOWLOCATION => false,
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_SSL_VERIFYHOST => 2,
+            CURLOPT_USERPWD        => $secretKey . ':',
+            CURLOPT_CUSTOMREQUEST  => 'POST',
+            CURLOPT_POSTFIELDS     => http_build_query($fields),
+            CURLOPT_HTTPHEADER     => ['Content-Type: application/x-www-form-urlencoded'],
+        ];
+
+        $caInfo = $this->getCaInfo();
+        if ($caInfo) {
+            $opts[CURLOPT_CAINFO] = $caInfo;
+        }
+
+        curl_setopt_array($ch, $opts);
+
+        $response  = curl_exec($ch);
+        $httpCode  = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
+        $curlErrno = curl_errno($ch);
+        curl_close($ch);
+
+        if ($curlError) {
+            return ['error' => 'Curl error #' . $curlErrno . ': ' . $curlError, 'httpCode' => $httpCode];
+        }
+
+        if (!is_string($response) || $response === '') {
+            return ['error' => 'Empty response', 'httpCode' => $httpCode];
+        }
+
+        $data = json_decode($response, true);
+        if (!is_array($data)) {
+            return ['error' => 'Invalid JSON', 'httpCode' => $httpCode, 'response' => mb_substr($response, 0, 300)];
+        }
+
+        if ($httpCode >= 400) {
+            return [
+                'error'    => $data['error']['message'] ?? 'HTTP ' . $httpCode,
+                'httpCode' => $httpCode,
+                'code'     => $data['error']['code'] ?? '',
+                'type'     => $data['error']['type'] ?? '',
+            ];
+        }
+
+        if (!isset($data['id'], $data['url'])) {
+            return ['error' => 'Missing id or url in response', 'httpCode' => $httpCode, 'response' => mb_substr($response, 0, 300)];
+        }
+
+        return ['session' => $data];
+    }
+
+    /**
      * Create a Stripe Checkout Session (hosted payment page).
      * Amount in cents (e.g. 1000 = €10.00).
      *

@@ -521,7 +521,7 @@ class PremiumController extends AbstractController
     public function stripeCheckout(Request $request): JsonResponse
     {
         if (!$this->stripe->isEnabled()) {
-            return new JsonResponse(['error' => 'Paiement Stripe non active.'], 400);
+            return new JsonResponse(['error' => '[DEBUG] stripe_enabled=false'], 400);
         }
 
         $data   = json_decode($request->getContent(), true);
@@ -529,7 +529,7 @@ class PremiumController extends AbstractController
 
         $plan = $this->planRepo->find($planId);
         if (!$plan || !$plan->isActive() || (float) $plan->getPrice() <= 0) {
-            return new JsonResponse(['error' => 'Plan introuvable, inactif ou sans prix.'], 400);
+            return new JsonResponse(['error' => '[DEBUG] Plan invalide id=' . $planId], 400);
         }
 
         /** @var User $user */
@@ -537,13 +537,11 @@ class PremiumController extends AbstractController
 
         $amountCents = (int) round((float) $plan->getPrice() * 100);
 
-        // Build the success_url manually to keep the {CHECKOUT_SESSION_ID} literal
-        // (Symfony's generateUrl would URL-encode the curly braces, breaking Stripe's substitution)
         $baseReturnUrl = $this->generateUrl('premium_stripe_return', [], UrlGeneratorInterface::ABSOLUTE_URL);
         $successUrl    = $baseReturnUrl . '?session_id={CHECKOUT_SESSION_ID}';
         $cancelUrl     = $this->generateUrl('premium_index', [], UrlGeneratorInterface::ABSOLUTE_URL);
 
-        $session = $this->stripe->createCheckoutSession(
+        $debugInfo = $this->stripe->createCheckoutSessionDebug(
             $amountCents,
             $plan->getCurrency(),
             'Nexarena - ' . $plan->getName(),
@@ -553,18 +551,17 @@ class PremiumController extends AbstractController
             $cancelUrl,
         );
 
-        if (!$session || !isset($session['id'], $session['url'])) {
-            $this->logger->error('Premium: Stripe createCheckoutSession returned null.', ['planId' => $planId]);
-            return new JsonResponse(['error' => 'Erreur Stripe. Veuillez reessayer.'], 500);
+        if (!isset($debugInfo['session'])) {
+            return new JsonResponse([
+                'error'  => 'Erreur Stripe : ' . ($debugInfo['error'] ?? 'inconnue'),
+                'detail' => $debugInfo,
+            ], 500);
         }
+
+        $session = $debugInfo['session'];
 
         $request->getSession()->set('stripe_session_id', $session['id']);
         $request->getSession()->set('stripe_plan_id', $plan->getId());
-
-        $this->logger->info('Premium: Stripe session created.', [
-            'sessionId' => $session['id'],
-            'planId'    => $planId,
-        ]);
 
         return new JsonResponse([
             'sessionId'  => $session['id'],
