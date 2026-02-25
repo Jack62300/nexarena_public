@@ -277,46 +277,6 @@
 .nxc-win-send:hover { background: #3de074; transform: scale(1.06); }
 .nxc-win-send:disabled { background: rgba(69,248,130,.2); cursor: not-allowed; transform: none; }
 
-/* ── Mobile FAB ───────────────────────────────────────────── */
-#nxc-fab {
-    display: none;
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 54px;
-    height: 54px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #45f882, #2ecc71);
-    color: #0a1018;
-    border: none;
-    cursor: pointer;
-    font-size: 22px;
-    z-index: 9990;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 20px rgba(69,248,130,.4);
-    transition: transform .15s, box-shadow .15s;
-}
-#nxc-fab:hover { transform: scale(1.08); box-shadow: 0 6px 28px rgba(69,248,130,.5); }
-
-#nxc-fab-badge {
-    position: absolute;
-    top: -3px;
-    right: -3px;
-    min-width: 19px;
-    height: 19px;
-    background: #e74c3c;
-    border-radius: 10px;
-    font-size: 10px;
-    font-weight: 800;
-    color: #fff;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    padding: 0 4px;
-    border: 2px solid #0a1018;
-}
-
 /* ── Mobile slide-up panel ───────────────────────────────── */
 #nxc-mob-panel {
     display: none;
@@ -476,7 +436,6 @@
 
 /* ── Responsive ───────────────────────────────────────────── */
 @media (max-width: 767px) {
-    #nxc-bar { display: none !important; }
     .nxc-win { display: none !important; }
-    #nxc-fab { display: flex; }
+    #nxc-contacts { display: none; }  /* hide bubbles on mobile, header alone triggers panel */
 }

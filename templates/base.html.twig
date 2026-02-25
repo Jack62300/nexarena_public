@@ -192,21 +192,15 @@
     {% if app.user %}
     <link rel="stylesheet" href="{{ asset('assets/css/chat-bar.css') }}">
 
-    {# Desktop bar — contacts on the LEFT, "Messages" button anchored to the RIGHT #}
+    {# Chat bar — contacts on the LEFT, "Messages" button anchored to the RIGHT #}
     <div id="nxc-bar" style="display:none;">
         <div id="nxc-contacts"></div>
-        <div id="nxc-header">
+        <div id="nxc-header" onclick="NxChat.mobOpen()" role="button" tabindex="0" aria-label="Ouvrir les messages">
             <i class="fas fa-comments"></i>
             <span>Messages</span>
             <span id="nxc-total-badge" class="nxc-badge" style="display:none;"></span>
         </div>
     </div>
-
-    {# Mobile FAB #}
-    <button id="nxc-fab" onclick="NxChat.mobOpen()" style="display:none;" aria-label="Ouvrir les messages">
-        <i class="fas fa-comments"></i>
-        <span id="nxc-fab-badge" style="display:none;"></span>
-    </button>
 
     {# Mobile conversation list panel #}
     <div id="nxc-mob-panel">
@@ -276,9 +270,7 @@
                         });
                         if (list.length > 0) {
                             var bar = document.getElementById('nxc-bar');
-                            var fab = document.getElementById('nxc-fab');
                             if (bar) bar.style.display = 'flex';
-                            if (fab) fab.style.display = 'flex';
                         }
                     }).catch(function () {});
             },
@@ -312,7 +304,6 @@
                             NxChat._updBubBadge(aid);
                             NxChat._updTotalBadge();
                             NxChat._updMobBadge(aid);
-                            NxChat._updFabBadge();
                             if (notify) NxChat._beep();
                         }).catch(function () {});
                 });
@@ -547,15 +538,6 @@
                 else b.style.display = 'none';
             },
 
-            _updFabBadge: function () {
-                var total = 0;
-                Object.keys(NxChat.convs).forEach(function (id) { total += NxChat.convs[id].unread; });
-                var b = document.getElementById('nxc-fab-badge');
-                if (!b) return;
-                if (total > 0) { b.textContent = total > 99 ? '99+' : total; b.style.display = 'flex'; }
-                else b.style.display = 'none';
-            },
-
             mobOpen: function () {
                 var p = document.getElementById('nxc-mob-panel');
                 if (p) p.classList.add('open');
@@ -572,7 +554,7 @@
                 NxChat.mobId = id;
                 c.unread = 0;
                 NxChat._updMobBadge(id);
-                NxChat._updFabBadge();
+                NxChat._updTotalBadge();
                 // Header
                 var nameEl = document.getElementById('nxc-mob-chat-name');
                 if (nameEl) nameEl.textContent = c.name + ' — ' + c.title;
