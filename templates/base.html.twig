@@ -184,5 +184,500 @@
     })();
     </script>
     {% endif %}
+
+    {# ════════════════════════════════════════════
+       GLOBAL CHAT BAR — Facebook-style bottom chat
+       Only for logged-in users with active chats
+    ════════════════════════════════════════════ #}
+    {% if app.user %}
+    <link rel="stylesheet" href="{{ asset('assets/css/chat-bar.css') }}">
+
+    {# Desktop bar #}
+    <div id="nxc-bar" style="display:none;">
+        <div id="nxc-header">
+            <i class="fas fa-comments"></i>
+            <span>Messages</span>
+            <span id="nxc-total-badge" class="nxc-badge" style="display:none;"></span>
+        </div>
+        <div id="nxc-contacts"></div>
+    </div>
+
+    {# Mobile FAB #}
+    <button id="nxc-fab" onclick="NxChat.mobOpen()" style="display:none;" aria-label="Ouvrir les messages">
+        <i class="fas fa-comments"></i>
+        <span id="nxc-fab-badge" style="display:none;"></span>
+    </button>
+
+    {# Mobile conversation list panel #}
+    <div id="nxc-mob-panel">
+        <div class="nxc-mob-panel-hdr">
+            <i class="fas fa-comments" style="color:#45f882;font-size:17px;"></i>
+            <span>Messages</span>
+            <button class="nxc-mob-close" onclick="NxChat.mobClose()" aria-label="Fermer"><i class="fas fa-times"></i></button>
+        </div>
+        <div id="nxc-mob-list" class="nxc-mob-list"></div>
+    </div>
+
+    {# Mobile full-screen chat view #}
+    <div id="nxc-mob-chat">
+        <div class="nxc-mob-chat-hdr">
+            <button class="nxc-mob-back" onclick="NxChat.mobChatBack()" aria-label="Retour"><i class="fas fa-arrow-left"></i></button>
+            <span id="nxc-mob-chat-name" class="nxc-mob-chat-name"></span>
+        </div>
+        <div id="nxc-mob-chat-msgs" class="nxc-mob-chat-msgs"></div>
+        <div class="nxc-mob-chat-input">
+            <input type="text" id="nxc-mob-input" placeholder="Message..." maxlength="2000" autocomplete="off">
+            <button id="nxc-mob-send" class="nxc-mob-chat-send" onclick="NxChat.mobSend()" aria-label="Envoyer">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <script nonce="{{ csp_nonce() }}">
+    (function () {
+        'use strict';
+
+        var NxChat = {
+            uid:      {{ app.user.id }},
+            convUrl:  '{{ path('api_chat_conversations') }}',
+            convs:    {},   // appId → state object
+            wins:     [],   // open desktop window appIds (ordered)
+            maxWins:  3,
+            mobId:    null, // currently open mobile chat appId
+
+            /* ── Bootstrap ─────────────────────────────── */
+            init: function () {
+                this._loadConvs();
+                setInterval(function () { NxChat._loadConvs(); }, 15000);
+                setInterval(function () { NxChat._poll(); }, 4000);
+                var mi = document.getElementById('nxc-mob-input');
+                if (mi) mi.addEventListener('keypress', function (e) {
+                    if (e.key === 'Enter') { e.preventDefault(); NxChat.mobSend(); }
+                });
+            },
+
+            /* ── Load / refresh conversation list ──────── */
+            _loadConvs: function () {
+                fetch(NxChat.convUrl, { credentials: 'same-origin' })
+                    .then(function (r) { if (!r.ok) throw 0; return r.json(); })
+                    .then(function (list) {
+                        list.forEach(function (c) {
+                            if (NxChat.convs[c.appId]) return;
+                            NxChat.convs[c.appId] = {
+                                appId: c.appId, role: c.role,
+                                name: c.contactName, avatar: c.contactAvatar,
+                                title: c.listingTitle, server: c.serverName,
+                                mUrl: c.messagesUrl, sUrl: c.sendUrl,
+                                lastId: 0, unread: 0,
+                                open: false, min: false, msgs: []
+                            };
+                            NxChat._addBubble(c.appId);
+                            NxChat._addMobItem(c.appId);
+                        });
+                        if (list.length > 0) {
+                            var bar = document.getElementById('nxc-bar');
+                            var fab = document.getElementById('nxc-fab');
+                            if (bar) bar.style.display = 'flex';
+                            if (fab) fab.style.display = 'flex';
+                        }
+                    }).catch(function () {});
+            },
+
+            /* ── Poll all known conversations for new msgs ─ */
+            _poll: function () {
+                Object.keys(NxChat.convs).forEach(function (id) {
+                    var c   = NxChat.convs[id];
+                    var aid = parseInt(id);
+                    fetch(c.mUrl + '?after=' + c.lastId, { credentials: 'same-origin' })
+                        .then(function (r) { if (!r.ok) return null; return r.json(); })
+                        .then(function (msgs) {
+                            if (!Array.isArray(msgs) || !msgs.length) return;
+                            var notify = false;
+                            msgs.forEach(function (m) {
+                                c.lastId = m.id;
+                                c.msgs.push(m);
+                                var fromOther = m.senderId !== NxChat.uid;
+                                // Desktop window
+                                if (c.open && !c.min) {
+                                    NxChat._appendMsg('nxc-msgs-' + aid, m);
+                                } else if (fromOther) {
+                                    c.unread++;
+                                }
+                                // Mobile chat
+                                if (NxChat.mobId === aid) {
+                                    NxChat._appendMsg('nxc-mob-chat-msgs', m);
+                                }
+                                if (fromOther) notify = true;
+                            });
+                            NxChat._updBubBadge(aid);
+                            NxChat._updTotalBadge();
+                            NxChat._updMobBadge(aid);
+                            NxChat._updFabBadge();
+                            if (notify) NxChat._beep();
+                        }).catch(function () {});
+                });
+            },
+
+            /* ── Desktop bubbles ──────────────────────────── */
+            _addBubble: function (id) {
+                var c  = NxChat.convs[id];
+                var el = document.createElement('div');
+                el.className = 'nxc-bubble';
+                el.id    = 'nxc-bub-' + id;
+                el.title = c.name + '\n' + c.title + ' · ' + c.server;
+                el.innerHTML = NxChat._avImg(c.avatar, c.name, 'nxc-bubble-initial') +
+                    '<span class="nxc-bubble-badge" id="nxc-bubbadge-' + id + '" style="display:none;"></span>';
+                el.addEventListener('click', function () { NxChat.openWin(id); });
+                var ct = document.getElementById('nxc-contacts');
+                if (ct) ct.appendChild(el);
+            },
+
+            _updBubBadge: function (id) {
+                var c = NxChat.convs[id];
+                var b = document.getElementById('nxc-bubbadge-' + id);
+                if (!b) return;
+                if (c.unread > 0) { b.textContent = c.unread > 9 ? '9+' : c.unread; b.style.display = 'flex'; }
+                else { b.style.display = 'none'; }
+            },
+
+            _updTotalBadge: function () {
+                var total = 0;
+                Object.keys(NxChat.convs).forEach(function (id) { total += NxChat.convs[id].unread; });
+                var b = document.getElementById('nxc-total-badge');
+                if (!b) return;
+                if (total > 0) { b.textContent = total > 99 ? '99+' : total; b.style.display = 'inline-flex'; }
+                else b.style.display = 'none';
+            },
+
+            /* ── Desktop windows ──────────────────────────── */
+            openWin: function (rawId) {
+                var id = parseInt(rawId);
+                var c  = NxChat.convs[id];
+                if (!c) return;
+
+                // Already open → unminimize / focus
+                if (c.open) {
+                    if (c.min) {
+                        var w = document.getElementById('nxc-win-' + id);
+                        if (w) w.classList.remove('nxc-win--minimized');
+                        c.min = false;
+                    }
+                    c.unread = 0;
+                    NxChat._updBubBadge(id);
+                    NxChat._updTotalBadge();
+                    var msgs = document.getElementById('nxc-msgs-' + id);
+                    if (msgs) msgs.scrollTop = msgs.scrollHeight;
+                    return;
+                }
+
+                // Evict oldest if at max
+                if (NxChat.wins.length >= NxChat.maxWins) NxChat.closeWin(NxChat.wins[0]);
+
+                c.open = true; c.min = false; c.unread = 0;
+                NxChat.wins.push(id);
+                NxChat._buildWin(id);
+                NxChat._reposition();
+                NxChat._updBubBadge(id);
+                NxChat._updTotalBadge();
+                NxChat._loadWinMsgs(id);
+            },
+
+            closeWin: function (rawId) {
+                var id = parseInt(rawId);
+                var c  = NxChat.convs[id];
+                if (!c) return;
+                c.open = false; c.min = false;
+                var w = document.getElementById('nxc-win-' + id);
+                if (w) w.remove();
+                NxChat.wins = NxChat.wins.filter(function (x) { return x !== id; });
+                NxChat._reposition();
+            },
+
+            toggleMin: function (rawId) {
+                var id = parseInt(rawId);
+                var c  = NxChat.convs[id];
+                if (!c) return;
+                var w = document.getElementById('nxc-win-' + id);
+                if (!w) return;
+                c.min = !c.min;
+                w.classList.toggle('nxc-win--minimized', c.min);
+                if (!c.min) {
+                    var msgs = document.getElementById('nxc-msgs-' + id);
+                    if (msgs) msgs.scrollTop = msgs.scrollHeight;
+                    c.unread = 0;
+                    NxChat._updBubBadge(id);
+                    NxChat._updTotalBadge();
+                }
+            },
+
+            _buildWin: function (id) {
+                var c = NxChat.convs[id];
+                var av = NxChat._avWinHdr(c.avatar, c.name);
+                var w  = document.createElement('div');
+                w.className = 'nxc-win'; w.id = 'nxc-win-' + id;
+                w.innerHTML =
+                    '<div class="nxc-win-hdr" onclick="NxChat.toggleMin(' + id + ')">' +
+                        av +
+                        '<div class="nxc-win-hdr-info">' +
+                            '<span class="nxc-win-name">' + NxChat._e(c.name) + '</span>' +
+                            '<span class="nxc-win-sub">' + NxChat._e(c.title) + ' · ' + NxChat._e(c.server) + '</span>' +
+                        '</div>' +
+                        '<div class="nxc-win-hdr-btns">' +
+                            '<button class="nxc-win-btn" onclick="event.stopPropagation();NxChat.closeWin(' + id + ');" title="Fermer"><i class="fas fa-times"></i></button>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="nxc-win-body">' +
+                        '<div class="nxc-win-msgs" id="nxc-msgs-' + id + '">' +
+                            '<div class="nxc-empty" id="nxc-empty-' + id + '"><i class="fas fa-comment-dots"></i><span>Aucun message pour l\'instant</span></div>' +
+                        '</div>' +
+                        '<div class="nxc-win-input">' +
+                            '<input type="text" id="nxc-inp-' + id + '" placeholder="Message..." maxlength="2000" autocomplete="off" ' +
+                                'onkeypress="if(event.key===\'Enter\'){event.preventDefault();NxChat.send(' + id + ');}">' +
+                            '<button class="nxc-win-send" id="nxc-sbtn-' + id + '" onclick="NxChat.send(' + id + ');" title="Envoyer"><i class="fas fa-paper-plane"></i></button>' +
+                        '</div>' +
+                    '</div>';
+                document.body.appendChild(w);
+            },
+
+            _reposition: function () {
+                var W = 298, G = 8, base = 8;
+                NxChat.wins.forEach(function (id, i) {
+                    var w = document.getElementById('nxc-win-' + id);
+                    if (w) w.style.right = (base + i * (W + G)) + 'px';
+                });
+            },
+
+            _loadWinMsgs: function (id) {
+                var c = NxChat.convs[id];
+                var box = document.getElementById('nxc-msgs-' + id);
+
+                // Use cached messages if we already loaded them
+                if (c.msgs.length > 0) {
+                    var emp = document.getElementById('nxc-empty-' + id);
+                    if (emp) emp.remove();
+                    c.msgs.forEach(function (m) { NxChat._appendMsg('nxc-msgs-' + id, m, true); });
+                    if (box) box.scrollTop = box.scrollHeight;
+                    return;
+                }
+
+                fetch(c.mUrl, { credentials: 'same-origin' })
+                    .then(function (r) { if (!r.ok) return []; return r.json(); })
+                    .then(function (msgs) {
+                        if (!Array.isArray(msgs)) return;
+                        var emp = document.getElementById('nxc-empty-' + id);
+                        if (msgs.length && emp) emp.remove();
+                        msgs.forEach(function (m) {
+                            c.msgs.push(m); c.lastId = m.id;
+                            NxChat._appendMsg('nxc-msgs-' + id, m, true);
+                        });
+                        if (box) box.scrollTop = box.scrollHeight;
+                    }).catch(function () {});
+            },
+
+            send: function (rawId) {
+                var id  = parseInt(rawId);
+                var c   = NxChat.convs[id];
+                if (!c) return;
+                var inp = document.getElementById('nxc-inp-' + id);
+                var btn = document.getElementById('nxc-sbtn-' + id);
+                if (!inp) return;
+                var txt = inp.value.trim();
+                if (!txt) return;
+                btn.disabled = true;
+                fetch(c.sUrl, {
+                    method: 'POST', credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content: txt })
+                }).then(function (r) { if (!r.ok) throw 0; return r.json(); })
+                .then(function (m) {
+                    if (m.id) {
+                        inp.value = '';
+                        c.lastId = m.id; c.msgs.push(m);
+                        var emp = document.getElementById('nxc-empty-' + id);
+                        if (emp) emp.remove();
+                        NxChat._appendMsg('nxc-msgs-' + id, m);
+                    }
+                    btn.disabled = false;
+                    inp.focus();
+                }).catch(function () { btn.disabled = false; });
+            },
+
+            /* ── Shared message rendering ─────────────────── */
+            _appendMsg: function (boxId, msg, skipScroll) {
+                var box = document.getElementById(boxId);
+                if (!box) return;
+                var nearBottom = box.scrollTop + box.clientHeight >= box.scrollHeight - 40;
+                var isMine = msg.senderId === NxChat.uid;
+                var el = document.createElement('div');
+                el.className = 'nxc-msg ' + (isMine ? 'nxc-msg--mine' : 'nxc-msg--other');
+                var txt = document.createElement('div');
+                txt.textContent = msg.content;
+                el.appendChild(txt);
+                var meta = document.createElement('div');
+                meta.className = 'nxc-msg-meta';
+                meta.textContent = (isMine ? 'Vous' : msg.senderName) + ' · ' + msg.createdAt;
+                el.appendChild(meta);
+                box.appendChild(el);
+                if (!skipScroll || nearBottom) box.scrollTop = box.scrollHeight;
+            },
+
+            /* ── Mobile ───────────────────────────────────── */
+            _addMobItem: function (id) {
+                var c  = NxChat.convs[id];
+                var li = document.createElement('div');
+                li.className = 'nxc-mob-item';
+                li.id = 'nxc-mobitem-' + id;
+                li.innerHTML =
+                    '<div class="nxc-mob-av">' + NxChat._avImg(c.avatar, c.name, '') + '</div>' +
+                    '<div class="nxc-mob-info">' +
+                        '<div class="nxc-mob-name">' + NxChat._e(c.name) + '</div>' +
+                        '<div class="nxc-mob-sub">' + NxChat._e(c.title) + ' — ' + NxChat._e(c.server) + '</div>' +
+                    '</div>' +
+                    '<span class="nxc-mob-badge" id="nxc-mobbadge-' + id + '"></span>';
+                li.addEventListener('click', function () { NxChat.mobOpenChat(parseInt(id)); });
+                var list = document.getElementById('nxc-mob-list');
+                if (list) list.appendChild(li);
+            },
+
+            _updMobBadge: function (id) {
+                var c = NxChat.convs[id];
+                var b = document.getElementById('nxc-mobbadge-' + id);
+                if (!b) return;
+                if (c.unread > 0) { b.textContent = c.unread > 9 ? '9+' : c.unread; b.style.display = 'flex'; }
+                else b.style.display = 'none';
+            },
+
+            _updFabBadge: function () {
+                var total = 0;
+                Object.keys(NxChat.convs).forEach(function (id) { total += NxChat.convs[id].unread; });
+                var b = document.getElementById('nxc-fab-badge');
+                if (!b) return;
+                if (total > 0) { b.textContent = total > 99 ? '99+' : total; b.style.display = 'flex'; }
+                else b.style.display = 'none';
+            },
+
+            mobOpen: function () {
+                var p = document.getElementById('nxc-mob-panel');
+                if (p) p.classList.add('open');
+            },
+
+            mobClose: function () {
+                var p = document.getElementById('nxc-mob-panel');
+                if (p) p.classList.remove('open');
+            },
+
+            mobOpenChat: function (id) {
+                var c = NxChat.convs[id];
+                if (!c) return;
+                NxChat.mobId = id;
+                c.unread = 0;
+                NxChat._updMobBadge(id);
+                NxChat._updFabBadge();
+                // Header
+                var nameEl = document.getElementById('nxc-mob-chat-name');
+                if (nameEl) nameEl.textContent = c.name + ' — ' + c.title;
+                // Clear box
+                var box = document.getElementById('nxc-mob-chat-msgs');
+                if (box) box.innerHTML = '';
+                // Input reset
+                var inp = document.getElementById('nxc-mob-input');
+                if (inp) inp.value = '';
+                // Close panel, open chat
+                NxChat.mobClose();
+                var chat = document.getElementById('nxc-mob-chat');
+                if (chat) chat.classList.add('open');
+                // Load messages
+                if (c.msgs.length > 0) {
+                    c.msgs.forEach(function (m) { NxChat._appendMsg('nxc-mob-chat-msgs', m, true); });
+                    if (box) box.scrollTop = box.scrollHeight;
+                } else {
+                    fetch(c.mUrl, { credentials: 'same-origin' })
+                        .then(function (r) { if (!r.ok) return []; return r.json(); })
+                        .then(function (msgs) {
+                            if (!Array.isArray(msgs)) return;
+                            msgs.forEach(function (m) { c.msgs.push(m); c.lastId = m.id; NxChat._appendMsg('nxc-mob-chat-msgs', m, true); });
+                            var b2 = document.getElementById('nxc-mob-chat-msgs');
+                            if (b2) b2.scrollTop = b2.scrollHeight;
+                        }).catch(function () {});
+                }
+            },
+
+            mobChatBack: function () {
+                NxChat.mobId = null;
+                var chat = document.getElementById('nxc-mob-chat');
+                if (chat) chat.classList.remove('open');
+                NxChat.mobOpen();
+            },
+
+            mobSend: function () {
+                var id = NxChat.mobId;
+                if (!id) return;
+                var c  = NxChat.convs[id];
+                if (!c) return;
+                var inp = document.getElementById('nxc-mob-input');
+                var btn = document.getElementById('nxc-mob-send');
+                if (!inp) return;
+                var txt = inp.value.trim();
+                if (!txt) return;
+                btn.disabled = true;
+                fetch(c.sUrl, {
+                    method: 'POST', credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content: txt })
+                }).then(function (r) { if (!r.ok) throw 0; return r.json(); })
+                .then(function (m) {
+                    if (m.id) { inp.value = ''; c.lastId = m.id; c.msgs.push(m); NxChat._appendMsg('nxc-mob-chat-msgs', m); }
+                    btn.disabled = false;
+                    inp.focus();
+                }).catch(function () { btn.disabled = false; });
+            },
+
+            /* ── Avatar helpers ───────────────────────────── */
+            _avImg: function (avatar, name, cls) {
+                var init = name ? name.charAt(0).toUpperCase() : '?';
+                if (avatar) {
+                    var src = avatar.indexOf('http') === 0 ? avatar : '/uploads/avatars/' + avatar;
+                    return '<img src="' + NxChat._e(src) + '" alt="" style="width:100%;height:100%;object-fit:cover;">';
+                }
+                return cls ? '<span class="' + cls + '">' + NxChat._e(init) + '</span>' : NxChat._e(init);
+            },
+
+            _avWinHdr: function (avatar, name) {
+                var init = name ? name.charAt(0).toUpperCase() : '?';
+                var s    = 'width:28px;height:28px;border-radius:50%;background:#0d1b2d;border:1px solid #1e3048;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;';
+                if (avatar) {
+                    var src = avatar.indexOf('http') === 0 ? avatar : '/uploads/avatars/' + avatar;
+                    return '<div style="' + s + '"><img src="' + NxChat._e(src) + '" style="width:100%;height:100%;object-fit:cover;"></div>';
+                }
+                return '<div style="' + s + 'font-size:12px;font-weight:800;color:#e6edf3;text-transform:uppercase;">' + NxChat._e(init) + '</div>';
+            },
+
+            /* ── Notification beep ────────────────────────── */
+            _beep: function () {
+                try {
+                    var ctx = new (window.AudioContext || window.webkitAudioContext)();
+                    var o = ctx.createOscillator(), g = ctx.createGain();
+                    o.connect(g); g.connect(ctx.destination);
+                    o.frequency.value = 880; o.type = 'sine';
+                    g.gain.setValueAtTime(0.1, ctx.currentTime);
+                    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
+                    o.start(ctx.currentTime); o.stop(ctx.currentTime + 0.18);
+                } catch (e) {}
+            },
+
+            /* ── HTML escape ──────────────────────────────── */
+            _e: function (s) {
+                if (s === null || s === undefined) return '';
+                var d = document.createElement('div');
+                d.textContent = String(s);
+                return d.innerHTML;
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', function () { NxChat.init(); });
+        window.NxChat = NxChat;
+    })();
+    </script>
+    {% endif %}
 </body>
 </html>

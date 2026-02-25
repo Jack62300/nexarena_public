@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Entity\RecruitmentApplication;
 use App\Entity\RecruitmentListing;
 use App\Entity\User;
+
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -63,5 +64,43 @@ class RecruitmentApplicationRepository extends ServiceEntityRepository
             ->setParameter('user', $user)
             ->getQuery()
             ->getOneOrNullResult();
+    }
+
+    /**
+     * Active chats where $user is server owner or any collaborator (manager role).
+     * @return RecruitmentApplication[]
+     */
+    public function findActiveChatsByManager(User $user): array
+    {
+        return $this->createQueryBuilder('a')
+            ->select('DISTINCT a')
+            ->join('a.listing', 'l')
+            ->join('l.server', 's')
+            ->leftJoin('s.collaborators', 'sc', 'WITH', 'sc.user = :user')
+            ->where('a.chatEnabled = :enabled')
+            ->andWhere('s.owner = :user OR sc.id IS NOT NULL')
+            ->setParameter('enabled', true)
+            ->setParameter('user', $user)
+            ->orderBy('a.id', 'DESC')
+            ->setMaxResults(15)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Active chats where $user is the applicant.
+     * @return RecruitmentApplication[]
+     */
+    public function findActiveChatsByApplicant(User $user): array
+    {
+        return $this->createQueryBuilder('a')
+            ->where('a.applicantUser = :user')
+            ->andWhere('a.chatEnabled = :enabled')
+            ->setParameter('user', $user)
+            ->setParameter('enabled', true)
+            ->orderBy('a.id', 'DESC')
+            ->setMaxResults(15)
+            ->getQuery()
+            ->getResult();
     }
 }
