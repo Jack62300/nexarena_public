@@ -89,6 +89,10 @@ class ServerService
         $newH = (int) ($origH * $ratio);
 
         $dst = imagecreatetruecolor($newW, $newH);
+        if ($dst === false) {
+            imagedestroy($src);
+            return;
+        }
         imagealphablending($dst, false);
         imagesavealpha($dst, true);
         imagecopyresampled($dst, $src, 0, 0, 0, 0, $newW, $newH, $origW, $origH);
