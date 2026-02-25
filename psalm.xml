@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<psalm
+    errorLevel="3"
+    resolveFromConfigFile="true"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="https://getpsalm.org/schema/config"
+    xsi:schemaLocation="https://getpsalm.org/schema/config vendor/vimeo/psalm/config.xsd"
+    findUnusedVariablesAndParams="false"
+>
+    <projectFiles>
+        <directory name="src" />
+        <ignoreFiles>
+            <directory name="vendor" />
+        </ignoreFiles>
+    </projectFiles>
+
+    <plugins>
+        <pluginClass class="Psalm\SymfonyPsalmPlugin\Plugin">
+            <!-- Container XML gives Psalm accurate service return types -->
+            <containerXml>var/cache/dev/App_KernelDevDebugContainer.xml</containerXml>
+        </pluginClass>
+    </plugins>
+
+    <!-- Auto-generated Symfony config classes (PHP-based config, Symfony 5.3+) -->
+    <extraFiles>
+        <directory name="var/cache/dev/Symfony/Config" />
+    </extraFiles>
+
+    <issueHandlers>
+        <!-- Suppress noisy baseline issues that are not security/logic bugs -->
+        <MissingReturnType errorLevel="info" />
+        <MissingParamType errorLevel="info" />
+        <PropertyNotSetInConstructor errorLevel="info" />
+        <MixedAssignment errorLevel="info" />
+        <MixedArgumentTypeCoercion errorLevel="info" />
+        <MixedReturnTypeCoercion errorLevel="info" />
+        <MixedMethodCall errorLevel="info" />
+    </issueHandlers>
+</psalm>
