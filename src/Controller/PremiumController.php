@@ -537,12 +537,11 @@ class PremiumController extends AbstractController
 
         $amountCents = (int) round((float) $plan->getPrice() * 100);
 
-        $successUrl = $this->generateUrl(
-            'premium_stripe_return',
-            ['session_id' => '{CHECKOUT_SESSION_ID}'],
-            UrlGeneratorInterface::ABSOLUTE_URL
-        );
-        $cancelUrl = $this->generateUrl('premium_index', [], UrlGeneratorInterface::ABSOLUTE_URL);
+        // Build the success_url manually to keep the {CHECKOUT_SESSION_ID} literal
+        // (Symfony's generateUrl would URL-encode the curly braces, breaking Stripe's substitution)
+        $baseReturnUrl = $this->generateUrl('premium_stripe_return', [], UrlGeneratorInterface::ABSOLUTE_URL);
+        $successUrl    = $baseReturnUrl . '?session_id={CHECKOUT_SESSION_ID}';
+        $cancelUrl     = $this->generateUrl('premium_index', [], UrlGeneratorInterface::ABSOLUTE_URL);
 
         $session = $this->stripe->createCheckoutSession(
             $amountCents,

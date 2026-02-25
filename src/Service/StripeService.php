@@ -104,11 +104,20 @@ class StripeService
         }
 
         if (!is_string($response) || $response === '') {
+            $this->logger->error('Stripe: reponse vide ou invalide.', [
+                'httpCode' => $httpCode,
+                'path'     => $path,
+            ]);
             return null;
         }
 
         $data = json_decode($response, true);
         if (!is_array($data)) {
+            $this->logger->error('Stripe: JSON invalide.', [
+                'httpCode' => $httpCode,
+                'path'     => $path,
+                'response' => mb_substr($response, 0, 200),
+            ]);
             return null;
         }
 
@@ -117,6 +126,7 @@ class StripeService
                 'httpCode' => $httpCode,
                 'path'     => $path,
                 'error'    => $data['error']['message'] ?? mb_substr($response, 0, 300),
+                'code'     => $data['error']['code'] ?? '',
             ]);
             return null;
         }
