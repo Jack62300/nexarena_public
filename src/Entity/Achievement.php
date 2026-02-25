@@ -60,6 +60,12 @@ class Achievement
     #[ORM\Column(nullable: true)]
     private ?array $criteria = null;
 
+    #[ORM\Column(options: ['default' => 0])]
+    private int $rewardNexbits = 0;
+
+    #[ORM\Column(options: ['default' => 0])]
+    private int $rewardNexboost = 0;
+
     #[ORM\Column]
     private bool $isActive = true;
 
@@ -104,6 +110,12 @@ class Achievement
 
     public function getCriteria(): ?array { return $this->criteria; }
     public function setCriteria(?array $criteria): static { $this->criteria = $criteria; return $this; }
+
+    public function getRewardNexbits(): int { return $this->rewardNexbits; }
+    public function setRewardNexbits(int $rewardNexbits): static { $this->rewardNexbits = max(0, $rewardNexbits); return $this; }
+
+    public function getRewardNexboost(): int { return $this->rewardNexboost; }
+    public function setRewardNexboost(int $rewardNexboost): static { $this->rewardNexboost = max(0, $rewardNexboost); return $this; }
 
     public function isActive(): bool { return $this->isActive; }
     public function setIsActive(bool $isActive): static { $this->isActive = $isActive; return $this; }

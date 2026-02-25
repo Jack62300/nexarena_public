@@ -63,6 +63,18 @@ class AchievementFormType extends AbstractType
                 'attr' => ['min' => 1],
                 'empty_data' => '1',
             ])
+            ->add('rewardNexbits', IntegerType::class, [
+                'label' => false,
+                'required' => false,
+                'attr' => ['min' => 0],
+                'empty_data' => '0',
+            ])
+            ->add('rewardNexboost', IntegerType::class, [
+                'label' => false,
+                'required' => false,
+                'attr' => ['min' => 0],
+                'empty_data' => '0',
+            ])
             ->add('isActive', CheckboxType::class, [
                 'label' => 'Succès actif',
                 'required' => false,

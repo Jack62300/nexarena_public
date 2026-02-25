@@ -83,6 +83,33 @@ select.form-control-admin option { background: var(--bg-darker); }
                 {{ form_errors(form.criteriaThreshold) }}
             </div>
 
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="{{ form.rewardNexbits.vars.id }}">
+                            <i class="fas fa-coins" style="color:#ffd700;margin-right:4px;"></i> Récompense NexBits
+                        </label>
+                        {{ form_widget(form.rewardNexbits, {attr: {class: 'form-control-admin', placeholder: '0'}}) }}
+                        <div style="font-size:11px;color:var(--text-secondary);margin-top:4px;">
+                            NexBits crédités sur le compte de l'utilisateur à l'obtention.
+                        </div>
+                        {{ form_errors(form.rewardNexbits) }}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="{{ form.rewardNexboost.vars.id }}">
+                            <i class="fas fa-bolt" style="color:#ff6b35;margin-right:4px;"></i> Récompense NexBoost
+                        </label>
+                        {{ form_widget(form.rewardNexboost, {attr: {class: 'form-control-admin', placeholder: '0'}}) }}
+                        <div style="font-size:11px;color:var(--text-secondary);margin-top:4px;">
+                            NexBoost crédités sur le compte de l'utilisateur à l'obtention.
+                        </div>
+                        {{ form_errors(form.rewardNexboost) }}
+                    </div>
+                </div>
+            </div>
+
             <div class="form-group">
                 <label for="{{ form.iconFile.vars.id }}">Icône</label>
                 {% if achievement and achievement.iconFileName %}

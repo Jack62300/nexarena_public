@@ -44,6 +44,7 @@ class AchievementService
                 $ua->setUser($user);
                 $ua->setAchievement($achievement);
                 $this->em->persist($ua);
+                $this->creditReward($user, $achievement);
                 $awarded[] = $achievement;
             }
         }
@@ -68,6 +69,7 @@ class AchievementService
         $ua->setUser($user);
         $ua->setAchievement($achievement);
         $this->em->persist($ua);
+        $this->creditReward($user, $achievement);
         $this->em->flush();
 
         return true;
@@ -124,6 +126,16 @@ class AchievementService
             'custom' => false,
             default => false,
         };
+    }
+
+    private function creditReward(User $user, Achievement $achievement): void
+    {
+        if ($achievement->getRewardNexbits() > 0) {
+            $user->addTokens($achievement->getRewardNexbits());
+        }
+        if ($achievement->getRewardNexboost() > 0) {
+            $user->addBoostTokens($achievement->getRewardNexboost());
+        }
     }
 
     private function countVotesGivenByUser(User $user): int
