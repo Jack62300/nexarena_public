@@ -36,7 +36,7 @@ select.form-control-admin option { background: var(--bg-darker); }
 <div style="max-width:800px;">
     <div class="admin-table">
         <div class="admin-table__header">
-            <h3>{{ achievement ? 'Modifier «&nbsp;' ~ achievement.name ~ '&nbsp;»' : 'Nouveau succès' }}</h3>
+            <h3>{% if achievement %}Modifier « {{ achievement.name }} »{% else %}Nouveau succès{% endif %}</h3>
             <a href="{{ path('admin_achievements_list') }}" class="btn-admin btn-admin--outline btn-admin--sm">
                 <i class="fas fa-arrow-left"></i> Retour
             </a>
