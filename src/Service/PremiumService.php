@@ -323,7 +323,7 @@ class PremiumService
             return ['available' => false, 'reason' => 'La date selectionnee est passee.'];
         }
 
-        $endsAt = (clone $startsAt)->modify("+{$durationHours} hours");
+        $endsAt = \DateTimeImmutable::createFromInterface($startsAt)->modify("+{$durationHours} hours");
 
         if ($this->bookingRepo->hasActiveBookingForServer($server, $startsAt, $endsAt)) {
             return ['available' => false, 'reason' => 'Ce serveur est deja mis en avant sur ce creneau.'];
@@ -352,7 +352,7 @@ class PremiumService
             return false;
         }
 
-        $endsAt = (clone $startsAt)->modify("+{$durationHours} hours");
+        $endsAt = \DateTimeImmutable::createFromInterface($startsAt)->modify("+{$durationHours} hours");
 
         $server->removeBoostTokens($cost);
 
@@ -399,7 +399,7 @@ class PremiumService
 
     public function getTwitchLiveMonthlyEurPrice(): string
     {
-        return $this->settings->get('premium_twitch_live_cost_eur', '4.99');
+        return $this->settings->get('premium_twitch_live_cost_eur', '4.99') ?? '4.99';
     }
 
     public function hasTwitchLiveActive(Server $server): bool
@@ -429,7 +429,8 @@ class PremiumService
         $sub = $this->twitchSubRepo->findByServer($server);
         if ($sub) {
             // Renew: extend from current expiry or now
-            $base = $sub->isActive() ? $sub->getExpiresAt() : new \DateTimeImmutable();
+            $expiresAt = $sub->isActive() ? $sub->getExpiresAt() : null;
+            $base = $expiresAt instanceof \DateTimeImmutable ? $expiresAt : new \DateTimeImmutable();
             $sub->setExpiresAt($base->modify('+30 days'));
             $sub->setStatus(TwitchSubscription::STATUS_ACTIVE);
             $sub->setRenewedAt(new \DateTimeImmutable());
@@ -459,7 +460,7 @@ class PremiumService
                 ['name' => 'Serveur', 'value' => $server->getName(), 'inline' => true],
                 ['name' => 'Utilisateur', 'value' => $user->getUsername(), 'inline' => true],
                 ['name' => 'Methode', 'value' => 'NexBits (' . $cost . ')', 'inline' => true],
-                ['name' => 'Expire le', 'value' => $sub->getExpiresAt()->format('d/m/Y'), 'inline' => true],
+                ['name' => 'Expire le', 'value' => $sub->getExpiresAt()?->format('d/m/Y') ?? '', 'inline' => true],
             ],
         ]);
 
@@ -472,7 +473,8 @@ class PremiumService
 
         $sub = $this->twitchSubRepo->findByServer($server);
         if ($sub) {
-            $base = $sub->isActive() ? $sub->getExpiresAt() : new \DateTimeImmutable();
+            $expiresAt = $sub->isActive() ? $sub->getExpiresAt() : null;
+            $base = $expiresAt instanceof \DateTimeImmutable ? $expiresAt : new \DateTimeImmutable();
             $sub->setExpiresAt($base->modify('+30 days'));
             $sub->setStatus(TwitchSubscription::STATUS_ACTIVE);
             $sub->setRenewedAt(new \DateTimeImmutable());
@@ -504,7 +506,7 @@ class PremiumService
                 ['name' => 'Serveur', 'value' => $server->getName(), 'inline' => true],
                 ['name' => 'Utilisateur', 'value' => $user->getUsername(), 'inline' => true],
                 ['name' => 'Montant', 'value' => $price . ' EUR', 'inline' => true],
-                ['name' => 'Expire le', 'value' => $sub->getExpiresAt()->format('d/m/Y'), 'inline' => true],
+                ['name' => 'Expire le', 'value' => $sub->getExpiresAt()?->format('d/m/Y') ?? '', 'inline' => true],
             ],
         ]);
 
@@ -618,7 +620,7 @@ class PremiumService
             return ['available' => false, 'reason' => 'Veuillez selectionner un jeu.'];
         }
 
-        $endsAt = (clone $startsAt)->modify("+{$durationHours} hours");
+        $endsAt = \DateTimeImmutable::createFromInterface($startsAt)->modify("+{$durationHours} hours");
 
         if (!$this->bookingRepo->isPositionAvailable($scope, $position, $startsAt, $endsAt, $gc)) {
             return ['available' => false, 'reason' => 'Cette position est deja reservee pour ce creneau.'];
@@ -641,7 +643,7 @@ class PremiumService
             return false;
         }
 
-        $endsAt = (clone $startsAt)->modify("+{$durationHours} hours");
+        $endsAt = \DateTimeImmutable::createFromInterface($startsAt)->modify("+{$durationHours} hours");
 
         $server->removeBoostTokens($cost);
 

@@ -49,6 +49,7 @@
         <!-- Return value intentionally ignored by some callers -->
         <PossiblyUnusedReturnValue errorLevel="info" />
         <UnusedReturnValue errorLevel="info" />
+        <PossiblyUnusedParam errorLevel="info" />
 
         <!-- Psalm can't infer that final is not required in Symfony services -->
         <ClassMustBeFinal errorLevel="info" />

@@ -64,7 +64,7 @@ class ServerAdminService
             $p = preg_split('/\s+/', trim($mem['lines'][1]));
             $total = (int)($p[1] ?? 0);
             $used  = (int)($p[2] ?? 0);
-            $memData = ['total' => $total, 'used' => $used, 'percent' => $total > 0 ? round($used / $total * 100) : 0];
+            $memData = ['total' => $total, 'used' => $used, 'percent' => $total > 0 ? (int) round($used / $total * 100) : 0];
         }
 
         $diskData = ['total' => '-', 'used' => '-', 'percent' => 0];
