@@ -144,10 +144,10 @@ class FeaturedBookingController extends AbstractController
             return $this->redirectToRoute('featured_booking', ['id' => $server->getId()]);
         }
 
-        $scope = $request->request->get('scope', FeaturedBooking::SCOPE_HOMEPAGE);
-        $position = $request->request->getInt('position', 1);
+        $scope      = $request->request->get('scope', FeaturedBooking::SCOPE_HOMEPAGE);
+        $position   = $request->request->getInt('position', 1);
         $startsAtStr = $request->request->get('startsAt', '');
-        $duration = $request->request->getInt('duration', 12);
+        $slotsCount = $request->request->getInt('slots_count', 1);
 
         if (!in_array($scope, [FeaturedBooking::SCOPE_HOMEPAGE, FeaturedBooking::SCOPE_GAME], true)) {
             $this->addFlash('danger', 'Scope invalide.');
@@ -161,8 +161,8 @@ class FeaturedBookingController extends AbstractController
             $this->addFlash('danger', 'Date invalide.');
             return $this->redirectToRoute('featured_booking', ['id' => $server->getId()]);
         }
-        if (!in_array($duration, [12, 24, 36, 48], true)) {
-            $this->addFlash('danger', 'Duree invalide.');
+        if ($slotsCount < 1 || $slotsCount > 14) {
+            $this->addFlash('danger', 'Nombre de créneaux invalide (1–14).');
             return $this->redirectToRoute('featured_booking', ['id' => $server->getId()]);
         }
 
@@ -182,21 +182,40 @@ class FeaturedBookingController extends AbstractController
             $this->addFlash('danger', 'Format de date invalide.');
             return $this->redirectToRoute('featured_booking', ['id' => $server->getId()]);
         }
-        $user = $this->getUser();
 
-        $cost = $this->premiumService->calculatePositionBookingCost($scope, $position, $duration);
-        if (!$server->hasEnoughBoostTokens($cost)) {
-            $this->addFlash('danger', 'NexBoost insuffisants sur le serveur. Deposez des NexBoost depuis la page de gestion.');
+        // Check total cost upfront
+        $costPerSlot = $this->premiumService->getPositionCost($scope, $position);
+        $totalCost   = $costPerSlot * $slotsCount;
+        if (!$server->hasEnoughBoostTokens($totalCost)) {
+            $this->addFlash('danger', 'NexBoost insuffisants sur le serveur (besoin : ' . $totalCost . '). Déposez des NexBoost depuis la page de gestion.');
             return $this->redirectToRoute('featured_booking', ['id' => $server->getId()]);
         }
 
-        $result = $this->premiumService->bookPosition($server, $user, $scope, $position, $startsAt, $duration, $gc);
-        if ($result) {
-            $endsAt = (clone $startsAt)->modify("+{$duration} hours");
-            $scopeLabel = $scope === FeaturedBooking::SCOPE_HOMEPAGE ? 'Page d\'accueil' : $gc->getName();
-            $this->addFlash('success', 'Position #' . $position . ' reservee (' . $scopeLabel . ') du ' . $startsAt->format('d/m/Y H:i') . ' au ' . $endsAt->format('d/m/Y H:i') . ' !');
+        // Pre-validate all slots availability before booking anything
+        $slotStarts = [];
+        $cursor = clone $startsAt;
+        for ($i = 0; $i < $slotsCount; $i++) {
+            $check = $this->premiumService->canBookPosition($server, $scope, $position, $cursor, 12, $gc);
+            if (!$check['can']) {
+                $this->addFlash('danger', 'Le créneau du ' . $cursor->format('d/m H:i') . ' est déjà pris ou indisponible.');
+                return $this->redirectToRoute('featured_booking', ['id' => $server->getId()]);
+            }
+            $slotStarts[] = clone $cursor;
+            $cursor->modify('+12 hours');
+        }
+
+        // Book all slots
+        $user = $this->getUser();
+        foreach ($slotStarts as $slotStart) {
+            $this->premiumService->bookPosition($server, $user, $scope, $position, $slotStart, 12, $gc);
+        }
+
+        $endsAt = (clone end($slotStarts))->modify('+12 hours');
+        $scopeLabel = $scope === FeaturedBooking::SCOPE_HOMEPAGE ? "Page d'accueil" : $gc->getName();
+        if ($slotsCount === 1) {
+            $this->addFlash('success', 'Position #' . $position . ' réservée (' . $scopeLabel . ') du ' . $startsAt->format('d/m/Y H:i') . ' au ' . $endsAt->format('d/m/Y H:i') . ' !');
         } else {
-            $this->addFlash('danger', 'Reservation impossible. La position est peut-etre deja prise.');
+            $this->addFlash('success', $slotsCount . ' créneaux réservés sur la position #' . $position . ' (' . $scopeLabel . ') — du ' . $startsAt->format('d/m/Y H:i') . ' au ' . $endsAt->format('d/m/Y H:i') . ' · ' . $totalCost . ' NexBoost débités.');
         }
 
         return $this->redirectToRoute('featured_booking', ['id' => $server->getId()]);

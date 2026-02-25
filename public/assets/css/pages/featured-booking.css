@@ -381,6 +381,59 @@
 .fb-dot--taken  { background: rgba(231,74,59,0.5); }
 .fb-dot--past   { background: rgba(255,255,255,0.15); }
 
+/* ---- RANGE highlight ---- */
+.fb-day-card--range-start {
+    border-color: #ff6b35 !important;
+    background: rgba(255,107,53,0.18) !important;
+    border-radius: 10px 4px 4px 10px !important;
+}
+.fb-day-card--range-mid {
+    border-color: rgba(255,107,53,0.35) !important;
+    background: rgba(255,107,53,0.09) !important;
+    border-radius: 4px !important;
+}
+.fb-day-card--range-end {
+    border-color: rgba(255,107,53,0.5) !important;
+    background: rgba(255,107,53,0.12) !important;
+    border-radius: 4px 10px 10px 4px !important;
+}
+.fb-day-card--range-start .fb-day-card__dow,
+.fb-day-card--range-end   .fb-day-card__dow { color: #ff6b35; }
+.fb-day-card--range-start .fb-day-card__num,
+.fb-day-card--range-end   .fb-day-card__num { color: #fff; }
+
+/* Period presets */
+.fb-period-btns {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+}
+.fb-period-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 6px;
+    border-radius: 10px;
+    border: 1px solid #1a2e45;
+    background: #091524;
+    color: #8b949e;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    gap: 3px;
+}
+.fb-period-btn strong { font-size: 13px; color: #c9d1d9; }
+.fb-period-btn span   { font-size: 10px; color: #5a7a9c; }
+.fb-period-btn:hover  { border-color: rgba(255,107,53,0.4); }
+.fb-period-btn--active {
+    border-color: #ff6b35;
+    background: rgba(255,107,53,0.1);
+    color: #ff6b35;
+}
+.fb-period-btn--active strong { color: #ff6b35; }
+.fb-period-btn--active span   { color: rgba(255,107,53,0.7); }
+
 /* ---- OPTIONS (slot + duration) ---- */
 .fb-options__inner {
     display: flex;

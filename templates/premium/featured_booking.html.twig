@@ -109,11 +109,11 @@
                     </div>
                 </div>
 
-                {# Slot + Duration — shown after date selected #}
+                {# Slot + Period — shown after date selected #}
                 <div class="fb-card fb-options" id="fbOptions" style="display:none;">
                     <div class="fb-options__inner">
                         <div class="fb-options__group">
-                            <div class="fb-card__label"><i class="fas fa-clock"></i> Créneau horaire</div>
+                            <div class="fb-card__label"><i class="fas fa-clock"></i> Créneau de départ</div>
                             <div class="fb-slot-btns" id="slotBtnsWrap">
                                 <button type="button" class="fb-slot-btn fb-slot-btn--active" data-slot="00:00" onclick="selectSlot('00:00', this)">
                                     <i class="fas fa-moon"></i>
@@ -126,8 +126,21 @@
                             </div>
                         </div>
                         <div class="fb-options__group">
-                            <div class="fb-card__label"><i class="fas fa-hourglass-half"></i> Durée</div>
-                            <div class="fb-dur-btns" id="durBtnsWrap"></div>
+                            <div class="fb-card__label"><i class="fas fa-calendar-week"></i> Période</div>
+                            <div class="fb-period-btns" id="periodBtnsWrap">
+                                <button type="button" class="fb-period-btn fb-period-btn--active" data-slots="1" onclick="selectPeriod(1, this)">
+                                    <strong>12h</strong><span>1 créneau</span>
+                                </button>
+                                <button type="button" class="fb-period-btn" data-slots="2" onclick="selectPeriod(2, this)">
+                                    <strong>1 jour</strong><span>2 créneaux</span>
+                                </button>
+                                <button type="button" class="fb-period-btn" data-slots="6" onclick="selectPeriod(6, this)">
+                                    <strong>3 jours</strong><span>6 créneaux</span>
+                                </button>
+                                <button type="button" class="fb-period-btn" data-slots="14" onclick="selectPeriod(14, this)">
+                                    <strong>1 semaine</strong><span>14 créneaux</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -157,7 +170,7 @@
                             <input type="hidden" name="scope" id="confirmScope" value="homepage">
                             <input type="hidden" name="position" id="confirmPosition" value="1">
                             <input type="hidden" name="startsAt" id="confirmStartsAt" value="">
-                            <input type="hidden" name="duration" id="confirmDuration" value="12">
+                            <input type="hidden" name="slots_count" id="confirmSlotsCount" value="1">
                             <button type="submit" class="fb-summary__btn" id="confirmBtn">
                                 <i class="fas fa-crown"></i> Réserver maintenant
                             </button>
@@ -182,41 +195,52 @@
 {% block javascripts %}
 <script nonce="{{ csp_nonce() }}">
 (function() {
-    var homepageCosts = {{ homepage_costs|json_encode|raw }};
-    var gameCosts = {{ game_costs|json_encode|raw }};
+    var homepageCosts        = {{ homepage_costs|json_encode|raw }};
+    var gameCosts            = {{ game_costs|json_encode|raw }};
     var homepageAvailability = {{ homepage_availability|json_encode|raw }};
-    var serverId = {{ server.id }};
-    var serverGcName = {{ server_gc_name|json_encode|raw }};
-    var userBoostBalance = {{ user_boost_balance }};
+    var serverId             = {{ server.id }};
+    var serverGcName         = {{ server_gc_name|json_encode|raw }};
+    var userBoostBalance     = {{ user_boost_balance }};
 
-    var currentScope = 'homepage';
+    var currentScope    = 'homepage';
     var currentPosition = 1;
-    var currentCosts = homepageCosts;
-    var slotTaken = {};
+    var currentCosts    = homepageCosts;
+    var slotTaken       = {};
     var serverBookedSlots = [];
-    var costPer12h = homepageCosts[1] || 10;
+    var costPer12h      = homepageCosts[1] || 10;
 
     var today = new Date();
     today.setHours(0, 0, 0, 0);
-    var stripOffset = 0; // days offset from today for the 7-day strip
+    var stripOffset  = 0;
     var selectedDate = null;
     var selectedSlot = '00:00';
-    var selectedDuration = 12;
+    var slotsCount   = 1;   // number of 12h slots to book
 
-    var dayNames = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+    var dayNames   = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
     var monthNames = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
 
     function pad2(n) { return n < 10 ? '0' + n : '' + n; }
 
     function buildSlotTakenFromAvailability(availability, pos) {
         var result = {};
-        for (var key in availability) {
-            result[key] = !!(availability[key] && availability[key][pos]);
-        }
+        for (var key in availability) { result[key] = !!(availability[key] && availability[key][pos]); }
         return result;
     }
 
     slotTaken = buildSlotTakenFromAvailability(homepageAvailability, 1);
+
+    // Compute range start/end dates based on selectedDate + selectedSlot + slotsCount
+    function getRangeDates() {
+        if (!selectedDate) return { start: null, end: null };
+        var start = new Date(selectedDate + 'T' + selectedSlot + ':00');
+        var endMs  = start.getTime() + slotsCount * 12 * 3600 * 1000;
+        var end    = new Date(endMs - 1); // last ms of last slot
+        return { start: start, end: end };
+    }
+
+    function dateToYMD(d) {
+        return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate());
+    }
 
     // ---- DATE STRIP ----
     function renderStrip() {
@@ -229,24 +253,28 @@
         endDate.setDate(startDate.getDate() + 6);
 
         var rangeEl = document.getElementById('fbStripRange');
-        rangeEl.textContent = startDate.getDate() + ' ' + monthNames[startDate.getMonth()] + ' – ' + endDate.getDate() + ' ' + monthNames[endDate.getMonth()];
+        rangeEl.textContent = startDate.getDate() + ' ' + monthNames[startDate.getMonth()]
+                            + ' – ' + endDate.getDate() + ' ' + monthNames[endDate.getMonth()];
 
-        // Disable prev if at start
         document.getElementById('navPrev').disabled = stripOffset <= 0;
+
+        var range = getRangeDates();
+        var rangeStartYMD = range.start ? dateToYMD(range.start) : null;
+        var rangeEndYMD   = range.end   ? dateToYMD(range.end)   : null;
 
         for (var i = 0; i < 7; i++) {
             var d = new Date(startDate);
             d.setDate(startDate.getDate() + i);
 
-            var dateStr = d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
-            var isPast = d < today;
+            var dateStr = dateToYMD(d);
+            var isPast  = d < today;
 
-            var morningKey = dateStr + ' 00:00';
+            var morningKey   = dateStr + ' 00:00';
             var afternoonKey = dateStr + ' 12:00';
-            var morningTaken = slotTaken[morningKey] || false;
+            var morningTaken   = slotTaken[morningKey]   || false;
             var afternoonTaken = slotTaken[afternoonKey] || false;
-            var morningMine = serverBookedSlots.indexOf(morningKey) !== -1;
-            var afternoonMine = serverBookedSlots.indexOf(afternoonKey) !== -1;
+            var morningMine    = serverBookedSlots.indexOf(morningKey)   !== -1;
+            var afternoonMine  = serverBookedSlots.indexOf(afternoonKey) !== -1;
 
             var card = document.createElement('button');
             card.type = 'button';
@@ -257,6 +285,8 @@
                 card.disabled = true;
             } else if (morningMine && afternoonMine) {
                 card.classList.add('fb-day-card--mine');
+                card.setAttribute('data-date', dateStr);
+                card.addEventListener('click', function() { selectDateFn(this.getAttribute('data-date')); });
             } else if ((morningTaken || morningMine) && (afternoonTaken || afternoonMine)) {
                 card.classList.add('fb-day-card--full');
                 card.disabled = true;
@@ -266,8 +296,18 @@
                 card.addEventListener('click', function() { selectDateFn(this.getAttribute('data-date')); });
             }
 
-            if (selectedDate === dateStr) {
-                card.classList.add('fb-day-card--selected');
+            // Range highlight
+            if (rangeStartYMD && rangeEndYMD && dateStr >= rangeStartYMD && dateStr <= rangeEndYMD) {
+                card.classList.remove('fb-day-card--available','fb-day-card--mine');
+                if (dateStr === rangeStartYMD && dateStr === rangeEndYMD) {
+                    card.classList.add('fb-day-card--selected');
+                } else if (dateStr === rangeStartYMD) {
+                    card.classList.add('fb-day-card--range-start');
+                } else if (dateStr === rangeEndYMD) {
+                    card.classList.add('fb-day-card--range-end');
+                } else {
+                    card.classList.add('fb-day-card--range-mid');
+                }
             }
 
             card.innerHTML =
@@ -311,9 +351,9 @@
         fetch(url)
             .then(function(r) { return r.json(); })
             .then(function(data) {
-                slotTaken = data.slot_taken || {};
+                slotTaken         = data.slot_taken         || {};
                 serverBookedSlots = data.server_booked_slots || [];
-                costPer12h = data.cost_per_12h || 1;
+                costPer12h        = data.cost_per_12h        || 1;
                 selectedDate = null;
                 hideSummary();
                 document.getElementById('fbOptions').style.display = 'none';
@@ -339,7 +379,7 @@
         costPer12h = currentCosts[pos] || 1;
 
         if (currentScope === 'homepage') {
-            slotTaken = buildSlotTakenFromAvailability(homepageAvailability, pos);
+            slotTaken    = buildSlotTakenFromAvailability(homepageAvailability, pos);
             selectedDate = null;
             hideSummary();
             document.getElementById('fbOptions').style.display = 'none';
@@ -349,66 +389,46 @@
         }
     };
 
-    // ---- DATE SELECTION ----
+    // ---- DATE & SLOT SELECTION ----
     function selectDateFn(dateStr) {
         selectedDate = dateStr;
-        renderStrip(); // re-render to show selection
+        renderStrip();
         updateSlotButtons();
-        updateDurationButtons();
+        updatePeriodButtons();
         document.getElementById('fbOptions').style.display = '';
         updateSummary();
     }
 
     function updateSlotButtons() {
         if (!selectedDate) return;
-        var morningKey = selectedDate + ' 00:00';
+        var morningKey   = selectedDate + ' 00:00';
         var afternoonKey = selectedDate + ' 12:00';
-        var morningTaken = slotTaken[morningKey] || false;
+        var morningTaken   = slotTaken[morningKey]   || false;
         var afternoonTaken = slotTaken[afternoonKey] || false;
-        var morningMine = serverBookedSlots.indexOf(morningKey) !== -1;
-        var afternoonMine = serverBookedSlots.indexOf(afternoonKey) !== -1;
+        var morningMine    = serverBookedSlots.indexOf(morningKey)   !== -1;
+        var afternoonMine  = serverBookedSlots.indexOf(afternoonKey) !== -1;
 
         var btns = document.querySelectorAll('.fb-slot-btn');
         btns.forEach(function(btn) {
-            var slot = btn.getAttribute('data-slot');
-            var taken = (slot === '00:00') ? morningTaken : afternoonTaken;
-            var mine = (slot === '00:00') ? morningMine : afternoonMine;
-
-            btn.classList.remove('fb-slot-btn--active', 'fb-slot-btn--mine', 'fb-slot-btn--taken');
+            var slot  = btn.getAttribute('data-slot');
+            var taken = (slot === '00:00') ? morningTaken  : afternoonTaken;
+            var mine  = (slot === '00:00') ? morningMine   : afternoonMine;
+            btn.classList.remove('fb-slot-btn--active','fb-slot-btn--mine','fb-slot-btn--taken');
             btn.disabled = false;
-
-            if (mine) { btn.classList.add('fb-slot-btn--mine'); btn.disabled = true; }
-            else if (taken) { btn.classList.add('fb-slot-btn--taken'); btn.disabled = true; }
+            if (mine)        { btn.classList.add('fb-slot-btn--mine');  btn.disabled = true; }
+            else if (taken)  { btn.classList.add('fb-slot-btn--taken'); btn.disabled = true; }
         });
 
-        var morningOk = !morningTaken && !morningMine;
+        var morningOk   = !morningTaken   && !morningMine;
         var afternoonOk = !afternoonTaken && !afternoonMine;
-        var activeBtns = Array.from(btns).filter(function(b) { return !b.disabled; });
-
-        if (morningOk) { selectedSlot = '00:00'; btns[0].classList.add('fb-slot-btn--active'); }
+        if (morningOk)        { selectedSlot = '00:00'; btns[0].classList.add('fb-slot-btn--active'); }
         else if (afternoonOk) { selectedSlot = '12:00'; btns[1].classList.add('fb-slot-btn--active'); }
     }
 
-    function updateDurationButtons() {
-        var wrap = document.getElementById('durBtnsWrap');
-        wrap.innerHTML = '';
-        selectedDuration = 12;
-        [12, 24, 48].forEach(function(dur, idx) {
-            var cost = Math.ceil(dur / 12) * costPer12h;
-            var btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'fb-dur-btn' + (idx === 0 ? ' fb-dur-btn--active' : '');
-            btn.setAttribute('data-dur', dur);
-            btn.innerHTML = dur + 'h<span>' + cost + ' <i class="fas fa-bolt"></i></span>';
-            btn.addEventListener('click', function() {
-                selectedDuration = dur;
-                wrap.querySelectorAll('.fb-dur-btn').forEach(function(b) { b.classList.remove('fb-dur-btn--active'); });
-                btn.classList.add('fb-dur-btn--active');
-                document.getElementById('confirmDuration').value = dur;
-                updateSummary();
-            });
-            wrap.appendChild(btn);
-        });
+    function updatePeriodButtons() {
+        // just re-render strip so range highlight updates; buttons already rendered in HTML
+        renderStrip();
+        updateSummary();
     }
 
     window.selectSlot = function(slot, btn) {
@@ -416,6 +436,16 @@
         selectedSlot = slot;
         document.querySelectorAll('.fb-slot-btn:not(:disabled)').forEach(function(el) { el.classList.remove('fb-slot-btn--active'); });
         btn.classList.add('fb-slot-btn--active');
+        renderStrip();
+        updateSummary();
+    };
+
+    window.selectPeriod = function(n, btn) {
+        slotsCount = n;
+        document.querySelectorAll('.fb-period-btn').forEach(function(el) { el.classList.remove('fb-period-btn--active'); });
+        btn.classList.add('fb-period-btn--active');
+        document.getElementById('confirmSlotsCount').value = n;
+        renderStrip();
         updateSummary();
     };
 
@@ -425,37 +455,55 @@
         document.getElementById('fbSummaryContent').style.display = 'none';
     }
 
+    function formatDate(dateStr) {
+        var p = dateStr.split('-');
+        return p[2] + '/' + p[1] + '/' + p[0];
+    }
+
     function updateSummary() {
         if (!selectedDate) return;
 
-        var key = selectedDate + ' ' + selectedSlot;
-        var taken = slotTaken[key] || false;
-        var mine = serverBookedSlots.indexOf(key) !== -1;
-        var cost = Math.ceil(selectedDuration / 12) * costPer12h;
-        var canBook = !taken && !mine;
+        var startKey = selectedDate + ' ' + selectedSlot;
+        var taken    = slotTaken[startKey] || false;
+        var mine     = serverBookedSlots.indexOf(startKey) !== -1;
+        var canBook  = !taken && !mine;
 
-        var parts = selectedDate.split('-');
-        var dateFormatted = parts[2] + '/' + parts[1] + '/' + parts[0];
-        var slotLabel = selectedSlot === '00:00' ? '00:00 – 12:00' : '12:00 – 00:00';
+        var totalCost  = slotsCount * costPer12h;
         var scopeLabel = currentScope === 'homepage' ? "Page d'accueil" : serverGcName;
+        var slotLabel  = selectedSlot === '00:00' ? '00:00 – 12:00' : '12:00 – 00:00';
+
+        // Compute end date/time
+        var startDt = new Date(selectedDate + 'T' + selectedSlot + ':00');
+        var endDt   = new Date(startDt.getTime() + slotsCount * 12 * 3600 * 1000);
+        var endStr  = pad2(endDt.getDate()) + '/' + pad2(endDt.getMonth()+1) + '/' + endDt.getFullYear()
+                    + ' ' + pad2(endDt.getHours()) + ':00';
+
+        var periodLabel = slotsCount === 1  ? '12h (1 créneau)'
+                        : slotsCount === 2  ? '1 jour (2 créneaux)'
+                        : slotsCount === 6  ? '3 jours (6 créneaux)'
+                        : slotsCount === 14 ? '1 semaine (14 créneaux)'
+                        : (slotsCount * 12) + 'h (' + slotsCount + ' créneaux)';
 
         var rows = [
-            { icon: 'fa-bullseye', label: 'Emplacement', val: scopeLabel },
-            { icon: 'fa-trophy', label: 'Position', val: '#' + currentPosition },
-            { icon: 'fa-calendar', label: 'Date', val: dateFormatted },
-            { icon: 'fa-clock', label: 'Créneau', val: slotLabel },
-            { icon: 'fa-hourglass-half', label: 'Durée', val: selectedDuration + 'h' },
+            { icon: 'fa-bullseye',        label: 'Emplacement', val: scopeLabel },
+            { icon: 'fa-trophy',          label: 'Position',    val: '#' + currentPosition },
+            { icon: 'fa-play-circle',     label: 'Début',       val: formatDate(selectedDate) + ' ' + selectedSlot },
+            { icon: 'fa-stop-circle',     label: 'Fin',         val: endStr },
+            { icon: 'fa-calendar-week',   label: 'Période',     val: periodLabel },
         ];
 
         var rowsHtml = rows.map(function(r) {
-            return '<div class="fb-sum-row"><span class="fb-sum-row__label"><i class="fas ' + r.icon + '"></i> ' + r.label + '</span><span class="fb-sum-row__val">' + r.val + '</span></div>';
+            return '<div class="fb-sum-row">'
+                 + '<span class="fb-sum-row__label"><i class="fas ' + r.icon + '"></i> ' + r.label + '</span>'
+                 + '<span class="fb-sum-row__val">' + r.val + '</span>'
+                 + '</div>';
         }).join('');
 
         document.getElementById('fbSummaryRows').innerHTML = rowsHtml;
-        document.getElementById('fbCostNum').textContent = cost;
+        document.getElementById('fbCostNum').textContent = totalCost;
         document.getElementById('fbSummaryCost').style.color = canBook ? '#ff6b35' : '#e74a3b';
 
-        var balanceOk = userBoostBalance >= cost;
+        var balanceOk = userBoostBalance >= totalCost;
         var balEl = document.getElementById('fbSummaryBalance');
         if (!balanceOk) {
             balEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Solde insuffisant (' + userBoostBalance + ' NexBoost disponibles)';
@@ -465,16 +513,16 @@
             balEl.className = 'fb-summary__balance fb-summary__balance--ok';
         }
 
-        var btn = document.getElementById('confirmBtn');
-        btn.disabled = !canBook || !balanceOk;
+        var confirmBtn = document.getElementById('confirmBtn');
+        confirmBtn.disabled = !canBook || !balanceOk;
 
-        document.getElementById('confirmScope').value = currentScope;
-        document.getElementById('confirmPosition').value = currentPosition;
-        document.getElementById('confirmStartsAt').value = selectedDate + ' ' + selectedSlot;
-        document.getElementById('confirmDuration').value = selectedDuration;
+        document.getElementById('confirmScope').value      = currentScope;
+        document.getElementById('confirmPosition').value   = currentPosition;
+        document.getElementById('confirmStartsAt').value   = selectedDate + ' ' + selectedSlot;
+        document.getElementById('confirmSlotsCount').value = slotsCount;
 
         document.getElementById('fbSummaryPlaceholder').style.display = 'none';
-        document.getElementById('fbSummaryContent').style.display = '';
+        document.getElementById('fbSummaryContent').style.display     = '';
     }
 
     // ---- INIT ----
