@@ -35,5 +35,18 @@
         <MixedArgumentTypeCoercion errorLevel="info" />
         <MixedReturnTypeCoercion errorLevel="info" />
         <MixedMethodCall errorLevel="info" />
+
+        <!-- Symfony false positives: classes/methods are wired via DI/autoconfiguration -->
+        <UnusedClass errorLevel="info" />
+        <PossiblyUnusedMethod errorLevel="info" />
+
+        <!-- PHP 8.3 #[Override] attribute — optional, not a logic bug -->
+        <MissingOverrideAttribute errorLevel="info" />
+
+        <!-- Common in closures/callbacks registered in arrays -->
+        <UnusedVariable errorLevel="info" />
+
+        <!-- Psalm can't infer that final is not required in Symfony services -->
+        <ClassMustBeFinal errorLevel="info" />
     </issueHandlers>
 </psalm>

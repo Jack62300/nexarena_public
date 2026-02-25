@@ -43,6 +43,9 @@ class PayPalService
     private function curlRequest(string $url, array $opts, string $context): ?string
     {
         $ch = curl_init($url);
+        if ($ch === false) {
+            return null;
+        }
 
         // Always set CA info for SSL
         $caInfo = $this->getCaInfo();

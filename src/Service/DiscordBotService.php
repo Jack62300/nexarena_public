@@ -41,6 +41,9 @@ class DiscordBotService
         $url = $baseUrl . '/api' . $path;
 
         $ch = curl_init($url);
+        if ($ch === false) {
+            return null;
+        }
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT => 10,
@@ -62,7 +65,7 @@ class DiscordBotService
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
 
-        if ($response === false || $httpCode >= 400) {
+        if (!is_string($response) || $httpCode >= 400) {
             return null;
         }
 
@@ -81,6 +84,9 @@ class DiscordBotService
         $url = $baseUrl . '/health';
 
         $ch = curl_init($url);
+        if ($ch === false) {
+            return false;
+        }
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT => 3,
@@ -91,7 +97,7 @@ class DiscordBotService
         $response = curl_exec($ch);
         curl_close($ch);
 
-        if ($response === false) {
+        if (!is_string($response)) {
             return false;
         }
 

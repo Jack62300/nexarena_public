@@ -124,6 +124,9 @@ class TwitchService
         }
 
         $ch = curl_init('https://id.twitch.tv/oauth2/token');
+        if ($ch === false) {
+            return null;
+        }
         curl_setopt_array($ch, [
             CURLOPT_POST => true,
             CURLOPT_POSTFIELDS => http_build_query([
@@ -141,7 +144,7 @@ class TwitchService
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
 
-        if ($httpCode !== 200 || !$response) {
+        if ($httpCode !== 200 || !is_string($response) || $response === '') {
             return null;
         }
 
@@ -166,6 +169,9 @@ class TwitchService
     private function apiGet(string $url, string $token, string $clientId): ?array
     {
         $ch = curl_init($url);
+        if ($ch === false) {
+            return null;
+        }
         curl_setopt_array($ch, [
             CURLOPT_HTTPHEADER => [
                 'Authorization: Bearer ' . $token,
@@ -181,7 +187,7 @@ class TwitchService
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
 
-        if ($httpCode !== 200 || !$response) {
+        if ($httpCode !== 200 || !is_string($response) || $response === '') {
             return null;
         }
 

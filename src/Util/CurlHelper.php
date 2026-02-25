@@ -15,6 +15,9 @@ class CurlHelper
     public static function createSecure(string $url, int $timeout = 10): \CurlHandle
     {
         $ch = curl_init($url);
+        if ($ch === false) {
+            throw new \RuntimeException('curl_init failed for: ' . $url);
+        }
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT => $timeout,

@@ -57,7 +57,7 @@ class IpSecurityService
             $error    = curl_error($ch);
             curl_close($ch);
 
-            if ($error || $httpCode !== 200 || !$response) {
+            if ($error || $httpCode !== 200 || !is_string($response) || $response === '') {
                 $this->logger->error('IpSecurityService: IPQS API error', [
                     'ip'        => $ip,
                     'http_code' => $httpCode,

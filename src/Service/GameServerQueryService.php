@@ -500,6 +500,9 @@ class GameServerQueryService
     private function httpGet(string $url, int $timeout): ?string
     {
         $ch = curl_init($url);
+        if ($ch === false) {
+            return null;
+        }
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT => $timeout,
@@ -513,7 +516,7 @@ class GameServerQueryService
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
 
-        if ($result === false || $httpCode !== 200) {
+        if (!is_string($result) || $httpCode !== 200) {
             return null;
         }
 

@@ -147,7 +147,7 @@ class SteamAuthenticator extends AbstractAuthenticator
         $response = curl_exec($ch);
         curl_close($ch);
 
-        if (!$response) {
+        if (!is_string($response) || $response === '') {
             return null;
         }
 

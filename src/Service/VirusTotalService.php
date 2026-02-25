@@ -17,6 +17,9 @@ class VirusTotalService
         }
 
         $ch = curl_init();
+        if ($ch === false) {
+            return null;
+        }
         $cfile = new \CURLFile($filePath, 'application/octet-stream', basename($filePath));
 
         curl_setopt_array($ch, [
@@ -36,7 +39,7 @@ class VirusTotalService
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
 
-        if ($httpCode !== 200 || !$response) {
+        if ($httpCode !== 200 || !is_string($response) || $response === '') {
             return null;
         }
 
@@ -53,6 +56,9 @@ class VirusTotalService
         }
 
         $ch = curl_init();
+        if ($ch === false) {
+            return 'error';
+        }
 
         curl_setopt_array($ch, [
             CURLOPT_URL => 'https://www.virustotal.com/api/v3/analyses/' . urlencode($analysisId),
@@ -69,7 +75,7 @@ class VirusTotalService
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
 
-        if ($httpCode !== 200 || !$response) {
+        if ($httpCode !== 200 || !is_string($response) || $response === '') {
             return 'error';
         }
 

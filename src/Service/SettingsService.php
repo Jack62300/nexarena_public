@@ -88,7 +88,7 @@ class SettingsService
     {
         $this->loadCache();
 
-        return $this->cache;
+        return $this->cache ?? [];
     }
 
     private function loadCache(): void

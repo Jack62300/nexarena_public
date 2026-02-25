@@ -48,6 +48,9 @@ class CryptoPayService
     private function curlRequest(string $url, array $opts, string $context): ?string
     {
         $ch = curl_init($url);
+        if ($ch === false) {
+            return null;
+        }
 
         $caInfo = $this->getCaInfo();
         if ($caInfo) {

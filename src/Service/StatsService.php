@@ -12,7 +12,7 @@ use App\Repository\VoteRepository;
 
 class StatsService
 {
-    /** @var array<string, callable> */
+    /** @var array<string, array{label: string, icon: string, color: string, provider: callable}> */
     private array $statProviders = [];
 
     public function __construct(
