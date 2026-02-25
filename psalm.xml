@@ -46,6 +46,9 @@
         <!-- Common in closures/callbacks registered in arrays -->
         <UnusedVariable errorLevel="info" />
 
+        <!-- Return value intentionally ignored by some callers -->
+        <PossiblyUnusedReturnValue errorLevel="info" />
+
         <!-- Psalm can't infer that final is not required in Symfony services -->
         <ClassMustBeFinal errorLevel="info" />
     </issueHandlers>

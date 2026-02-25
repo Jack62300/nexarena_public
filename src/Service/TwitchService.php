@@ -34,8 +34,8 @@ class TwitchService
             return null;
         }
 
-        $clientId = $this->settings->get('twitch_client_id', '');
-        if ($clientId === '') {
+        $clientId = $this->settings->get('twitch_client_id');
+        if (!$clientId) {
             return null;
         }
 

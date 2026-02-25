@@ -48,22 +48,23 @@ class WebhookService
             'server_id' => $server->getId(),
             'server_name' => $server->getName(),
             'username' => $vote->getVoterUsername(),
-            'voted_at' => $vote->getVotedAt()->format('c'),
+            'voted_at' => $vote->getVotedAt()?->format('c') ?? '',
         ];
 
         if ($this->settings->getBool('webhook_send_ip', true)) {
             $payload['ip'] = $vote->getVoterIp();
         }
 
-        if ($this->settings->getBool('webhook_send_email', false) && $vote->getUser()) {
-            $payload['email'] = $vote->getUser()->getEmail();
+        $voteUser = $vote->getUser();
+        if ($this->settings->getBool('webhook_send_email', false) && $voteUser) {
+            $payload['email'] = $voteUser->getEmail();
         }
 
         $headers = ['Content-Type' => 'application/json'];
 
         $secret = $this->settings->get('webhook_secret', '');
         if ($secret) {
-            $signature = hash_hmac('sha256', json_encode($payload), $secret);
+            $signature = hash_hmac('sha256', (string) json_encode($payload), $secret);
             $headers['X-Webhook-Signature'] = $signature;
         }
 
@@ -117,7 +118,8 @@ class WebhookService
     public function dispatch(string $eventType, array $embedData): void
     {
         $webhook = $this->resolveWebhook($eventType);
-        if (!$webhook || !$webhook->isEnabled() || !$webhook->getWebhookUrl()) {
+        $webhookUrl = $webhook?->getWebhookUrl();
+        if (!$webhook || !$webhook->isEnabled() || !$webhookUrl) {
             return;
         }
 
@@ -129,7 +131,7 @@ class WebhookService
         }
 
         try {
-            $this->httpClient->request('POST', $webhook->getWebhookUrl(), [
+            $this->httpClient->request('POST', $webhookUrl, [
                 'json' => $payload,
                 'timeout' => 5,
             ]);
@@ -139,7 +141,8 @@ class WebhookService
 
     public function sendTestWebhook(AdminWebhook $webhook): bool
     {
-        if (!$webhook->getWebhookUrl()) {
+        $webhookUrl = $webhook->getWebhookUrl();
+        if (!$webhookUrl) {
             return false;
         }
 
@@ -153,7 +156,7 @@ class WebhookService
         ]);
 
         try {
-            $response = $this->httpClient->request('POST', $webhook->getWebhookUrl(), [
+            $response = $this->httpClient->request('POST', $webhookUrl, [
                 'json' => $payload,
                 'timeout' => 10,
             ]);

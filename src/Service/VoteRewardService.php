@@ -109,7 +109,7 @@ class VoteRewardService
         if ($pending >= 1.0) {
             $wholeTokens = (int) floor($pending);
             $user->addTokens($wholeTokens);
-            $user->setPendingVoteTokens($pending - $wholeTokens);
+            $user->setPendingVoteTokens($pending - (float) $wholeTokens);
 
             // Create transaction for the conversion
             $tx = new Transaction();

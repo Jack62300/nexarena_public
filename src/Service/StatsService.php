@@ -9,6 +9,7 @@ use App\Repository\ServerRepository;
 use App\Repository\TransactionRepository;
 use App\Repository\UserRepository;
 use App\Repository\VoteRepository;
+use Doctrine\DBAL\Types\Types;
 
 class StatsService
 {
@@ -178,7 +179,7 @@ class StatsService
         $rows = $this->userRepository->createQueryBuilder('u')
             ->select('u.createdAt')
             ->where('u.createdAt >= :since')
-            ->setParameter('since', $since)
+            ->setParameter('since', $since, Types::DATETIME_IMMUTABLE)
             ->getQuery()
             ->getResult();
 
@@ -202,7 +203,7 @@ class StatsService
         $rows = $this->voteRepository->createQueryBuilder('v')
             ->select('v.votedAt')
             ->where('v.votedAt >= :since')
-            ->setParameter('since', $since)
+            ->setParameter('since', $since, Types::DATETIME_IMMUTABLE)
             ->getQuery()
             ->getResult();
 
