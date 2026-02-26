@@ -51,10 +51,8 @@ class UserController extends AbstractController
     #[IsGranted('users.edit')]
     public function edit(User $user, Request $request): Response
     {
-        $assignableRoles = $this->roleRepo->findBy(
-            [],
-            ['position' => 'ASC'],
-        );
+        $allRoles        = $this->roleRepo->findBy([], ['position' => 'ASC']);
+        $assignableRoles = $this->filterAssignableRoleObjects($allRoles);
 
         if ($request->isMethod('POST')) {
             if (!$this->isCsrfTokenValid('user_edit', $request->request->get('_token'))) {
@@ -65,29 +63,11 @@ class UserController extends AbstractController
             $user->setUsername($request->request->get('username', $user->getUsername()));
 
             $selectedRoles = $request->request->all('roles') ?: [];
-            // Validate against existing roles in database
-            $validTechnicalNames = array_map(
-                fn($r) => $r->getTechnicalName(),
-                $assignableRoles,
-            );
-            $roles = array_intersect($selectedRoles, $validTechnicalNames);
-            // Remove ROLE_USER as it's always added automatically
-            $roles = array_filter($roles, fn($r) => $r !== 'ROLE_USER');
 
-            // Prevent role escalation: cannot assign roles equal or higher than own
-            $roleHierarchy = [
-                'ROLE_EDITEUR' => 1,
-                'ROLE_MANAGER' => 2,
-                'ROLE_RESPONSABLE' => 3,
-                'ROLE_DEVELOPPEUR' => 4,
-                'ROLE_FONDATEUR' => 5,
-            ];
-            $currentUser = $this->getUser();
-            $currentMaxLevel = 0;
-            foreach ($currentUser->getRoles() as $r) {
-                $currentMaxLevel = max($currentMaxLevel, $roleHierarchy[$r] ?? 0);
-            }
-            $roles = array_filter($roles, fn($r) => ($roleHierarchy[$r] ?? 0) < $currentMaxLevel);
+            // Validate against the assignable role names only (server-side guard)
+            $assignableNames = array_map(fn($r) => $r->getTechnicalName(), $assignableRoles);
+            $roles = array_intersect($selectedRoles, $assignableNames);
+            $roles = array_filter($roles, fn($r) => $r !== 'ROLE_USER');
 
             $user->setRoles(array_values($roles));
 
@@ -102,9 +82,57 @@ class UserController extends AbstractController
         }
 
         return $this->render('admin/users/edit.html.twig', [
-            'user' => $user,
+            'user'             => $user,
             'assignable_roles' => $assignableRoles,
         ]);
+    }
+
+    /**
+     * Retourne les rôles que l'utilisateur courant est autorisé à assigner.
+     *
+     * Hiérarchie : EDITEUR(1) < MANAGER(2) < RESPONSABLE(3) < DEVELOPPEUR(4) < FONDATEUR(5)
+     *
+     * Règles :
+     *   - DEVELOPPEUR  → peut tout assigner (FONDATEUR compris)
+     *   - RESPONSABLE  → peut assigner tout sauf FONDATEUR et DEVELOPPEUR
+     *   - Autres       → peut assigner uniquement les niveaux strictement inférieurs au sien
+     */
+    private function filterAssignableRoleObjects(array $allRoles): array
+    {
+        $hierarchy = [
+            'ROLE_EDITEUR'     => 1,
+            'ROLE_MANAGER'     => 2,
+            'ROLE_RESPONSABLE' => 3,
+            'ROLE_DEVELOPPEUR' => 4,
+            'ROLE_FONDATEUR'   => 5,
+        ];
+
+        $currentMax = 0;
+        foreach ($this->getUser()->getRoles() as $r) {
+            $currentMax = max($currentMax, $hierarchy[$r] ?? 0);
+        }
+
+        return array_values(array_filter($allRoles, function ($role) use ($hierarchy, $currentMax): bool {
+            $name  = $role->getTechnicalName();
+            $level = $hierarchy[$name] ?? 0;
+
+            if ($name === 'ROLE_USER') {
+                return false;
+            }
+
+            // DEVELOPPEUR : peut tout assigner
+            if ($currentMax === 4) {
+                return true;
+            }
+
+            // RESPONSABLE : peut assigner tout sauf FONDATEUR et DEVELOPPEUR
+            if ($currentMax === 3) {
+                return !in_array($name, ['ROLE_FONDATEUR', 'ROLE_DEVELOPPEUR'], true);
+            }
+
+            // Règle générale : niveau strictement inférieur au sien
+            return $level < $currentMax;
+        }));
     }
 
     #[Route('/{id}/credit', name: 'credit', methods: ['POST'])]
