@@ -1,0 +1,235 @@
+{# ═══════════════════════════════════════════════════════
+   Cookie Consent Banner — RGPD / CNIL
+   Stockage : cookie "nx_cookie_consent" (accepted|declined)
+   Validité : 365 jours
+════════════════════════════════════════════════════════ #}
+<div id="nx-cookie-banner" role="dialog" aria-modal="true" aria-label="Gestion des cookies" style="display:none;">
+    <div class="nx-cookie__inner">
+        <div class="nx-cookie__icon">
+            <i class="fas fa-shield-alt"></i>
+        </div>
+        <div class="nx-cookie__content">
+            <p class="nx-cookie__title">Nous utilisons des cookies</p>
+            <p class="nx-cookie__desc">
+                Nexarena utilise des cookies pour améliorer votre expérience, mesurer l'audience et assurer le bon
+                fonctionnement du site (sessions, sécurité). Vous pouvez accepter ou refuser les cookies non essentiels.
+                {% if setting('legal_privacy_url') %}
+                    <a href="{{ setting('legal_privacy_url') }}" target="_blank" rel="noopener" class="nx-cookie__link">
+                        En savoir plus
+                    </a>
+                {% endif %}
+            </p>
+        </div>
+        <div class="nx-cookie__actions">
+            <button type="button" id="nx-cookie-decline" class="nx-cookie__btn nx-cookie__btn--outline">
+                Refuser
+            </button>
+            <button type="button" id="nx-cookie-accept" class="nx-cookie__btn nx-cookie__btn--primary">
+                Tout accepter
+            </button>
+        </div>
+        <button type="button" id="nx-cookie-close" class="nx-cookie__close" aria-label="Fermer">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+</div>
+
+<style>
+#nx-cookie-banner {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 99990;
+    padding: 0 16px 16px;
+    animation: nx-cookie-slide 0.4s cubic-bezier(0.16,1,0.3,1) forwards;
+}
+@keyframes nx-cookie-slide {
+    from { transform: translateY(100%); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+}
+#nx-cookie-banner.nx-cookie--hiding {
+    animation: nx-cookie-hide 0.3s ease-in forwards;
+}
+@keyframes nx-cookie-hide {
+    from { transform: translateY(0);    opacity: 1; }
+    to   { transform: translateY(110%); opacity: 0; }
+}
+.nx-cookie__inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    background: #0d1117;
+    border: 1px solid rgba(69,248,130,0.2);
+    border-radius: 12px;
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 -4px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(69,248,130,0.05);
+    position: relative;
+}
+.nx-cookie__icon {
+    flex-shrink: 0;
+    width: 42px;
+    height: 42px;
+    background: rgba(69,248,130,0.1);
+    border: 1px solid rgba(69,248,130,0.2);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: #45f882;
+}
+.nx-cookie__content {
+    flex: 1;
+    min-width: 0;
+}
+.nx-cookie__title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    margin: 0 0 4px;
+    letter-spacing: 0.2px;
+}
+.nx-cookie__desc {
+    font-size: 12px;
+    color: rgba(255,255,255,0.5);
+    margin: 0;
+    line-height: 1.5;
+}
+.nx-cookie__link {
+    color: #45f882;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+.nx-cookie__link:hover { opacity: 0.8; color: #45f882; }
+.nx-cookie__actions {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+}
+.nx-cookie__btn {
+    padding: 9px 20px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+    letter-spacing: 0.3px;
+}
+.nx-cookie__btn--outline {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.6);
+}
+.nx-cookie__btn--outline:hover {
+    border-color: rgba(255,255,255,0.35);
+    color: #fff;
+    background: rgba(255,255,255,0.05);
+}
+.nx-cookie__btn--primary {
+    background: #45f882;
+    border: 1px solid #45f882;
+    color: #0d1117;
+}
+.nx-cookie__btn--primary:hover {
+    background: #3de876;
+    border-color: #3de876;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(69,248,130,0.3);
+}
+.nx-cookie__close {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.3);
+    font-size: 14px;
+    cursor: pointer;
+    padding: 4px;
+    line-height: 1;
+    transition: color 0.15s;
+}
+.nx-cookie__close:hover { color: rgba(255,255,255,0.7); }
+@media (max-width: 768px) {
+    .nx-cookie__inner {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 16px 40px 16px 16px;
+    }
+    .nx-cookie__icon { display: none; }
+    .nx-cookie__actions { width: 100%; }
+    .nx-cookie__btn { flex: 1; text-align: center; }
+}
+</style>
+
+<script nonce="{{ csp_nonce() }}">
+(function () {
+    var COOKIE_NAME = 'nx_cookie_consent';
+    var DAYS        = 365;
+
+    function getCookie(name) {
+        var m = document.cookie.match('(?:^|;)\\s*' + name + '=([^;]*)');
+        return m ? decodeURIComponent(m[1]) : null;
+    }
+
+    function setCookie(name, value, days) {
+        var d = new Date();
+        d.setTime(d.getTime() + days * 864e5);
+        document.cookie = name + '=' + encodeURIComponent(value) +
+            '; expires=' + d.toUTCString() +
+            '; path=/; SameSite=Lax';
+    }
+
+    function hideBanner(banner) {
+        banner.classList.add('nx-cookie--hiding');
+        setTimeout(function () { banner.style.display = 'none'; }, 310);
+    }
+
+    function applyConsent(value) {
+        // Déclencher un event custom pour les scripts tiers (ex: Google Analytics)
+        document.dispatchEvent(new CustomEvent('nx:consent', { detail: { accepted: value === 'accepted' } }));
+    }
+
+    var consent = getCookie(COOKIE_NAME);
+
+    // Consentement déjà donné → appliquer silencieusement
+    if (consent) {
+        applyConsent(consent);
+        return;
+    }
+
+    // Pas encore de consentement → afficher le bandeau
+    document.addEventListener('DOMContentLoaded', function () {
+        var banner  = document.getElementById('nx-cookie-banner');
+        var btnAccept  = document.getElementById('nx-cookie-accept');
+        var btnDecline = document.getElementById('nx-cookie-decline');
+        var btnClose   = document.getElementById('nx-cookie-close');
+
+        if (!banner) return;
+        banner.style.display = 'block';
+
+        btnAccept.addEventListener('click', function () {
+            setCookie(COOKIE_NAME, 'accepted', DAYS);
+            applyConsent('accepted');
+            hideBanner(banner);
+        });
+
+        btnDecline.addEventListener('click', function () {
+            setCookie(COOKIE_NAME, 'declined', DAYS);
+            applyConsent('declined');
+            hideBanner(banner);
+        });
+
+        btnClose.addEventListener('click', function () {
+            // Fermer sans enregistrer = refus implicite
+            setCookie(COOKIE_NAME, 'declined', 1); // réafficher dans 1 jour
+            hideBanner(banner);
+        });
+    });
+})();
+</script>

@@ -83,14 +83,27 @@
 
     {% block stylesheets %}{% endblock %}
 
-    {# ── Google Analytics ─────────────────────────────────── #}
+    {# ── Google Analytics (chargé seulement après acceptation cookies) ─── #}
     {% if setting('google_analytics_id') %}
-    <script async src="https://www.googletagmanager.com/gtag/js?id={{ setting('google_analytics_id') }}"></script>
     <script nonce="{{ csp_nonce() }}">
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', '{{ setting('google_analytics_id') }}');
+      window._ga_id = '{{ setting('google_analytics_id') }}';
+      function _loadGA() {
+          if (window._ga_loaded) return;
+          window._ga_loaded = true;
+          var s = document.createElement('script');
+          s.async = true;
+          s.src = 'https://www.googletagmanager.com/gtag/js?id=' + window._ga_id;
+          document.head.appendChild(s);
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', window._ga_id);
+          window.gtag = gtag;
+      }
+      // Charger GA si consentement déjà donné
+      document.addEventListener('nx:consent', function(e) {
+          if (e.detail.accepted) _loadGA();
+      });
     </script>
     {% endif %}
 
@@ -141,6 +154,9 @@
     <script src="{{ asset('assets/js/main.js') }}"></script>
 
     {% block javascripts %}{% endblock %}
+
+    {# ── Cookie Consent Banner ─────────────────────────── #}
+    {% include 'includes/_cookie_consent.html.twig' %}
 
     {# ===== DEV LOGIN TOOLBAR (dev only) ===== #}
     {% if _dev_users is defined and _dev_users is not empty %}
