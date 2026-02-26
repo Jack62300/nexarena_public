@@ -2,13 +2,17 @@
 
 namespace App\EventListener;
 
+use App\Entity\AccessLog;
 use App\Service\IpSecurityService;
 use App\Service\SettingsService;
+use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
+use Symfony\Contracts\Cache\CacheInterface;
 
 /**
  * Listener global : vérifie VPN/proxy et pays pour CHAQUE visiteur.
@@ -30,10 +34,21 @@ class IpAccessListener
         '/premium/crypto/webhook',
     ];
 
+    /**
+     * Déduplication des logs :
+     * - Bloqués   → 1 entrée par IP max toutes les 2 min
+     * - Autorisés → 1 entrée par IP max toutes les 30 min
+     */
+    private const DEDUP_BLOCKED_TTL = 120;   // 2 minutes
+    private const DEDUP_ALLOWED_TTL = 1800;  // 30 minutes
+
     public function __construct(
-        private IpSecurityService $ipSecurity,
-        private SettingsService $settings,
-        private LoggerInterface $logger,
+        private IpSecurityService  $ipSecurity,
+        private SettingsService    $settings,
+        private LoggerInterface    $logger,
+        private EntityManagerInterface $em,
+        #[Autowire(service: 'cache.app')]
+        private CacheInterface $logCache,
     ) {}
 
     public function __invoke(RequestEvent $event): void
@@ -42,7 +57,8 @@ class IpAccessListener
             return;
         }
 
-        $path = $event->getRequest()->getPathInfo();
+        $request = $event->getRequest();
+        $path    = $request->getPathInfo();
 
         foreach (self::SKIP_PREFIXES as $prefix) {
             if (str_starts_with($path, $prefix)) {
@@ -50,9 +66,12 @@ class IpAccessListener
             }
         }
 
-        $ip = $event->getRequest()->getClientIp() ?? '0.0.0.0';
+        $ip         = $request->getClientIp() ?? '0.0.0.0';
+        $remoteAddr = $request->server->get('REMOTE_ADDR');
+        $method     = $request->getMethod();
+        $userAgent  = $request->headers->get('User-Agent');
 
-        // ── IP de confiance → bypass total ──────────────────────────────────
+        // ── IP de confiance → bypass total (pas de log) ─────────────────────
         if ($this->ipSecurity->isTrustedIp($ip)) {
             $this->logger->debug('IpAccessListener: IP de confiance, bypass', ['ip' => $ip]);
             return;
@@ -61,34 +80,133 @@ class IpAccessListener
         $vpnBlockEnabled     = $this->settings->getBool('vpn_block_enabled', false);
         $countryBlockEnabled = $this->settings->getBool('country_block_enabled', false);
 
+        // Si aucune règle active → pas de check, pas de log
+        if (!$vpnBlockEnabled && !$countryBlockEnabled) {
+            return;
+        }
+
         $this->logger->debug('IpAccessListener check', [
-            'ip'                   => $ip,
-            'path'                 => $path,
-            'vpn_block_enabled'    => $vpnBlockEnabled,
-            'country_block_enabled'=> $countryBlockEnabled,
+            'ip'                    => $ip,
+            'path'                  => $path,
+            'vpn_block_enabled'     => $vpnBlockEnabled,
+            'country_block_enabled' => $countryBlockEnabled,
         ]);
 
-        // ── 1. Blocage VPN / Proxy / Tor (site entier) ──────────────────────
-        if ($vpnBlockEnabled) {
-            $isVpn = $this->ipSecurity->isVpnOrProxy($ip);
-            $this->logger->debug('IpAccessListener VPN check', ['ip' => $ip, 'is_vpn' => $isVpn]);
-            if ($isVpn) {
-                $this->logger->warning('IpAccessListener: VPN bloqué', ['ip' => $ip, 'path' => $path]);
-                $event->setResponse($this->buildResponse('vpn', $ip));
-                return;
+        // ── Récupérer les données IPQS (cache Redis, pas d'appel API supplémentaire) ──
+        $raw         = $this->ipSecurity->getFullReport($ip);
+        $apiError    = !empty($raw['error']);
+        $vpnDetected = null;
+        $countryCode = null;
+        $fraudScore  = null;
+
+        if (!$apiError) {
+            $vpnDetected = !empty($raw['vpn']) || !empty($raw['active_vpn'])
+                         || !empty($raw['tor']) || !empty($raw['active_tor']);
+            $countryCode = isset($raw['country_code']) ? strtoupper((string) $raw['country_code']) : null;
+            $fraudScore  = isset($raw['fraud_score']) ? (int) $raw['fraud_score'] : null;
+
+            // Appliquer le seuil fraud_score
+            $threshold = (int) $this->settings->get('vpn_fraud_score_threshold', '85');
+            if ($threshold > 0 && $fraudScore !== null && $fraudScore >= $threshold) {
+                $vpnDetected = true;
             }
         }
 
+        $blocked     = false;
+        $blockReason = null;
+
+        // ── 1. Blocage VPN / Proxy / Tor ────────────────────────────────────
+        if ($vpnBlockEnabled && $vpnDetected) {
+            $this->logger->warning('IpAccessListener: VPN bloqué', ['ip' => $ip, 'path' => $path]);
+            $blocked     = true;
+            $blockReason = AccessLog::REASON_VPN;
+            $event->setResponse($this->buildResponse('vpn', $ip));
+        }
+
         // ── 2. Blocage par pays ──────────────────────────────────────────────
-        if ($countryBlockEnabled) {
-            $country = $this->ipSecurity->getCountryCode($ip);
+        if (!$blocked && $countryBlockEnabled) {
             $allowed = $this->ipSecurity->isCountryAllowed($ip);
-            $this->logger->debug('IpAccessListener country check', ['ip' => $ip, 'country' => $country, 'allowed' => $allowed]);
+            $this->logger->debug('IpAccessListener country check', [
+                'ip'      => $ip,
+                'country' => $countryCode,
+                'allowed' => $allowed,
+            ]);
             if (!$allowed) {
-                $this->logger->warning('IpAccessListener: Pays bloqué', ['ip' => $ip, 'country' => $country, 'path' => $path]);
-                $event->setResponse($this->buildResponse('country', $ip, $country));
-                return;
+                $this->logger->warning('IpAccessListener: Pays bloqué', [
+                    'ip'      => $ip,
+                    'country' => $countryCode,
+                    'path'    => $path,
+                ]);
+                $blocked     = true;
+                $blockReason = AccessLog::REASON_COUNTRY;
+                $event->setResponse($this->buildResponse('country', $ip, $countryCode ?? ''));
             }
+        }
+
+        // ── Persistance du log (avec déduplication) ─────────────────────────
+        $this->writeLog(
+            ip:          $ip,
+            remoteAddr:  $remoteAddr,
+            path:        $path,
+            method:      $method,
+            userAgent:   $userAgent,
+            countryCode: $countryCode,
+            vpnDetected: $vpnDetected,
+            fraudScore:  $fraudScore,
+            blocked:     $blocked,
+            blockReason: $blockReason,
+        );
+    }
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+
+    private function writeLog(
+        string  $ip,
+        ?string $remoteAddr,
+        string  $path,
+        string  $method,
+        ?string $userAgent,
+        ?string $countryCode,
+        ?bool   $vpnDetected,
+        ?int    $fraudScore,
+        bool    $blocked,
+        ?string $blockReason,
+    ): void {
+        // Déduplication via cache Redis
+        $cacheKey = 'al_' . ($blocked ? 'b' : 'a') . '_' . md5($ip);
+        $ttl      = $blocked ? self::DEDUP_BLOCKED_TTL : self::DEDUP_ALLOWED_TTL;
+
+        try {
+            $item = $this->logCache->getItem($cacheKey);
+            if ($item->isHit()) {
+                return; // déjà loggué récemment
+            }
+            $item->set(1)->expiresAfter($ttl);
+            $this->logCache->save($item);
+        } catch (\Throwable) {
+            // Cache indisponible → on logue quand même
+        }
+
+        try {
+            $log = (new AccessLog())
+                ->setIp($ip)
+                ->setRemoteAddr($remoteAddr)
+                ->setPath(substr($path, 0, 255))
+                ->setMethod(strtoupper(substr($method, 0, 10)))
+                ->setCountryCode($countryCode ? substr($countryCode, 0, 2) : null)
+                ->setVpnDetected($vpnDetected)
+                ->setFraudScore($fraudScore)
+                ->setBlocked($blocked)
+                ->setBlockReason($blockReason)
+                ->setUserAgent($userAgent ? substr($userAgent, 0, 500) : null);
+
+            $this->em->persist($log);
+            $this->em->flush();
+        } catch (\Throwable $e) {
+            $this->logger->error('IpAccessListener: échec écriture AccessLog', [
+                'ip'    => $ip,
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 

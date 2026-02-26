@@ -1,0 +1,492 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Logs d'accès — Admin{% endblock %}
+{% block page_title %}Logs d'accès{% endblock %}
+
+{% block admin_css %}
+/* ── Stats bar ── */
+.al-stats {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+.al-stat {
+    flex: 1;
+    min-width: 130px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 14px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.al-stat__label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .5px; font-weight: 600; }
+.al-stat__value { font-size: 26px; font-weight: 800; color: var(--text-primary); line-height: 1; }
+.al-stat--danger  .al-stat__value { color: var(--danger); }
+.al-stat--success .al-stat__value { color: var(--success); }
+.al-stat--info    .al-stat__value { color: var(--info); }
+
+/* ── Filters ── */
+.al-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 12px 16px;
+}
+.al-filter-tabs { display: flex; gap: 6px; }
+.al-tab {
+    padding: 5px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all .15s;
+}
+.al-tab:hover { border-color: var(--accent); color: var(--accent); }
+.al-tab.active { background: var(--accent); border-color: var(--accent); color: #0a1018; }
+.al-tab--danger.active  { background: var(--danger);  border-color: var(--danger);  color: #fff; }
+.al-tab--success.active { background: var(--success); border-color: var(--success); color: #fff; }
+.al-search {
+    flex: 1;
+    min-width: 180px;
+    background: var(--bg-darker);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 13px;
+    padding: 7px 12px;
+    outline: none;
+    font-family: 'Courier New', monospace;
+    transition: border-color .2s;
+}
+.al-search:focus { border-color: var(--accent); }
+.al-search::placeholder { color: var(--text-secondary); opacity: .6; }
+.al-select {
+    background: var(--bg-darker);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 12px;
+    padding: 7px 10px;
+    outline: none;
+    cursor: pointer;
+}
+
+/* ── Table ── */
+.al-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+.al-table th {
+    padding: 9px 12px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    border-bottom: 2px solid var(--border-color);
+    white-space: nowrap;
+}
+.al-table td {
+    padding: 9px 12px;
+    border-bottom: 1px solid rgba(255,255,255,.04);
+    vertical-align: middle;
+    color: var(--text-secondary);
+}
+.al-table tr:last-child td { border-bottom: none; }
+.al-table tr.blocked td { background: rgba(231,74,59,.04); }
+.al-table tr.blocked:hover td { background: rgba(231,74,59,.08); }
+.al-table tr:not(.blocked):hover td { background: rgba(255,255,255,.02); }
+
+/* ── Cell types ── */
+.al-ip { font-family: 'Courier New', monospace; font-weight: 700; color: var(--text-primary); font-size: 12px; }
+.al-path { font-family: 'Courier New', monospace; font-size: 11px; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-secondary); }
+.al-method {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    background: rgba(255,255,255,.07);
+    color: var(--text-secondary);
+}
+.al-method--post { background: rgba(69,248,130,.12); color: var(--accent); }
+
+.al-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+.al-badge--blocked  { background: rgba(231,74,59,.15);  border: 1px solid rgba(231,74,59,.3);  color: var(--danger); }
+.al-badge--allowed  { background: rgba(28,200,138,.1);  border: 1px solid rgba(28,200,138,.2); color: var(--success); }
+.al-badge--vpn      { background: rgba(246,194,62,.12); border: 1px solid rgba(246,194,62,.3); color: var(--warning); }
+.al-badge--country  { background: rgba(116,185,255,.12);border: 1px solid rgba(116,185,255,.3);color: #74b9ff; }
+.al-badge--fraud    { background: rgba(253,121,168,.12);border: 1px solid rgba(253,121,168,.3);color: #fd79a8; }
+
+.al-fraud-score {
+    display: inline-block;
+    min-width: 28px;
+    text-align: center;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 800;
+    font-family: 'Courier New', monospace;
+}
+.al-fraud-score--low    { background: rgba(28,200,138,.1);  color: var(--success); }
+.al-fraud-score--medium { background: rgba(246,194,62,.12); color: var(--warning); }
+.al-fraud-score--high   { background: rgba(231,74,59,.15);  color: var(--danger); }
+
+.al-date { font-size: 11px; white-space: nowrap; }
+.al-ua-toggle {
+    cursor: pointer;
+    font-size: 10px;
+    color: var(--text-secondary);
+    border: none;
+    background: transparent;
+    padding: 0;
+    opacity: .5;
+    transition: opacity .15s;
+}
+.al-ua-toggle:hover { opacity: 1; }
+.al-ua-detail {
+    display: none;
+    font-size: 10px;
+    color: var(--text-secondary);
+    font-family: 'Courier New', monospace;
+    word-break: break-all;
+    margin-top: 3px;
+    line-height: 1.4;
+    opacity: .7;
+}
+
+/* ── Pagination ── */
+.al-pagination { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 16px; }
+.al-page-btn {
+    padding: 5px 12px;
+    border-radius: 7px;
+    border: 1px solid var(--border-color);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all .15s;
+}
+.al-page-btn:hover { border-color: var(--accent); color: var(--accent); }
+.al-page-btn.active { background: var(--accent); border-color: var(--accent); color: #0a1018; }
+.al-page-btn.disabled { opacity: .3; pointer-events: none; }
+
+/* ── Purge form ── */
+.al-purge-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+    padding: 12px 16px;
+    background: rgba(231,74,59,.05);
+    border: 1px solid rgba(231,74,59,.2);
+    border-radius: 8px;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+.al-purge-input {
+    width: 60px;
+    background: var(--bg-darker);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-size: 12px;
+    padding: 5px 8px;
+    text-align: center;
+    outline: none;
+}
+.al-purge-btn {
+    padding: 5px 14px;
+    border-radius: 6px;
+    border: 1px solid rgba(231,74,59,.5);
+    background: transparent;
+    color: var(--danger);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .15s;
+}
+.al-purge-btn:hover { background: rgba(231,74,59,.12); }
+{% endblock %}
+
+{% block admin_body %}
+
+{# ── En-tête ── #}
+<div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;">
+    <div style="width:48px;height:48px;border-radius:12px;background:rgba(231,74,59,.1);border:1px solid rgba(231,74,59,.2);display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--danger);flex-shrink:0;">
+        <i class="fas fa-shield-alt"></i>
+    </div>
+    <div>
+        <div style="font-size:22px;font-weight:700;color:var(--text-primary);">Logs d'accès</div>
+        <div style="font-size:13px;color:var(--text-secondary);">Historique des connexions autorisées et bloquées (VPN, pays). Dédupliqué : 1 entrée/IP toutes les 2 min (bloqué) ou 30 min (autorisé).</div>
+    </div>
+</div>
+
+{# ── Stats 24h ── #}
+<div class="al-stats">
+    <div class="al-stat">
+        <div class="al-stat__label">Total 24h</div>
+        <div class="al-stat__value al-stat--info">{{ stats.total }}</div>
+    </div>
+    <div class="al-stat al-stat--danger">
+        <div class="al-stat__label">Bloqués 24h</div>
+        <div class="al-stat__value">{{ stats.blocked }}</div>
+    </div>
+    <div class="al-stat al-stat--success">
+        <div class="al-stat__label">Autorisés 24h</div>
+        <div class="al-stat__value">{{ stats.allowed }}</div>
+    </div>
+    <div class="al-stat">
+        <div class="al-stat__label">Total en base</div>
+        <div class="al-stat__value">{{ total }}</div>
+    </div>
+</div>
+
+{# ── Filtres ── #}
+<form method="get" action="{{ path('admin_access_logs_index') }}" id="filterForm">
+<div class="al-filters">
+    <div class="al-filter-tabs">
+        <a href="{{ path('admin_access_logs_index', {filter:'all',    q:search, country:country, reason:reason}) }}"
+           class="al-tab {{ filter == 'all'     ? 'active' : '' }}">Tous ({{ total }})</a>
+        <a href="{{ path('admin_access_logs_index', {filter:'blocked',q:search, country:country, reason:reason}) }}"
+           class="al-tab al-tab--danger {{ filter == 'blocked' ? 'active' : '' }}">
+            <i class="fas fa-ban me-1"></i>Bloqués
+        </a>
+        <a href="{{ path('admin_access_logs_index', {filter:'allowed',q:search, country:country, reason:reason}) }}"
+           class="al-tab al-tab--success {{ filter == 'allowed' ? 'active' : '' }}">
+            <i class="fas fa-check me-1"></i>Autorisés
+        </a>
+    </div>
+
+    <input type="hidden" name="filter" value="{{ filter }}">
+    <input type="text" name="q" class="al-search" placeholder="🔍 IP ou chemin…"
+           value="{{ search }}" autocomplete="off">
+
+    <select name="reason" class="al-select" onchange="this.form.submit()">
+        <option value=""           {{ reason == '' ? 'selected' : '' }}>Toutes raisons</option>
+        <option value="vpn"        {{ reason == 'vpn' ? 'selected' : '' }}>VPN / Proxy</option>
+        <option value="country"    {{ reason == 'country' ? 'selected' : '' }}>Pays</option>
+        <option value="ip_ban"     {{ reason == 'ip_ban' ? 'selected' : '' }}>Ban IP</option>
+    </select>
+
+    <input type="text" name="country" class="al-select" placeholder="Pays (FR…)"
+           value="{{ country }}" maxlength="2" style="width:80px;font-family:'Courier New',monospace;">
+
+    <button type="submit" style="padding:6px 14px;border-radius:7px;border:1px solid var(--accent);background:transparent;color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;">
+        <i class="fas fa-search"></i>
+    </button>
+
+    {% if search or country or reason %}
+    <a href="{{ path('admin_access_logs_index', {filter:filter}) }}"
+       style="font-size:12px;color:var(--danger);text-decoration:none;white-space:nowrap;">
+        <i class="fas fa-times me-1"></i>Réinitialiser
+    </a>
+    {% endif %}
+</div>
+</form>
+
+{# ── Table ── #}
+{% if logs is empty %}
+<div style="text-align:center;padding:48px;color:var(--text-secondary);">
+    <i class="fas fa-inbox fa-2x" style="opacity:.3;margin-bottom:12px;display:block;"></i>
+    Aucun log trouvé.
+    {% if not current_vpn_or_country_active is defined %}
+    <br><small>Les logs ne sont enregistrés que lorsque le blocage VPN ou pays est actif dans
+    <a href="{{ path('admin_security_access_index') }}" style="color:var(--accent);">Sécurité & Accès</a>.</small>
+    {% endif %}
+</div>
+{% else %}
+<div style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:10px;overflow:hidden;">
+    <div style="overflow-x:auto;">
+        <table class="al-table">
+            <thead>
+                <tr>
+                    <th>IP visiteur</th>
+                    <th>Proxy (REMOTE_ADDR)</th>
+                    <th>Pays</th>
+                    <th>Chemin</th>
+                    <th>VPN</th>
+                    <th>Fraud</th>
+                    <th>Statut</th>
+                    <th>Date</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for log in logs %}
+                {% set isBlocked = log.isBlocked %}
+                <tr class="{{ isBlocked ? 'blocked' : '' }}">
+
+                    {# IP #}
+                    <td>
+                        <div class="al-ip">{{ log.ip }}</div>
+                    </td>
+
+                    {# Proxy IP (REMOTE_ADDR) — n'afficher que si différent de l'IP cliente #}
+                    <td>
+                        {% if log.remoteAddr and log.remoteAddr != log.ip %}
+                            <span style="font-family:'Courier New',monospace;font-size:11px;color:var(--text-secondary);">
+                                {{ log.remoteAddr }}
+                            </span>
+                        {% else %}
+                            <span style="color:rgba(255,255,255,.15);font-size:11px;">—</span>
+                        {% endif %}
+                    </td>
+
+                    {# Pays #}
+                    <td style="white-space:nowrap;">
+                        {% if log.countryCode %}
+                            <span style="font-size:1.1rem;">{{ log.countryCode|country_flag }}</span>
+                            <span style="font-size:11px;font-weight:700;font-family:'Courier New',monospace;margin-left:3px;">{{ log.countryCode }}</span>
+                        {% else %}
+                            <span style="color:rgba(255,255,255,.15);">—</span>
+                        {% endif %}
+                    </td>
+
+                    {# Chemin + méthode #}
+                    <td>
+                        <span class="al-method {{ log.method == 'POST' ? 'al-method--post' : '' }}">{{ log.method }}</span>
+                        <span class="al-path" title="{{ log.path }}">{{ log.path }}</span>
+                    </td>
+
+                    {# VPN #}
+                    <td>
+                        {% if log.isVpnDetected is same as(true) %}
+                            <span class="al-badge al-badge--vpn"><i class="fas fa-mask"></i> VPN</span>
+                        {% elseif log.isVpnDetected is same as(false) %}
+                            <span style="font-size:11px;color:var(--success);">✓</span>
+                        {% else %}
+                            <span style="color:rgba(255,255,255,.15);font-size:11px;">N/A</span>
+                        {% endif %}
+                    </td>
+
+                    {# Fraud score #}
+                    <td>
+                        {% if log.fraudScore is not null %}
+                            {% if log.fraudScore >= 85 %}
+                                <span class="al-fraud-score al-fraud-score--high">{{ log.fraudScore }}</span>
+                            {% elseif log.fraudScore >= 50 %}
+                                <span class="al-fraud-score al-fraud-score--medium">{{ log.fraudScore }}</span>
+                            {% else %}
+                                <span class="al-fraud-score al-fraud-score--low">{{ log.fraudScore }}</span>
+                            {% endif %}
+                        {% else %}
+                            <span style="color:rgba(255,255,255,.15);font-size:11px;">—</span>
+                        {% endif %}
+                    </td>
+
+                    {# Statut / raison #}
+                    <td>
+                        {% if isBlocked %}
+                            <span class="al-badge al-badge--blocked"><i class="fas fa-ban"></i>
+                                {% if log.blockReason == 'vpn' %}VPN/Proxy
+                                {% elseif log.blockReason == 'country' %}Pays {{ log.countryCode }}
+                                {% elseif log.blockReason == 'ip_ban' %}Ban IP
+                                {% else %}Bloqué{% endif %}
+                            </span>
+                        {% else %}
+                            <span class="al-badge al-badge--allowed"><i class="fas fa-check"></i> Autorisé</span>
+                        {% endif %}
+                    </td>
+
+                    {# Date #}
+                    <td class="al-date">
+                        {{ log.createdAt|date('d/m/Y') }}<br>
+                        <span style="opacity:.6;">{{ log.createdAt|date('H:i:s') }}</span>
+                    </td>
+
+                    {# User-Agent toggle #}
+                    <td>
+                        {% if log.userAgent %}
+                        <button type="button" class="al-ua-toggle" onclick="toggleUA(this)" title="Voir User-Agent">
+                            <i class="fas fa-info-circle"></i>
+                        </button>
+                        <div class="al-ua-detail">{{ log.userAgent }}</div>
+                        {% endif %}
+                    </td>
+
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{# ── Pagination ── #}
+{% if pages > 1 %}
+<div class="al-pagination">
+    <a href="{{ path('admin_access_logs_index', {filter:filter, q:search, country:country, reason:reason, page:page-1}) }}"
+       class="al-page-btn {{ page <= 1 ? 'disabled' : '' }}">
+        <i class="fas fa-chevron-left"></i>
+    </a>
+
+    {% for p in max(1, page-3)..min(pages, page+3) %}
+        <a href="{{ path('admin_access_logs_index', {filter:filter, q:search, country:country, reason:reason, page:p}) }}"
+           class="al-page-btn {{ p == page ? 'active' : '' }}">{{ p }}</a>
+    {% endfor %}
+
+    <a href="{{ path('admin_access_logs_index', {filter:filter, q:search, country:country, reason:reason, page:page+1}) }}"
+       class="al-page-btn {{ page >= pages ? 'disabled' : '' }}">
+        <i class="fas fa-chevron-right"></i>
+    </a>
+
+    <span style="font-size:12px;color:var(--text-secondary);margin-left:4px;">
+        Page {{ page }}/{{ pages }} — {{ total }} entrée(s)
+    </span>
+</div>
+{% endif %}
+
+{% endif %}
+
+{# ── Purge ── #}
+<form method="post" action="{{ path('admin_access_logs_purge') }}" class="al-purge-bar"
+      onsubmit="return confirm('Supprimer les logs plus vieux que ' + this.days.value + ' jours ?')">
+    <input type="hidden" name="_token" value="{{ csrf_token('access_log_purge') }}">
+    <i class="fas fa-trash-alt" style="color:var(--danger);"></i>
+    <span>Supprimer les entrées de plus de</span>
+    <input type="number" name="days" class="al-purge-input" value="30" min="1" max="365">
+    <span>jours</span>
+    <button type="submit" class="al-purge-btn">Purger</button>
+</form>
+
+{% endblock %}
+
+{% block admin_js %}
+<script nonce="{{ csp_nonce() }}">
+function toggleUA(btn) {
+    var detail = btn.nextElementSibling;
+    if (detail.style.display === 'block') {
+        detail.style.display = 'none';
+        btn.style.opacity = '.5';
+    } else {
+        detail.style.display = 'block';
+        btn.style.opacity = '1';
+    }
+}
+</script>
+{% endblock %}

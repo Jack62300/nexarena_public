@@ -218,10 +218,14 @@
 
             {# ── Technique ── #}
             {% if is_granted('ROLE_DEVELOPPEUR') %}
-            {% set techActive = _r starts with 'admin_webhooks_' or _r starts with 'admin_logs_' %}
+            {% set blockedCount = blocked_access_count() %}
+            {% set techActive = _r starts with 'admin_webhooks_' or _r starts with 'admin_logs_' or _r starts with 'admin_access_logs_' %}
             <div class="admin-sidebar__group admin-sidebar__group--red {{ techActive ? 'open' : '' }}">
                 <button class="admin-sidebar__section" type="button">
                     <span><i class="fas fa-code"></i> Technique</span>
+                    {% if blockedCount > 0 %}
+                        <span class="badge bg-danger">{{ blockedCount }}</span>
+                    {% endif %}
                     <i class="fas fa-chevron-right admin-sidebar__arrow"></i>
                 </button>
                 <div class="admin-sidebar__items">
@@ -230,6 +234,12 @@
                     </a>
                     <a href="{{ path('admin_logs_list') }}" class="admin-sidebar__link {{ _r starts with 'admin_logs_' ? 'active' : '' }}">
                         <i class="fas fa-terminal"></i> Logs
+                    </a>
+                    <a href="{{ path('admin_access_logs_index') }}" class="admin-sidebar__link {{ _r starts with 'admin_access_logs_' ? 'active' : '' }}">
+                        <i class="fas fa-shield-alt"></i> Logs d'accès
+                        {% if blockedCount > 0 %}
+                            <span class="badge bg-danger ms-auto">{{ blockedCount }}</span>
+                        {% endif %}
                     </a>
                 </div>
             </div>
