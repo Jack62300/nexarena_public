@@ -782,7 +782,13 @@ class UserServerController extends AbstractController
         if ($canEditInfo) {
             $name = $request->request->get('name', '');
             $server->setName($name);
-            $server->setSlug($this->slugService->slugify($name));
+            // Only generate slug on creation — editing the name must NOT change the URL (SEO stability)
+            if ($server->getId() === null) {
+                $excludeId = null;
+                $server->setSlug($this->slugService->uniqueSlugify($name, function (string $s) use ($excludeId) {
+                    return $this->em->getRepository(Server::class)->findOneBy(['slug' => $s]) !== null;
+                }));
+            }
             $server->setShortDescription($request->request->get('short_description', ''));
             $server->setFullDescription($request->request->get('full_description') ?: null);
             $server->setIsPrivate($request->request->getBoolean('is_private'));

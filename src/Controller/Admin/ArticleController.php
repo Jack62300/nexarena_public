@@ -76,7 +76,7 @@ class ArticleController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $article->setSlug($this->slugService->slugify($article->getTitle()));
+            // Slug intentionally NOT regenerated on edit (SEO: stable URLs)
 
             $imageFile = $form->get('imageFile')->getData();
             if ($imageFile) {

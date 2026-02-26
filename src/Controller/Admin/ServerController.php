@@ -9,7 +9,6 @@ use App\Repository\CategoryRepository;
 use App\Repository\ServerRepository;
 use App\Service\ActivityLogService;
 use App\Service\ServerService;
-use App\Service\SlugService;
 use App\Service\WebhookService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -24,7 +23,6 @@ class ServerController extends AbstractController
 {
     public function __construct(
         private EntityManagerInterface $em,
-        private SlugService $slugService,
         private ServerService $serverService,
         private WebhookService $webhookService,
         private ActivityLogService $activityLog,
@@ -61,7 +59,7 @@ class ServerController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $server->setSlug($this->slugService->slugify($server->getName()));
+            // Slug is intentionally NOT regenerated on edit (SEO: stable URLs)
             $this->em->flush();
 
             $this->activityLog->log('server.edit', ActivityLog::CAT_SERVER, 'Server', $server->getId(), $server->getName());

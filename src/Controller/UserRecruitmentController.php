@@ -514,7 +514,12 @@ class UserRecruitmentController extends AbstractController
     {
         $title = trim((string) $request->request->get('title'));
         $listing->setTitle($title);
-        $listing->setSlug($this->slugService->slugify($title) . '-' . uniqid());
+        // Only generate slug on creation — editing the title must NOT change the URL (SEO stability)
+        if ($listing->getId() === null) {
+            $listing->setSlug($this->slugService->uniqueSlugify($title, function (string $s) {
+                return $this->em->getRepository(RecruitmentListing::class)->findOneBy(['slug' => $s]) !== null;
+            }));
+        }
         $listing->setDescription($request->request->get('description', ''));
         $listing->setRequiresLogin($request->request->getBoolean('requires_login'));
 

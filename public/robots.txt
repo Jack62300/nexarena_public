@@ -1,8 +1,10 @@
 User-agent: *
 Allow: /
 
-# Admin panel
+# Admin panel & Symfony internals
 Disallow: /admin/
+Disallow: /_profiler
+Disallow: /_wdt
 Disallow: /profil/
 Disallow: /serveur/*/gestion
 Disallow: /recrutement/*/candidatures
