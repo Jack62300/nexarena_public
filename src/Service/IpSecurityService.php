@@ -217,4 +217,12 @@ class IpSecurityService
     {
         $this->cache->delete('ipqs_' . md5($ip));
     }
+
+    /**
+     * Vide tout le cache IPQS (pool dédié cache.ipqs).
+     */
+    public function clearAllCache(): bool
+    {
+        return $this->cache->clear();
+    }
 }

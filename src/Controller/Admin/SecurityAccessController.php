@@ -331,6 +331,75 @@ class SecurityAccessController extends AbstractController
     }
 
     /**
+     * Retourne le résultat du check pour l'IP du visiteur courant (admin).
+     * Utilisé par le bouton "Tester mon IP".
+     */
+    #[Route('/mon-ip', name: 'mon_ip', methods: ['GET'])]
+    public function monIp(Request $request): JsonResponse
+    {
+        $ip = $request->getClientIp() ?? '0.0.0.0';
+
+        $apiKeyConfigured = !empty(trim($this->settings->get('ipqs_api_key', '') ?? ''));
+        $vpnEnabled       = $this->settings->getBool('vpn_block_enabled');
+        $countryEnabled   = $this->settings->getBool('country_block_enabled');
+        $allowedCountries = $this->settings->get('allowed_countries', '');
+
+        $raw     = $apiKeyConfigured ? $this->ipSecurity->checkIp($ip) : [];
+        $apiOk   = $apiKeyConfigured && !empty($raw['success']);
+        $isVpn   = $apiKeyConfigured ? $this->ipSecurity->isVpnOrProxy($ip) : null;
+        $country = $apiKeyConfigured ? $this->ipSecurity->getCountryCode($ip) : null;
+        $allowed = $apiKeyConfigured ? $this->ipSecurity->isCountryAllowed($ip) : null;
+        $trusted = $this->ipSecurity->isTrustedIp($ip);
+
+        // Simulate what IpAccessListener would decide
+        $blocked     = false;
+        $blockReason = null;
+        if ($trusted) {
+            $blockReason = 'IP de confiance → autorisé (bypass)';
+        } elseif ($vpnEnabled && $isVpn) {
+            $blocked     = true;
+            $blockReason = 'VPN/proxy détecté → bloqué';
+        } elseif ($countryEnabled && $country !== null && !$allowed) {
+            $blocked     = true;
+            $blockReason = 'Pays ' . $country . ' non autorisé → bloqué';
+        } else {
+            $blockReason = 'Aucune règle ne bloque cette IP';
+        }
+
+        return new JsonResponse([
+            'ip'                => $ip,
+            'api_key_set'       => $apiKeyConfigured,
+            'api_responded'     => $apiOk,
+            'trusted'           => $trusted,
+            'vpn_block_enabled' => $vpnEnabled,
+            'vpn_detected'      => $isVpn,
+            'country_block_enabled' => $countryEnabled,
+            'country_code'      => $country,
+            'country_allowed'   => $allowed,
+            'allowed_countries' => $allowedCountries,
+            'blocked'           => $blocked,
+            'block_reason'      => $blockReason,
+            'raw'               => $raw,
+        ]);
+    }
+
+    /**
+     * Vide tout le cache IPQS (force re-vérification de toutes les IPs au prochain accès).
+     */
+    #[Route('/cache/vider', name: 'cache_flush', methods: ['POST'])]
+    public function cacheFlush(Request $request): Response
+    {
+        if (!$this->isCsrfTokenValid('security_cache_flush', $request->request->get('_token'))) {
+            $this->addFlash('error', 'Token CSRF invalide.');
+            return $this->redirectToRoute('admin_security_access_index');
+        }
+
+        $this->ipSecurity->clearAllCache();
+        $this->addFlash('success', 'Cache IPQS vidé — toutes les IPs seront re-vérifiées à leur prochain accès.');
+        return $this->redirectToRoute('admin_security_access_index');
+    }
+
+    /**
      * Sanitizes a comma-separated string of country codes.
      * Only keeps valid 2-letter uppercase codes present in COUNTRIES.
      */

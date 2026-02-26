@@ -63,15 +63,22 @@ class SettingsService
     public function set(string $key, ?string $value): void
     {
         $setting = $this->repository->findByKey($key);
-        if ($setting) {
-            // Auto-encrypt secrets
-            if ($setting->getType() === Setting::TYPE_SECRET && $value !== null && $value !== '') {
-                $value = $this->encryptionService->encrypt($value);
-            }
-            $setting->setValue($value);
-            $this->em->flush();
-            $this->cache = null; // Invalidate cache
+
+        if (!$setting) {
+            // Upsert: create the row if it doesn't exist yet (e.g. init-settings not run)
+            $setting = new Setting();
+            $setting->setKey($key);
+            $this->em->persist($setting);
         }
+
+        // Auto-encrypt secrets
+        if ($setting->getType() === Setting::TYPE_SECRET && $value !== null && $value !== '') {
+            $value = $this->encryptionService->encrypt($value);
+        }
+
+        $setting->setValue($value);
+        $this->em->flush();
+        $this->cache = null; // Invalidate in-memory cache
     }
 
     public function getSetting(string $key): ?Setting

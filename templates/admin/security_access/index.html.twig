@@ -277,6 +277,106 @@
     font-weight: 600;
     padding: 2px 10px;
 }
+
+/* ── Status bar ── */
+.sa-status-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 14px 20px;
+    background: rgba(255,255,255,.02);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    margin-bottom: 24px;
+    align-items: center;
+}
+.sa-status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid transparent;
+}
+.sa-status-indicator--ok {
+    background: rgba(28,200,138,.1);
+    border-color: rgba(28,200,138,.25);
+    color: var(--success);
+}
+.sa-status-indicator--warn {
+    background: rgba(246,194,62,.1);
+    border-color: rgba(246,194,62,.25);
+    color: var(--warning);
+}
+.sa-status-indicator--off {
+    background: rgba(255,255,255,.04);
+    border-color: var(--border-color);
+    color: var(--text-secondary);
+}
+.sa-status-indicator--danger {
+    background: rgba(231,74,59,.1);
+    border-color: rgba(231,74,59,.25);
+    color: var(--danger);
+}
+.sa-status-separator {
+    flex: 1;
+}
+.sa-status-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+.sa-status-btn {
+    padding: 6px 14px;
+    border-radius: 7px;
+    border: 1px solid var(--border-color);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .18s;
+    white-space: nowrap;
+}
+.sa-status-btn:hover { border-color: var(--accent); color: var(--accent); }
+.sa-status-btn--danger { border-color: rgba(231,74,59,.4); color: var(--danger); }
+.sa-status-btn--danger:hover { background: rgba(231,74,59,.1); }
+
+/* ── Résultat "Mon IP" ── */
+.sa-monip-result {
+    margin-top: 14px;
+    padding: 14px;
+    border-radius: 8px;
+    background: var(--bg-darker);
+    border: 1px solid var(--border-color);
+    font-size: 12px;
+    display: none;
+}
+.sa-monip-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(255,255,255,.04);
+}
+.sa-monip-row:last-child { border-bottom: none; }
+.sa-monip-key { color: var(--text-secondary); }
+.sa-monip-val { font-weight: 600; font-family: 'Courier New', monospace; }
+.sa-monip-val--ok { color: var(--success); }
+.sa-monip-val--warn { color: var(--warning); }
+.sa-monip-val--danger { color: var(--danger); }
+.sa-monip-verdict {
+    margin-top: 10px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: center;
+}
+.sa-monip-verdict--blocked { background: rgba(231,74,59,.15); color: var(--danger); border: 1px solid rgba(231,74,59,.3); }
+.sa-monip-verdict--pass { background: rgba(28,200,138,.12); color: var(--success); border: 1px solid rgba(28,200,138,.25); }
 {% endblock %}
 
 {% block admin_body %}
@@ -291,6 +391,83 @@
         <div style="font-size:13px;color:var(--text-secondary);">Contrôlez les VPN/proxy, les pays autorisés et les IPs de confiance.</div>
     </div>
 </div>
+
+{# ── Barre de statut système ── #}
+{% set apiOk = current.ipqs_api_key is not empty %}
+{% set anyActive = current.vpn_block_enabled or current.country_block_enabled %}
+<div class="sa-status-bar">
+
+    {# Clé API #}
+    {% if apiOk %}
+        <div class="sa-status-indicator sa-status-indicator--ok">
+            <i class="fas fa-check-circle"></i> Clé IPQS configurée
+        </div>
+    {% else %}
+        <div class="sa-status-indicator sa-status-indicator--danger">
+            <i class="fas fa-times-circle"></i> Clé IPQS manquante
+        </div>
+    {% endif %}
+
+    {# VPN block #}
+    {% if current.vpn_block_enabled %}
+        <div class="sa-status-indicator {{ apiOk ? 'sa-status-indicator--ok' : 'sa-status-indicator--warn' }}">
+            <i class="fas fa-{{ apiOk ? 'shield-alt' : 'exclamation-triangle' }}"></i>
+            Blocage VPN {{ apiOk ? 'actif' : 'activé (sans clé = inactif)' }}
+        </div>
+    {% else %}
+        <div class="sa-status-indicator sa-status-indicator--off">
+            <i class="fas fa-minus-circle"></i> Blocage VPN désactivé
+        </div>
+    {% endif %}
+
+    {# Country block #}
+    {% if current.country_block_enabled %}
+        <div class="sa-status-indicator {{ apiOk ? 'sa-status-indicator--ok' : 'sa-status-indicator--warn' }}">
+            <i class="fas fa-{{ apiOk ? 'globe' : 'exclamation-triangle' }}"></i>
+            Filtrage pays {{ apiOk ? 'actif' : 'activé (sans clé = inactif)' }}
+        </div>
+    {% else %}
+        <div class="sa-status-indicator sa-status-indicator--off">
+            <i class="fas fa-minus-circle"></i> Filtrage pays désactivé
+        </div>
+    {% endif %}
+
+    <div class="sa-status-separator"></div>
+
+    {# Actions #}
+    <div class="sa-status-actions">
+        <button type="button" id="monIpBtn" class="sa-status-btn">
+            <i class="fas fa-crosshairs"></i> Tester mon IP
+        </button>
+
+        <form method="post" action="{{ path('admin_security_access_cache_flush') }}" style="display:inline;" id="cacheFlushForm">
+            <input type="hidden" name="_token" value="{{ csrf_token('security_cache_flush') }}">
+            <button type="submit" class="sa-status-btn sa-status-btn--danger"
+                    onclick="return confirm('Vider le cache IPQS ? Toutes les IPs seront re-vérifiées à leur prochain accès.')">
+                <i class="fas fa-trash-alt"></i> Vider cache IPQS
+            </button>
+        </form>
+    </div>
+</div>
+
+{# Alerte si clé manquante et au moins une règle active #}
+{% if not apiOk and anyActive %}
+<div class="alert alert-warning d-flex align-items-center gap-3 mb-4" style="border-radius:10px;background:rgba(246,194,62,.12);border:1px solid rgba(246,194,62,.3);color:var(--warning);padding:14px 18px;font-size:13px;">
+    <i class="fas fa-exclamation-triangle fa-lg flex-shrink-0"></i>
+    <div>
+        <strong>Le blocage VPN/pays ne fonctionne pas.</strong>
+        La clé API IPQualityScore n'est pas configurée → tous les visiteurs passent (fail-open).
+        <br>Ajoutez votre clé dans
+        <a href="{{ path('admin_settings_index') }}#api_keys" class="fw-bold" style="color:var(--warning);text-decoration:underline;">
+            Paramètres → Clés API → IPQualityScore API Key
+        </a>.
+        Le plan gratuit IPQS offre 200 vérifications/mois.
+    </div>
+</div>
+{% endif %}
+
+{# Résultat "Mon IP" #}
+<div id="monIpResult" class="sa-monip-result"></div>
 
 <form method="post" action="{{ path('admin_security_access_index') }}" id="securityForm">
     <input type="hidden" name="_token" value="{{ csrf_token('security_access_save') }}">
@@ -561,6 +738,53 @@
 
     diagInput.addEventListener('keydown', function (e) {
         if (e.key === 'Enter') { e.preventDefault(); diagBtn.click(); }
+    });
+
+    // ── Tester mon IP ────────────────────────────────────────────────────
+    var monIpBtn    = document.getElementById('monIpBtn');
+    var monIpResult = document.getElementById('monIpResult');
+
+    monIpBtn.addEventListener('click', function () {
+        monIpResult.style.display = 'block';
+        monIpResult.innerHTML = '<span style="color:var(--text-secondary)"><i class="fas fa-spinner fa-spin me-1"></i> Analyse en cours…</span>';
+
+        fetch('{{ path('admin_security_access_mon_ip') }}')
+            .then(function (r) { return r.json(); })
+            .then(function (d) {
+                function row(label, value, cls) {
+                    cls = cls || '';
+                    return '<div class="sa-monip-row"><span class="sa-monip-key">' + label + '</span>'
+                         + '<span class="sa-monip-val ' + cls + '">' + value + '</span></div>';
+                }
+                function bool(v, okLabel, warnLabel) {
+                    if (v === null || v === undefined) return '<span style="color:var(--text-secondary)">N/A (clé API absente)</span>';
+                    return v ? '<span class="sa-monip-val--ok">✅ ' + (okLabel || 'oui') + '</span>'
+                             : '<span class="sa-monip-val--danger">🔴 ' + (warnLabel || 'non') + '</span>';
+                }
+
+                var html = row('IP détectée par le serveur', d.ip, 'sa-monip-val--ok');
+                html += row('Clé API IPQS', d.api_key_set ? '✅ configurée' : '❌ manquante', d.api_key_set ? 'sa-monip-val--ok' : 'sa-monip-val--danger');
+                html += row('API a répondu', d.api_responded ? '✅ oui' : (d.api_key_set ? '❌ erreur' : 'N/A'), d.api_responded ? 'sa-monip-val--ok' : 'sa-monip-val--danger');
+                html += row('IP de confiance', d.trusted ? '✅ oui (bypass)' : 'non');
+                html += row('Blocage VPN activé', d.vpn_block_enabled ? '✅ oui' : '❌ non', d.vpn_block_enabled ? 'sa-monip-val--ok' : 'sa-monip-val--off');
+                html += row('VPN/Proxy détecté', bool(d.vpn_detected, 'oui (bloquerait)', 'non'));
+                html += row('Filtrage pays activé', d.country_block_enabled ? '✅ oui' : '❌ non', d.country_block_enabled ? 'sa-monip-val--ok' : 'sa-monip-val--off');
+                html += row('Pays détecté', d.country_code ? '🌍 ' + d.country_code : 'N/A');
+                html += row('Pays autorisé', bool(d.country_allowed, 'oui', 'non (bloquerait)'));
+                if (d.allowed_countries) {
+                    html += row('Pays configurés', d.allowed_countries);
+                }
+
+                var verdictClass = d.blocked ? 'sa-monip-verdict--blocked' : 'sa-monip-verdict--pass';
+                var verdictIcon  = d.blocked ? '🚫' : '✅';
+                html += '<div class="sa-monip-verdict ' + verdictClass + '">'
+                     + verdictIcon + ' ' + d.block_reason + '</div>';
+
+                monIpResult.innerHTML = html;
+            })
+            .catch(function (err) {
+                monIpResult.innerHTML = '<span style="color:var(--danger)">Erreur réseau : ' + err.message + '</span>';
+            });
     });
 
     updateCount();

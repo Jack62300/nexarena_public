@@ -28,6 +28,10 @@ services:
         arguments:
             $appSecret: '%env(APP_SECRET)%'
 
+    App\Service\IpSecurityService:
+        arguments:
+            $cache: '@cache.ipqs'
+
     App\Service\ServerService:
         arguments:
             $projectDir: '%kernel.project_dir%'
