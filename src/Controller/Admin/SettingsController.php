@@ -2,8 +2,10 @@
 
 namespace App\Controller\Admin;
 
+use App\Entity\ActivityLog;
 use App\Entity\Setting;
 use App\Repository\SettingRepository;
+use App\Service\ActivityLogService;
 use App\Service\EncryptionService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -74,6 +76,7 @@ class SettingsController extends AbstractController
         private EntityManagerInterface $em,
         private SettingRepository $settingRepo,
         private EncryptionService $encryptionService,
+        private ActivityLogService $activityLog,
     ) {
     }
 
@@ -261,6 +264,10 @@ class SettingsController extends AbstractController
         }
 
         $this->em->flush();
+
+        $this->activityLog->log('settings.save', ActivityLog::CAT_SETTINGS, 'Setting', null, $category, [
+            'category' => $category,
+        ]);
 
         $this->addFlash('success', 'Parametres "' . (self::CATEGORY_LABELS[$category] ?? $category) . '" enregistres.');
         return $this->redirectToRoute('admin_settings_index', ['tab' => $category]);

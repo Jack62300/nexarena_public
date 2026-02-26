@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\ActivityLog;
 use App\Entity\Notification;
 use App\Entity\RecruitmentApplication;
 use App\Entity\RecruitmentListing;
@@ -12,6 +13,7 @@ use App\Repository\RecruitmentListingRepository;
 use App\Repository\RecruitmentMessageRepository;
 use App\Repository\ServerCollaboratorRepository;
 use App\Repository\ServerRepository;
+use App\Service\ActivityLogService;
 use App\Service\NotificationService;
 use App\Service\PremiumService;
 use App\Service\RecruitmentService;
@@ -38,6 +40,7 @@ class UserRecruitmentController extends AbstractController
         private ServerCollaboratorRepository $collabRepo,
         private NotificationService $notificationService,
         private WebhookService $webhookService,
+        private ActivityLogService $activityLog,
     ) {
     }
 
@@ -280,8 +283,12 @@ class UserRecruitmentController extends AbstractController
             $this->recruitmentService->deleteImage($listing->getImage2());
         }
 
+        $title = $listing->getTitle();
+        $listingId = $listing->getId();
         $this->em->remove($listing);
         $this->em->flush();
+
+        $this->activityLog->log('recruitment.delete_self', ActivityLog::CAT_RECRUITMENT, 'RecruitmentListing', $listingId, $title);
 
         $this->addFlash('success', 'Annonce supprimee.');
         return $this->redirectToRoute('user_recruitment_list');

@@ -2,7 +2,9 @@
 
 namespace App\Controller;
 
+use App\Entity\ActivityLog;
 use App\Repository\UserRepository;
+use App\Service\ActivityLogService;
 use App\Service\PremiumService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -18,6 +20,7 @@ class ProfileEditController extends AbstractController
         private EntityManagerInterface $em,
         private UserRepository $userRepo,
         private PremiumService $premiumService,
+        private ActivityLogService $activityLog,
     ) {
     }
 
@@ -149,6 +152,7 @@ class ProfileEditController extends AbstractController
         $user->setProfileVisibility($visibility);
 
         $this->em->flush();
+        $this->activityLog->log('profile.edit', ActivityLog::CAT_PROFILE, 'User', $user->getId(), $user->getUsername());
         $this->addFlash('success', 'Profil mis a jour.');
 
         return $this->redirectToRoute('profile_show', ['username' => $user->getUsername()]);

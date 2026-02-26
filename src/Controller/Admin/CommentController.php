@@ -2,9 +2,11 @@
 
 namespace App\Controller\Admin;
 
+use App\Entity\ActivityLog;
 use App\Entity\Comment;
 use App\Repository\CommentRepository;
 use App\Repository\ServerRepository;
+use App\Service\ActivityLogService;
 use App\Service\WebhookService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -20,6 +22,7 @@ class CommentController extends AbstractController
     public function __construct(
         private EntityManagerInterface $em,
         private WebhookService $webhookService,
+        private ActivityLogService $activityLog,
     ) {
     }
 
@@ -65,6 +68,11 @@ class CommentController extends AbstractController
         $comment->setDeletedBy($this->getUser());
         $this->em->flush();
 
+        $this->activityLog->log('comment.delete', ActivityLog::CAT_COMMENT, 'Comment', $comment->getId(), $comment->getAuthor()->getUsername(), [
+            'server' => $server->getName(),
+            'reason' => 'flagged',
+        ]);
+
         $this->webhookService->dispatch('comment.deleted', [
             'title' => 'Commentaire supprime par admin',
             'fields' => [
@@ -94,6 +102,10 @@ class CommentController extends AbstractController
         $comment->setFlaggedAt(null);
         $this->em->flush();
 
+        $this->activityLog->log('comment.dismiss_flag', ActivityLog::CAT_COMMENT, 'Comment', $comment->getId(), $comment->getAuthor()->getUsername(), [
+            'server' => $server->getName(),
+        ]);
+
         $this->webhookService->dispatch('comment.flag_dismissed', [
             'title' => 'Signalement rejete',
             'fields' => [
@@ -116,8 +128,12 @@ class CommentController extends AbstractController
             return $this->redirectToRoute('admin_comments_list');
         }
 
+        $authorName = $comment->getAuthor()->getUsername();
+        $commentId = $comment->getId();
         $this->em->remove($comment);
         $this->em->flush();
+
+        $this->activityLog->log('comment.hard_delete', ActivityLog::CAT_COMMENT, 'Comment', $commentId, $authorName);
 
         $this->addFlash('success', 'Le commentaire a ete supprime definitivement.');
         return $this->redirectToRoute('admin_comments_list');

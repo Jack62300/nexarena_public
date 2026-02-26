@@ -1,20 +1,182 @@
 {% extends 'admin/base.html.twig' %}
 
-{% block page_title %}Logs{% endblock %}
+{% block page_title %}Logs d'activite{% endblock %}
 {% block title %}Nexarena Admin - Logs{% endblock %}
 
+{% block admin_css %}
+.log-filters { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:18px; }
+.log-filters input, .log-filters select { background:#0d1b2d; border:1px solid #1e3048; color:#e6edf3; border-radius:6px; padding:6px 10px; font-size:13px; }
+.log-filters input:focus, .log-filters select:focus { outline:none; border-color:rgba(69,248,130,.4); }
+.log-filters select option { background:#0d1b2d; }
+
+.log-table { width:100%; border-collapse:collapse; font-size:12.5px; }
+.log-table th { padding:9px 10px; background:#0d1b2d; color:#5a7a9c; text-transform:uppercase; font-size:10px; letter-spacing:.04em; border-bottom:1px solid #1e3048; text-align:left; }
+.log-table td { padding:8px 10px; border-bottom:1px solid rgba(30,48,72,.5); color:#c8d8e8; vertical-align:middle; }
+.log-table tr:hover td { background:rgba(30,48,72,.25); }
+
+.log-cat { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:700; white-space:nowrap; }
+.log-action { font-family:monospace; font-size:11.5px; color:#e6edf3; }
+.log-user { color:#5a7a9c; font-size:11px; }
+.log-obj { font-size:11px; }
+.log-obj strong { color:#e6edf3; }
+.log-obj span { color:#5a7a9c; }
+.log-ip { font-family:monospace; font-size:10.5px; color:#3d5068; }
+.log-time { font-size:11px; color:#3d5068; white-space:nowrap; }
+
+.log-detail-btn { background:none; border:none; color:#5a7a9c; cursor:pointer; padding:2px 5px; border-radius:3px; font-size:11px; transition:color .15s; }
+.log-detail-btn:hover { color:#45f882; }
+.log-details-row { display:none; }
+.log-details-row td { padding:6px 12px 10px; }
+.log-details-pre { background:#050c14; border:1px solid #1e3048; border-radius:6px; padding:10px 12px; margin:0; font-size:11px; color:#5a7a9c; white-space:pre-wrap; word-break:break-all; }
+
+.log-pagination { display:flex; align-items:center; gap:6px; margin-top:16px; flex-wrap:wrap; }
+.log-pagination a, .log-pagination span { padding:5px 10px; border-radius:5px; font-size:12px; text-decoration:none; }
+.log-pagination a { background:#0d1b2d; border:1px solid #1e3048; color:#c8d8e8; transition:background .15s; }
+.log-pagination a:hover { background:#162231; }
+.log-pagination .active { background:#45f882; border-color:#45f882; color:#0a1018; font-weight:700; }
+.log-pagination .disabled { color:#2d4a66; background:#0d1b2d; border:1px solid #1e3048; }
+
+.log-count { font-size:12px; color:#5a7a9c; margin-left:auto; }
+{% endblock %}
+
 {% block admin_body %}
-    <div class="admin-table">
-        <div class="admin-table__header">
-            <h3>Logs systeme</h3>
-        </div>
-        <div style="padding:60px 25px;text-align:center;">
-            <i class="fas fa-terminal" style="font-size:48px;color:var(--text-secondary);margin-bottom:15px;display:block;"></i>
-            <h4 style="color:var(--text-primary);margin-bottom:8px;">Journal d'activite</h4>
-            <p style="color:var(--text-secondary);font-size:14px;">
-                Les logs d'activite du site seront affiches ici.<br>
-                Connexions, modifications, erreurs et evenements systeme.
-            </p>
-        </div>
+<div class="admin-table">
+    <div class="admin-table__header">
+        <h3><i class="fas fa-scroll" style="color:#45f882;margin-right:8px;"></i>Journal d'activite</h3>
+        <span style="color:#5a7a9c;font-size:13px;">{{ total }} entree{{ total > 1 ? 's' : '' }}</span>
     </div>
+
+    {# Filters #}
+    <div style="padding:0 20px 4px;">
+        <form method="get" class="log-filters">
+            <select name="category" onchange="this.form.submit()">
+                <option value="">Toutes les categories</option>
+                {% for key, cat in categories %}
+                    <option value="{{ key }}" {{ category == key ? 'selected' : '' }}>{{ cat.label }}</option>
+                {% endfor %}
+            </select>
+            <input type="text" name="search" value="{{ search }}" placeholder="Recherche action, objet, utilisateur..." style="min-width:240px;" onchange="">
+            <input type="hidden" name="page" value="1">
+            <button type="submit" class="admin-btn admin-btn--primary" style="padding:6px 14px;font-size:13px;">
+                <i class="fas fa-search"></i>
+            </button>
+            {% if category or search %}
+                <a href="{{ path('admin_logs_list') }}" class="admin-btn" style="padding:6px 14px;font-size:13px;">
+                    <i class="fas fa-times"></i> Reset
+                </a>
+            {% endif %}
+        </form>
+    </div>
+
+    {% if logs|length == 0 %}
+        <div style="text-align:center;padding:60px 20px;color:#2d4a66;">
+            <i class="fas fa-scroll" style="font-size:40px;margin-bottom:12px;display:block;"></i>
+            <p>Aucun log trouvé.</p>
+        </div>
+    {% else %}
+    <div style="overflow-x:auto;padding:0 20px 20px;">
+        <table class="log-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Categorie</th>
+                    <th>Action</th>
+                    <th>Utilisateur</th>
+                    <th>Objet</th>
+                    <th>IP</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                    {% set catInfo = categories[log.category] ?? {label: log.category, color: '#95a5a6'} %}
+                    <tr>
+                        <td class="log-time">{{ log.createdAt|date('d/m/Y H:i:s') }}</td>
+                        <td>
+                            <span class="log-cat" style="background:{{ catInfo.color }}22;color:{{ catInfo.color }};border:1px solid {{ catInfo.color }}44;">
+                                {{ catInfo.label }}
+                            </span>
+                        </td>
+                        <td class="log-action">{{ log.action }}</td>
+                        <td class="log-user">
+                            {% if log.username %}
+                                <i class="fas fa-user" style="opacity:.5;margin-right:3px;"></i>{{ log.username }}
+                            {% else %}
+                                <span style="opacity:.4;">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="log-obj">
+                            {% if log.objectType %}
+                                <span>{{ log.objectType }}</span>
+                                {% if log.objectId %}
+                                    <span style="opacity:.4;">#{{ log.objectId }}</span>
+                                {% endif %}
+                                {% if log.objectLabel %}
+                                    <br><strong>{{ log.objectLabel|u.truncate(60, '…') }}</strong>
+                                {% endif %}
+                            {% else %}
+                                <span style="opacity:.3;">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="log-ip">{{ log.ipAddress ?? '—' }}</td>
+                        <td>
+                            {% if log.details %}
+                                <button class="log-detail-btn" onclick="toggleDetail({{ log.id }})" title="Voir les details">
+                                    <i class="fas fa-chevron-down" id="icon-{{ log.id }}"></i>
+                                </button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% if log.details %}
+                    <tr class="log-details-row" id="detail-{{ log.id }}">
+                        <td colspan="7">
+                            <pre class="log-details-pre">{{ log.details|json_encode(constant('JSON_PRETTY_PRINT') b-or constant('JSON_UNESCAPED_UNICODE')) }}</pre>
+                        </td>
+                    </tr>
+                    {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {# Pagination #}
+        {% if totalPages > 1 %}
+        <div class="log-pagination">
+            {% if page > 1 %}
+                <a href="{{ path('admin_logs_list', {page: page - 1, category: category, search: search}) }}">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            {% endif %}
+
+            {% for p in max(1, page - 3)..min(totalPages, page + 3) %}
+                {% if p == page %}
+                    <span class="active">{{ p }}</span>
+                {% else %}
+                    <a href="{{ path('admin_logs_list', {page: p, category: category, search: search}) }}">{{ p }}</a>
+                {% endif %}
+            {% endfor %}
+
+            {% if page < totalPages %}
+                <a href="{{ path('admin_logs_list', {page: page + 1, category: category, search: search}) }}">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            {% endif %}
+
+            <span class="log-count">Page {{ page }} / {{ totalPages }}</span>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script nonce="{{ csp_nonce() }}">
+function toggleDetail(id) {
+    var row  = document.getElementById('detail-' + id);
+    var icon = document.getElementById('icon-' + id);
+    var open = row.style.display === 'table-row';
+    row.style.display = open ? 'none' : 'table-row';
+    icon.className = open ? 'fas fa-chevron-down' : 'fas fa-chevron-up';
+}
+</script>
 {% endblock %}

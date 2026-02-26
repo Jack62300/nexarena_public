@@ -2,11 +2,13 @@
 
 namespace App\Controller\Admin;
 
+use App\Entity\ActivityLog;
 use App\Entity\Transaction;
 use App\Entity\User;
 use App\Form\Admin\AdminUserFormType;
 use App\Repository\RoleRepository;
 use App\Repository\UserRepository;
+use App\Service\ActivityLogService;
 use App\Service\WebhookService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -23,6 +25,7 @@ class UserController extends AbstractController
         private EntityManagerInterface $em,
         private RoleRepository $roleRepo,
         private WebhookService $webhookService,
+        private ActivityLogService $activityLog,
     ) {
     }
 
@@ -88,6 +91,10 @@ class UserController extends AbstractController
 
             $this->em->flush();
 
+            $this->activityLog->log('user.edit', ActivityLog::CAT_USER, 'User', $user->getId(), $user->getUsername(), [
+                'roles' => $user->getRoles(),
+            ]);
+
             $this->addFlash('success', 'Utilisateur modifie avec succes.');
             return $this->redirectToRoute('admin_users_list');
         }
@@ -141,6 +148,12 @@ class UserController extends AbstractController
         $this->em->persist($tx);
 
         $this->em->flush();
+
+        $this->activityLog->log('user.credit', ActivityLog::CAT_USER, 'User', $user->getId(), $user->getUsername(), [
+            'nexbits'  => $nexbits,
+            'nexboost' => $nexboost,
+            'reason'   => $reason,
+        ]);
 
         $parts = [];
         if ($nexbits !== 0) {
@@ -209,6 +222,12 @@ class UserController extends AbstractController
         $user->ban($reason, $expiresAt, $currentUser);
         $this->em->flush();
 
+        $this->activityLog->log('user.ban', ActivityLog::CAT_USER, 'User', $user->getId(), $user->getUsername(), [
+            'reason'    => $reason,
+            'type'      => $type,
+            'expiresAt' => $expiresAt?->format('Y-m-d H:i'),
+        ]);
+
         $this->addFlash('success', sprintf(
             'Utilisateur %s banni %s.',
             $user->getUsername(),
@@ -230,6 +249,8 @@ class UserController extends AbstractController
         $user->unban();
         $this->em->flush();
 
+        $this->activityLog->log('user.unban', ActivityLog::CAT_USER, 'User', $user->getId(), $user->getUsername());
+
         $this->addFlash('success', 'Le ban de ' . $user->getUsername() . ' a été levé.');
         return $this->redirectToRoute('admin_users_list');
     }
@@ -244,8 +265,11 @@ class UserController extends AbstractController
                 return $this->redirectToRoute('admin_users_list');
             }
 
+            $username = $user->getUsername();
+            $userId = $user->getId();
             $this->em->remove($user);
             $this->em->flush();
+            $this->activityLog->log('user.delete', ActivityLog::CAT_USER, 'User', $userId, $username);
             $this->addFlash('success', 'Utilisateur supprime.');
         }
 

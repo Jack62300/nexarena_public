@@ -2,8 +2,10 @@
 
 namespace App\Controller\Admin;
 
+use App\Entity\ActivityLog;
 use App\Entity\RecruitmentListing;
 use App\Repository\RecruitmentListingRepository;
+use App\Service\ActivityLogService;
 use App\Service\RecruitmentService;
 use App\Service\WebhookService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -21,6 +23,7 @@ class RecruitmentController extends AbstractController
         private EntityManagerInterface $em,
         private RecruitmentService $recruitmentService,
         private WebhookService $webhookService,
+        private ActivityLogService $activityLog,
     ) {
     }
 
@@ -70,6 +73,10 @@ class RecruitmentController extends AbstractController
         $listing->setRejectionReason(null);
         $this->em->flush();
 
+        $this->activityLog->log('recruitment.approve', ActivityLog::CAT_RECRUITMENT, 'RecruitmentListing', $listing->getId(), $listing->getTitle(), [
+            'server' => $listing->getServer()->getName(),
+        ]);
+
         $this->webhookService->dispatch('recruitment.approved', [
             'title' => 'Annonce approuvee',
             'fields' => [
@@ -101,6 +108,10 @@ class RecruitmentController extends AbstractController
         $listing->setStatus(RecruitmentListing::STATUS_REVISION_REQUESTED);
         $listing->setRevisionReason($reason);
         $this->em->flush();
+
+        $this->activityLog->log('recruitment.revision', ActivityLog::CAT_RECRUITMENT, 'RecruitmentListing', $listing->getId(), $listing->getTitle(), [
+            'reason' => $reason,
+        ]);
 
         $this->webhookService->dispatch('recruitment.revision_requested', [
             'title' => 'Revision demandee',
@@ -135,6 +146,10 @@ class RecruitmentController extends AbstractController
         $listing->setRejectionReason($reason);
         $this->em->flush();
 
+        $this->activityLog->log('recruitment.reject', ActivityLog::CAT_RECRUITMENT, 'RecruitmentListing', $listing->getId(), $listing->getTitle(), [
+            'reason' => $reason,
+        ]);
+
         $this->webhookService->dispatch('recruitment.rejected', [
             'title' => 'Annonce rejetee',
             'fields' => [
@@ -166,8 +181,12 @@ class RecruitmentController extends AbstractController
             $this->recruitmentService->deleteImage($listing->getImage2());
         }
 
+        $title = $listing->getTitle();
+        $listingId = $listing->getId();
         $this->em->remove($listing);
         $this->em->flush();
+
+        $this->activityLog->log('recruitment.delete', ActivityLog::CAT_RECRUITMENT, 'RecruitmentListing', $listingId, $title);
 
         $this->addFlash('success', 'L\'annonce a ete supprimee.');
         return $this->redirectToRoute('admin_recruitment_list');

@@ -2,10 +2,12 @@
 
 namespace App\Controller\Admin;
 
+use App\Entity\ActivityLog;
 use App\Entity\Server;
 use App\Form\Admin\AdminServerFormType;
 use App\Repository\CategoryRepository;
 use App\Repository\ServerRepository;
+use App\Service\ActivityLogService;
 use App\Service\ServerService;
 use App\Service\SlugService;
 use App\Service\WebhookService;
@@ -25,6 +27,7 @@ class ServerController extends AbstractController
         private SlugService $slugService,
         private ServerService $serverService,
         private WebhookService $webhookService,
+        private ActivityLogService $activityLog,
     ) {
     }
 
@@ -61,6 +64,8 @@ class ServerController extends AbstractController
             $server->setSlug($this->slugService->slugify($server->getName()));
             $this->em->flush();
 
+            $this->activityLog->log('server.edit', ActivityLog::CAT_SERVER, 'Server', $server->getId(), $server->getName());
+
             $this->addFlash('success', 'Serveur modifié avec succès.');
             return $this->redirectToRoute('admin_servers_list');
         }
@@ -91,6 +96,9 @@ class ServerController extends AbstractController
                 ]);
             }
 
+            $this->activityLog->log('server.approve', ActivityLog::CAT_SERVER, 'Server', $server->getId(), $server->getName(), [
+                'approved' => $server->isApproved(),
+            ]);
             $this->addFlash('success', "Serveur {$status}.");
         }
 
@@ -105,6 +113,9 @@ class ServerController extends AbstractController
             $server->setIsActive(!$server->isActive());
             $this->em->flush();
             $status = $server->isActive() ? 'activé' : 'désactivé';
+            $this->activityLog->log('server.toggle_active', ActivityLog::CAT_SERVER, 'Server', $server->getId(), $server->getName(), [
+                'active' => $server->isActive(),
+            ]);
             $this->addFlash('success', "Serveur {$status}.");
         }
 
@@ -126,8 +137,13 @@ class ServerController extends AbstractController
             $serverName = $server->getName();
             $ownerName = $server->getOwner() ? $server->getOwner()->getUsername() : 'Inconnu';
 
+            $serverId = $server->getId();
             $this->em->remove($server);
             $this->em->flush();
+
+            $this->activityLog->log('server.delete', ActivityLog::CAT_SERVER, 'Server', $serverId, $serverName, [
+                'owner' => $ownerName,
+            ]);
 
             $this->webhookService->dispatch('server.deleted', [
                 'title' => 'Serveur supprimé',

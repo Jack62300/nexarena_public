@@ -23,7 +23,9 @@ use App\Repository\TagRepository;
 use App\Repository\TransactionRepository;
 use App\Repository\UserRepository;
 use App\Repository\VoteRepository;
+use App\Entity\ActivityLog;
 use App\Service\AchievementService;
+use App\Service\ActivityLogService;
 use App\Service\SettingsService;
 use App\Service\NetworkValidationService;
 use App\Service\NotificationService;
@@ -73,6 +75,7 @@ class UserServerController extends AbstractController
         private VoteRepository $voteRepo,
         private SettingsService $settingsService,
         private AchievementService $achievementService,
+        private ActivityLogService $activityLog,
     ) {
     }
 
@@ -188,6 +191,10 @@ class UserServerController extends AbstractController
             ]);
 
             $this->achievementService->checkAndAwardAchievements($this->getUser());
+
+            $this->activityLog->log('server.create', ActivityLog::CAT_SERVER, 'Server', $server->getId(), $server->getName(), [
+                'category' => $server->getCategory()?->getName(),
+            ]);
 
             $this->addFlash('success', 'Serveur cree avec succes ! Il sera visible apres approbation par un administrateur.');
             return $this->redirectToRoute('user_servers_manage', ['id' => $server->getId()]);
@@ -422,8 +429,11 @@ class UserServerController extends AbstractController
                 $this->serverService->deleteFile('servers/presentations', $server->getPresentationImage());
             }
 
+            $serverName = $server->getName();
+            $serverId = $server->getId();
             $this->em->remove($server);
             $this->em->flush();
+            $this->activityLog->log('server.delete_self', ActivityLog::CAT_SERVER, 'Server', $serverId, $serverName);
             $this->addFlash('success', 'Serveur supprime.');
         }
 

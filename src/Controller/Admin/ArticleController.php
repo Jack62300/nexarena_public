@@ -2,9 +2,11 @@
 
 namespace App\Controller\Admin;
 
+use App\Entity\ActivityLog;
 use App\Entity\Article;
 use App\Form\Admin\ArticleFormType;
 use App\Repository\ArticleRepository;
+use App\Service\ActivityLogService;
 use App\Service\SlugService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -20,6 +22,7 @@ class ArticleController extends AbstractController
     public function __construct(
         private EntityManagerInterface $em,
         private SlugService $slugService,
+        private ActivityLogService $activityLog,
     ) {
     }
 
@@ -53,6 +56,8 @@ class ArticleController extends AbstractController
 
             $this->em->persist($article);
             $this->em->flush();
+
+            $this->activityLog->log('article.create', ActivityLog::CAT_CONTENT, 'Article', $article->getId(), $article->getTitle());
 
             $this->addFlash('success', 'Article créé avec succès.');
             return $this->redirectToRoute('admin_articles_list');
@@ -93,6 +98,8 @@ class ArticleController extends AbstractController
 
             $this->em->flush();
 
+            $this->activityLog->log('article.edit', ActivityLog::CAT_CONTENT, 'Article', $article->getId(), $article->getTitle());
+
             $this->addFlash('success', 'Article modifié avec succès.');
             return $this->redirectToRoute('admin_articles_list');
         }
@@ -114,8 +121,11 @@ class ArticleController extends AbstractController
                     unlink($path);
                 }
             }
+            $title = $article->getTitle();
+            $articleId = $article->getId();
             $this->em->remove($article);
             $this->em->flush();
+            $this->activityLog->log('article.delete', ActivityLog::CAT_CONTENT, 'Article', $articleId, $title);
             $this->addFlash('success', 'Article supprimé.');
         }
 
