@@ -3,23 +3,31 @@
 {% block title %}{{ listing.title }} - Recrutement - {{ setting('site_name', 'Nexarena') }}{% endblock %}
 {% block meta_description %}{{ listing.description|striptags|slice(0, 160) }}{% endblock %}
 
-{%- set _rec_img = listing.image1 ? (app.request.schemeAndHttpHost ~ asset('uploads/recruitment/' ~ listing.image1)) : null -%}
-{% block og_image %}{% if _rec_img %}
-    <meta property="og:image"        content="{{ _rec_img }}">
+{% block og_image %}
+    {% if listing.image1 %}
+    <meta property="og:image"        content="{{ app.request.schemeAndHttpHost ~ asset('uploads/recruitment/' ~ listing.image1) }}">
     <meta property="og:image:width"  content="1200">
     <meta property="og:image:height" content="630">
-    <meta name="twitter:image"       content="{{ _rec_img }}">
-{% endif %}{% endblock %}
+    {% else %}{{ parent() }}{% endif %}
+{% endblock %}
+{% block twitter_card %}{{ listing.image1 ? 'summary_large_image' : 'summary' }}{% endblock %}
+{% block twitter_image %}
+    {% if listing.image1 %}
+    <meta name="twitter:image" content="{{ app.request.schemeAndHttpHost ~ asset('uploads/recruitment/' ~ listing.image1) }}">
+    {% endif %}
+{% endblock %}
 
 {% block json_ld %}
 {% set _rec_url = app.request.schemeAndHttpHost ~ path('recruitment_show', {slug: listing.slug}) %}
+{% set _rec_img = listing.image1 ? (app.request.schemeAndHttpHost ~ asset('uploads/recruitment/' ~ listing.image1)) : null %}
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "JobPosting",
   "title": {{ listing.title|json_encode|raw }},
   "description": {{ listing.description|striptags|json_encode|raw }},
-  "url": {{ _rec_url|json_encode|raw }},
+  "url": {{ _rec_url|json_encode|raw }}{% if _rec_img %},
+  "image": {{ _rec_img|json_encode|raw }}{% endif %},
   "hiringOrganization": {
     "@type": "Organization",
     "name": {{ listing.server.name|json_encode|raw }}
