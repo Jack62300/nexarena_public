@@ -318,6 +318,22 @@ class Transaction
         return $this->stripeSessionId ?? $this->cryptoPaymentId ?? $this->paypalOrderId;
     }
 
+    /**
+     * Returns true for purchase transactions that were never actually credited
+     * (abandoned checkouts, sandbox/test mode payments).
+     */
+    public function isTest(): bool
+    {
+        if ($this->type === self::TYPE_PURCHASE && !$this->isCredited) {
+            return true;
+        }
+        // Crypto.com sandbox explicitly uses status 'succeeded' (not 'captured')
+        if ($this->cryptoStatus === self::CRYPTO_STATUS_SUCCEEDED) {
+            return true;
+        }
+        return false;
+    }
+
     #[ORM\PrePersist]
     public function onPrePersist(): void
     {

@@ -3,6 +3,36 @@
 {% block page_title %}Transactions{% endblock %}
 {% block title %}Nexarena Admin - Transactions{% endblock %}
 
+{% block admin_css %}
+    .tx-test-badge {
+        display: inline-block;
+        padding: 1px 6px;
+        border-radius: 4px;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .4px;
+        background: rgba(231,76,60,.15);
+        color: #e74c3c;
+        border: 1px solid rgba(231,76,60,.3);
+        vertical-align: middle;
+        margin-left: 4px;
+    }
+    .tx-row--test td { opacity: .65; }
+    .tx-checkbox { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
+    #selectAll { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
+    #bulkBar {
+        display: none;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 20px;
+        background: rgba(231,76,60,.08);
+        border-top: 1px solid rgba(231,76,60,.2);
+    }
+    #bulkBar.visible { display: flex; }
+    #bulkCount { font-size: 13px; font-weight: 600; color: #e74c3c; }
+{% endblock %}
+
 {% block admin_body %}
     <div class="admin-table">
         <div class="admin-table__header">
@@ -15,112 +45,191 @@
                 <a href="{{ path('admin_transactions_list', {type: 'admin_credit'}) }}" class="btn-admin btn-admin--sm {{ current_type == 'admin_credit' ? 'btn-admin--primary' : 'btn-admin--outline' }}">Credits admin</a>
             </div>
         </div>
-        <table>
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Date</th>
-                    <th>Utilisateur</th>
-                    <th>Type</th>
-                    <th>Plan</th>
-                    <th>Montant</th>
-                    <th>NexBits</th>
-                    <th>NexBoost</th>
-                    <th>Paiement</th>
-                    <th>Ref. paiement</th>
-                    <th>Description</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for tx in transactions %}
+
+        <form id="bulkForm" method="post" action="{{ path('admin_transactions_bulk_delete') }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('transactions_bulk_delete') }}">
+
+            <table>
+                <thead>
                     <tr>
-                        <td style="color:var(--text-secondary);">{{ tx.id }}</td>
-                        <td style="color:var(--text-secondary);font-size:12px;white-space:nowrap;">{{ tx.createdAt|time_ago }}</td>
-                        <td>
-                            {% if tx.user %}
-                                <strong>{{ tx.user.username }}</strong>
-                            {% else %}
-                                <span style="color:var(--text-secondary);">—</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if tx.type == 'purchase' %}
-                                <span style="color:#1cc88a;"><i class="fas fa-shopping-cart"></i> Achat</span>
-                            {% elseif tx.type == 'spend' %}
-                                <span style="color:#f6c23e;"><i class="fas fa-minus-circle"></i> Depense</span>
-                            {% elseif tx.type == 'refund' %}
-                                <span style="color:#e74a3b;"><i class="fas fa-undo"></i> Remboursement</span>
-                            {% elseif tx.type == 'admin_credit' %}
-                                <span style="color:#36b9cc;"><i class="fas fa-gift"></i> Credit admin</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if tx.plan %}
-                                {{ tx.plan.name }}
-                            {% else %}
-                                <span style="color:var(--text-secondary);">—</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if tx.amount %}
-                                <span style="color:{{ tx.type == 'refund' ? '#e74a3b' : 'var(--accent)' }};font-weight:600;">
-                                    {{ tx.amount }} {{ tx.currency }}
-                                </span>
-                            {% else %}
-                                <span style="color:var(--text-secondary);">—</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if tx.tokensAmount != 0 %}
-                                <span style="color:{{ tx.tokensAmount > 0 ? '#1cc88a' : '#e74a3b' }};">
-                                    {{ tx.tokensAmount > 0 ? '+' : '' }}{{ tx.tokensAmount }}
-                                </span>
-                            {% else %}
-                                <span style="color:var(--text-secondary);">—</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if tx.boostTokensAmount != 0 %}
-                                <span style="color:{{ tx.boostTokensAmount > 0 ? '#1cc88a' : '#e74a3b' }};">
-                                    {{ tx.boostTokensAmount > 0 ? '+' : '' }}{{ tx.boostTokensAmount }}
-                                </span>
-                            {% else %}
-                                <span style="color:var(--text-secondary);">—</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% set method = tx.paymentMethod %}
-                            {% if method == 'paypal' %}
-                                <span style="background:#003087;color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;white-space:nowrap;">
-                                    <i class="fab fa-paypal"></i> PayPal
-                                </span>
-                            {% elseif method == 'crypto' %}
-                                <span style="background:#f7931a;color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;white-space:nowrap;">
-                                    <i class="fas fa-coins"></i> Crypto
-                                </span>
-                            {% elseif method == 'stripe' %}
-                                <span style="background:#635bff;color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;white-space:nowrap;">
-                                    <i class="fab fa-stripe-s"></i> Stripe
-                                </span>
-                            {% else %}
-                                <span style="color:var(--text-secondary);">—</span>
-                            {% endif %}
-                        </td>
-                        <td style="font-size:11px;color:var(--text-secondary);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="{{ tx.paymentId }}">
-                            {{ tx.paymentId ?: '—' }}
-                        </td>
-                        <td style="font-size:12px;color:var(--text-secondary);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                            {{ tx.description ?: '—' }}
-                        </td>
+                        {% if is_granted('ROLE_RESPONSABLE') %}
+                        <th style="width:36px;"><input type="checkbox" id="selectAll" title="Tout sélectionner"></th>
+                        {% endif %}
+                        <th>#</th>
+                        <th>Date</th>
+                        <th>Utilisateur</th>
+                        <th>Type</th>
+                        <th>Plan</th>
+                        <th>Montant</th>
+                        <th>NexBits</th>
+                        <th>NexBoost</th>
+                        <th>Paiement</th>
+                        <th>Ref. paiement</th>
+                        <th>Description</th>
                     </tr>
-                {% else %}
-                    <tr>
-                        <td colspan="11" style="text-align:center;color:var(--text-secondary);padding:30px;">
-                            Aucune transaction pour le moment.
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    {% for tx in transactions %}
+                        <tr class="{{ tx.test ? 'tx-row--test' : '' }}">
+                            {% if is_granted('ROLE_RESPONSABLE') %}
+                            <td><input type="checkbox" name="ids[]" value="{{ tx.id }}" class="tx-checkbox"></td>
+                            {% endif %}
+                            <td style="color:var(--text-secondary);">{{ tx.id }}</td>
+                            <td style="color:var(--text-secondary);font-size:12px;white-space:nowrap;">{{ tx.createdAt|time_ago }}</td>
+                            <td>
+                                {% if tx.user %}
+                                    <strong>{{ tx.user.username }}</strong>
+                                {% else %}
+                                    <span style="color:var(--text-secondary);">—</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if tx.type == 'purchase' %}
+                                    <span style="color:#1cc88a;"><i class="fas fa-shopping-cart"></i> Achat</span>
+                                    {% if tx.test %}<span class="tx-test-badge">test</span>{% endif %}
+                                {% elseif tx.type == 'spend' %}
+                                    <span style="color:#f6c23e;"><i class="fas fa-minus-circle"></i> Depense</span>
+                                {% elseif tx.type == 'refund' %}
+                                    <span style="color:#e74a3b;"><i class="fas fa-undo"></i> Remboursement</span>
+                                {% elseif tx.type == 'admin_credit' %}
+                                    <span style="color:#36b9cc;"><i class="fas fa-gift"></i> Credit admin</span>
+                                {% elseif tx.type == 'vote_reward' %}
+                                    <span style="color:#45f882;"><i class="fas fa-star"></i> Vote reward</span>
+                                {% elseif tx.type == 'deposit' %}
+                                    <span style="color:#a29bfe;"><i class="fas fa-arrow-right"></i> Depot</span>
+                                {% else %}
+                                    <span style="color:var(--text-secondary);">{{ tx.type }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if tx.plan %}
+                                    {{ tx.plan.name }}
+                                {% else %}
+                                    <span style="color:var(--text-secondary);">—</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if tx.amount %}
+                                    <span style="color:{{ tx.type == 'refund' ? '#e74a3b' : 'var(--accent)' }};font-weight:600;">
+                                        {{ tx.amount }} {{ tx.currency }}
+                                    </span>
+                                {% else %}
+                                    <span style="color:var(--text-secondary);">—</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if tx.tokensAmount != 0 %}
+                                    <span style="color:{{ tx.tokensAmount > 0 ? '#1cc88a' : '#e74a3b' }};">
+                                        {{ tx.tokensAmount > 0 ? '+' : '' }}{{ tx.tokensAmount }}
+                                    </span>
+                                {% else %}
+                                    <span style="color:var(--text-secondary);">—</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if tx.boostTokensAmount != 0 %}
+                                    <span style="color:{{ tx.boostTokensAmount > 0 ? '#1cc88a' : '#e74a3b' }};">
+                                        {{ tx.boostTokensAmount > 0 ? '+' : '' }}{{ tx.boostTokensAmount }}
+                                    </span>
+                                {% else %}
+                                    <span style="color:var(--text-secondary);">—</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% set method = tx.paymentMethod %}
+                                {% if method == 'paypal' %}
+                                    <span style="background:#003087;color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;white-space:nowrap;">
+                                        <i class="fab fa-paypal"></i> PayPal
+                                    </span>
+                                {% elseif method == 'crypto' %}
+                                    <span style="background:#f7931a;color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;white-space:nowrap;">
+                                        <i class="fas fa-coins"></i> Crypto
+                                    </span>
+                                {% elseif method == 'stripe' %}
+                                    <span style="background:#635bff;color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;white-space:nowrap;">
+                                        <i class="fab fa-stripe-s"></i> Stripe
+                                    </span>
+                                {% else %}
+                                    <span style="color:var(--text-secondary);">—</span>
+                                {% endif %}
+                            </td>
+                            <td style="font-size:11px;color:var(--text-secondary);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="{{ tx.paymentId }}">
+                                {{ tx.paymentId ?: '—' }}
+                            </td>
+                            <td style="font-size:12px;color:var(--text-secondary);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                                {{ tx.description ?: '—' }}
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="{{ is_granted('ROLE_RESPONSABLE') ? 13 : 12 }}" style="text-align:center;color:var(--text-secondary);padding:30px;">
+                                Aucune transaction pour le moment.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            {% if is_granted('ROLE_RESPONSABLE') %}
+            <div id="bulkBar">
+                <span id="bulkCount">0 sélectionnée(s)</span>
+                <button type="submit" class="btn-admin" style="background:rgba(231,76,60,.15);color:#e74c3c;border:1px solid rgba(231,76,60,.4);padding:6px 14px;font-size:13px;">
+                    <i class="fas fa-trash"></i> Supprimer la sélection
+                </button>
+                <button type="button" id="bulkCancel" style="background:transparent;border:1px solid var(--border-color);border-radius:6px;color:var(--text-secondary);padding:6px 14px;font-size:13px;cursor:pointer;">
+                    Annuler
+                </button>
+            </div>
+            {% endif %}
+        </form>
     </div>
+{% endblock %}
+
+{% block admin_js %}
+{% if is_granted('ROLE_RESPONSABLE') %}
+<script nonce="{{ csp_nonce() }}">
+(function () {
+    var selectAll  = document.getElementById('selectAll');
+    var bulkBar    = document.getElementById('bulkBar');
+    var bulkCount  = document.getElementById('bulkCount');
+    var bulkCancel = document.getElementById('bulkCancel');
+    var checkboxes = document.querySelectorAll('.tx-checkbox');
+
+    function updateBar() {
+        var checked = document.querySelectorAll('.tx-checkbox:checked').length;
+        if (checked > 0) {
+            bulkBar.classList.add('visible');
+            bulkCount.textContent = checked + ' sélectionnée(s)';
+        } else {
+            bulkBar.classList.remove('visible');
+        }
+        selectAll.indeterminate = checked > 0 && checked < checkboxes.length;
+        selectAll.checked = checked === checkboxes.length && checkboxes.length > 0;
+    }
+
+    selectAll.addEventListener('change', function () {
+        checkboxes.forEach(function (cb) { cb.checked = selectAll.checked; });
+        updateBar();
+    });
+
+    checkboxes.forEach(function (cb) {
+        cb.addEventListener('change', updateBar);
+    });
+
+    bulkCancel.addEventListener('click', function () {
+        checkboxes.forEach(function (cb) { cb.checked = false; });
+        selectAll.checked = false;
+        bulkBar.classList.remove('visible');
+    });
+
+    document.getElementById('bulkForm').addEventListener('submit', function (e) {
+        var checked = document.querySelectorAll('.tx-checkbox:checked').length;
+        if (checked === 0) { e.preventDefault(); return; }
+        if (!confirm('Supprimer ' + checked + ' transaction(s) ? Cette action est irréversible.')) {
+            e.preventDefault();
+        }
+    });
+}());
+</script>
+{% endif %}
 {% endblock %}
