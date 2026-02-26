@@ -13,9 +13,9 @@ use Symfony\Component\HttpKernel\KernelEvents;
 /**
  * Listener global : vérifie VPN/proxy et pays pour CHAQUE visiteur.
  * S'applique à toutes les routes du site sauf les exclusions techniques.
- * Priority 9 → s'exécute avant MaintenanceListener (5) et AdminVpnBlockListener (8).
+ * Priority 2048 → s'exécute avant RouterListener (32), SecurityFirewall (8), scheb/2fa-bundle.
  */
-#[AsEventListener(event: KernelEvents::REQUEST, priority: 9)]
+#[AsEventListener(event: KernelEvents::REQUEST, priority: 2048)]
 class IpAccessListener
 {
     /** Routes qui ne doivent jamais être bloquées */
