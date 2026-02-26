@@ -190,7 +190,7 @@
             <div class="pop-cats-grid">
                 {% for game in popularCategories %}
                     {% set rank = loop.index %}
-                    {% set gcImg = game.image ? asset('uploads/categories/' ~ game.image) : (game.category.image ? asset('uploads/categories/' ~ game.category.image) : null) %}
+                    {% set gcImg = asset(gc_image(game, game.category)) %}
                     {% set sCount = serverCounts[game.id] ?? 0 %}
                     {% set rankClass = rank == 1 ? 'pop-cat--gold' : (rank == 2 ? 'pop-cat--silver' : (rank == 3 ? 'pop-cat--bronze' : '')) %}
                     <a href="{{ path('ranking_game_category', {slug: game.slug}) }}" class="pop-cat {{ rankClass }}">
@@ -204,13 +204,7 @@
                             {% endif %}
                         </div>
                         <div class="pop-cat__img">
-                            {% if gcImg %}
-                                <img src="{{ gcImg }}" alt="{{ game.name }}">
-                            {% else %}
-                                <div class="pop-cat__placeholder">
-                                    <i class="{{ game.category.icon ?? 'fas fa-gamepad' }}"></i>
-                                </div>
-                            {% endif %}
+                            <img src="{{ gcImg }}" alt="{{ game.name }}">
                         </div>
                         <div class="pop-cat__body">
                             <div class="pop-cat__parent">

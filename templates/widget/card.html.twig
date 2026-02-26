@@ -156,15 +156,7 @@
 <body>
     <div class="widget-card">
         <div class="widget-header">
-            {% if server.gameCategory and server.gameCategory.image %}
-                <img src="{{ app.request.schemeAndHttpHost }}/uploads/categories/{{ server.gameCategory.image }}" alt="{{ server.gameCategory.name }}" class="widget-logo">
-            {% elseif server.category.image %}
-                <img src="{{ app.request.schemeAndHttpHost }}/uploads/categories/{{ server.category.image }}" alt="{{ server.category.name }}" class="widget-logo">
-            {% else %}
-                <div class="widget-logo-fallback">
-                    <i class="{{ server.category.icon ?: 'fas fa-gamepad' }}"></i>
-                </div>
-            {% endif %}
+            <img src="{{ app.request.schemeAndHttpHost ~ '/' ~ gc_image(server.gameCategory, server.category) }}" alt="{{ (server.gameCategory ?? server.category).name }}" class="widget-logo">
             <div class="widget-info">
                 <div class="widget-name">{{ server.name }}</div>
                 {% if server.gameCategory %}

@@ -54,19 +54,7 @@
                         {% set count = serverCounts[gc.id] ?? 0 %}
                         <a href="{{ path('ranking_game_category', {slug: gc.slug}) }}" class="nx-cat-card wow fadeInUp" data-wow-delay="{{ (loop.index0 * 0.06)|round(2) }}s">
                             <div class="nx-cat-card__img">
-                                {% if gc.image %}
-                                    <img src="{{ asset('uploads/categories/' ~ gc.image) }}" alt="{{ gc.name }}">
-                                {% elseif category.image %}
-                                    <img src="{{ asset('uploads/categories/' ~ category.image) }}" alt="{{ gc.name }}">
-                                {% else %}
-                                    <div class="nx-cat-card__placeholder">
-                                        {% if gc.icon %}
-                                            <img src="{{ asset('uploads/categories/' ~ gc.icon) }}" alt="{{ gc.name }}" style="width:48px;height:48px;object-fit:contain;opacity:0.5;">
-                                        {% else %}
-                                            <i class="{{ category.icon ?? 'fas fa-gamepad' }}"></i>
-                                        {% endif %}
-                                    </div>
-                                {% endif %}
+                                <img src="{{ asset(gc_image(gc, category)) }}" alt="{{ gc.name }}">
                                 {% if gc.icon %}
                                     <div class="nx-cat-card__icon-badge">
                                         <img src="{{ asset('uploads/categories/' ~ gc.icon) }}" alt="">
