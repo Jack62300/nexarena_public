@@ -9,6 +9,7 @@ use App\Form\Admin\AdminUserFormType;
 use App\Repository\RoleRepository;
 use App\Repository\UserRepository;
 use App\Service\ActivityLogService;
+use App\Service\UserDeletionService;
 use App\Service\WebhookService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -26,6 +27,7 @@ class UserController extends AbstractController
         private RoleRepository $roleRepo,
         private WebhookService $webhookService,
         private ActivityLogService $activityLog,
+        private UserDeletionService $userDeletion,
     ) {
     }
 
@@ -256,21 +258,63 @@ class UserController extends AbstractController
     }
 
     #[Route('/{id}/delete', name: 'delete', methods: ['POST'])]
-    #[IsGranted('users.delete')]
+    #[IsGranted('ROLE_RESPONSABLE')]
     public function delete(User $user, Request $request): Response
     {
-        if ($this->isCsrfTokenValid('delete_' . $user->getId(), $request->request->get('_token'))) {
-            if ($user === $this->getUser()) {
-                $this->addFlash('error', 'Vous ne pouvez pas supprimer votre propre compte.');
-                return $this->redirectToRoute('admin_users_list');
-            }
+        if (!$this->isCsrfTokenValid('user_delete_' . $user->getId(), $request->request->get('_token'))) {
+            $this->addFlash('error', 'Token CSRF invalide.');
+            return $this->redirectToRoute('admin_users_list');
+        }
 
-            $username = $user->getUsername();
-            $userId = $user->getId();
-            $this->em->remove($user);
-            $this->em->flush();
-            $this->activityLog->log('user.delete', ActivityLog::CAT_USER, 'User', $userId, $username);
-            $this->addFlash('success', 'Utilisateur supprime.');
+        if ($user === $this->getUser()) {
+            $this->addFlash('error', 'Vous ne pouvez pas supprimer votre propre compte.');
+            return $this->redirectToRoute('admin_users_list');
+        }
+
+        // Prevent deleting users with equal or higher role
+        $roleHierarchy = [
+            'ROLE_EDITEUR'     => 1,
+            'ROLE_MANAGER'     => 2,
+            'ROLE_RESPONSABLE' => 3,
+            'ROLE_DEVELOPPEUR' => 4,
+            'ROLE_FONDATEUR'   => 5,
+        ];
+        $currentUser = $this->getUser();
+        $currentMax  = 0;
+        foreach ($currentUser->getRoles() as $r) {
+            $currentMax = max($currentMax, $roleHierarchy[$r] ?? 0);
+        }
+        $targetMax = 0;
+        foreach ($user->getRoles() as $r) {
+            $targetMax = max($targetMax, $roleHierarchy[$r] ?? 0);
+        }
+        if ($targetMax >= $currentMax) {
+            $this->addFlash('error', 'Vous ne pouvez pas supprimer un utilisateur avec un rôle égal ou supérieur au vôtre.');
+            return $this->redirectToRoute('admin_users_list');
+        }
+
+        $username = $user->getUsername();
+        $userId   = $user->getId();
+
+        try {
+            $stats = $this->userDeletion->deleteUser($user);
+
+            $this->activityLog->log('user.delete', ActivityLog::CAT_USER, 'User', $userId, $username, [
+                'servers'     => $stats['servers']    ?? 0,
+                'comments'    => $stats['comments']   ?? 0,
+                'listings'    => $stats['listings']   ?? 0,
+                'messages'    => $stats['messages']   ?? 0,
+            ]);
+
+            $this->addFlash('success', sprintf(
+                'Utilisateur "%s" supprimé avec toutes ses données (%d serveur(s), %d commentaire(s), %d annonce(s)).',
+                $username,
+                $stats['servers']  ?? 0,
+                $stats['comments'] ?? 0,
+                $stats['listings'] ?? 0,
+            ));
+        } catch (\Throwable $e) {
+            $this->addFlash('error', 'Erreur lors de la suppression : ' . $e->getMessage());
         }
 
         return $this->redirectToRoute('admin_users_list');
