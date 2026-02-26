@@ -762,7 +762,33 @@
                              : '<span class="sa-monip-val--danger">🔴 ' + (warnLabel || 'non') + '</span>';
                 }
 
-                var html = row('IP détectée par le serveur', d.ip, 'sa-monip-val--ok');
+                var html = '';
+
+                // ── Alerte critique proxy mal configuré ──
+                if (d.proxy_misconfigured) {
+                    html += '<div style="background:rgba(231,74,59,.18);border:2px solid rgba(231,74,59,.6);border-radius:8px;padding:12px 14px;margin-bottom:12px;color:#ff7675;">'
+                          + '<div style="font-weight:700;font-size:13px;margin-bottom:6px;"><i class="fas fa-exclamation-triangle me-2"></i>⚠️ TRUSTED_PROXIES non configuré — tous les checks IP sont inefficaces !</div>'
+                          + '<div style="font-size:12px;line-height:1.6;">'
+                          + 'Le serveur est derrière un proxy/reverse proxy (Apache, LiteSpeed, Nginx…) mais Symfony ne sait pas lui faire confiance. '
+                          + 'Résultat : <strong>getClientIp() retourne l\'IP du serveur lui-même</strong> au lieu de l\'IP réelle du visiteur. '
+                          + 'Les vérifications VPN et pays échouent donc pour <strong>tous les visiteurs</strong>.'
+                          + '<br><br>✅ <strong>Correction requise</strong> : ajoutez la ligne suivante dans le fichier <code style="background:rgba(0,0,0,.3);padding:1px 5px;border-radius:3px;">.env.local</code> sur le serveur de production :'
+                          + '<br><code style="display:block;background:rgba(0,0,0,.4);padding:6px 10px;border-radius:4px;margin-top:6px;font-size:11px;color:#ffeaa7;">TRUSTED_PROXIES=REMOTE_ADDR</code>'
+                          + '<br>Puis rechargez le serveur web (ou videz le cache Symfony). Après correction, videz aussi le cache IPQS via le bouton ci-dessus.'
+                          + '</div></div>';
+                }
+
+                // ── Lignes IP ──
+                html += row('IP détectée (getClientIp)', d.ip, d.proxy_misconfigured ? 'sa-monip-val--danger' : 'sa-monip-val--ok');
+                html += row('REMOTE_ADDR (connexion TCP)', d.remote_addr, d.remote_addr === d.ip ? '' : 'sa-monip-val--warn');
+                if (d.x_forwarded_for) {
+                    html += row('X-Forwarded-For', d.x_forwarded_for, 'sa-monip-val--warn');
+                }
+                if (d.x_real_ip) {
+                    html += row('X-Real-IP', d.x_real_ip, 'sa-monip-val--warn');
+                }
+
+                // ── Lignes API & règles ──
                 html += row('Clé API IPQS', d.api_key_set ? '✅ configurée' : '❌ manquante', d.api_key_set ? 'sa-monip-val--ok' : 'sa-monip-val--danger');
                 html += row('API a répondu', d.api_responded ? '✅ oui' : (d.api_key_set ? '❌ erreur' : 'N/A'), d.api_responded ? 'sa-monip-val--ok' : 'sa-monip-val--danger');
                 html += row('IP de confiance', d.trusted ? '✅ oui (bypass)' : 'non');

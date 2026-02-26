@@ -337,7 +337,18 @@ class SecurityAccessController extends AbstractController
     #[Route('/mon-ip', name: 'mon_ip', methods: ['GET'])]
     public function monIp(Request $request): JsonResponse
     {
-        $ip = $request->getClientIp() ?? '0.0.0.0';
+        // IP résolue par Symfony (tient compte de TRUSTED_PROXIES)
+        $ip         = $request->getClientIp() ?? '0.0.0.0';
+        // IP directe de la connexion TCP (avant résolution proxy)
+        $remoteAddr = $request->server->get('REMOTE_ADDR', '?');
+        // Header X-Forwarded-For brut
+        $xForwarded = $request->headers->get('X-Forwarded-For', '');
+        $xRealIp    = $request->headers->get('X-Real-IP', '');
+
+        // Détection automatique : si getClientIp() == REMOTE_ADDR et que
+        // X-Forwarded-For est non vide → TRUSTED_PROXIES probablement manquant
+        $proxyMisconfigured = ($ip === $remoteAddr)
+            && ($xForwarded !== '' || $xRealIp !== '');
 
         $apiKeyConfigured = !empty(trim($this->settings->get('ipqs_api_key', '') ?? ''));
         $vpnEnabled       = $this->settings->getBool('vpn_block_enabled');
@@ -351,7 +362,7 @@ class SecurityAccessController extends AbstractController
         $allowed = $apiKeyConfigured ? $this->ipSecurity->isCountryAllowed($ip) : null;
         $trusted = $this->ipSecurity->isTrustedIp($ip);
 
-        // Simulate what IpAccessListener would decide
+        // Simuler la décision de IpAccessListener
         $blocked     = false;
         $blockReason = null;
         if ($trusted) {
@@ -367,19 +378,23 @@ class SecurityAccessController extends AbstractController
         }
 
         return new JsonResponse([
-            'ip'                => $ip,
-            'api_key_set'       => $apiKeyConfigured,
-            'api_responded'     => $apiOk,
-            'trusted'           => $trusted,
-            'vpn_block_enabled' => $vpnEnabled,
-            'vpn_detected'      => $isVpn,
-            'country_block_enabled' => $countryEnabled,
-            'country_code'      => $country,
-            'country_allowed'   => $allowed,
-            'allowed_countries' => $allowedCountries,
-            'blocked'           => $blocked,
-            'block_reason'      => $blockReason,
-            'raw'               => $raw,
+            'ip'                   => $ip,
+            'remote_addr'          => $remoteAddr,
+            'x_forwarded_for'      => $xForwarded,
+            'x_real_ip'            => $xRealIp,
+            'proxy_misconfigured'  => $proxyMisconfigured,
+            'api_key_set'          => $apiKeyConfigured,
+            'api_responded'        => $apiOk,
+            'trusted'              => $trusted,
+            'vpn_block_enabled'    => $vpnEnabled,
+            'vpn_detected'         => $isVpn,
+            'country_block_enabled'=> $countryEnabled,
+            'country_code'         => $country,
+            'country_allowed'      => $allowed,
+            'allowed_countries'    => $allowedCountries,
+            'blocked'              => $blocked,
+            'block_reason'         => $blockReason,
+            'raw'                  => $raw,
         ]);
     }
 

@@ -130,6 +130,7 @@ class InitSettingsCommand extends Command
         ['key' => 'country_block_enabled', 'value' => '0', 'type' => 'boolean', 'label' => 'Filtrage par pays active', 'description' => 'Bloquer les visiteurs dont le pays n\'est pas dans la liste des pays autorises. Necessite la cle API IPQualityScore.', 'category' => 'securite', 'position' => 5],
         ['key' => 'allowed_countries', 'value' => '', 'type' => 'text', 'label' => 'Pays autorises (codes ISO)', 'description' => 'Codes pays ISO 3166-1 alpha-2 separes par des virgules. Ex: FR,BE,CH,LU,MC,CA. Laisser vide = tous les pays autorises.', 'category' => 'securite', 'position' => 6],
         ['key' => 'trusted_ips', 'value' => '', 'type' => 'textarea', 'label' => 'IPs de confiance (whitelist)', 'description' => 'IPs ou plages CIDR exemptees de tous les checks (VPN, pays). Une entree par ligne. Supporte IPv4 exacte (82.66.56.201) et CIDR (82.66.0.0/16).', 'category' => 'securite', 'position' => 7],
+        ['key' => 'vpn_fraud_score_threshold', 'value' => '85', 'type' => 'number', 'label' => 'Seuil fraud_score IPQS (0 = desactive)', 'description' => 'Score de fraude minimum (0-100) au-dela duquel une IP est consideree comme suspecte et bloquee. 0 = desactive. Recommande : 85.', 'category' => 'securite', 'position' => 8],
 
         // ========== PAIEMENT ==========
         ['key' => 'paypal_client_id', 'value' => '', 'type' => 'secret', 'label' => 'PayPal Client ID', 'description' => 'Client ID de l\'application PayPal (developer.paypal.com)', 'category' => 'paiement', 'position' => 0],

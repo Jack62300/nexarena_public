@@ -81,6 +81,14 @@ class IpSecurityService
 
     /**
      * Retourne true si l'IP est un VPN, proxy ou Tor (selon IPQS).
+     *
+     * Champs vérifiés (du plus fiable au plus permissif) :
+     *  - active_vpn / active_tor : confirmés actifs (IPQS premium, souvent false sur plan gratuit)
+     *  - vpn / tor               : détectés VPN/Tor (disponible sur plan gratuit)
+     *  - fraud_score             : score >= seuil configurable (défaut 85/100)
+     *
+     * Le champ "proxy" reste exclu : IPQS retourne true pour certains FAI
+     * grand public (Free, SFR…) et génère de faux positifs.
      */
     public function isVpnOrProxy(string $ip): bool
     {
@@ -90,12 +98,14 @@ class IpSecurityService
             return false; // fail-open
         }
 
-        // On bloque uniquement les VPN/Tor actifs confirmés.
-        // Le champ "proxy" est volontairement exclu : IPQS le retourne true
-        // pour certains FAI grand public (Free, SFR…) générant des faux positifs.
+        // Seuil fraud_score configurable (0 = désactivé)
+        $threshold = (int) $this->settings->get('vpn_fraud_score_threshold', '85');
+
         return !empty($data['active_vpn'])
             || !empty($data['active_tor'])
-            || (!empty($data['vpn']) && !empty($data['tor']));
+            || !empty($data['vpn'])
+            || !empty($data['tor'])
+            || ($threshold > 0 && ($data['fraud_score'] ?? 0) >= $threshold);
     }
 
     /**
