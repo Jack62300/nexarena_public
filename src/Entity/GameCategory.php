@@ -43,6 +43,9 @@ class GameCategory
     #[ORM\JoinColumn(name: 'category_id', nullable: true)]
     private ?Category $category = null;
 
+    #[ORM\Column(type: Types::JSON, nullable: true)]
+    private ?array $serverFormFields = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -152,6 +155,18 @@ class GameCategory
     public function setCategory(?Category $category): static
     {
         $this->category = $category;
+
+        return $this;
+    }
+
+    public function getServerFormFields(): ?array
+    {
+        return $this->serverFormFields;
+    }
+
+    public function setServerFormFields(?array $fields): static
+    {
+        $this->serverFormFields = $fields;
 
         return $this;
     }

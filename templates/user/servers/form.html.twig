@@ -120,22 +120,34 @@
                     <div class="form-card" {% if not can_edit_info %}style="opacity:0.6;"{% endif %}>
                         <h4 class="form-card__title"><i class="fas fa-plug"></i> Connexion</h4>
                         <div class="row g-3">
-                            <div class="col-md-5">
+                            <div class="col-md-5" data-cfg-key="ip">
                                 <div class="form-group">
                                     <label for="ip">Adresse IP</label>
                                     <input type="text" id="ip" name="ip" class="form-input" value="{{ server ? server.ip : '' }}" placeholder="play.monserveur.fr" {{ not can_edit_info ? 'disabled' : '' }}>
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-3" data-cfg-key="port">
                                 <div class="form-group">
                                     <label for="port">Port</label>
                                     <input type="number" id="port" name="port" class="form-input" value="{{ server ? server.port : '' }}" placeholder="25565" {{ not can_edit_info ? 'disabled' : '' }}>
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-4" data-cfg-key="connect_url">
                                 <div class="form-group">
                                     <label for="connect_url">Lien de connexion</label>
                                     <input type="url" id="connect_url" name="connect_url" class="form-input" value="{{ server ? server.connectUrl : '' }}" placeholder="https://..." {{ not can_edit_info ? 'disabled' : '' }}>
+                                </div>
+                            </div>
+                            <div class="col-md-6" data-cfg-key="website" style="display:none;">
+                                <div class="form-group">
+                                    <label for="website_conn"><i class="fas fa-globe" style="margin-right:5px;"></i> Site web</label>
+                                    <input type="url" id="website_conn" name="website" class="form-input" value="{{ server ? server.website : '' }}" placeholder="https://www.monserveur.fr" {{ not can_edit_info ? 'disabled' : '' }}>
+                                </div>
+                            </div>
+                            <div class="col-md-6" data-cfg-key="discord_url" style="display:none;">
+                                <div class="form-group">
+                                    <label for="discord_url_conn"><i class="fab fa-discord" style="margin-right:5px;"></i> Lien d'invitation Discord</label>
+                                    <input type="url" id="discord_url_conn" name="discord_url" class="form-input" value="{{ server ? server.discordUrl : '' }}" placeholder="https://discord.gg/..." {{ not can_edit_info ? 'disabled' : '' }}>
                                 </div>
                             </div>
                         </div>
@@ -153,13 +165,13 @@
 
                         <div id="linksSection" class="toggle-section {{ server and (server.website or server.discordUrl or server.twitterUrl or server.youtubeUrl or server.instagramUrl or server.twitchChannel) ? 'active' : '' }}">
                             <div class="row g-3">
-                                <div class="col-md-6">
+                                <div class="col-md-6" data-social-key="website">
                                     <div class="form-group">
                                         <label for="website"><i class="fas fa-globe" style="margin-right:5px;"></i> Site web</label>
                                         <input type="url" id="website" name="website" class="form-input" value="{{ server ? server.website : '' }}" placeholder="https://www.monserveur.fr" {{ not can_edit_social ? 'disabled' : '' }}>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-6" data-social-key="discord_url">
                                     <div class="form-group">
                                         <label for="discord_url"><i class="fab fa-discord" style="margin-right:5px;"></i> Discord</label>
                                         <input type="url" id="discord_url" name="discord_url" class="form-input" value="{{ server ? server.discordUrl : '' }}" placeholder="https://discord.gg/..." {{ not can_edit_social ? 'disabled' : '' }}>
@@ -268,6 +280,57 @@
     var currentGameCatId = {{ server and server.gameCategory ? server.gameCategory.id : 'null' }};
     var currentServerTypeId = {{ server and server.serverType ? server.serverType.id : 'null' }};
 
+    // ── Field config map from PHP ──
+    var gcFieldsMap = {{ (gameCategoriesFields ?? {})|json_encode|raw }};
+    var ALL_KEYS = ['ip', 'port', 'connect_url', 'website', 'discord_url'];
+
+    function applyFieldConfig(gcId) {
+        var config = (gcId && gcFieldsMap[gcId] !== undefined) ? gcFieldsMap[gcId] : null;
+        // config is [] or [{key,required}...] or null
+        var hasConfig = config !== null && config.length > 0;
+        var activeKeys = hasConfig ? config.map(function(f) { return f.key; }) : ALL_KEYS;
+
+        document.querySelectorAll('[data-cfg-key]').forEach(function(el) {
+            var key = el.dataset.cfgKey;
+            var shown = activeKeys.indexOf(key) !== -1;
+            el.style.display = shown ? '' : 'none';
+            var input = el.querySelector('input');
+            if (input) {
+                // Only disable connexion inputs for website/discord_url (they have social duplicates)
+                // For ip/port/connect_url, these only exist in connexion section — keep enabled
+                var hasSocialDuplicate = (key === 'website' || key === 'discord_url');
+                if (hasSocialDuplicate) {
+                    input.disabled = !shown;
+                }
+                if (hasConfig) {
+                    var fc = config.find(function(f) { return f.key === key; });
+                    input.required = shown && (fc && fc.required) ? true : false;
+                } else {
+                    input.required = false;
+                }
+            }
+        });
+
+        // Social links: hide website/discord_url if they appear in connexion config
+        // Disable hidden inputs to avoid duplicate field submission
+        ['website', 'discord_url'].forEach(function(key) {
+            var socialEl = document.querySelector('[data-social-key="' + key + '"]');
+            var connEl = document.querySelector('[data-cfg-key="' + key + '"]');
+            if (!socialEl) return;
+            var inConnexion = hasConfig && activeKeys.indexOf(key) !== -1;
+            socialEl.style.display = inConnexion ? 'none' : '';
+            var socialInput = socialEl.querySelector('input');
+            if (socialInput) socialInput.disabled = inConnexion;
+            // Sync value to connexion input on first show
+            if (inConnexion && connEl) {
+                var connInput = connEl.querySelector('input');
+                if (connInput && !connInput.value && socialInput && socialInput.value) {
+                    connInput.value = socialInput.value;
+                }
+            }
+        });
+    }
+
     function loadOptions(url, select, currentId) {
         fetch(url)
             .then(function(r) { return r.json(); })
@@ -280,6 +343,10 @@
                     if (currentId && item.id == currentId) opt.selected = true;
                     select.appendChild(opt);
                 });
+                // Apply field config after game categories are loaded
+                if (gameCategorySelect.value) {
+                    applyFieldConfig(parseInt(gameCategorySelect.value));
+                }
             });
     }
 
@@ -288,6 +355,7 @@
         if (!catId) {
             gameCategorySelect.innerHTML = '<option value="">-- Selectionner d\'abord une categorie --</option>';
             serverTypeSelect.innerHTML = '<option value="">-- Selectionner d\'abord une categorie --</option>';
+            applyFieldConfig(null);
             return;
         }
         loadOptions('/api/form/game-categories/' + catId, gameCategorySelect, currentGameCatId);
@@ -297,11 +365,17 @@
         currentServerTypeId = null;
     }
 
+    gameCategorySelect.addEventListener('change', function() {
+        applyFieldConfig(this.value ? parseInt(this.value) : null);
+    });
+
     categorySelect.addEventListener('change', onCategoryChange);
 
     // Load on page load if editing
     if (categorySelect.value) {
         onCategoryChange();
+    } else {
+        applyFieldConfig(null);
     }
 
     // Tag checkbox visual toggle

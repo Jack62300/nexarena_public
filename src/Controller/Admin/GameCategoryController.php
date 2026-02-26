@@ -60,6 +60,10 @@ class GameCategoryController extends AbstractController
                 $category->setIcon($filename);
             }
 
+            $raw = $request->request->get('server_form_fields_json', '');
+            $fields = json_decode($raw, true);
+            $category->setServerFormFields(is_array($fields) && count($fields) > 0 ? $fields : null);
+
             $this->em->persist($category);
             $this->em->flush();
 
@@ -106,6 +110,10 @@ class GameCategoryController extends AbstractController
                 $iconFile->move($uploadDir, $filename);
                 $category->setIcon($filename);
             }
+
+            $raw = $request->request->get('server_form_fields_json', '');
+            $fields = json_decode($raw, true);
+            $category->setServerFormFields(is_array($fields) && count($fields) > 0 ? $fields : null);
 
             $this->em->flush();
 

@@ -4,7 +4,6 @@ namespace App\Controller\Admin;
 
 use App\Entity\IpBan;
 use App\Repository\IpBanRepository;
-use App\Service\ServerAdminService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -16,7 +15,6 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_MANAGER')]
 class IpBanController extends AbstractController
 {
-    public function __construct(private ServerAdminService $sas) {}
 
     #[Route('', name: 'index', methods: ['GET'])]
     public function index(IpBanRepository $repo, Request $request): Response
@@ -88,11 +86,6 @@ class IpBanController extends AbstractController
         $em->persist($ban);
         $em->flush();
 
-        // Sync avec iptables pour les bans permanents
-        if ($type === IpBan::TYPE_PERMANENT) {
-            $this->sas->banIp($ip);
-        }
-
         $this->addFlash('success', "IP {$ip} bannie avec succès.");
         return $this->redirectToRoute('admin_ip_bans_index');
     }
@@ -116,9 +109,6 @@ class IpBanController extends AbstractController
 
         $em->flush();
 
-        // Sync avec iptables (silencieux si l'IP n'y est pas)
-        $this->sas->unbanIp($ban->getIpAddress());
-
         $this->addFlash('success', "Ban de {$ban->getIpAddress()} levé.");
         return $this->redirectToRoute('admin_ip_bans_index');
     }
@@ -135,9 +125,6 @@ class IpBanController extends AbstractController
         $ip = $ban->getIpAddress();
         $em->remove($ban);
         $em->flush();
-
-        // Sync avec iptables (silencieux si l'IP n'y est pas)
-        $this->sas->unbanIp($ip);
 
         $this->addFlash('success', "Ban de {$ip} supprimé.");
         return $this->redirectToRoute('admin_ip_bans_index');

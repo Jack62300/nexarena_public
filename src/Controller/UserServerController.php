@@ -15,6 +15,7 @@ use App\Entity\ServerPremiumFeature;
 use App\Repository\CategoryRepository;
 use App\Repository\CommentRepository;
 use App\Repository\FeaturedBookingRepository;
+use App\Repository\GameCategoryRepository;
 use App\Repository\RecruitmentListingRepository;
 use App\Repository\ServerCollaboratorRepository;
 use App\Repository\ServerDailyStatRepository;
@@ -148,6 +149,15 @@ class UserServerController extends AbstractController
         return $collab->hasPermission($permission);
     }
 
+    private function buildGCFieldsMap(GameCategoryRepository $repo): array
+    {
+        $map = [];
+        foreach ($repo->findBy(['isActive' => true]) as $gc) {
+            $map[$gc->getId()] = $gc->getServerFormFields() ?? [];
+        }
+        return $map;
+    }
+
     // ──────────────────────────────────────────────
     // Routes
     // ──────────────────────────────────────────────
@@ -166,7 +176,7 @@ class UserServerController extends AbstractController
     }
 
     #[Route('/serveur/ajouter', name: 'user_servers_new')]
-    public function new(Request $request, CategoryRepository $categoryRepo): Response
+    public function new(Request $request, CategoryRepository $categoryRepo, GameCategoryRepository $gameCategoryRepo): Response
     {
         if ($request->isMethod('POST')) {
             if (!$this->isCsrfTokenValid('server_form', $request->request->get('_token'))) {
@@ -204,11 +214,12 @@ class UserServerController extends AbstractController
             'server' => null,
             'categories' => $categoryRepo->findBy(['isActive' => true], ['position' => 'ASC']),
             'tags' => $this->tagRepo->findAllActive(),
+            'gameCategoriesFields' => $this->buildGCFieldsMap($gameCategoryRepo),
         ]);
     }
 
     #[Route('/serveur/{id}/modifier', name: 'user_servers_edit')]
-    public function edit(Server $server, Request $request, CategoryRepository $categoryRepo): Response
+    public function edit(Server $server, Request $request, CategoryRepository $categoryRepo, GameCategoryRepository $gameCategoryRepo): Response
     {
         $this->requireAccessAny($server, ['edit_info', 'edit_images', 'edit_social']);
 
@@ -236,6 +247,7 @@ class UserServerController extends AbstractController
             'can_edit_images' => $canEditImages,
             'can_edit_social' => $canEditSocial,
             'tags' => $this->tagRepo->findAllActive(),
+            'gameCategoriesFields' => $this->buildGCFieldsMap($gameCategoryRepo),
         ]);
     }
 
