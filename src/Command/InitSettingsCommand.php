@@ -48,6 +48,8 @@ class InitSettingsCommand extends Command
         ['key' => 'seo_keywords', 'value' => 'serveur, jeux, classement, vote, gaming, minecraft, gmod, ark, rust', 'type' => 'textarea', 'label' => 'Mots-cles SEO', 'description' => 'Mots-cles separes par des virgules', 'category' => 'seo', 'position' => 2],
         ['key' => 'seo_og_image', 'value' => '', 'type' => 'image', 'label' => 'Image Open Graph', 'description' => 'Image affichee lors du partage sur les reseaux sociaux (recommande: 1200x630px)', 'category' => 'seo', 'position' => 3],
         ['key' => 'google_analytics_id', 'value' => '', 'type' => 'text', 'label' => 'Google Analytics ID', 'description' => 'ID Google Analytics (ex: G-XXXXXXXXXX). Laissez vide pour desactiver.', 'category' => 'seo', 'position' => 4],
+        ['key' => 'seo_site_url', 'value' => 'https://nexarena.fr', 'type' => 'text', 'label' => 'URL du site (canonique)', 'description' => 'URL absolue du site sans slash final (ex: https://nexarena.fr). Utilise pour les balises canonical et le sitemap.', 'category' => 'seo', 'position' => 5],
+        ['key' => 'google_verification', 'value' => '', 'type' => 'text', 'label' => 'Code verification Google Search Console', 'description' => 'Contenu de la balise google-site-verification (depuis la Search Console). Laissez vide si non utilise.', 'category' => 'seo', 'position' => 6],
 
         // ========== RESEAUX SOCIAUX ==========
         ['key' => 'social_discord', 'value' => '', 'type' => 'url', 'label' => 'Lien Discord', 'description' => 'URL d\'invitation vers votre serveur Discord', 'category' => 'social', 'position' => 0],

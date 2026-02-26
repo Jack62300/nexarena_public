@@ -1,0 +1,24 @@
+User-agent: *
+Allow: /
+
+# Admin panel
+Disallow: /admin/
+Disallow: /profil/
+Disallow: /serveur/*/gestion
+Disallow: /recrutement/*/candidatures
+Disallow: /premium/success
+
+# Auth pages (no value for indexing)
+Disallow: /connexion
+Disallow: /inscription
+Disallow: /inscription/completer
+Disallow: /deconnexion
+Disallow: /2fa
+
+# API endpoints
+Disallow: /api/
+
+# Vote flow
+Disallow: /vote/
+
+Sitemap: https://nexarena.fr/sitemap.xml

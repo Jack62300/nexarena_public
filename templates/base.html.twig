@@ -3,19 +3,78 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <title>{% block title %}{{ setting('seo_title', 'Nexarena - Classement de Serveurs de Jeux') }}{% endblock %}</title>
-    <meta name="description" content="{% block meta_description %}{{ setting('seo_description', 'Nexarena - Classement et listing de serveurs prives de jeux videos') }}{% endblock %}">
-    <meta name="keywords" content="{{ setting('seo_keywords', '') }}">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    {% if setting('seo_og_image') %}
-        <meta property="og:image" content="{{ asset(setting('seo_og_image')) }}">
-    {% endif %}
-    <meta property="og:title" content="{{ setting('seo_title', 'Nexarena') }}">
-    <meta property="og:description" content="{{ setting('seo_description', '') }}">
+    {# ── Titles & descriptions ─────────────────────────────── #}
+    {% set _title       = block('title') %}
+    {% set _description = block('meta_description') %}
+    {% set _site_name   = setting('site_name', 'Nexarena') %}
+    {% set _site_url    = setting('seo_site_url', app.request.schemeAndHttpHost) %}
+    {% set _canonical   = block('canonical_url') ?: (_site_url ~ app.request.pathInfo) %}
+    {% set _og_image    = block('og_image') ?: (setting('seo_og_image') ? (asset(setting('seo_og_image'))) : null) %}
+    {% set _og_type     = block('og_type') ?: 'website' %}
 
+    <title>{% block title %}{{ setting('seo_title', 'Nexarena - Classement de Serveurs de Jeux') }}{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}{{ setting('seo_description', 'Nexarena - Classement et listing de serveurs prives de jeux videos') }}{% endblock %}">
+    {% if setting('seo_keywords') %}<meta name="keywords" content="{{ setting('seo_keywords') }}">{% endif %}
+    {% block robots %}<meta name="robots" content="index, follow">{% endblock %}
+
+    {# ── Canonical ─────────────────────────────────────────── #}
+    <link rel="canonical" href="{{ _canonical }}">
+    {% block canonical_url %}{% endblock %}
+
+    {# ── Open Graph (Discord, Facebook, LinkedIn…) ─────────── #}
+    <meta property="og:site_name"   content="{{ _site_name }}">
+    <meta property="og:locale"      content="fr_FR">
+    <meta property="og:type"        content="{{ _og_type }}">
+    {% block og_type %}{% endblock %}
+    <meta property="og:title"       content="{{ _title }}">
+    <meta property="og:description" content="{{ _description }}">
+    <meta property="og:url"         content="{{ _canonical }}">
+    {% if _og_image %}
+    <meta property="og:image"       content="{{ _og_image }}">
+    <meta property="og:image:width"  content="1200">
+    <meta property="og:image:height" content="630">
+    {% endif %}
+    {% block og_image %}{% endblock %}
+
+    {# ── Twitter / X Card ──────────────────────────────────── #}
+    <meta name="twitter:card"        content="{{ _og_image ? 'summary_large_image' : 'summary' }}">
+    <meta name="twitter:title"       content="{{ _title }}">
+    <meta name="twitter:description" content="{{ _description }}">
+    {% if _og_image %}
+    <meta name="twitter:image"       content="{{ _og_image }}">
+    {% endif %}
+
+    {# ── Google verification (Search Console) ─────────────── #}
+    {% if setting('google_verification') %}
+    <meta name="google-site-verification" content="{{ setting('google_verification') }}">
+    {% endif %}
+
+    {# ── Favicon ───────────────────────────────────────────── #}
     <link rel="icon" type="image/png" href="{{ asset('assets/img/logo/new_logo_hd.png') }}">
     <link rel="apple-touch-icon" href="{{ asset('assets/img/logo/new_logo_hd.png') }}">
+
+    {# ── JSON-LD structured data ────────────────────────────── #}
+    {% block json_ld %}
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": {{ _site_name|json_encode|raw }},
+      "url": {{ _site_url|json_encode|raw }},
+      "description": {{ setting('seo_description', '')|json_encode|raw }},
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": {{ (_site_url ~ '/classement?q={search_term_string}')|json_encode|raw }}
+        },
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+    {% endblock %}
 
     {# CSS #}
     <link rel="stylesheet" href="{{ asset('assets/css/bootstrap.min.css') }}">
@@ -34,6 +93,17 @@
     <link rel="stylesheet" href="{{ asset('assets/css/components/notifications.css') }}">
 
     {% block stylesheets %}{% endblock %}
+
+    {# ── Google Analytics ─────────────────────────────────── #}
+    {% if setting('google_analytics_id') %}
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ setting('google_analytics_id') }}"></script>
+    <script nonce="{{ csp_nonce() }}">
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', '{{ setting('google_analytics_id') }}');
+    </script>
+    {% endif %}
 
     {# Page-Revealer #}
     <script src="{{ asset('assets/js/tg-page-head.js') }}"></script>

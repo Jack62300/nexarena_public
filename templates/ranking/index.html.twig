@@ -1,6 +1,26 @@
 {% extends 'base.html.twig' %}
 
 {% block title %}Classement {{ title }} - {{ setting('site_name', 'Nexarena') }}{% endblock %}
+{% block meta_description %}Découvrez le classement des meilleurs serveurs {{ title }} sur {{ setting('site_name', 'Nexarena') }}. Votez pour votre serveur préféré et rejoignez la communauté.{% endblock %}
+
+{% block json_ld %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": {{ ('Classement ' ~ title ~ ' - ' ~ setting('site_name', 'Nexarena'))|json_encode|raw }},
+  "description": {{ ('Classement des meilleurs serveurs ' ~ title)|json_encode|raw }},
+  "url": {{ (app.request.schemeAndHttpHost ~ app.request.requestUri)|json_encode|raw }},
+  "breadcrumb": {
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {"@type":"ListItem","position":1,"name":"Accueil","item":{{ app.request.schemeAndHttpHost|json_encode|raw }}},
+      {"@type":"ListItem","position":2,"name":{{ ('Classement ' ~ title)|json_encode|raw }},"item":{{ (app.request.schemeAndHttpHost ~ app.request.requestUri)|json_encode|raw }}}
+    ]
+  }
+}
+</script>
+{% endblock %}
 
 {% block body %}
 

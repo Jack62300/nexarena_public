@@ -3,6 +3,40 @@
 {% block title %}{{ listing.title }} - Recrutement - {{ setting('site_name', 'Nexarena') }}{% endblock %}
 {% block meta_description %}{{ listing.description|striptags|slice(0, 160) }}{% endblock %}
 
+{%- set _rec_img = listing.image1 ? (app.request.schemeAndHttpHost ~ asset('uploads/recruitment/' ~ listing.image1)) : null -%}
+{% block og_image %}{% if _rec_img %}
+    <meta property="og:image"        content="{{ _rec_img }}">
+    <meta property="og:image:width"  content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:image"       content="{{ _rec_img }}">
+{% endif %}{% endblock %}
+
+{% block json_ld %}
+{% set _rec_url = app.request.schemeAndHttpHost ~ path('recruitment_show', {slug: listing.slug}) %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "JobPosting",
+  "title": {{ listing.title|json_encode|raw }},
+  "description": {{ listing.description|striptags|json_encode|raw }},
+  "url": {{ _rec_url|json_encode|raw }},
+  "hiringOrganization": {
+    "@type": "Organization",
+    "name": {{ listing.server.name|json_encode|raw }}
+  },
+  "datePosted": "{{ listing.approvedAt ? listing.approvedAt|date('Y-m-d') : listing.createdAt|date('Y-m-d') }}",
+  "breadcrumb": {
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {"@type":"ListItem","position":1,"name":"Accueil","item":{{ app.request.schemeAndHttpHost|json_encode|raw }}},
+      {"@type":"ListItem","position":2,"name":"Recrutement","item":{{ (app.request.schemeAndHttpHost ~ path('recruitment_index'))|json_encode|raw }}},
+      {"@type":"ListItem","position":3,"name":{{ listing.title|json_encode|raw }},"item":{{ _rec_url|json_encode|raw }}}
+    ]
+  }
+}
+</script>
+{% endblock %}
+
 {% block stylesheets %}
 <link rel="stylesheet" href="{{ asset('assets/css/pages/recruitment-show.css') }}">
 {% endblock %}

@@ -1,6 +1,8 @@
 {% extends 'base.html.twig' %}
 
 {% block title %}{{ setting('seo_title', 'Nexarena - Classement de Serveurs de Jeux') }}{% endblock %}
+{% block meta_description %}{{ setting('seo_description', 'Nexarena - Classement et listing de serveurs prives de jeux videos. Votez pour vos serveurs preferes.') }}{% endblock %}
+{% block canonical_url %}{# homepage = root, canonical already set by base #}{% endblock %}
 
 {% block stylesheets %}
 <link rel="stylesheet" href="{{ asset('assets/css/pages/home.css') }}">

@@ -2,6 +2,48 @@
 
 {% block title %}{{ server.name }} - {{ setting('site_name', 'Nexarena') }}{% endblock %}
 {% block meta_description %}{{ server.shortDescription }}{% endblock %}
+{% block og_type %}{% endblock %}
+{%- set _srv_img = server.banner ? (app.request.schemeAndHttpHost ~ asset('uploads/servers/banners/' ~ server.banner))
+                   : (server.presentationImage ? (app.request.schemeAndHttpHost ~ asset('uploads/servers/presentations/' ~ server.presentationImage))
+                   : null) -%}
+{% block og_image %}{% if _srv_img %}
+    <meta property="og:image"        content="{{ _srv_img }}">
+    <meta property="og:image:width"  content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:image"       content="{{ _srv_img }}">
+{% endif %}{% endblock %}
+
+{% block json_ld %}
+{% set _srv_url = app.request.schemeAndHttpHost ~ path('public_server_show', {slug: server.slug}) %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ItemPage",
+  "name": {{ server.name|json_encode|raw }},
+  "description": {{ server.shortDescription|json_encode|raw }},
+  "url": {{ _srv_url|json_encode|raw }}{% if _srv_img %},
+  "image": {{ _srv_img|json_encode|raw }}{% endif %},
+  "breadcrumb": {
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {"@type":"ListItem","position":1,"name":"Accueil","item":{{ app.request.schemeAndHttpHost|json_encode|raw }}},
+      {"@type":"ListItem","position":2,"name":{{ server.category.name|json_encode|raw }},"item":{{ (app.request.schemeAndHttpHost ~ path('ranking_category', {slug: server.category.slug}))|json_encode|raw }}},
+      {"@type":"ListItem","position":3,"name":{{ server.name|json_encode|raw }},"item":{{ _srv_url|json_encode|raw }}}
+    ]
+  },
+  "mainEntity": {
+    "@type": "SoftwareApplication",
+    "name": {{ server.name|json_encode|raw }},
+    "applicationCategory": {{ server.category.name|json_encode|raw }},
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "5",
+      "ratingCount": {{ server.totalVotes }}
+    }
+  }
+}
+</script>
+{% endblock %}
 
 {% block stylesheets %}
 {% set theme = server_theme(server.pageTemplate) %}
