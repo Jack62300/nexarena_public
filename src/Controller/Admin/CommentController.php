@@ -16,7 +16,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/admin/comments', name: 'admin_comments_')]
-#[IsGranted('ROLE_EDITEUR')]
+#[IsGranted('comments.list')]
 class CommentController extends AbstractController
 {
     public function __construct(

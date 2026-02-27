@@ -13,7 +13,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/admin/partners', name: 'admin_partners_')]
-#[IsGranted('ROLE_EDITEUR')]
+#[IsGranted('partners.list')]
 class PartnerController extends AbstractController
 {
     private const UPLOAD_DIR = 'uploads/partners';

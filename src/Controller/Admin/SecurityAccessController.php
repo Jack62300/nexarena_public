@@ -14,7 +14,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/admin/securite/acces', name: 'admin_security_access_')]
-#[IsGranted('ROLE_RESPONSABLE')]
+#[IsGranted('security.manage')]
 class SecurityAccessController extends AbstractController
 {
     private const REGION_LABELS = [

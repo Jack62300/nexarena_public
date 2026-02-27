@@ -13,7 +13,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/admin/featured-servers', name: 'admin_featured_')]
-#[IsGranted('ROLE_MANAGER')]
+#[IsGranted('featured.manage')]
 class FeaturedServerController extends AbstractController
 {
     public function __construct(

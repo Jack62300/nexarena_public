@@ -16,7 +16,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/admin/settings', name: 'admin_settings_')]
-#[IsGranted('ROLE_RESPONSABLE')]
+#[IsGranted('settings.view')]
 class SettingsController extends AbstractController
 {
     /**

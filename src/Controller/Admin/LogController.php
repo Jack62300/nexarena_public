@@ -11,7 +11,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/admin/logs', name: 'admin_logs_')]
-#[IsGranted('ROLE_DEVELOPPEUR')]
+#[IsGranted('logs.view')]
 class LogController extends AbstractController
 {
     private const PER_PAGE = 60;

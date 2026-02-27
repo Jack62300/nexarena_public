@@ -10,7 +10,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/admin/acces-logs', name: 'admin_access_logs_')]
-#[IsGranted('ROLE_DEVELOPPEUR')]
+#[IsGranted('logs.access')]
 class AccessLogController extends AbstractController
 {
     private const PER_PAGE = 60;
@@ -47,7 +47,7 @@ class AccessLogController extends AbstractController
     }
 
     #[Route('/purger', name: 'purge', methods: ['POST'])]
-    #[IsGranted('ROLE_RESPONSABLE')]
+    #[IsGranted('logs.purge')]
     public function purge(Request $request, AccessLogRepository $repo): Response
     {
         if (!$this->isCsrfTokenValid('access_log_purge', $request->request->get('_token'))) {

@@ -13,7 +13,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/admin/votes', name: 'admin_votes_')]
-#[IsGranted('ROLE_EDITEUR')]
+#[IsGranted('votes.list')]
 class VoteController extends AbstractController
 {
     public function __construct(

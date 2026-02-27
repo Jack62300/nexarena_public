@@ -15,7 +15,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/admin/plugins', name: 'admin_plugins_')]
-#[IsGranted('ROLE_EDITEUR')]
+#[IsGranted('plugins.list')]
 class PluginController extends AbstractController
 {
     public function __construct(
@@ -35,7 +35,7 @@ class PluginController extends AbstractController
     }
 
     #[Route('/new', name: 'new')]
-    #[IsGranted('ROLE_MANAGER')]
+    #[IsGranted('plugins.manage')]
     public function new(Request $request): Response
     {
         $plugin = new Plugin();
@@ -62,7 +62,7 @@ class PluginController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'edit')]
-    #[IsGranted('ROLE_MANAGER')]
+    #[IsGranted('plugins.manage')]
     public function edit(Plugin $plugin, Request $request): Response
     {
         $form = $this->createForm(PluginFormType::class, $plugin);
@@ -113,7 +113,7 @@ class PluginController extends AbstractController
     }
 
     #[Route('/{id}/refresh-scan', name: 'refresh_scan', methods: ['POST'])]
-    #[IsGranted('ROLE_MANAGER')]
+    #[IsGranted('plugins.manage')]
     public function refreshScan(Plugin $plugin, Request $request): Response
     {
         if (!$this->isCsrfTokenValid('refresh_scan_' . $plugin->getId(), $request->request->get('_token'))) {

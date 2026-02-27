@@ -16,7 +16,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/admin/articles', name: 'admin_articles_')]
-#[IsGranted('ROLE_EDITEUR')]
+#[IsGranted('articles.list')]
 class ArticleController extends AbstractController
 {
     public function __construct(

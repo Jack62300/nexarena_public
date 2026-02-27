@@ -12,7 +12,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/admin', name: 'admin_')]
-#[IsGranted('ROLE_EDITEUR')]
+#[IsGranted('dashboard.view')]
 class DashboardController extends AbstractController
 {
     #[Route('', name: 'dashboard')]

@@ -110,7 +110,20 @@ class InitPermissionsCommand extends Command
         ['code' => 'webhooks.manage', 'label' => 'Gerer les webhooks',   'category' => 'webhooks'],
 
         // Logs
-        ['code' => 'logs.view', 'label' => 'Voir les logs systeme', 'category' => 'logs'],
+        ['code' => 'logs.view',   'label' => 'Voir les logs systeme',            'category' => 'logs'],
+        ['code' => 'logs.access', 'label' => 'Voir les logs d\'acces IP',        'category' => 'logs'],
+        ['code' => 'logs.purge',  'label' => 'Purger les logs d\'acces IP',      'category' => 'logs'],
+
+        // Security
+        ['code' => 'security.manage',  'label' => 'Gerer les regles de securite et acces', 'category' => 'security'],
+        ['code' => 'blacklist.manage', 'label' => 'Gerer la liste noire',                   'category' => 'security'],
+        ['code' => 'ip_bans.manage',   'label' => 'Gerer les bans IP',                      'category' => 'security'],
+
+        // Users (extra)
+        ['code' => 'users.ban', 'label' => 'Bannir / debannir des utilisateurs', 'category' => 'users'],
+
+        // Transactions (extra)
+        ['code' => 'transactions.delete', 'label' => 'Supprimer des transactions', 'category' => 'premium'],
     ];
 
     private const DEFAULT_ROLES = [
@@ -166,7 +179,8 @@ class InitPermissionsCommand extends Command
                 'premium_plans.list', 'premium_plans.manage',
                 'featured.list', 'featured.manage',
                 'discord.manage',
-                'users.list',
+                'users.list', 'users.ban',
+                'blacklist.manage', 'ip_bans.manage',
             ],
         ],
         [
@@ -193,9 +207,13 @@ class InitPermissionsCommand extends Command
                 'featured.list', 'featured.manage',
                 'discord.manage',
                 'themes.manage',
-                'users.list', 'users.edit', 'users.credit',
+                'users.list', 'users.edit', 'users.credit', 'users.ban', 'users.delete',
                 'roles.view', 'roles.create', 'roles.edit',
                 'settings.view', 'settings.edit',
+                'transactions.delete',
+                'security.manage', 'blacklist.manage', 'ip_bans.manage',
+                'logs.view', 'logs.access', 'logs.purge',
+                'webhooks.list', 'webhooks.manage',
             ],
         ],
         [
@@ -222,11 +240,13 @@ class InitPermissionsCommand extends Command
                 'featured.list', 'featured.manage',
                 'discord.manage',
                 'themes.manage',
-                'users.list', 'users.edit', 'users.credit',
+                'users.list', 'users.edit', 'users.credit', 'users.ban', 'users.delete',
                 'roles.view', 'roles.create', 'roles.edit', 'roles.delete',
                 'settings.view', 'settings.edit',
+                'transactions.delete',
+                'security.manage', 'blacklist.manage', 'ip_bans.manage',
                 'webhooks.list', 'webhooks.manage',
-                'logs.view',
+                'logs.view', 'logs.access', 'logs.purge',
             ],
         ],
         [

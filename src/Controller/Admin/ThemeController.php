@@ -11,7 +11,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/admin/themes', name: 'admin_themes_')]
-#[IsGranted('ROLE_RESPONSABLE')]
+#[IsGranted('themes.manage')]
 class ThemeController extends AbstractController
 {
     private const IMAGE_TYPES = ['bg', 'decor-left', 'decor-right'];

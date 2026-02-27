@@ -17,7 +17,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/admin/achievements', name: 'admin_achievements_')]
-#[IsGranted('ROLE_EDITEUR')]
+#[IsGranted('achievements.list')]
 class AchievementController extends AbstractController
 {
     private const UPLOAD_DIR  = 'uploads/achievements';

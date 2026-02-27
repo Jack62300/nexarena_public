@@ -12,7 +12,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/admin/premium/transactions', name: 'admin_transactions_')]
-#[IsGranted('ROLE_MANAGER')]
+#[IsGranted('transactions.list')]
 class TransactionController extends AbstractController
 {
     #[Route('', name: 'list')]
@@ -31,7 +31,7 @@ class TransactionController extends AbstractController
     }
 
     #[Route('/bulk-delete', name: 'bulk_delete', methods: ['POST'])]
-    #[IsGranted('ROLE_RESPONSABLE')]
+    #[IsGranted('transactions.delete')]
     public function bulkDelete(Request $request, EntityManagerInterface $em): Response
     {
         if (!$this->isCsrfTokenValid('transactions_bulk_delete', $request->request->get('_token'))) {

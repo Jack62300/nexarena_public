@@ -16,7 +16,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\String\Slugger\AsciiSlugger;
 
 #[Route('/admin/roles', name: 'admin_roles_')]
-#[IsGranted('ROLE_RESPONSABLE')]
+#[IsGranted('roles.view')]
 class RoleController extends AbstractController
 {
     public function __construct(

@@ -19,7 +19,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/admin/users', name: 'admin_users_')]
-#[IsGranted('ROLE_MANAGER')]
+#[IsGranted('users.list')]
 class UserController extends AbstractController
 {
     public function __construct(
@@ -208,7 +208,7 @@ class UserController extends AbstractController
     }
 
     #[Route('/{id}/ban', name: 'ban', methods: ['POST'])]
-    #[IsGranted('ROLE_MANAGER')]
+    #[IsGranted('users.ban')]
     public function ban(User $user, Request $request): Response
     {
         if (!$this->isCsrfTokenValid('user_ban_' . $user->getId(), $request->request->get('_token'))) {
@@ -268,7 +268,7 @@ class UserController extends AbstractController
     }
 
     #[Route('/{id}/unban', name: 'unban', methods: ['POST'])]
-    #[IsGranted('ROLE_MANAGER')]
+    #[IsGranted('users.ban')]
     public function unban(User $user, Request $request): Response
     {
         if (!$this->isCsrfTokenValid('user_unban_' . $user->getId(), $request->request->get('_token'))) {
@@ -286,7 +286,7 @@ class UserController extends AbstractController
     }
 
     #[Route('/{id}/delete', name: 'delete', methods: ['POST'])]
-    #[IsGranted('ROLE_RESPONSABLE')]
+    #[IsGranted('users.delete')]
     public function delete(User $user, Request $request): Response
     {
         if (!$this->isCsrfTokenValid('user_delete_' . $user->getId(), $request->request->get('_token'))) {

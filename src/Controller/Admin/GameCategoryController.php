@@ -15,7 +15,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/admin/categories', name: 'admin_categories_')]
-#[IsGranted('ROLE_EDITEUR')]
+#[IsGranted('categories.list')]
 class GameCategoryController extends AbstractController
 {
     public function __construct(

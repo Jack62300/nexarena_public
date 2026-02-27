@@ -15,7 +15,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/admin/premium/plans', name: 'admin_premium_plans_')]
-#[IsGranted('ROLE_MANAGER')]
+#[IsGranted('premium_plans.manage')]
 class PremiumPlanController extends AbstractController
 {
     private const UPLOAD_DIR = 'uploads/plans';
@@ -125,7 +125,6 @@ class PremiumPlanController extends AbstractController
     }
 
     #[Route('/{id}/delete', name: 'delete', methods: ['POST'])]
-    #[IsGranted('settings.edit')]
     public function delete(PremiumPlan $plan, Request $request): Response
     {
         if ($this->isCsrfTokenValid('delete_' . $plan->getId(), $request->request->get('_token'))) {

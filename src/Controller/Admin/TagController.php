@@ -14,7 +14,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/admin/tags', name: 'admin_tags_')]
-#[IsGranted('ROLE_EDITEUR')]
+#[IsGranted('tags.list')]
 class TagController extends AbstractController
 {
     public function __construct(

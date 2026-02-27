@@ -14,7 +14,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/admin/parent-categories', name: 'admin_parent_categories_')]
-#[IsGranted('ROLE_EDITEUR')]
+#[IsGranted('categories.list')]
 class CategoryController extends AbstractController
 {
     public function __construct(

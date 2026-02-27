@@ -13,7 +13,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/admin/webhooks', name: 'admin_webhooks_')]
-#[IsGranted('ROLE_DEVELOPPEUR')]
+#[IsGranted('webhooks.manage')]
 class WebhookController extends AbstractController
 {
     private const EVENT_TYPES = [

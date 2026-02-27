@@ -16,7 +16,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/admin/recruitment', name: 'admin_recruitment_')]
-#[IsGranted('ROLE_EDITEUR')]
+#[IsGranted('recruitment.list')]
 class RecruitmentController extends AbstractController
 {
     public function __construct(

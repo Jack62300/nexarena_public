@@ -17,7 +17,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/admin/plugin-submissions', name: 'admin_plugin_submissions_')]
-#[IsGranted('ROLE_EDITEUR')]
+#[IsGranted('plugins.list')]
 class PluginSubmissionController extends AbstractController
 {
     public function __construct(
@@ -45,7 +45,7 @@ class PluginSubmissionController extends AbstractController
     }
 
     #[Route('/{id}/approve', name: 'approve', methods: ['POST'])]
-    #[IsGranted('ROLE_MANAGER')]
+    #[IsGranted('plugins.manage')]
     public function approve(PluginSubmission $submission, Request $request): Response
     {
         if (!$this->isCsrfTokenValid('approve_' . $submission->getId(), $request->request->get('_token'))) {
@@ -138,7 +138,7 @@ class PluginSubmissionController extends AbstractController
     }
 
     #[Route('/{id}/reject', name: 'reject', methods: ['POST'])]
-    #[IsGranted('ROLE_MANAGER')]
+    #[IsGranted('plugins.manage')]
     public function reject(PluginSubmission $submission, Request $request): Response
     {
         if (!$this->isCsrfTokenValid('reject_' . $submission->getId(), $request->request->get('_token'))) {
@@ -165,7 +165,7 @@ class PluginSubmissionController extends AbstractController
     }
 
     #[Route('/{id}/delete', name: 'delete', methods: ['POST'])]
-    #[IsGranted('ROLE_MANAGER')]
+    #[IsGranted('plugins.manage')]
     public function delete(PluginSubmission $submission, Request $request): Response
     {
         if (!$this->isCsrfTokenValid('delete_submission_' . $submission->getId(), $request->request->get('_token'))) {

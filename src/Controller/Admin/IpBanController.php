@@ -12,7 +12,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/admin/ip-bans', name: 'admin_ip_bans_')]
-#[IsGranted('ROLE_MANAGER')]
+#[IsGranted('ip_bans.manage')]
 class IpBanController extends AbstractController
 {
 
@@ -114,7 +114,7 @@ class IpBanController extends AbstractController
     }
 
     #[Route('/{id}/delete', name: 'delete', methods: ['POST'])]
-    #[IsGranted('ROLE_RESPONSABLE')]
+    #[IsGranted('security.manage')]
     public function delete(IpBan $ban, Request $request, EntityManagerInterface $em): Response
     {
         if (!$this->isCsrfTokenValid('ip_ban_delete_' . $ban->getId(), $request->request->get('_token'))) {

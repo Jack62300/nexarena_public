@@ -18,7 +18,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/admin/servers', name: 'admin_servers_')]
-#[IsGranted('ROLE_EDITEUR')]
+#[IsGranted('servers.list')]
 class ServerController extends AbstractController
 {
     public function __construct(

@@ -12,7 +12,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/admin/blacklist', name: 'admin_blacklist_')]
-#[IsGranted('ROLE_MANAGER')]
+#[IsGranted('blacklist.manage')]
 class BlacklistController extends AbstractController
 {
     #[Route('', name: 'index', methods: ['GET'])]

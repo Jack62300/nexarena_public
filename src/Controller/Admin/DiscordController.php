@@ -26,7 +26,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/admin/discord', name: 'admin_discord_')]
-#[IsGranted('ROLE_MANAGER')]
+#[IsGranted('discord.manage')]
 class DiscordController extends AbstractController
 {
     private const CATEGORY_LABELS = [
