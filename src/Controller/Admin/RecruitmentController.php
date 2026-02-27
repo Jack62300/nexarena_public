@@ -74,14 +74,14 @@ class RecruitmentController extends AbstractController
         $this->em->flush();
 
         $this->activityLog->log('recruitment.approve', ActivityLog::CAT_RECRUITMENT, 'RecruitmentListing', $listing->getId(), $listing->getTitle(), [
-            'server' => $listing->getServer()->getName(),
+            'server' => $listing->getServer()?->getName() ?? 'Annonce libre',
         ]);
 
         $this->webhookService->dispatch('recruitment.approved', [
             'title' => 'Annonce approuvee',
             'fields' => [
                 ['name' => 'Annonce', 'value' => $listing->getTitle(), 'inline' => true],
-                ['name' => 'Serveur', 'value' => $listing->getServer()->getName(), 'inline' => true],
+                ['name' => 'Serveur', 'value' => $listing->getServer()?->getName() ?? 'Annonce libre', 'inline' => true],
                 ['name' => 'Approuvee par', 'value' => $this->getUser()->getUsername(), 'inline' => true],
             ],
         ]);
@@ -117,7 +117,7 @@ class RecruitmentController extends AbstractController
             'title' => 'Revision demandee',
             'fields' => [
                 ['name' => 'Annonce',       'value' => $listing->getTitle(),            'inline' => true],
-                ['name' => 'Serveur',       'value' => $listing->getServer()->getName(), 'inline' => true],
+                ['name' => 'Serveur',       'value' => $listing->getServer()?->getName() ?? 'Annonce libre', 'inline' => true],
                 ['name' => 'Demandee par',  'value' => $this->getUser()->getUsername(),  'inline' => true],
                 ['name' => 'Raison',        'value' => mb_substr($reason, 0, 200),       'inline' => false],
             ],
@@ -154,7 +154,7 @@ class RecruitmentController extends AbstractController
             'title' => 'Annonce rejetee',
             'fields' => [
                 ['name' => 'Annonce',     'value' => $listing->getTitle(),            'inline' => true],
-                ['name' => 'Serveur',     'value' => $listing->getServer()->getName(), 'inline' => true],
+                ['name' => 'Serveur',     'value' => $listing->getServer()?->getName() ?? 'Annonce libre', 'inline' => true],
                 ['name' => 'Rejete par',  'value' => $this->getUser()->getUsername(),  'inline' => true],
                 ['name' => 'Raison',      'value' => mb_substr($reason, 0, 200),       'inline' => false],
             ],

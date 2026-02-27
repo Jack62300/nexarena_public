@@ -16,7 +16,11 @@
 
         <h1 class="rf-title">{{ listing ? 'Modifier' : 'Creer' }} une <span>annonce</span></h1>
         <p class="rf-subtitle">
-            Serveur : <strong style="color:#45f882;">{{ server.name }}</strong>
+            {% if server %}
+                Serveur : <strong style="color:#45f882;">{{ server.name }}</strong>
+            {% else %}
+                <span style="color:#a0aec0;"><i class="fas fa-bullhorn"></i> Annonce libre (sans serveur)</span>
+            {% endif %}
         </p>
 
         {% for type, messages in app.flashes %}

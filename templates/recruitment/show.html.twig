@@ -30,7 +30,7 @@
   "image": {{ _rec_img|json_encode|raw }}{% endif %},
   "hiringOrganization": {
     "@type": "Organization",
-    "name": {{ listing.server.name|json_encode|raw }}
+    "name": {{ (listing.server ? listing.server.name : 'Nexarena')|json_encode|raw }}
   },
   "datePosted": "{{ listing.approvedAt ? listing.approvedAt|date('Y-m-d') : listing.createdAt|date('Y-m-d') }}",
   "breadcrumb": {
@@ -77,12 +77,18 @@
                 {% endif %}
                 <div class="rcs-hero__banner-overlay"></div>
                 <div class="rcs-hero__banner-content">
+                    {% if listing.server %}
                     <a href="{{ path('server_show', {slug: listing.server.slug}) }}" class="rcs-server-chip">
                         <i class="fas fa-server"></i> {{ listing.server.name }}
                         {% if listing.server.category %}
                             <span style="opacity:0.4;">|</span> {{ listing.server.category.name }}
                         {% endif %}
                     </a>
+                    {% else %}
+                    <span class="rcs-server-chip">
+                        <i class="fas fa-bullhorn"></i> Annonce libre
+                    </span>
+                    {% endif %}
                     <h1 class="rcs-title">{{ listing.title }}</h1>
                     <div class="rcs-meta">
                         <span class="rcs-meta__item"><i class="fas fa-user"></i> {{ listing.author.username }}</span>

@@ -68,9 +68,16 @@
                         Le lien est valable <strong>1 heure</strong>. Vérifiez aussi vos spams si vous ne trouvez pas l'email.
                     </div>
 
-                    <a href="{{ path('app_login') }}" class="btn btn-link mt-4">
-                        <i class="fas fa-arrow-left me-1"></i> Retour à la connexion
-                    </a>
+                    <div class="dv-footer-btns">
+                        <a href="{{ path('app_login') }}" class="btn btn-link">
+                            <i class="fas fa-arrow-left me-1"></i> Retour à la connexion
+                        </a>
+                        {% if app.user %}
+                        <a href="{{ path('app_logout') }}" class="btn btn-link dv-btn-logout">
+                            <i class="fas fa-sign-out-alt me-1"></i> Se déconnecter
+                        </a>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
@@ -133,5 +140,8 @@
     font-size: 13px; color: rgba(200,214,232,0.6);
 }
 .dv-notice i { color: #45f882; margin-right: 6px; }
+.dv-footer-btns { display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; margin-top: 24px; }
+.dv-btn-logout { color: rgba(255,107,53,0.7) !important; }
+.dv-btn-logout:hover { color: #ff6b35 !important; }
 </style>
 {% endblock %}

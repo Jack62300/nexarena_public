@@ -37,7 +37,7 @@
                         </div>
                         <h3 class="mal-card__title">{{ app.listing.title }}</h3>
                         <div class="mal-card__server">
-                            <i class="fas fa-circle"></i> {{ app.listing.server.name }}
+                            <i class="fas fa-circle"></i> {{ app.listing.server ? app.listing.server.name : 'Annonce libre' }}
                         </div>
                         <div class="mal-card__footer">
                             <span class="mal-card__date"><i class="far fa-clock"></i> {{ app.createdAt|time_ago }}</span>

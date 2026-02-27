@@ -150,21 +150,21 @@ class RecruitmentController extends AbstractController
             'fields' => [
                 ['name' => 'Annonce', 'value' => $listing->getTitle(), 'inline' => true],
                 ['name' => 'Candidat', 'value' => $name, 'inline' => true],
-                ['name' => 'Serveur', 'value' => $listing->getServer()->getName(), 'inline' => true],
+                ['name' => 'Serveur', 'value' => $listing->getServer()?->getName() ?? 'Annonce libre', 'inline' => true],
             ],
         ]);
 
-        // Notify server owner + collabs with manage_recruitment
+        // Notify listing author + collabs with manage_recruitment
         $server = $listing->getServer();
-        $owner = $server->getOwner();
+        $author = $listing->getAuthor();
         $notifLink = $this->generateUrl('user_recruitment_application_detail', [
             'id' => $listing->getId(),
             'appId' => $application->getId(),
         ]);
 
-        if ($owner) {
+        if ($author) {
             $this->notificationService->create(
-                $owner,
+                $author,
                 Notification::TYPE_NEW_APPLICATION,
                 'Nouvelle candidature',
                 $name . ' a postule pour "' . $listing->getTitle() . '".',
@@ -172,16 +172,18 @@ class RecruitmentController extends AbstractController
             );
         }
 
-        $collabs = $this->collabRepo->findBy(['server' => $server]);
-        foreach ($collabs as $collab) {
-            if ($collab->hasPermission('manage_recruitment') && $collab->getUser() !== $owner) {
-                $this->notificationService->create(
-                    $collab->getUser(),
-                    Notification::TYPE_NEW_APPLICATION,
-                    'Nouvelle candidature',
-                    $name . ' a postule pour "' . $listing->getTitle() . '".',
-                    $notifLink
-                );
+        if ($server) {
+            $collabs = $this->collabRepo->findBy(['server' => $server]);
+            foreach ($collabs as $collab) {
+                if ($collab->hasPermission('manage_recruitment') && $collab->getUser() !== $author) {
+                    $this->notificationService->create(
+                        $collab->getUser(),
+                        Notification::TYPE_NEW_APPLICATION,
+                        'Nouvelle candidature',
+                        $name . ' a postule pour "' . $listing->getTitle() . '".',
+                        $notifLink
+                    );
+                }
             }
         }
 

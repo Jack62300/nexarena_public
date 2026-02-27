@@ -58,6 +58,21 @@ class LoginIpVerificationListener
             return;
         }
 
+        // New IP: check if an unexpired verification token already exists → no spam
+        $existingToken = $user->getDeviceVerificationToken();
+        $existingExpiry = $user->getDeviceVerificationTokenExpiry();
+        if ($existingToken !== null
+            && $existingExpiry !== null
+            && $existingExpiry > new \DateTimeImmutable()
+        ) {
+            // Email already sent and still valid — just block access, no new email
+            $request->getSession()->invalidate();
+            $event->setResponse(new RedirectResponse(
+                $this->urlGenerator->generate('app_device_verify_pending')
+            ));
+            return;
+        }
+
         // New IP: generate device verification token, save pending IP, log out, send email
         $token = bin2hex(random_bytes(32));
         $user->setDeviceVerificationToken($token);

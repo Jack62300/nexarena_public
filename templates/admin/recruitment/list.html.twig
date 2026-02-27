@@ -61,9 +61,13 @@
                             </a>
                         </td>
                         <td>
-                            <a href="{{ path('server_show', {slug: listing.server.slug}) }}" target="_blank">
-                                {{ listing.server.name }}
-                            </a>
+                            {% if listing.server %}
+                                <a href="{{ path('server_show', {slug: listing.server.slug}) }}" target="_blank">
+                                    {{ listing.server.name }}
+                                </a>
+                            {% else %}
+                                <span style="color:var(--text-secondary);">Annonce libre</span>
+                            {% endif %}
                         </td>
                         <td>
                             <div style="display:flex;align-items:center;gap:8px;">

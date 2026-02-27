@@ -17,7 +17,7 @@
                 <div>
                     <h2 style="font-size:22px;font-weight:700;margin:0 0 8px;">{{ listing.title }}</h2>
                     <div style="display:flex;align-items:center;gap:12px;color:var(--text-secondary);font-size:13px;">
-                        <span><i class="fas fa-server"></i> {{ listing.server.name }}</span>
+                        <span><i class="fas fa-{{ listing.server ? 'server' : 'bullhorn' }}"></i> {{ listing.server ? listing.server.name : 'Annonce libre' }}</span>
                         <span><i class="fas fa-user"></i> {{ listing.author.username }}</span>
                         <span><i class="fas fa-calendar"></i> {{ listing.createdAt|time_ago }}</span>
                     </div>

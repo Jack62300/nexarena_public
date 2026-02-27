@@ -15,7 +15,7 @@
         </a>
 
         <h1 class="apps-title"><span>Candidatures</span></h1>
-        <p class="apps-subtitle">{{ listing.title }} &mdash; {{ listing.server.name }} &mdash; {{ applications|length }} candidature{{ applications|length > 1 ? 's' : '' }}</p>
+        <p class="apps-subtitle">{{ listing.title }} &mdash; {{ listing.server ? listing.server.name : 'Annonce libre' }} &mdash; {{ applications|length }} candidature{{ applications|length > 1 ? 's' : '' }}</p>
 
         <div class="apps-card">
             {% if applications|length > 0 %}

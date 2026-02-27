@@ -26,7 +26,7 @@ class RecruitmentListing
     private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: Server::class)]
-    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
     private ?Server $server = null;
 
     #[ORM\ManyToOne(targetEntity: User::class)]

@@ -44,7 +44,7 @@ class UserRecruitmentController extends AbstractController
     ) {
     }
 
-    private function canManageRecruitment(Server $server): bool
+    private function canManageServerRecruitment(Server $server): bool
     {
         $user = $this->getUser();
         if ($server->getOwner() === $user) {
@@ -52,8 +52,23 @@ class UserRecruitmentController extends AbstractController
         }
 
         $collab = $this->collabRepo->findByServerAndUser($server, $user);
-        if ($collab && $collab->hasPermission('manage_recruitment')) {
+        return $collab && $collab->hasPermission('manage_recruitment');
+    }
+
+    private function canManageListing(RecruitmentListing $listing): bool
+    {
+        $user = $this->getUser();
+        // Author always has access
+        if ($listing->getAuthor() === $user) {
             return true;
+        }
+        // If linked to a server, check collaborator permission
+        $server = $listing->getServer();
+        if ($server) {
+            $collab = $this->collabRepo->findByServerAndUser($server, $user);
+            if ($collab && $collab->hasPermission('manage_recruitment')) {
+                return true;
+            }
         }
 
         return false;
@@ -61,7 +76,7 @@ class UserRecruitmentController extends AbstractController
 
     private function requireRecruitmentAccess(RecruitmentListing $listing): void
     {
-        if (!$this->canManageRecruitment($listing->getServer())) {
+        if (!$this->canManageListing($listing)) {
             throw $this->createAccessDeniedException();
         }
     }
@@ -77,16 +92,46 @@ class UserRecruitmentController extends AbstractController
         ]);
     }
 
-    #[Route('/mes-recrutements/creer/{serverId}', name: 'user_recruitment_new', requirements: ['serverId' => '\d+'])]
-    public function new(int $serverId, Request $request, ServerRepository $serverRepo): Response
+    #[Route('/mes-recrutements/creer', name: 'user_recruitment_new')]
+    public function new(Request $request): Response
+    {
+        $user = $this->getUser();
+
+        if ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid('recruitment_form', $request->request->get('_token'))) {
+                $this->addFlash('error', 'Token CSRF invalide.');
+                return $this->redirectToRoute('user_recruitment_new');
+            }
+
+            $listing = new RecruitmentListing();
+            $listing->setServer(null);
+            $listing->setAuthor($user);
+            $this->handleForm($listing, $request);
+
+            $this->em->persist($listing);
+            $this->em->flush();
+
+            $this->addFlash('success', 'Annonce creee en brouillon. Configurez le formulaire puis soumettez-la pour validation.');
+            return $this->redirectToRoute('user_recruitment_form_builder', ['id' => $listing->getId()]);
+        }
+
+        return $this->render('user/recruitment/form.html.twig', [
+            'listing' => null,
+            'server' => null,
+        ]);
+    }
+
+    #[Route('/mes-recrutements/creer/{serverId}', name: 'user_recruitment_new_for_server', requirements: ['serverId' => '\d+'])]
+    public function newForServer(int $serverId, Request $request, ServerRepository $serverRepo): Response
     {
         $server = $serverRepo->find($serverId);
-        if (!$server || !$this->canManageRecruitment($server)) {
+        if (!$server || !$this->canManageServerRecruitment($server)) {
             throw $this->createAccessDeniedException();
         }
 
-        // Premium check: recruitment limit
         $user = $this->getUser();
+
+        // Premium check: recruitment limit
         if ($this->premiumService->isPremiumEnabled()) {
             $recruitmentCheck = $this->premiumService->canCreateRecruitment($server, $user);
             if (!$recruitmentCheck['allowed']) {
@@ -98,7 +143,7 @@ class UserRecruitmentController extends AbstractController
         if ($request->isMethod('POST')) {
             if (!$this->isCsrfTokenValid('recruitment_form', $request->request->get('_token'))) {
                 $this->addFlash('error', 'Token CSRF invalide.');
-                return $this->redirectToRoute('user_recruitment_new', ['serverId' => $serverId]);
+                return $this->redirectToRoute('user_recruitment_new_for_server', ['serverId' => $serverId]);
             }
 
             // Charge tokens for extra recruitment if needed
@@ -174,7 +219,7 @@ class UserRecruitmentController extends AbstractController
             'title' => 'Annonce soumise',
             'fields' => [
                 ['name' => 'Annonce', 'value' => $listing->getTitle(), 'inline' => true],
-                ['name' => 'Serveur', 'value' => $listing->getServer()->getName(), 'inline' => true],
+                ['name' => 'Serveur', 'value' => $listing->getServer()?->getName() ?? 'Annonce libre', 'inline' => true],
                 ['name' => 'Auteur', 'value' => $this->getUser()->getUsername(), 'inline' => true],
             ],
         ]);
@@ -433,7 +478,7 @@ class UserRecruitmentController extends AbstractController
         }
 
         $listing = $application->getListing();
-        if (!$this->canManageRecruitment($listing->getServer())) {
+        if (!$this->canManageListing($listing)) {
             return new JsonResponse(['error' => 'Forbidden'], 403);
         }
 
@@ -458,7 +503,7 @@ class UserRecruitmentController extends AbstractController
         }
 
         $listing = $application->getListing();
-        if (!$this->canManageRecruitment($listing->getServer())) {
+        if (!$this->canManageListing($listing)) {
             return new JsonResponse(['error' => 'Forbidden'], 403);
         }
 

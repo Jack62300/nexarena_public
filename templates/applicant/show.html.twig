@@ -28,7 +28,14 @@
 
                 <div class="mas-sh__info">
                     <h2>{{ listing.title }}</h2>
-                    <p><a href="{{ path('server_show', {slug: listing.server.slug}) }}">{{ listing.server.name }}</a> &middot; Soumise le {{ application.createdAt|time_ago }}</p>
+                    <p>
+                        {% if listing.server %}
+                            <a href="{{ path('server_show', {slug: listing.server.slug}) }}">{{ listing.server.name }}</a> &middot;
+                        {% else %}
+                            <span>Annonce libre</span> &middot;
+                        {% endif %}
+                        Soumise le {{ application.createdAt|time_ago }}
+                    </p>
                 </div>
 
                 {% if application.status == 'accepted' %}

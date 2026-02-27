@@ -55,9 +55,11 @@
                                 {% endif %}
                                 <div class="rci-card__overlay"></div>
                                 <div class="rci-card__tags">
+                                    {% if listing.server and listing.server.category %}
                                     <span class="rci-card__tag rci-card__tag--cat">
                                         {{ listing.server.category.name }}
                                     </span>
+                                    {% endif %}
                                     {% if listing.requiresLogin %}
                                         <span class="rci-card__tag rci-card__tag--lock"><i class="fas fa-lock"></i></span>
                                     {% endif %}
@@ -65,9 +67,13 @@
                             </div>
                             <div class="rci-card__body">
                                 <div class="rci-card__server">
-                                    <i class="fas fa-circle"></i> {{ listing.server.name }}
-                                    {% if listing.server.gameCategory %}
-                                        &middot; {{ listing.server.gameCategory.name }}
+                                    {% if listing.server %}
+                                        <i class="fas fa-circle"></i> {{ listing.server.name }}
+                                        {% if listing.server.gameCategory %}
+                                            &middot; {{ listing.server.gameCategory.name }}
+                                        {% endif %}
+                                    {% else %}
+                                        <i class="fas fa-bullhorn"></i> Annonce libre
                                     {% endif %}
                                 </div>
                                 <h3 class="rci-card__title">{{ listing.title }}</h3>

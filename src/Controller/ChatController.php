@@ -37,7 +37,7 @@ class ChatController extends AbstractController
                 'contactName'   => $contactName,
                 'contactAvatar' => $contactAvatar,
                 'listingTitle'  => $app->getListing()->getTitle(),
-                'serverName'    => $app->getListing()->getServer()->getName(),
+                'serverName'    => $app->getListing()->getServer()?->getName() ?? 'Annonce libre',
                 'messagesUrl'   => $this->generateUrl('api_recruitment_chat_messages', ['appId' => $app->getId()]),
                 'sendUrl'       => $this->generateUrl('api_recruitment_chat_send',     ['appId' => $app->getId()]),
             ];
@@ -57,7 +57,7 @@ class ChatController extends AbstractController
                 'contactName'   => $author ? $author->getUsername() : 'Gestionnaire',
                 'contactAvatar' => $author ? $author->getAvatar() : null,
                 'listingTitle'  => $app->getListing()->getTitle(),
-                'serverName'    => $app->getListing()->getServer()->getName(),
+                'serverName'    => $app->getListing()->getServer()?->getName() ?? 'Annonce libre',
                 'messagesUrl'   => $this->generateUrl('api_applicant_chat_messages', ['appId' => $app->getId()]),
                 'sendUrl'       => $this->generateUrl('api_applicant_chat_send',     ['appId' => $app->getId()]),
             ];

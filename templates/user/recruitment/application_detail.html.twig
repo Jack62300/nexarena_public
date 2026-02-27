@@ -15,7 +15,7 @@
         </a>
 
         <h1 class="appd-title">Candidature de <span>{{ application.applicantName }}</span></h1>
-        <p class="appd-subtitle">{{ listing.title }} &mdash; {{ listing.server.name }}</p>
+        <p class="appd-subtitle">{{ listing.title }} &mdash; {{ listing.server ? listing.server.name : 'Annonce libre' }}</p>
 
         {# Status + Actions #}
         <div class="appd-card">
