@@ -66,7 +66,7 @@ class IpAccessListener
             }
         }
 
-        $ip         = $request->getClientIp() ?? '0.0.0.0';
+        $ip         = $this->ipSecurity->normalizeIp($request->getClientIp() ?? '0.0.0.0');
         $remoteAddr = $request->server->get('REMOTE_ADDR');
         $method     = $request->getMethod();
         $userAgent  = $request->headers->get('User-Agent');

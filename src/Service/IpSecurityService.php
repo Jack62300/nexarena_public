@@ -32,11 +32,30 @@ class IpSecurityService
     ) {}
 
     /**
+     * Normalise une adresse IP :
+     * - IPv4-mapped IPv6 (::ffff:x.x.x.x) → IPv4 pure (x.x.x.x)
+     * - Supprime les crochets IPv6 ([::1] → ::1)
+     * - Retourne l'IP inchangée si elle est déjà propre.
+     */
+    public function normalizeIp(string $ip): string
+    {
+        $ip = trim($ip, '[] ');
+
+        // ::ffff:x.x.x.x  ou  ::FFFF:x.x.x.x  → IPv4
+        if (preg_match('/^::(?:ffff|FFFF):(\d{1,3}(?:\.\d{1,3}){3})$/i', $ip, $m)) {
+            return $m[1];
+        }
+
+        return $ip;
+    }
+
+    /**
      * Appelle l'API IPQualityScore et retourne les données brutes.
      * Le résultat est mis en cache pendant 1 heure.
      */
     public function checkIp(string $ip): array
     {
+        $ip       = $this->normalizeIp($ip);
         $cacheKey = 'ipqs_' . md5($ip);
 
         return $this->cache->get($cacheKey, function (ItemInterface $item) use ($ip) {
@@ -92,6 +111,7 @@ class IpSecurityService
      */
     public function isVpnOrProxy(string $ip): bool
     {
+        $ip   = $this->normalizeIp($ip);
         $data = $this->checkIp($ip);
 
         if (!empty($data['error'])) {
@@ -113,6 +133,7 @@ class IpSecurityService
      */
     public function getCountryCode(string $ip): string
     {
+        $ip   = $this->normalizeIp($ip);
         $data = $this->checkIp($ip);
         return strtoupper((string) ($data['country_code'] ?? ''));
     }
@@ -123,6 +144,7 @@ class IpSecurityService
      */
     public function isCountryAllowed(string $ip): bool
     {
+        $ip         = $this->normalizeIp($ip);
         $allowedStr = $this->settings->get('allowed_countries', '');
 
         if (empty(trim($allowedStr))) {
@@ -155,6 +177,7 @@ class IpSecurityService
      */
     public function isTrustedIp(string $ip): bool
     {
+        $ip  = $this->normalizeIp($ip);
         $raw = $this->settings->get('trusted_ips', '') ?? '';
         if (empty(trim($raw))) {
             return false;
@@ -192,14 +215,20 @@ class IpSecurityService
     }
 
     /**
-     * Vérifie si une IP est dans une plage CIDR (IPv4 uniquement).
+     * Vérifie si une IP est dans une plage CIDR (IPv4 et IPv6).
      */
     private function ipInCidr(string $ip, string $cidr): bool
     {
-        $parts  = explode('/', $cidr, 2);
-        $subnet = $parts[0];
-        $bits   = (int) ($parts[1] ?? 32);
+        [$subnet, $prefixLen] = explode('/', $cidr, 2) + [1 => null];
 
+        $isIpv6 = str_contains($ip, ':') || str_contains($subnet, ':');
+
+        if ($isIpv6) {
+            return $this->ipv6InCidr($ip, $subnet, (int) ($prefixLen ?? 128));
+        }
+
+        // ── IPv4 ─────────────────────────────────────────────────────────────
+        $bits       = (int) ($prefixLen ?? 32);
         $ipLong     = ip2long($ip);
         $subnetLong = ip2long($subnet);
 
@@ -210,6 +239,32 @@ class IpSecurityService
         $mask = $bits === 0 ? 0 : (~0 << (32 - $bits));
 
         return ($ipLong & $mask) === ($subnetLong & $mask);
+    }
+
+    /**
+     * Vérifie si une adresse IPv6 est dans une plage CIDR IPv6.
+     * Utilise inet_pton() pour une comparaison binaire correcte.
+     */
+    private function ipv6InCidr(string $ip, string $subnet, int $bits): bool
+    {
+        $ipBin     = @inet_pton($ip);
+        $subnetBin = @inet_pton($subnet);
+
+        if ($ipBin === false || $subnetBin === false || $bits < 0 || $bits > 128) {
+            return false;
+        }
+
+        // Construire le masque binaire (16 octets)
+        $fullBytes = intdiv($bits, 8);
+        $remBits   = $bits % 8;
+
+        $mask = str_repeat("\xff", $fullBytes);
+        if ($remBits > 0) {
+            $mask .= chr((0xff << (8 - $remBits)) & 0xff);
+        }
+        $mask = str_pad($mask, 16, "\x00");
+
+        return ($ipBin & $mask) === ($subnetBin & $mask);
     }
 
     /**
