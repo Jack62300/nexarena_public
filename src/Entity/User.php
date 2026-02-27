@@ -98,18 +98,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     #[ORM\Column(length: 64, nullable: true)]
     private ?string $emailVerificationToken = null;
 
-    #[ORM\Column(nullable: true)]
-    private ?array $trustedIps = null;
-
-    #[ORM\Column(length: 64, nullable: true)]
-    private ?string $deviceVerificationToken = null;
-
-    #[ORM\Column(nullable: true)]
-    private ?\DateTimeImmutable $deviceVerificationTokenExpiry = null;
-
-    #[ORM\Column(length: 45, nullable: true)]
-    private ?string $pendingDeviceIp = null;
-
     #[ORM\Column(length: 100, nullable: true)]
     private ?string $twitchUsername = null;
 
@@ -570,65 +558,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     public function setEmailVerificationToken(?string $token): static
     {
         $this->emailVerificationToken = $token;
-        return $this;
-    }
-
-    public function getTrustedIps(): ?array
-    {
-        return $this->trustedIps;
-    }
-
-    public function setTrustedIps(?array $trustedIps): static
-    {
-        $this->trustedIps = $trustedIps;
-        return $this;
-    }
-
-    public function addTrustedIp(string $ip): static
-    {
-        $ips = $this->trustedIps ?? [];
-        if (!in_array($ip, $ips, true)) {
-            $ips[] = $ip;
-        }
-        $this->trustedIps = $ips;
-        return $this;
-    }
-
-    public function isTrustedIp(string $ip): bool
-    {
-        return in_array($ip, $this->trustedIps ?? [], true);
-    }
-
-    public function getDeviceVerificationToken(): ?string
-    {
-        return $this->deviceVerificationToken;
-    }
-
-    public function setDeviceVerificationToken(?string $token): static
-    {
-        $this->deviceVerificationToken = $token;
-        return $this;
-    }
-
-    public function getDeviceVerificationTokenExpiry(): ?\DateTimeImmutable
-    {
-        return $this->deviceVerificationTokenExpiry;
-    }
-
-    public function setDeviceVerificationTokenExpiry(?\DateTimeImmutable $expiry): static
-    {
-        $this->deviceVerificationTokenExpiry = $expiry;
-        return $this;
-    }
-
-    public function getPendingDeviceIp(): ?string
-    {
-        return $this->pendingDeviceIp;
-    }
-
-    public function setPendingDeviceIp(?string $ip): static
-    {
-        $this->pendingDeviceIp = $ip;
         return $this;
     }
 

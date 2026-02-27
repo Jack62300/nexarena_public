@@ -2,7 +2,6 @@
 
 namespace App\Controller;
 
-use App\Entity\User;
 use App\Repository\UserRepository;
 use App\Service\MailerService;
 use App\Service\SettingsService;
@@ -94,48 +93,4 @@ class SecurityController extends AbstractController
         return $this->redirectToRoute('app_register_email_sent');
     }
 
-    // ─── Device/IP verification ───────────────────────────────────────────────
-
-    #[Route('/appareil/validation-en-attente', name: 'app_device_verify_pending')]
-    public function deviceVerifyPending(): Response
-    {
-        return $this->render('security/device_verify_pending.html.twig');
-    }
-
-    #[Route('/appareil/valider/{token}', name: 'app_verify_device')]
-    public function verifyDevice(
-        string $token,
-        UserRepository $userRepo,
-        EntityManagerInterface $em,
-    ): Response {
-        $user = $userRepo->findOneBy(['deviceVerificationToken' => $token]);
-
-        if (!$user) {
-            $this->addFlash('error', 'Lien de validation d\'appareil invalide ou expiré.');
-            return $this->redirectToRoute('app_login');
-        }
-
-        $expiry = $user->getDeviceVerificationTokenExpiry();
-        if (!$expiry || $expiry < new \DateTimeImmutable()) {
-            $this->addFlash('error', 'Ce lien de validation a expiré. Veuillez vous reconnecter pour en recevoir un nouveau.');
-            $user->setDeviceVerificationToken(null);
-            $user->setDeviceVerificationTokenExpiry(null);
-            $user->setPendingDeviceIp(null);
-            $em->flush();
-            return $this->redirectToRoute('app_login');
-        }
-
-        $ip = $user->getPendingDeviceIp();
-        if ($ip) {
-            $user->addTrustedIp($ip);
-        }
-
-        $user->setDeviceVerificationToken(null);
-        $user->setDeviceVerificationTokenExpiry(null);
-        $user->setPendingDeviceIp(null);
-        $em->flush();
-
-        $this->addFlash('success', 'Appareil validé ! Vous pouvez maintenant vous connecter.');
-        return $this->redirectToRoute('app_login');
-    }
 }

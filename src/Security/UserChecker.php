@@ -35,6 +35,5 @@ class UserChecker implements UserCheckerInterface
 
     public function checkPostAuth(UserInterface $user): void
     {
-        // Post-auth checks handled by LoginIpVerificationListener
     }
 }
