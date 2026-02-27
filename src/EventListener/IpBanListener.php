@@ -21,6 +21,8 @@ class IpBanListener
         '/_wdt',
         '/_dev',
         '/widget/',
+        '/robots.txt',
+        '/sitemap.xml',
     ];
 
     public function __construct(

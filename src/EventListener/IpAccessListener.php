@@ -32,6 +32,23 @@ class IpAccessListener
         '/widget/',
         '/oauth/',
         '/premium/crypto/webhook',
+        '/robots.txt',
+        '/sitemap.xml',
+    ];
+
+    /** User-Agent des bots de moteurs de recherche (bypass VPN/country) */
+    private const BOT_PATTERNS = [
+        'Googlebot',
+        'Bingbot',
+        'Slurp',
+        'DuckDuckBot',
+        'Baiduspider',
+        'YandexBot',
+        'Applebot',
+        'facebookexternalhit',
+        'Twitterbot',
+        'LinkedInBot',
+        'Pinterestbot',
     ];
 
     /**
@@ -74,6 +91,15 @@ class IpAccessListener
         // ── IP de confiance → bypass total (pas de log) ─────────────────────
         if ($this->ipSecurity->isTrustedIp($ip)) {
             $this->logger->debug('IpAccessListener: IP de confiance, bypass', ['ip' => $ip]);
+            return;
+        }
+
+        // ── Bot moteur de recherche → bypass pour permettre l'indexation ──
+        if ($this->isSearchEngineBot($userAgent)) {
+            $this->logger->debug('IpAccessListener: bot SEO détecté, bypass', [
+                'ip' => $ip,
+                'ua' => $userAgent,
+            ]);
             return;
         }
 
@@ -208,6 +234,21 @@ class IpAccessListener
                 'error' => $e->getMessage(),
             ]);
         }
+    }
+
+    private function isSearchEngineBot(?string $userAgent): bool
+    {
+        if ($userAgent === null || $userAgent === '') {
+            return false;
+        }
+
+        foreach (self::BOT_PATTERNS as $pattern) {
+            if (stripos($userAgent, $pattern) !== false) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function isApiOrJsonRequest(\Symfony\Component\HttpFoundation\Request $request): bool

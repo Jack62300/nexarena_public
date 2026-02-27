@@ -33,6 +33,8 @@ class MaintenanceListener
         '/deconnexion',
         '/2fa',
         '/connexion',
+        '/robots.txt',
+        '/sitemap.xml',
     ];
 
     public function __construct(
