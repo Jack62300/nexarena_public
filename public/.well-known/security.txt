@@ -1,7 +1,7 @@
-# Security contact for nexarena.fr
+# Security contact for nexarena.eu
 # See https://securitytxt.org/
 
-Contact: mailto:contact@nexarena.fr
+Contact: mailto:contact@nexarena.eu
 Preferred-Languages: fr, en
-Canonical: https://www.nexarena.fr/.well-known/security.txt
+Canonical: https://nexarena.eu/.well-known/security.txt
 Expires: 2027-02-12T00:00:00.000Z

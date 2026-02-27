@@ -23,4 +23,4 @@ Disallow: /api/
 # Vote flow
 Disallow: /vote/
 
-Sitemap: https://nexarena.fr/sitemap.xml
+Sitemap: https://nexarena.eu/sitemap.xml
