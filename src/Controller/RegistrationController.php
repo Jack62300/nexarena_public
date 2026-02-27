@@ -56,6 +56,12 @@ class RegistrationController extends AbstractController
         }
 
         if ($form->isSubmitted() && $form->isValid()) {
+            // ToS acceptance (checkbox outside Symfony form type)
+            if (!$request->request->getBoolean('accept_terms', false)) {
+                $this->addFlash('error', 'Vous devez accepter le règlement de Nexarena pour vous inscrire.');
+                return $this->render('security/register.html.twig', ['form' => $form]);
+            }
+
             $username = $form->get('username')->getData();
             $email = $form->get('email')->getData();
             $plainPassword = $form->get('plainPassword')->getData();

@@ -31,4 +31,13 @@ class PageController extends AbstractController
             'content' => $this->settings->get('legal_cgv', ''),
         ]);
     }
+
+    #[Route('/reglement', name: 'page_reglement')]
+    public function reglement(): Response
+    {
+        return $this->render('pages/legal.html.twig', [
+            'title' => 'Reglement de Nexarena',
+            'content' => $this->settings->get('terms_of_service', ''),
+        ]);
+    }
 }

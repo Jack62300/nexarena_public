@@ -103,6 +103,13 @@
                                 {{ form_errors(form.plainPassword.second) }}
                                 {{ form_errors(form.plainPassword) }}
                             </div>
+                            <div class="form-grp" style="display:flex;align-items:flex-start;gap:10px;margin:16px 0;">
+                                <input type="checkbox" id="accept_terms" name="accept_terms" value="1" required
+                                       style="margin-top:3px;width:18px;height:18px;flex-shrink:0;cursor:pointer;accent-color:#45f882;">
+                                <label for="accept_terms" style="margin:0;font-size:14px;color:rgba(255,255,255,0.8);line-height:1.5;cursor:pointer;">
+                                    J'ai lu et j'accepte le <a href="{{ path('page_reglement') }}" target="_blank" rel="noopener" style="color:#45f882;text-decoration:underline;">règlement de Nexarena</a> <span style="color:#e74a3b;">*</span>
+                                </label>
+                            </div>
                             <button type="submit" id="register-submit" class="btn btn-two arrow-btn">S'inscrire</button>
                         {{ form_end(form) }}
 

@@ -53,20 +53,35 @@
                             </span>
                         </div>
 
-                        <p class="mb-4" style="color:rgba(255,255,255,0.7);font-size:14px;">
-                            Votre provider ne nous a pas transmis votre adresse email. Veuillez la saisir pour finaliser votre inscription.
-                            Si vous avez deja un compte Nexarena avec cette adresse, vos comptes seront automatiquement lies.
-                        </p>
-
                         {% for message in app.flashes('error') %}
                             <div class="alert alert-danger">{{ message }}</div>
                         {% endfor %}
 
                         <form action="{{ path('app_oauth_complete_registration') }}" method="post" class="account__form">
                             <input type="hidden" name="_csrf_token" value="{{ csrf_token('oauth_complete') }}">
-                            <div class="form-grp">
-                                <label for="email">Adresse email</label>
-                                <input type="email" id="email" name="email" value="{{ last_email }}" placeholder="votre@email.com" required autofocus>
+
+                            {% if pending.email is not defined or pending.email is empty %}
+                                {# Email non fourni par le provider (ex: Steam) #}
+                                <p class="mb-4" style="color:rgba(255,255,255,0.7);font-size:14px;">
+                                    Votre provider ne nous a pas transmis votre adresse email. Veuillez la saisir pour finaliser votre inscription.
+                                    Si vous avez déjà un compte Nexarena avec cette adresse, vos comptes seront automatiquement liés.
+                                </p>
+                                <div class="form-grp">
+                                    <label for="email">Adresse email</label>
+                                    <input type="email" id="email" name="email" value="{{ last_email }}" placeholder="votre@email.com" required autofocus>
+                                </div>
+                            {% else %}
+                                <p class="mb-4" style="color:rgba(255,255,255,0.7);font-size:14px;">
+                                    Pour finaliser votre inscription, veuillez lire et accepter le règlement de Nexarena.
+                                </p>
+                            {% endif %}
+
+                            <div style="display:flex;align-items:flex-start;gap:10px;margin:16px 0;">
+                                <input type="checkbox" id="accept_terms" name="accept_terms" value="1" required
+                                       style="margin-top:3px;width:18px;height:18px;flex-shrink:0;cursor:pointer;accent-color:#45f882;">
+                                <label for="accept_terms" style="margin:0;font-size:14px;color:rgba(255,255,255,0.8);line-height:1.5;cursor:pointer;">
+                                    J'ai lu et j'accepte le <a href="{{ path('page_reglement') }}" target="_blank" rel="noopener" style="color:#45f882;text-decoration:underline;">règlement de Nexarena</a> <span style="color:#e74a3b;">*</span>
+                                </label>
                             </div>
                             <button type="submit" class="btn btn-two arrow-btn">Finaliser l'inscription</button>
                         </form>

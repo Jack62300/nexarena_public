@@ -120,7 +120,7 @@ class IpAccessListener
             $this->logger->warning('IpAccessListener: VPN bloqué', ['ip' => $ip, 'path' => $path]);
             $blocked     = true;
             $blockReason = AccessLog::REASON_VPN;
-            $event->setResponse($this->buildResponse('vpn', $ip));
+            $event->setResponse($this->buildResponse('vpn', $ip, '', $request));
         }
 
         // ── 2. Blocage par pays ──────────────────────────────────────────────
@@ -139,7 +139,7 @@ class IpAccessListener
                 ]);
                 $blocked     = true;
                 $blockReason = AccessLog::REASON_COUNTRY;
-                $event->setResponse($this->buildResponse('country', $ip, $countryCode ?? ''));
+                $event->setResponse($this->buildResponse('country', $ip, $countryCode ?? '', $request));
             }
         }
 
@@ -210,8 +210,30 @@ class IpAccessListener
         }
     }
 
-    private function buildResponse(string $reason, string $ip, string $country = ''): Response
+    private function isApiOrJsonRequest(\Symfony\Component\HttpFoundation\Request $request): bool
     {
+        if (str_starts_with($request->getPathInfo(), '/api/')) {
+            return true;
+        }
+        $accept = $request->headers->get('Accept', '');
+        return str_contains($accept, 'application/json') || str_contains($accept, 'application/ld+json');
+    }
+
+    private function buildResponse(string $reason, string $ip, string $country = '', ?\Symfony\Component\HttpFoundation\Request $request = null): Response
+    {
+        // Routes API ou requêtes JSON → retourner JSON au lieu d'une page HTML
+        if ($request !== null && $this->isApiOrJsonRequest($request)) {
+            $message = match ($reason) {
+                'vpn'     => 'Connexions via VPN, proxy ou Tor non autorisées.',
+                'country' => 'Ce service n\'est pas disponible dans votre région' . ($country ? " ({$country})" : '') . '.',
+                default   => 'Accès refusé.',
+            };
+            return new \Symfony\Component\HttpFoundation\JsonResponse(
+                ['error' => 'access_denied', 'reason' => $reason, 'message' => $message],
+                Response::HTTP_FORBIDDEN,
+            );
+        }
+
         $safeIp      = htmlspecialchars($ip, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $safeCountry = htmlspecialchars($country, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 

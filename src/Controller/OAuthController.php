@@ -87,24 +87,15 @@ class OAuthController extends AbstractController
                 return $this->redirectToRoute('app_maintenance');
             }
 
-            // Pas d'email fourni → demander l'email
-            if (empty($email)) {
-                $request->getSession()->set('_oauth_pending', [
-                    'provider' => $provider,
-                    'oauth_id' => $oauthId,
-                    'username' => $username,
-                    'avatar' => $avatar,
-                ]);
-                return $this->redirectToRoute('app_oauth_complete_registration');
-            }
-
-            // Email disponible → flux normal
-            $user = $oauthService->findOrCreateFromOAuth($provider, $oauthId, $email, $username, $avatar);
-
-            $request->getSession()->migrate(true);
-            $security->login($user, 'form_login', 'main');
-
-            return $this->redirectToRoute('app_home');
+            // Nouveau utilisateur → ToS acceptance requise avant création de compte
+            $request->getSession()->set('_oauth_pending', [
+                'provider' => $provider,
+                'oauth_id' => $oauthId,
+                'username' => $username,
+                'avatar'   => $avatar,
+                'email'    => $email, // peut être vide (Steam)
+            ]);
+            return $this->redirectToRoute('app_oauth_complete_registration');
         } catch (\Exception $e) {
             $this->addFlash('error', 'Erreur lors de la connexion avec ' . ucfirst($provider) . '. Veuillez reessayer.');
 
@@ -138,12 +129,22 @@ class OAuthController extends AbstractController
                 return $this->redirectToRoute('app_oauth_complete_registration');
             }
 
-            $email = trim($request->request->get('email', ''));
+            // ToS acceptance
+            if (!$request->request->getBoolean('accept_terms', false)) {
+                $this->addFlash('error', 'Vous devez accepter le règlement de Nexarena pour vous inscrire.');
+                return $this->render('security/complete_registration.html.twig', [
+                    'pending'    => $pending,
+                    'last_email' => '',
+                ]);
+            }
+
+            // Email : utiliser celui du provider si disponible, sinon récupérer depuis le formulaire
+            $email = !empty($pending['email']) ? $pending['email'] : trim($request->request->get('email', ''));
 
             if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 $this->addFlash('error', 'Veuillez saisir une adresse email valide.');
                 return $this->render('security/complete_registration.html.twig', [
-                    'pending' => $pending,
+                    'pending'    => $pending,
                     'last_email' => $email,
                 ]);
             }
@@ -164,7 +165,7 @@ class OAuthController extends AbstractController
         }
 
         return $this->render('security/complete_registration.html.twig', [
-            'pending' => $pending,
+            'pending'    => $pending,
             'last_email' => '',
         ]);
     }
