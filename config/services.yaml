@@ -104,17 +104,18 @@ services:
         arguments:
             $kernelEnvironment: '%kernel.environment%'
 
-    # Redis client (utilisé pour le cache et les sessions)
-    redis.client:
-        class: \Redis
-        factory: ['Symfony\Component\Cache\Adapter\RedisAdapter', 'createConnection']
-        arguments:
-            - '%env(REDIS_URL)%'
-
-    Symfony\Component\HttpFoundation\Session\Storage\Handler\RedisSessionHandler:
-        arguments:
-            - '@redis.client'
-            - {prefix: 'nx_sess_', ttl: 7200}
-
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+when@prod:
+    services:
+        redis.client:
+            class: \Redis
+            factory: ['Symfony\Component\Cache\Adapter\RedisAdapter', 'createConnection']
+            arguments:
+                - '%env(REDIS_URL)%'
+
+        Symfony\Component\HttpFoundation\Session\Storage\Handler\RedisSessionHandler:
+            arguments:
+                - '@redis.client'
+                - {prefix: 'nx_sess_', ttl: 7200}
