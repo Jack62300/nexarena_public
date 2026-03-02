@@ -17,6 +17,7 @@ class Transaction
     public const TYPE_ADMIN_CREDIT = 'admin_credit';
     public const TYPE_VOTE_REWARD = 'vote_reward';
     public const TYPE_DEPOSIT = 'deposit';
+    public const TYPE_WHEEL_REWARD = 'wheel_reward';
 
     public const PAYPAL_STATUS_COMPLETED = 'COMPLETED';
     public const PAYPAL_STATUS_PENDING = 'PENDING';

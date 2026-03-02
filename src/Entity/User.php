@@ -120,6 +120,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     #[ORM\JoinColumn(onDelete: 'SET NULL')]
     private ?User $bannedBy = null;
 
+    #[ORM\Column(options: ['default' => 0])]
+    private int $freeSpins = 0;
+
+    #[ORM\Column(length: 7, nullable: true)]
+    private ?string $lastFreeSpinMonth = null;
+
     #[ORM\Column(options: ['default' => '{"email":false,"discord":false,"steam":false,"twitch":false,"games":false,"servers":true}'])]
     private array $profileVisibility = [
         'email' => false,
@@ -615,6 +621,40 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
         $this->bannedAt = null;
         $this->banExpiresAt = null;
         $this->bannedBy = null;
+    }
+
+    public function getFreeSpins(): int
+    {
+        return $this->freeSpins;
+    }
+
+    public function setFreeSpins(int $freeSpins): static
+    {
+        $this->freeSpins = $freeSpins;
+        return $this;
+    }
+
+    public function addFreeSpins(int $amount): static
+    {
+        $this->freeSpins += $amount;
+        return $this;
+    }
+
+    public function removeFreeSpins(int $amount): static
+    {
+        $this->freeSpins = max(0, $this->freeSpins - $amount);
+        return $this;
+    }
+
+    public function getLastFreeSpinMonth(): ?string
+    {
+        return $this->lastFreeSpinMonth;
+    }
+
+    public function setLastFreeSpinMonth(?string $lastFreeSpinMonth): static
+    {
+        $this->lastFreeSpinMonth = $lastFreeSpinMonth;
+        return $this;
     }
 
     #[ORM\PrePersist]

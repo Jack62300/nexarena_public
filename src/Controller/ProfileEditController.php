@@ -6,6 +6,7 @@ use App\Entity\ActivityLog;
 use App\Repository\UserRepository;
 use App\Service\ActivityLogService;
 use App\Service\PremiumService;
+use App\Service\WheelService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -21,6 +22,7 @@ class ProfileEditController extends AbstractController
         private UserRepository $userRepo,
         private PremiumService $premiumService,
         private ActivityLogService $activityLog,
+        private WheelService $wheelService,
     ) {
     }
 
@@ -39,6 +41,9 @@ class ProfileEditController extends AbstractController
             'twitch_sub'          => $twitchSub,
             'twitch_gated'        => $this->premiumService->isUserTwitchLiveGated(),
             'twitch_cost_tokens'  => $this->premiumService->getUserTwitchLiveCostTokens(),
+            'wheel_enabled'       => $this->wheelService->isEnabled(),
+            'wheel_spin_cost'     => $this->wheelService->getSpinCost(),
+            'wheel_prizes'        => $this->wheelService->getPrizes(),
         ]);
     }
 

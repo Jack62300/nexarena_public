@@ -226,6 +226,11 @@ class InitSettingsCommand extends Command
         ['key' => 'vote_reward_max_user_day', 'value' => '8', 'type' => 'number', 'label' => 'Max votes comptabilises/jour/user', 'description' => 'Nombre maximum de votes recompenses par jour et par utilisateur', 'category' => 'votes', 'position' => 17],
         ['key' => 'vote_reward_max_server_day', 'value' => '150', 'type' => 'number', 'label' => 'Max votes comptabilises/jour/serveur', 'description' => 'Nombre maximum de votes recompenses par jour et par serveur', 'category' => 'votes', 'position' => 18],
         ['key' => 'vote_reward_max_tokens_month', 'value' => '200', 'type' => 'number', 'label' => 'Max NexBits/mois via votes', 'description' => 'Nombre maximum de NexBits gagnables par mois via les votes', 'category' => 'votes', 'position' => 19],
+
+        // ========== ROUE COMMUNAUTAIRE ==========
+        ['key' => 'wheel_enabled', 'value' => '1', 'type' => 'boolean', 'label' => 'Roue communautaire activee', 'description' => 'Activer la roue de la fortune sur la page de profil', 'category' => 'roue', 'position' => 0],
+        ['key' => 'wheel_spin_cost', 'value' => '10', 'type' => 'number', 'label' => 'Cout d\'un tour (NexBits)', 'description' => 'Nombre de NexBits pour un tour payant de la roue', 'category' => 'roue', 'position' => 1],
+        ['key' => 'wheel_max_paid_spins_per_day', 'value' => '10', 'type' => 'number', 'label' => 'Max tours payants / jour', 'description' => 'Nombre maximum de tours payants par utilisateur par jour', 'category' => 'roue', 'position' => 2],
     ];
 
     private const CATEGORY_LABELS = [
@@ -247,6 +252,7 @@ class InitSettingsCommand extends Command
         'premium' => 'Premium',
         'discord' => 'Discord',
         'legal' => 'Pages legales',
+        'roue' => 'Roue communautaire',
     ];
 
     private const DEFAULT_PLANS = [
