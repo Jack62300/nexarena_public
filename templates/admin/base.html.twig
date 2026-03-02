@@ -143,7 +143,7 @@
 
             {# ── Configuration ── #}
             {% if is_granted('ROLE_RESPONSABLE') %}
-            {% set configActive = _r starts with 'admin_settings_' or _r starts with 'admin_roles_' or _r starts with 'admin_themes_' or _r starts with 'admin_security_access_' %}
+            {% set configActive = _r starts with 'admin_settings_' or _r starts with 'admin_roles_' or _r starts with 'admin_themes_' or _r starts with 'admin_security_access_' or _r starts with 'admin_wheel_' %}
             <div class="admin-sidebar__group admin-sidebar__group--purple {{ configActive ? 'open' : '' }}">
                 <button class="admin-sidebar__section" type="button">
                     <span><i class="fas fa-cog"></i> Configuration</span>
@@ -161,6 +161,9 @@
                     </a>
                     <a href="{{ path('admin_security_access_index') }}" class="admin-sidebar__link {{ _r starts with 'admin_security_access_' ? 'active' : '' }}">
                         <i class="fas fa-shield-alt"></i> Securite & Acces
+                    </a>
+                    <a href="{{ path('admin_wheel_list') }}" class="admin-sidebar__link {{ _r starts with 'admin_wheel_' ? 'active' : '' }}">
+                        <i class="fas fa-dharmachakra"></i> Roue communautaire
                     </a>
                 </div>
             </div>

@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Repository\UserRepository;
+use App\Service\WheelService;
 use Doctrine\ORM\EntityManagerInterface;
 use Endroid\QrCode\QrCode;
 use Endroid\QrCode\Writer\PngWriter;
@@ -23,13 +24,22 @@ class SettingsController extends AbstractController
     public function __construct(
         private EntityManagerInterface $em,
         private string $projectDir,
+        private WheelService $wheelService,
     ) {
     }
 
     #[Route('/profil/parametres', name: 'user_settings')]
     public function index(): Response
     {
-        return $this->render('user/settings.html.twig');
+        /** @var \App\Entity\User $user */
+        $user = $this->getUser();
+
+        return $this->render('user/settings.html.twig', [
+            'wheel_enabled'    => $this->wheelService->isEnabled(),
+            'wheel_spin_cost'  => $this->wheelService->getSpinCost(),
+            'wheel_prizes'     => $this->wheelService->getPrizes(),
+            'wheel_free_spins' => $user->getFreeSpins(),
+        ]);
     }
 
     #[Route('/profil/parametres/avatar', name: 'user_settings_avatar', methods: ['POST'])]

@@ -52,7 +52,7 @@ class WheelController extends AbstractController
                 'sectionIndex' => $result['sectionIndex'],
                 'nexbitsWon' => $result['prize']['nexbits'],
                 'nexboostWon' => $result['prize']['nexboost'],
-                'isJackpot' => $result['prize']['index'] === 11,
+                'isJackpot' => $result['prize']['isJackpot'] ?? false,
             ]
         );
 
@@ -68,7 +68,7 @@ class WheelController extends AbstractController
                 'nexboost' => $user->getBoostTokenBalance(),
             ],
             'remainingFreeSpins' => $user->getFreeSpins(),
-            'isJackpot' => $result['prize']['index'] === 11,
+            'isJackpot' => $result['prize']['isJackpot'] ?? false,
         ]);
     }
 }

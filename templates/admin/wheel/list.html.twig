@@ -1,0 +1,98 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block page_title %}Roue communautaire{% endblock %}
+{% block title %}Nexarena Admin - Roue communautaire{% endblock %}
+
+{% block admin_body %}
+
+    {# ── Stats ── #}
+    <div style="display:flex;gap:16px;margin-bottom:24px;flex-wrap:wrap;">
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:16px 20px;flex:1;min-width:180px;">
+            <div style="font-size:11px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Esperance (EV) par spin</div>
+            <div style="font-size:22px;font-weight:800;color:var(--accent);">{{ ev }} NexBits</div>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:16px 20px;flex:1;min-width:180px;">
+            <div style="font-size:11px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Poids total</div>
+            <div style="font-size:22px;font-weight:800;color:var(--text-primary);">{{ total_weight }}</div>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:16px 20px;flex:1;min-width:180px;">
+            <div style="font-size:11px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Nombre de lots</div>
+            <div style="font-size:22px;font-weight:800;color:var(--text-primary);">{{ prizes|length }}</div>
+        </div>
+    </div>
+
+    <div class="admin-table">
+        <div class="admin-table__header">
+            <h3><i class="fas fa-dharmachakra"></i> Lots de la roue</h3>
+            {% if is_granted('wheel.manage') %}
+                <form method="post" action="{{ path('admin_wheel_reset') }}" onsubmit="return confirm('Reinitialiser tous les lots aux valeurs par defaut ? Cette action est irreversible.');">
+                    <input type="hidden" name="_token" value="{{ csrf_token('wheel_reset') }}">
+                    <button type="submit" class="btn-admin btn-admin--outline btn-admin--sm" style="color:var(--danger);border-color:var(--danger);">
+                        <i class="fas fa-undo"></i> Reinitialiser
+                    </button>
+                </form>
+            {% endif %}
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Pos.</th>
+                    <th>Couleur</th>
+                    <th>Label</th>
+                    <th>NexBits</th>
+                    <th>NexBoost</th>
+                    <th>Poids</th>
+                    <th>Proba (%)</th>
+                    <th>Jackpot</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for prize in prizes %}
+                    <tr>
+                        <td style="color:var(--text-secondary);font-weight:600;">{{ prize.position }}</td>
+                        <td>
+                            <span style="display:inline-block;width:24px;height:24px;border-radius:4px;background:{{ prize.color }};border:1px solid rgba(255,255,255,0.1);vertical-align:middle;"></span>
+                            <code style="font-size:11px;color:var(--text-secondary);margin-left:6px;">{{ prize.color }}</code>
+                        </td>
+                        <td><strong>{{ prize.label }}</strong></td>
+                        <td>
+                            {% if prize.nexbits > 0 %}
+                                <span style="color:var(--accent);font-weight:600;">{{ prize.nexbits }}</span>
+                            {% else %}
+                                <span style="color:var(--text-secondary);">0</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if prize.nexboost > 0 %}
+                                <span style="color:#00c6ff;font-weight:600;">{{ prize.nexboost }}</span>
+                            {% else %}
+                                <span style="color:var(--text-secondary);">0</span>
+                            {% endif %}
+                        </td>
+                        <td style="color:var(--text-secondary);">{{ prize.weight }}</td>
+                        <td>
+                            <span style="font-weight:600;">{{ stats[prize.id] }}%</span>
+                        </td>
+                        <td>
+                            {% if prize.isJackpot %}
+                                <span style="color:#ffd700;"><i class="fas fa-crown"></i> Oui</span>
+                            {% else %}
+                                <span style="color:var(--text-secondary);">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if is_granted('wheel.manage') %}
+                                <a href="{{ path('admin_wheel_edit', {id: prize.id}) }}" class="btn-admin btn-admin--outline btn-admin--sm">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+{% endblock %}

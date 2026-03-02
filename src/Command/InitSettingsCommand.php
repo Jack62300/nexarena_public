@@ -7,6 +7,7 @@ use App\Entity\Setting;
 use App\Repository\PremiumPlanRepository;
 use App\Repository\SettingRepository;
 use App\Service\SlugService;
+use App\Service\WheelService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -268,6 +269,7 @@ class InitSettingsCommand extends Command
         private SettingRepository $settingRepo,
         private PremiumPlanRepository $planRepo,
         private SlugService $slugService,
+        private WheelService $wheelService,
     ) {
         parent::__construct();
     }
@@ -327,6 +329,14 @@ class InitSettingsCommand extends Command
             $io->success(count(self::DEFAULT_PLANS) . ' plan(s) premium cree(s) par defaut.');
         } else {
             $io->note("$existingPlans plan(s) premium deja existant(s), aucun ajout.");
+        }
+
+        // ========== SEED DEFAULT WHEEL PRIZES ==========
+        $wheelCreated = $this->wheelService->initDefaultPrizes($this->em);
+        if ($wheelCreated > 0) {
+            $io->success("$wheelCreated lot(s) de roue cree(s) par defaut.");
+        } else {
+            $io->note('Lots de la roue deja existants, aucun ajout.');
         }
 
         return Command::SUCCESS;

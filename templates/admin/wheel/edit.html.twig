@@ -1,0 +1,75 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block page_title %}Modifier le lot #{{ prize.position }}{% endblock %}
+{% block title %}Nexarena Admin - Modifier lot{% endblock %}
+
+{% block admin_body %}
+
+    <div style="max-width:600px;">
+        <div style="margin-bottom:20px;">
+            <a href="{{ path('admin_wheel_list') }}" class="btn-admin btn-admin--outline btn-admin--sm">
+                <i class="fas fa-arrow-left"></i> Retour a la liste
+            </a>
+        </div>
+
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:24px;">
+            <h3 style="margin-bottom:20px;font-size:16px;font-weight:700;color:var(--text-primary);">
+                <i class="fas fa-edit" style="color:var(--accent);margin-right:6px;"></i>
+                Lot position {{ prize.position }} — {{ prize.label }}
+            </h3>
+
+            <form method="post" action="{{ path('admin_wheel_edit', {id: prize.id}) }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('wheel_edit_' ~ prize.id) }}">
+
+                <div style="margin-bottom:16px;">
+                    <label style="display:block;font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;">Label</label>
+                    <input type="text" name="label" value="{{ prize.label }}" required maxlength="50" class="form-control" style="background:var(--bg-body);border:1px solid var(--border);color:var(--text-primary);border-radius:6px;padding:8px 12px;width:100%;">
+                </div>
+
+                <div style="display:flex;gap:16px;margin-bottom:16px;">
+                    <div style="flex:1;">
+                        <label style="display:block;font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;">NexBits</label>
+                        <input type="number" name="nexbits" value="{{ prize.nexbits }}" min="0" class="form-control" style="background:var(--bg-body);border:1px solid var(--border);color:var(--text-primary);border-radius:6px;padding:8px 12px;width:100%;">
+                    </div>
+                    <div style="flex:1;">
+                        <label style="display:block;font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;">NexBoost</label>
+                        <input type="number" name="nexboost" value="{{ prize.nexboost }}" min="0" class="form-control" style="background:var(--bg-body);border:1px solid var(--border);color:var(--text-primary);border-radius:6px;padding:8px 12px;width:100%;">
+                    </div>
+                </div>
+
+                <div style="display:flex;gap:16px;margin-bottom:16px;">
+                    <div style="flex:1;">
+                        <label style="display:block;font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;">Poids</label>
+                        <input type="number" name="weight" value="{{ prize.weight }}" min="1" required class="form-control" style="background:var(--bg-body);border:1px solid var(--border);color:var(--text-primary);border-radius:6px;padding:8px 12px;width:100%;">
+                        <div style="font-size:11px;color:var(--text-secondary);margin-top:4px;">Plus le poids est eleve, plus le lot est frequent.</div>
+                    </div>
+                    <div style="flex:1;">
+                        <label style="display:block;font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;">Couleur</label>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <input type="color" name="color" value="{{ prize.color }}" style="width:40px;height:36px;border:1px solid var(--border);border-radius:6px;cursor:pointer;background:transparent;padding:2px;">
+                            <code style="font-size:12px;color:var(--text-secondary);">{{ prize.color }}</code>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:24px;">
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--text-primary);">
+                        <input type="checkbox" name="is_jackpot" value="1" {{ prize.isJackpot ? 'checked' : '' }} style="width:16px;height:16px;accent-color:#ffd700;">
+                        <i class="fas fa-crown" style="color:#ffd700;"></i> Lot Jackpot
+                    </label>
+                    <div style="font-size:11px;color:var(--text-secondary);margin-top:4px;margin-left:24px;">
+                        Le lot jackpot declenche une notification speciale et une animation differente.
+                    </div>
+                </div>
+
+                <div style="display:flex;gap:12px;">
+                    <button type="submit" class="btn-admin btn-admin--primary">
+                        <i class="fas fa-save"></i> Enregistrer
+                    </button>
+                    <a href="{{ path('admin_wheel_list') }}" class="btn-admin btn-admin--outline">Annuler</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+{% endblock %}

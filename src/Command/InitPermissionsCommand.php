@@ -124,6 +124,10 @@ class InitPermissionsCommand extends Command
 
         // Transactions (extra)
         ['code' => 'transactions.delete', 'label' => 'Supprimer des transactions', 'category' => 'premium'],
+
+        // Wheel
+        ['code' => 'wheel.list',   'label' => 'Voir les lots de la roue',  'category' => 'wheel'],
+        ['code' => 'wheel.manage', 'label' => 'Gerer les lots de la roue', 'category' => 'wheel'],
     ];
 
     private const DEFAULT_ROLES = [
@@ -154,6 +158,7 @@ class InitPermissionsCommand extends Command
                 'plugins.list',
                 'partners.list',
                 'recruitment.list',
+                'wheel.list',
             ],
         ],
         [
@@ -181,6 +186,7 @@ class InitPermissionsCommand extends Command
                 'discord.manage',
                 'users.list', 'users.ban',
                 'blacklist.manage', 'ip_bans.manage',
+                'wheel.list', 'wheel.manage',
             ],
         ],
         [
@@ -214,6 +220,7 @@ class InitPermissionsCommand extends Command
                 'security.manage', 'blacklist.manage', 'ip_bans.manage',
                 'logs.view', 'logs.access', 'logs.purge',
                 'webhooks.list', 'webhooks.manage',
+                'wheel.list', 'wheel.manage',
             ],
         ],
         [
@@ -247,6 +254,7 @@ class InitPermissionsCommand extends Command
                 'security.manage', 'blacklist.manage', 'ip_bans.manage',
                 'webhooks.list', 'webhooks.manage',
                 'logs.view', 'logs.access', 'logs.purge',
+                'wheel.list', 'wheel.manage',
             ],
         ],
         [
