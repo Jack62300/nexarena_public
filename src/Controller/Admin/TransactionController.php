@@ -19,7 +19,7 @@ class TransactionController extends AbstractController
     public function list(Request $request, TransactionRepository $repo): Response
     {
         $type = $request->query->get('type');
-        $validTypes = ['purchase', 'spend', 'refund', 'admin_credit'];
+        $validTypes = ['purchase', 'spend', 'refund', 'admin_credit', 'wheel_reward'];
         if ($type && !in_array($type, $validTypes, true)) {
             $type = null;
         }

@@ -43,6 +43,7 @@
                 <a href="{{ path('admin_transactions_list', {type: 'spend'}) }}" class="btn-admin btn-admin--sm {{ current_type == 'spend' ? 'btn-admin--primary' : 'btn-admin--outline' }}">Depenses</a>
                 <a href="{{ path('admin_transactions_list', {type: 'refund'}) }}" class="btn-admin btn-admin--sm {{ current_type == 'refund' ? 'btn-admin--primary' : 'btn-admin--outline' }}">Remboursements</a>
                 <a href="{{ path('admin_transactions_list', {type: 'admin_credit'}) }}" class="btn-admin btn-admin--sm {{ current_type == 'admin_credit' ? 'btn-admin--primary' : 'btn-admin--outline' }}">Credits admin</a>
+                <a href="{{ path('admin_transactions_list', {type: 'wheel_reward'}) }}" class="btn-admin btn-admin--sm {{ current_type == 'wheel_reward' ? 'btn-admin--primary' : 'btn-admin--outline' }}"><i class="fas fa-dharmachakra"></i> Roue</a>
             </div>
         </div>
 
@@ -93,6 +94,8 @@
                                     <span style="color:#e74a3b;"><i class="fas fa-undo"></i> Remboursement</span>
                                 {% elseif tx.type == 'admin_credit' %}
                                     <span style="color:#36b9cc;"><i class="fas fa-gift"></i> Credit admin</span>
+                                {% elseif tx.type == 'wheel_reward' %}
+                                    <span style="color:#ffd700;"><i class="fas fa-dharmachakra"></i> Roue</span>
                                 {% elseif tx.type == 'vote_reward' %}
                                     <span style="color:#45f882;"><i class="fas fa-star"></i> Vote reward</span>
                                 {% elseif tx.type == 'deposit' %}
