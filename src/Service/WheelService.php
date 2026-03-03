@@ -137,10 +137,21 @@ class WheelService
         $prize = $this->selectPrize();
 
         // Debit
+        $cost = $this->getSpinCost();
         if ($type === WheelSpin::TYPE_FREE) {
             $user->removeFreeSpins(1);
         } else {
-            $user->removeTokens($this->getSpinCost());
+            $user->removeTokens($cost);
+
+            // Transaction de debit
+            $txDebit = new Transaction();
+            $txDebit->setUser($user);
+            $txDebit->setType(Transaction::TYPE_SPEND);
+            $txDebit->setTokensAmount(-$cost);
+            $txDebit->setDescription('Roue communautaire : tour payant');
+            $txDebit->setIsCredited(true);
+            $txDebit->setCreditedAt(new \DateTimeImmutable());
+            $this->em->persist($txDebit);
         }
 
         // Credit gains
