@@ -103,7 +103,9 @@ class IpAccessListener
         }
 
         // ── Bot moteur de recherche → bypass pour permettre l'indexation ──
-        if ($this->isSearchEngineBot($userAgent)) {
+        // Vérification 1 : User-Agent (rapide)
+        // Vérification 2 : DNS inversé (fallback si UA modifié par proxy/CDN, résultat caché 24h)
+        if ($this->isSearchEngineBot($userAgent) || $this->isVerifiedSearchEngineBotByIp($ip)) {
             $this->logger->debug('IpAccessListener: bot SEO détecté, bypass', [
                 'ip' => $ip,
                 'ua' => $userAgent,
@@ -242,6 +244,59 @@ class IpAccessListener
                 'error' => $e->getMessage(),
             ]);
         }
+    }
+
+    /**
+     * Vérifie si l'IP appartient à un moteur de recherche via DNS inversé (méthode recommandée par Google).
+     * Résultat caché 24h pour éviter les lookups DNS répétés.
+     */
+    private function isVerifiedSearchEngineBotByIp(string $ip): bool
+    {
+        $cacheKey = 'seo_bot_ip_' . str_replace([':', '.'], '_', $ip);
+
+        try {
+            $item = $this->logCache->getItem($cacheKey);
+            if ($item->isHit()) {
+                return (bool) $item->get();
+            }
+
+            $isBot = $this->verifySearchEngineDns($ip);
+            $item->set($isBot)->expiresAfter(86400); // 24h
+            $this->logCache->save($item);
+
+            if ($isBot) {
+                $this->logger->info('IpAccessListener: bot vérifié par DNS', ['ip' => $ip]);
+            }
+
+            return $isBot;
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
+    /**
+     * DNS inversé + vérification avant : confirme que l'IP appartient à Google ou Bing.
+     * @see https://developers.google.com/search/docs/crawling-indexing/verifying-googlebot
+     */
+    private function verifySearchEngineDns(string $ip): bool
+    {
+        $hostname = @gethostbyaddr($ip);
+        if (!$hostname || $hostname === $ip) {
+            return false;
+        }
+
+        $isKnownBot = str_ends_with($hostname, '.googlebot.com')
+            || str_ends_with($hostname, '.google.com')
+            || str_ends_with($hostname, '.search.msn.com');
+
+        if (!$isKnownBot) {
+            return false;
+        }
+
+        // Vérification avant : le hostname doit résoudre vers la même IP
+        $resolved = gethostbyname($hostname);
+
+        return $resolved === $ip;
     }
 
     private function isSearchEngineBot(?string $userAgent): bool

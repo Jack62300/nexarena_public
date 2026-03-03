@@ -11,7 +11,7 @@ use Symfony\Component\HttpKernel\KernelEvents;
 
 /**
  * Bloque les IPs bannies avant tout traitement.
- * Priority 10 → s'exécute en premier (avant IpAccessListener: 9, Maintenance: 5).
+ * Priority 10 → s'exécute après IpAccessListener (2048), avant Maintenance (5).
  */
 #[AsEventListener(event: KernelEvents::REQUEST, priority: 10)]
 class IpBanListener
@@ -25,6 +25,17 @@ class IpBanListener
         '/sitemap.xml',
     ];
 
+    /** User-Agent des bots de moteurs de recherche (ne pas bannir) */
+    private const BOT_PATTERNS = [
+        'Googlebot',
+        'Google-InspectionTool',
+        'AdsBot-Google',
+        'Bingbot',
+        'Applebot',
+        'YandexBot',
+        'DuckDuckBot',
+    ];
+
     public function __construct(
         private IpBanRepository $ipBanRepo,
     ) {}
@@ -35,7 +46,8 @@ class IpBanListener
             return;
         }
 
-        $path = $event->getRequest()->getPathInfo();
+        $request = $event->getRequest();
+        $path    = $request->getPathInfo();
 
         foreach (self::SKIP_PREFIXES as $prefix) {
             if (str_starts_with($path, $prefix)) {
@@ -43,7 +55,15 @@ class IpBanListener
             }
         }
 
-        $ip = $event->getRequest()->getClientIp() ?? '0.0.0.0';
+        // Ne pas bloquer les bots de moteurs de recherche
+        $userAgent = $request->headers->get('User-Agent', '');
+        foreach (self::BOT_PATTERNS as $pattern) {
+            if (stripos($userAgent, $pattern) !== false) {
+                return;
+            }
+        }
+
+        $ip = $request->getClientIp() ?? '0.0.0.0';
 
         $ban = $this->ipBanRepo->findActiveBanForIp($ip);
 
