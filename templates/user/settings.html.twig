@@ -5,124 +5,176 @@
 {% block stylesheets %}
 <link rel="stylesheet" href="{{ asset('assets/css/pages/profile.css') }}">
 <style>
-/* ───── Wheel ───── */
+/* ───── Wheel Pro Gaming ───── */
 .wheel-card {
-    background: linear-gradient(135deg, #0f1c2d 0%, #162231 100%);
-    border: 1px solid rgba(69,248,130,0.15);
-    border-radius: 12px;
-    padding: 18px;
+    background: linear-gradient(145deg, #0b1420 0%, #0f1a2a 50%, #0b1420 100%);
+    border: 1px solid rgba(69,248,130,0.12);
+    border-radius: 16px;
+    padding: 24px;
     position: relative;
     overflow: hidden;
 }
 .wheel-card::before {
     content: '';
     position: absolute; inset: -1px;
-    border-radius: 12px;
+    border-radius: 16px;
     padding: 1px;
-    background: linear-gradient(135deg, rgba(69,248,130,0.2), rgba(0,198,255,0.1), rgba(69,248,130,0.2));
+    background: linear-gradient(135deg, rgba(69,248,130,0.25), transparent 40%, transparent 60%, rgba(69,248,130,0.25));
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
     pointer-events: none;
 }
 .wheel-card__title {
-    font-size: 12px; font-weight: 700;
+    font-size: 13px; font-weight: 800;
     color: #45f882;
-    text-transform: uppercase; letter-spacing: 0.6px;
-    margin-bottom: 14px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid rgba(69,248,130,0.1);
-    display: flex; align-items: center; gap: 7px;
+    text-transform: uppercase; letter-spacing: 1.2px;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(69,248,130,0.08);
+    display: flex; align-items: center; gap: 8px;
+    text-shadow: 0 0 20px rgba(69,248,130,0.3);
 }
-.wheel-canvas-wrap {
+.wheel-stage {
     position: relative;
-    width: 280px; height: 280px;
-    margin: 0 auto 16px;
+    width: 320px; height: 320px;
+    margin: 0 auto 20px;
 }
-.wheel-canvas-wrap canvas {
+.wheel-stage canvas {
     width: 100%; height: 100%;
     border-radius: 50%;
-    box-shadow: 0 0 30px rgba(69,248,130,0.08), inset 0 0 20px rgba(0,0,0,0.3);
 }
-.wheel-pointer {
+.wheel-pointer-wrap {
     position: absolute;
-    top: -8px; left: 50%;
+    top: -2px; left: 50%;
     transform: translateX(-50%);
-    width: 0; height: 0;
-    border-left: 12px solid transparent;
-    border-right: 12px solid transparent;
-    border-top: 22px solid #45f882;
-    filter: drop-shadow(0 2px 6px rgba(69,248,130,0.5));
-    z-index: 2;
+    z-index: 3;
+    filter: drop-shadow(0 3px 8px rgba(69,248,130,0.6));
 }
-.wheel-info {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 12px; font-size: 12px; color: #8b949e;
+.wheel-pointer-wrap svg { display: block; }
+.wheel-stats {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 10px; margin-bottom: 14px;
 }
-.wheel-info strong { color: #e6edf3; }
-.wheel-info .free-badge {
-    padding: 2px 8px; border-radius: 4px;
-    background: rgba(69,248,130,0.1); color: #45f882;
-    font-weight: 700; font-size: 11px;
-    border: 1px solid rgba(69,248,130,0.2);
+.wheel-stat {
+    background: rgba(15,26,42,0.8);
+    border: 1px solid rgba(69,248,130,0.08);
+    border-radius: 10px;
+    padding: 10px 12px;
+    text-align: center;
 }
-.wheel-spin-btn {
-    width: 100%; padding: 11px;
-    border-radius: 8px; border: none;
-    background: linear-gradient(135deg, #45f882, #2dd66b);
-    color: #0a1018; font-size: 14px; font-weight: 800;
-    cursor: pointer; transition: all .3s;
+.wheel-stat__value {
+    font-size: 18px; font-weight: 800;
+    color: #45f882;
+    line-height: 1;
+    margin-bottom: 3px;
+}
+.wheel-stat__value--boost { color: #00c6ff; }
+.wheel-stat__label {
+    font-size: 10px; font-weight: 600;
+    color: #5a6a7e;
     text-transform: uppercase; letter-spacing: 0.5px;
 }
-.wheel-spin-btn:hover:not(:disabled) {
-    box-shadow: 0 0 20px rgba(69,248,130,0.4);
-    transform: translateY(-1px);
+.wheel-stat--free .wheel-stat__value { color: #ffd700; }
+.wheel-info-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px; font-size: 12px; color: #5a6a7e;
+    padding: 0 2px;
 }
+.wheel-info-bar strong { color: #c9d1d9; font-weight: 700; }
+.free-badge {
+    display: inline-block;
+    padding: 2px 8px; border-radius: 4px;
+    background: linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,215,0,0.05));
+    color: #ffd700;
+    font-weight: 800; font-size: 10px;
+    border: 1px solid rgba(255,215,0,0.25);
+    text-transform: uppercase; letter-spacing: 0.5px;
+    animation: free-pulse 2s ease infinite;
+}
+@keyframes free-pulse {
+    0%,100% { box-shadow: 0 0 4px rgba(255,215,0,0.1); }
+    50% { box-shadow: 0 0 12px rgba(255,215,0,0.3); }
+}
+.wheel-spin-btn {
+    width: 100%; padding: 14px 20px;
+    border-radius: 10px; border: none;
+    background: linear-gradient(135deg, #45f882 0%, #2dd66b 50%, #22c55e 100%);
+    color: #0a1018; font-size: 14px; font-weight: 900;
+    cursor: pointer; transition: all .25s;
+    text-transform: uppercase; letter-spacing: 1px;
+    position: relative; overflow: hidden;
+}
+.wheel-spin-btn::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.5s;
+}
+.wheel-spin-btn:hover:not(:disabled)::before { transform: translateX(100%); }
+.wheel-spin-btn:hover:not(:disabled) {
+    box-shadow: 0 0 30px rgba(69,248,130,0.4), 0 4px 15px rgba(69,248,130,0.2);
+    transform: translateY(-2px);
+}
+.wheel-spin-btn:active:not(:disabled) { transform: translateY(0); }
 .wheel-spin-btn:disabled {
-    opacity: 0.4; cursor: not-allowed;
-    background: rgba(69,248,130,0.15); color: rgba(69,248,130,0.4);
+    opacity: 0.35; cursor: not-allowed;
+    background: rgba(69,248,130,0.12); color: rgba(69,248,130,0.35);
 }
 .wheel-spin-btn.spinning {
-    animation: pulse-spin 0.6s ease infinite;
+    background: linear-gradient(135deg, #1a7a3a, #156d32);
+    color: #45f882;
+    animation: btn-pulse 0.8s ease infinite;
 }
-@keyframes pulse-spin {
-    0%, 100% { box-shadow: 0 0 10px rgba(69,248,130,0.2); }
-    50% { box-shadow: 0 0 25px rgba(69,248,130,0.5); }
+@keyframes btn-pulse {
+    0%,100% { box-shadow: 0 0 8px rgba(69,248,130,0.15); }
+    50% { box-shadow: 0 0 20px rgba(69,248,130,0.35); }
 }
 .wheel-result-overlay {
     position: absolute; inset: 0;
-    background: rgba(10,16,24,0.92);
-    border-radius: 12px;
+    background: rgba(8,14,22,0.95);
+    backdrop-filter: blur(8px);
+    border-radius: 16px;
     display: none; flex-direction: column;
     align-items: center; justify-content: center;
-    z-index: 10; text-align: center; padding: 20px;
+    z-index: 10; text-align: center; padding: 24px;
 }
 .wheel-result-overlay.active { display: flex; }
-.wheel-result-overlay .result-icon {
-    font-size: 40px; margin-bottom: 10px;
-}
+.wheel-result-overlay .result-icon { font-size: 48px; margin-bottom: 12px; }
 .wheel-result-overlay .result-label {
-    font-size: 20px; font-weight: 800; color: #e6edf3;
-    margin-bottom: 6px;
+    font-size: 22px; font-weight: 900; color: #e6edf3;
+    margin-bottom: 8px; letter-spacing: 0.5px;
 }
 .wheel-result-overlay .result-detail {
-    font-size: 13px; color: #8b949e; margin-bottom: 16px;
+    font-size: 14px; color: #8b949e; margin-bottom: 20px;
 }
 .wheel-result-overlay .result-close {
-    padding: 7px 20px; border-radius: 6px;
-    background: rgba(69,248,130,0.1); border: 1px solid rgba(69,248,130,0.2);
-    color: #45f882; font-size: 12px; font-weight: 600;
+    padding: 10px 28px; border-radius: 8px;
+    background: rgba(69,248,130,0.08); border: 1px solid rgba(69,248,130,0.2);
+    color: #45f882; font-size: 13px; font-weight: 700;
     cursor: pointer; transition: all .2s;
+    text-transform: uppercase; letter-spacing: 0.5px;
 }
-.wheel-result-overlay .result-close:hover { background: rgba(69,248,130,0.18); }
+.wheel-result-overlay .result-close:hover {
+    background: rgba(69,248,130,0.15);
+    box-shadow: 0 0 15px rgba(69,248,130,0.15);
+}
 .wheel-result-overlay.jackpot {
-    background: radial-gradient(ellipse at center, rgba(255,215,0,0.15) 0%, rgba(10,16,24,0.95) 70%);
+    background: radial-gradient(ellipse at center, rgba(255,215,0,0.12) 0%, rgba(8,14,22,0.97) 70%);
 }
 .wheel-result-overlay.jackpot .result-icon { color: #ffd700; animation: jackpot-glow 1s ease infinite alternate; }
-.wheel-result-overlay.jackpot .result-label { color: #ffd700; }
+.wheel-result-overlay.jackpot .result-label { color: #ffd700; text-shadow: 0 0 20px rgba(255,215,0,0.5); }
 @keyframes jackpot-glow {
-    0% { text-shadow: 0 0 10px rgba(255,215,0,0.3); }
-    100% { text-shadow: 0 0 30px rgba(255,215,0,0.8), 0 0 60px rgba(255,215,0,0.3); }
+    0% { text-shadow: 0 0 10px rgba(255,215,0,0.3); transform: scale(1); }
+    100% { text-shadow: 0 0 40px rgba(255,215,0,0.8), 0 0 80px rgba(255,215,0,0.3); transform: scale(1.05); }
+}
+.wheel-result-overlay.loss .result-icon { color: #f85149; }
+.wheel-result-overlay.loss .result-label { color: #f85149; }
+@media (max-width: 480px) {
+    .wheel-stage { width: 280px; height: 280px; }
+    .wheel-card { padding: 16px; }
+    .wheel-stats { gap: 8px; }
 }
 </style>
 {% endblock %}
@@ -303,32 +355,58 @@
                             <i class="fas fa-dharmachakra"></i> Roue communautaire
                         </div>
 
-                        <div class="wheel-canvas-wrap">
-                            <div class="wheel-pointer"></div>
-                            <canvas id="wheelCanvas" width="560" height="560"></canvas>
-                        </div>
-
-                        <div class="wheel-info">
-                            <div>
-                                Tours gratuits : <strong id="wheelFreeSpins">{{ wheel_free_spins }}</strong>
-                                {% if wheel_free_spins > 0 %}
-                                    <span class="free-badge">GRATUIT</span>
-                                {% endif %}
+                        <div class="wheel-stats">
+                            <div class="wheel-stat">
+                                <div class="wheel-stat__value" id="wheelBalance">{{ app.user.tokenBalance }}</div>
+                                <div class="wheel-stat__label"><i class="fas fa-coins"></i> NexBits</div>
                             </div>
-                            <div>Cout : <strong>{{ wheel_spin_cost }} NexBits</strong></div>
+                            <div class="wheel-stat">
+                                <div class="wheel-stat__value wheel-stat__value--boost" id="wheelBoostBalance">{{ app.user.boostTokenBalance }}</div>
+                                <div class="wheel-stat__label"><i class="fas fa-bolt"></i> NexBoost</div>
+                            </div>
+                            <div class="wheel-stat wheel-stat--free">
+                                <div class="wheel-stat__value" id="wheelFreeSpins">{{ wheel_free_spins }}</div>
+                                <div class="wheel-stat__label"><i class="fas fa-gift"></i> Tours gratuits</div>
+                            </div>
+                            <div class="wheel-stat">
+                                <div class="wheel-stat__value" style="color:#c9d1d9;">{{ wheel_spin_cost }}</div>
+                                <div class="wheel-stat__label"><i class="fas fa-tag"></i> Cout / tour</div>
+                            </div>
                         </div>
 
-                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;font-size:12px;color:#8b949e;">
-                            <div><i class="fas fa-wallet" style="color:#45f882;margin-right:4px;"></i> Solde : <strong id="wheelBalance" style="color:#45f882;">{{ app.user.tokenBalance }}</strong> NexBits</div>
-                            <div><strong id="wheelBoostBalance" style="color:#00c6ff;">{{ app.user.boostTokenBalance }}</strong> NexBoost</div>
+                        <div class="wheel-stage" id="wheelStage">
+                            <div class="wheel-pointer-wrap">
+                                <svg width="28" height="34" viewBox="0 0 28 34">
+                                    <defs>
+                                        <linearGradient id="ptrGrad" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stop-color="#45f882"/>
+                                            <stop offset="100%" stop-color="#2dd66b"/>
+                                        </linearGradient>
+                                        <filter id="ptrGlow">
+                                            <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#45f882" flood-opacity="0.6"/>
+                                        </filter>
+                                    </defs>
+                                    <polygon points="14,34 0,0 28,0" fill="url(#ptrGrad)" filter="url(#ptrGlow)"/>
+                                    <polygon points="14,28 4,2 24,2" fill="rgba(255,255,255,0.15)"/>
+                                </svg>
+                            </div>
+                            <canvas id="wheelCanvas" width="640" height="640"></canvas>
+                        </div>
+
+                        <div class="wheel-info-bar">
+                            {% if wheel_free_spins > 0 %}
+                                <span class="free-badge"><i class="fas fa-gift"></i> Tour gratuit disponible</span>
+                            {% else %}
+                                <span>Cout : <strong>{{ wheel_spin_cost }} NexBits</strong></span>
+                            {% endif %}
                         </div>
 
                         <button type="button" class="wheel-spin-btn" id="wheelSpinBtn">
-                            <i class="fas fa-dharmachakra"></i>
+                            <i class="fas fa-dharmachakra" style="margin-right:6px;"></i>
                             {% if wheel_free_spins > 0 %}
-                                Tourner (gratuit)
+                                Tourner gratuitement
                             {% else %}
-                                Tourner ({{ wheel_spin_cost }} NexBits)
+                                Tourner — {{ wheel_spin_cost }} NexBits
                             {% endif %}
                         </button>
 
@@ -336,7 +414,7 @@
                             <div class="result-icon" id="wheelResultIcon"></div>
                             <div class="result-label" id="wheelResultLabel"></div>
                             <div class="result-detail" id="wheelResultDetail"></div>
-                            <button type="button" class="result-close" id="wheelResultClose">Fermer</button>
+                            <button type="button" class="result-close" id="wheelResultClose">Continuer</button>
                         </div>
                     </div>
 
@@ -578,63 +656,193 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!canvas) return;
         var ctx = canvas.getContext('2d');
         var prizes = {{ wheel_prizes|json_encode|raw }};
-        var numSections = prizes.length;
-        var arc = (2 * Math.PI) / numSections;
+        var N = prizes.length;
+        var arc = (2 * Math.PI) / N;
+        var CX = 320, CY = 320;
+        var R = 290;
         var currentAngle = 0;
         var spinning = false;
+        var ledPhase = 0;
+        var ledTimer = null;
+
+        // Color helpers
+        function hexToRgb(hex) {
+            var r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+            return [r,g,b];
+        }
+        function lighten(hex, pct) {
+            var c = hexToRgb(hex);
+            return 'rgb(' + Math.min(255, c[0]+pct) + ',' + Math.min(255, c[1]+pct) + ',' + Math.min(255, c[2]+pct) + ')';
+        }
+        function darken(hex, pct) {
+            var c = hexToRgb(hex);
+            return 'rgb(' + Math.max(0, c[0]-pct) + ',' + Math.max(0, c[1]-pct) + ',' + Math.max(0, c[2]-pct) + ')';
+        }
 
         function drawWheel(angle) {
-            ctx.clearRect(0, 0, 560, 560);
+            ctx.clearRect(0, 0, 640, 640);
+
+            // Outer dark ring background
+            ctx.beginPath();
+            ctx.arc(CX, CY, R + 22, 0, 2 * Math.PI);
+            ctx.fillStyle = '#0a0f18';
+            ctx.fill();
+
+            // Outer ring border
+            ctx.beginPath();
+            ctx.arc(CX, CY, R + 22, 0, 2 * Math.PI);
+            ctx.strokeStyle = 'rgba(69,248,130,0.15)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // LED dots on outer ring
+            var ledCount = N * 3;
+            for (var li = 0; li < ledCount; li++) {
+                var la = (li / ledCount) * 2 * Math.PI - Math.PI / 2;
+                var lr = R + 12;
+                var lx = CX + Math.cos(la) * lr;
+                var ly = CY + Math.sin(la) * lr;
+                var isLit = ((li + ledPhase) % 3 === 0);
+                ctx.beginPath();
+                ctx.arc(lx, ly, 2.5, 0, 2 * Math.PI);
+                ctx.fillStyle = isLit ? '#45f882' : 'rgba(69,248,130,0.12)';
+                ctx.fill();
+                if (isLit) {
+                    ctx.shadowColor = '#45f882';
+                    ctx.shadowBlur = 6;
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
+            }
+
+            // Inner ring border
+            ctx.beginPath();
+            ctx.arc(CX, CY, R + 1, 0, 2 * Math.PI);
+            ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
             ctx.save();
-            ctx.translate(280, 280);
+            ctx.translate(CX, CY);
             ctx.rotate(angle);
 
-            for (var i = 0; i < numSections; i++) {
-                var startAngle = i * arc - Math.PI / 2;
-                var endAngle = startAngle + arc;
+            // Draw sections
+            for (var i = 0; i < N; i++) {
+                var sa = i * arc - Math.PI / 2;
+                var ea = sa + arc;
+                var col = prizes[i].color || '#2d8a4e';
+                var isJP = prizes[i].isJackpot;
 
+                // Section fill with gradient
                 ctx.beginPath();
                 ctx.moveTo(0, 0);
-                ctx.arc(0, 0, 270, startAngle, endAngle);
+                ctx.arc(0, 0, R, sa, ea);
                 ctx.closePath();
-                ctx.fillStyle = prizes[i].color || '#2d8a4e';
+                var grad = ctx.createRadialGradient(0, 0, 30, 0, 0, R);
+                grad.addColorStop(0, lighten(col, 30));
+                grad.addColorStop(0.7, col);
+                grad.addColorStop(1, darken(col, 25));
+                ctx.fillStyle = grad;
                 ctx.fill();
 
-                ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+                // Section divider
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                var ex = Math.cos(sa) * R, ey = Math.sin(sa) * R;
+                ctx.lineTo(ex, ey);
+                ctx.strokeStyle = 'rgba(0,0,0,0.4)';
                 ctx.lineWidth = 1.5;
                 ctx.stroke();
 
+                // Inner highlight line
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(ex, ey);
+                ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+                ctx.lineWidth = 0.5;
+                ctx.stroke();
+
+                // Label
                 ctx.save();
-                ctx.rotate(startAngle + arc / 2);
+                ctx.rotate(sa + arc / 2);
                 ctx.textAlign = 'right';
-                ctx.fillStyle = prizes[i].isJackpot ? '#0a1018' : '#fff';
-                ctx.font = (prizes[i].isJackpot ? 'bold 15px' : '13px') + ' system-ui, -apple-system, sans-serif';
-                ctx.fillText(prizes[i].label, 255, 5);
+                ctx.textBaseline = 'middle';
+                if (isJP) {
+                    ctx.font = '900 16px "Segoe UI", system-ui, sans-serif';
+                    ctx.fillStyle = '#0a1018';
+                    ctx.shadowColor = 'rgba(0,0,0,0.5)';
+                    ctx.shadowBlur = 4;
+                    ctx.fillText(prizes[i].label, R - 18, 0);
+                    ctx.shadowBlur = 0;
+                    ctx.fillStyle = 'rgba(255,215,0,0.9)';
+                    ctx.fillText(prizes[i].label, R - 18, 0);
+                } else {
+                    var isLoss = prizes[i].nexbits === 0 && prizes[i].nexboost === 0;
+                    ctx.font = (isLoss ? '700 13px' : '700 13px') + ' "Segoe UI", system-ui, sans-serif';
+                    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+                    ctx.fillText(prizes[i].label, R - 17, 1);
+                    ctx.fillStyle = isLoss ? 'rgba(255,255,255,0.7)' : '#fff';
+                    ctx.fillText(prizes[i].label, R - 18, 0);
+                }
                 ctx.restore();
+
+                // Small icon for jackpot
+                if (isJP) {
+                    ctx.save();
+                    ctx.rotate(sa + arc / 2);
+                    ctx.font = '14px "Font Awesome 6 Free"';
+                    ctx.fillStyle = 'rgba(255,215,0,0.8)';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('\uf521', 60, 0);
+                    ctx.restore();
+                }
             }
 
+            // Center hub - outer ring
             ctx.beginPath();
-            ctx.arc(0, 0, 35, 0, 2 * Math.PI);
-            ctx.fillStyle = '#0a1018';
+            ctx.arc(0, 0, 42, 0, 2 * Math.PI);
+            var hubGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, 42);
+            hubGrad.addColorStop(0, '#1a2a3a');
+            hubGrad.addColorStop(1, '#0a1018');
+            ctx.fillStyle = hubGrad;
             ctx.fill();
             ctx.strokeStyle = '#45f882';
             ctx.lineWidth = 3;
             ctx.stroke();
 
-            ctx.font = 'bold 10px system-ui, sans-serif';
+            // Center hub - inner glow
+            ctx.beginPath();
+            ctx.arc(0, 0, 36, 0, 2 * Math.PI);
+            ctx.strokeStyle = 'rgba(69,248,130,0.2)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            // Center text
+            ctx.font = '900 11px "Segoe UI", system-ui, sans-serif';
             ctx.fillStyle = '#45f882';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
+            ctx.shadowColor = 'rgba(69,248,130,0.5)';
+            ctx.shadowBlur = 8;
             ctx.fillText('SPIN', 0, 0);
+            ctx.shadowBlur = 0;
 
             ctx.restore();
 
+            // Outer glow ring
             ctx.beginPath();
-            ctx.arc(280, 280, 272, 0, 2 * Math.PI);
-            ctx.strokeStyle = 'rgba(69,248,130,0.2)';
-            ctx.lineWidth = 4;
+            ctx.arc(CX, CY, R + 23, 0, 2 * Math.PI);
+            ctx.strokeStyle = 'rgba(69,248,130,0.08)';
+            ctx.lineWidth = 1;
             ctx.stroke();
         }
+
+        // Animate LEDs
+        function animateLeds() {
+            ledPhase = (ledPhase + 1) % 3;
+            drawWheel(currentAngle);
+        }
+        ledTimer = setInterval(animateLeds, 400);
 
         drawWheel(0);
 
@@ -649,14 +857,18 @@ document.addEventListener('DOMContentLoaded', function () {
         var boostBalanceEl = document.getElementById('wheelBoostBalance');
         var wheelCsrfToken = '{{ csrf_token("wheel_spin") }}';
 
-        function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+        function easeOutQuart(t) { return 1 - Math.pow(1 - t, 4); }
 
         spinBtn.addEventListener('click', function() {
             if (spinning) return;
             spinning = true;
             spinBtn.disabled = true;
             spinBtn.classList.add('spinning');
-            spinBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> En cours...';
+            spinBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:6px;"></i> En cours...';
+
+            // Speed up LEDs while spinning
+            clearInterval(ledTimer);
+            ledTimer = setInterval(animateLeds, 100);
 
             var formData = new FormData();
             formData.append('_token', wheelCsrfToken);
@@ -668,7 +880,9 @@ document.addEventListener('DOMContentLoaded', function () {
                         spinning = false;
                         spinBtn.disabled = false;
                         spinBtn.classList.remove('spinning');
-                        updateWheelBtnLabel(parseInt(freeSpinsEl.textContent));
+                        clearInterval(ledTimer);
+                        ledTimer = setInterval(animateLeds, 400);
+                        updateBtnLabel(parseInt(freeSpinsEl.textContent));
                         alert(res.data.error || 'Erreur');
                         return;
                     }
@@ -676,22 +890,34 @@ document.addEventListener('DOMContentLoaded', function () {
                     var d = res.data;
                     var targetIndex = d.sectionIndex;
 
-                    var sectionAngle = targetIndex * arc + arc / 2;
-                    var targetAngle = (2 * Math.PI - sectionAngle);
-                    var fullSpins = 5 + Math.floor(Math.random() * 3);
-                    var totalAngle = fullSpins * 2 * Math.PI + targetAngle;
+                    // Target angle: the pointer is at top (12 o'clock = -PI/2).
+                    // Section i occupies [i*arc - PI/2, (i+1)*arc - PI/2].
+                    // To land in the middle of section targetIndex, the wheel
+                    // needs to rotate so that angle + targetIndex*arc + arc/2 = 0 (mod 2PI)
+                    // → desiredAngle = 2PI - (targetIndex*arc + arc/2)
+                    var desiredAngle = 2 * Math.PI - (targetIndex * arc + arc / 2);
 
-                    var startAngle = currentAngle % (2 * Math.PI);
-                    var duration = 4000;
+                    // Compensate for current wheel position
+                    var startMod = currentAngle % (2 * Math.PI);
+                    if (startMod < 0) startMod += 2 * Math.PI;
+                    var delta = desiredAngle - startMod;
+                    if (delta < 0) delta += 2 * Math.PI;
+
+                    // Add full rotations for dramatic effect
+                    var fullSpins = 5 + Math.floor(Math.random() * 3);
+                    var totalDelta = fullSpins * 2 * Math.PI + delta;
+
+                    var animStart = currentAngle;
+                    var duration = 5000;
                     var startTime = null;
 
                     function animate(ts) {
                         if (!startTime) startTime = ts;
                         var elapsed = ts - startTime;
                         var t = Math.min(elapsed / duration, 1);
-                        var eased = easeOutCubic(t);
+                        var eased = easeOutQuart(t);
 
-                        currentAngle = startAngle + eased * totalAngle;
+                        currentAngle = animStart + eased * totalDelta;
                         drawWheel(currentAngle);
 
                         if (t < 1) {
@@ -700,69 +926,73 @@ document.addEventListener('DOMContentLoaded', function () {
                             spinning = false;
                             spinBtn.classList.remove('spinning');
 
+                            // Slow LEDs back down
+                            clearInterval(ledTimer);
+                            ledTimer = setInterval(animateLeds, 400);
+
+                            // Update UI values
                             freeSpinsEl.textContent = d.remainingFreeSpins;
                             balanceEl.textContent = d.newBalance.nexbits;
                             boostBalanceEl.textContent = d.newBalance.nexboost;
 
-                            var freeParent = freeSpinsEl.parentElement;
-                            var existingBadge = freeParent.querySelector('.free-badge');
+                            // Update free badge in info bar
+                            var infoBar = document.querySelector('.wheel-info-bar');
                             if (d.remainingFreeSpins > 0) {
-                                if (!existingBadge) {
-                                    var badge = document.createElement('span');
-                                    badge.className = 'free-badge';
-                                    badge.textContent = 'GRATUIT';
-                                    freeParent.appendChild(badge);
-                                }
-                            } else if (existingBadge) {
-                                existingBadge.remove();
+                                infoBar.innerHTML = '<span class="free-badge"><i class="fas fa-gift"></i> Tour gratuit disponible</span>';
+                            } else {
+                                infoBar.innerHTML = '<span>Cout : <strong>{{ wheel_spin_cost }} NexBits</strong></span>';
                             }
 
-                            updateWheelBtnLabel(d.remainingFreeSpins);
+                            updateBtnLabel(d.remainingFreeSpins);
                             spinBtn.disabled = false;
 
+                            // Show result
                             var isJackpot = d.isJackpot;
                             var isLoss = d.prize.nexbits === 0 && d.prize.nexboost === 0;
 
-                            resultOverlay.className = 'wheel-result-overlay active' + (isJackpot ? ' jackpot' : '');
-
                             if (isJackpot) {
+                                resultOverlay.className = 'wheel-result-overlay active jackpot';
                                 resultIcon.innerHTML = '<i class="fas fa-crown"></i>';
                                 resultLabel.textContent = 'JACKPOT !';
                                 resultDetail.innerHTML = '<strong style="color:#ffd700;">' + d.prize.nexbits + ' NexBits + ' + d.prize.nexboost + ' NexBoost</strong>';
                             } else if (isLoss) {
-                                resultIcon.innerHTML = '<i class="fas fa-times-circle" style="color:#c9314a;"></i>';
+                                resultOverlay.className = 'wheel-result-overlay active loss';
+                                resultIcon.innerHTML = '<i class="fas fa-times-circle"></i>';
                                 resultLabel.textContent = 'Perdu !';
                                 resultDetail.textContent = 'Pas de chance, retentez votre chance !';
                             } else {
+                                resultOverlay.className = 'wheel-result-overlay active';
                                 resultIcon.innerHTML = '<i class="fas fa-coins" style="color:#45f882;"></i>';
                                 resultLabel.textContent = d.prize.label;
-                                var detailParts = [];
-                                if (d.prize.nexbits > 0) detailParts.push('+' + d.prize.nexbits + ' NexBits');
-                                if (d.prize.nexboost > 0) detailParts.push('+' + d.prize.nexboost + ' NexBoost');
-                                resultDetail.innerHTML = '<strong style="color:#45f882;">' + detailParts.join(' & ') + '</strong>';
+                                var parts = [];
+                                if (d.prize.nexbits > 0) parts.push('+' + d.prize.nexbits + ' NexBits');
+                                if (d.prize.nexboost > 0) parts.push('+' + d.prize.nexboost + ' NexBoost');
+                                resultDetail.innerHTML = '<strong style="color:#45f882;">' + parts.join(' & ') + '</strong>';
                             }
                         }
                     }
                     requestAnimationFrame(animate);
                 })
-                .catch(function(err) {
+                .catch(function() {
                     spinning = false;
                     spinBtn.disabled = false;
                     spinBtn.classList.remove('spinning');
-                    updateWheelBtnLabel(parseInt(freeSpinsEl.textContent));
+                    clearInterval(ledTimer);
+                    ledTimer = setInterval(animateLeds, 400);
+                    updateBtnLabel(parseInt(freeSpinsEl.textContent));
                     alert('Erreur reseau.');
                 });
         });
 
         resultClose.addEventListener('click', function() {
-            resultOverlay.classList.remove('active');
+            resultOverlay.className = 'wheel-result-overlay';
         });
 
-        function updateWheelBtnLabel(freeSpins) {
+        function updateBtnLabel(freeSpins) {
             if (freeSpins > 0) {
-                spinBtn.innerHTML = '<i class="fas fa-dharmachakra"></i> Tourner (gratuit)';
+                spinBtn.innerHTML = '<i class="fas fa-dharmachakra" style="margin-right:6px;"></i> Tourner gratuitement';
             } else {
-                spinBtn.innerHTML = '<i class="fas fa-dharmachakra"></i> Tourner ({{ wheel_spin_cost }} NexBits)';
+                spinBtn.innerHTML = '<i class="fas fa-dharmachakra" style="margin-right:6px;"></i> Tourner — {{ wheel_spin_cost }} NexBits';
             }
         }
     })();
