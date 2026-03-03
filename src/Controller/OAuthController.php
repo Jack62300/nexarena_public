@@ -10,6 +10,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 
 class OAuthController extends AbstractController
@@ -107,6 +108,8 @@ class OAuthController extends AbstractController
     public function completeRegistration(
         Request $request,
         OAuthRegistrationService $oauthService,
+        UserRepository $userRepository,
+        UserPasswordHasherInterface $passwordHasher,
         Security $security,
     ): Response {
         // Inscriptions bloquées pendant la maintenance
@@ -149,6 +152,33 @@ class OAuthController extends AbstractController
                 ]);
             }
 
+            // Mot de passe obligatoire pour les nouveaux comptes
+            $password = (string) $request->request->get('password');
+            $passwordConfirm = (string) $request->request->get('password_confirm');
+
+            // Vérifier si c'est un nouveau compte (pas de liaison à un compte existant)
+            $existingByOAuth = $userRepository->findByOAuthId($pending['provider'], $pending['oauth_id']);
+            $existingByEmail = $existingByOAuth ? null : $userRepository->findOneBy(['email' => $email]);
+            $isNewAccount = !$existingByOAuth && !$existingByEmail;
+
+            if ($isNewAccount) {
+                if (mb_strlen($password) < 10) {
+                    $this->addFlash('error', 'Le mot de passe doit contenir au moins 10 caractères.');
+                    return $this->render('security/complete_registration.html.twig', [
+                        'pending'    => $pending,
+                        'last_email' => $email,
+                    ]);
+                }
+
+                if ($password !== $passwordConfirm) {
+                    $this->addFlash('error', 'Les mots de passe ne correspondent pas.');
+                    return $this->render('security/complete_registration.html.twig', [
+                        'pending'    => $pending,
+                        'last_email' => $email,
+                    ]);
+                }
+            }
+
             $user = $oauthService->findOrCreateFromOAuth(
                 $pending['provider'],
                 $pending['oauth_id'],
@@ -156,6 +186,12 @@ class OAuthController extends AbstractController
                 $pending['username'],
                 $pending['avatar'],
             );
+
+            // Définir le mot de passe si nouveau compte
+            if ($isNewAccount && mb_strlen($password) >= 10) {
+                $user->setPassword($passwordHasher->hashPassword($user, $password));
+                $oauthService->flush();
+            }
 
             $session->remove('_oauth_pending');
             $session->migrate(true);

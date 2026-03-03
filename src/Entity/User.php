@@ -98,6 +98,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     #[ORM\Column(length: 64, nullable: true)]
     private ?string $emailVerificationToken = null;
 
+    #[ORM\Column(length: 64, nullable: true, unique: true)]
+    private ?string $passwordResetToken = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $passwordResetTokenExpiresAt = null;
+
     #[ORM\Column(length: 100, nullable: true)]
     private ?string $twitchUsername = null;
 
@@ -654,6 +660,28 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     public function setLastFreeSpinMonth(?string $lastFreeSpinMonth): static
     {
         $this->lastFreeSpinMonth = $lastFreeSpinMonth;
+        return $this;
+    }
+
+    public function getPasswordResetToken(): ?string
+    {
+        return $this->passwordResetToken;
+    }
+
+    public function setPasswordResetToken(?string $passwordResetToken): static
+    {
+        $this->passwordResetToken = $passwordResetToken;
+        return $this;
+    }
+
+    public function getPasswordResetTokenExpiresAt(): ?\DateTimeImmutable
+    {
+        return $this->passwordResetTokenExpiresAt;
+    }
+
+    public function setPasswordResetTokenExpiresAt(?\DateTimeImmutable $passwordResetTokenExpiresAt): static
+    {
+        $this->passwordResetTokenExpiresAt = $passwordResetTokenExpiresAt;
         return $this;
     }
 

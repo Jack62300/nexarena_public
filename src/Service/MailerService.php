@@ -98,6 +98,88 @@ class MailerService
 HTML;
     }
 
+    public function sendPasswordResetEmail(User $user): void
+    {
+        $siteName  = $this->settings->get('site_name', 'Nexarena') ?? 'Nexarena';
+        $siteEmail = $this->settings->get('site_email', 'noreply@nexarena.com') ?? 'noreply@nexarena.com';
+
+        $resetUrl = $this->urlGenerator->generate(
+            'app_reset_password',
+            ['token' => $user->getPasswordResetToken()],
+            UrlGeneratorInterface::ABSOLUTE_URL
+        );
+
+        $html = $this->renderPasswordResetTemplate($user->getUsername() ?? '', $resetUrl, $siteName);
+
+        $email = (new Email())
+            ->from(sprintf('%s <%s>', $siteName, $siteEmail))
+            ->to($user->getEmail() ?? '')
+            ->subject('Réinitialisez votre mot de passe — ' . $siteName)
+            ->html($html);
+
+        $this->mailer->send($email);
+    }
+
+    private function renderPasswordResetTemplate(string $username, string $resetUrl, string $siteName): string
+    {
+        $username  = htmlspecialchars($username, ENT_QUOTES);
+        $resetUrl  = htmlspecialchars($resetUrl, ENT_QUOTES);
+        $siteName  = htmlspecialchars($siteName, ENT_QUOTES);
+        $year      = date('Y');
+
+        return <<<HTML
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Réinitialisation du mot de passe — {$siteName}</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #080e17; font-family: 'Segoe UI', Arial, sans-serif; color: #c8d6e8; }
+  .wrapper { max-width: 580px; margin: 40px auto; padding: 0 16px; }
+  .card { background: #0d1b2d; border: 1px solid rgba(69,248,130,0.15); border-radius: 16px; overflow: hidden; }
+  .header { background: linear-gradient(135deg, #0d1b2d 0%, #0a2015 100%); padding: 40px 40px 32px; text-align: center; border-bottom: 1px solid rgba(69,248,130,0.12); }
+  .logo { font-size: 28px; font-weight: 800; color: #45f882; letter-spacing: -0.5px; margin-bottom: 6px; }
+  .logo span { color: #fff; }
+  .tagline { font-size: 12px; color: rgba(200,214,232,0.5); text-transform: uppercase; letter-spacing: 2px; }
+  .body { padding: 40px; }
+  .greeting { font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 16px; }
+  .text { font-size: 15px; line-height: 1.7; color: rgba(200,214,232,0.75); margin-bottom: 24px; }
+  .btn-wrap { text-align: center; margin: 32px 0; }
+  .btn { display: inline-block; background: #45f882; color: #050d18; font-size: 16px; font-weight: 700; padding: 15px 40px; border-radius: 10px; text-decoration: none; letter-spacing: 0.3px; }
+  .divider { height: 1px; background: rgba(69,248,130,0.1); margin: 28px 0; }
+  .small { font-size: 12px; color: rgba(200,214,232,0.4); line-height: 1.6; }
+  .url-box { background: rgba(69,248,130,0.05); border: 1px solid rgba(69,248,130,0.1); border-radius: 8px; padding: 12px 16px; font-size: 11px; color: rgba(200,214,232,0.5); word-break: break-all; margin-top: 12px; }
+  .footer { background: rgba(0,0,0,0.2); padding: 20px 40px; text-align: center; font-size: 12px; color: rgba(200,214,232,0.35); border-top: 1px solid rgba(69,248,130,0.08); }
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="card">
+    <div class="header">
+      <div class="logo">Nex<span>arena</span></div>
+      <div class="tagline">Plateforme de serveurs de jeux</div>
+    </div>
+    <div class="body">
+      <div class="greeting">Bonjour {$username} 👋</div>
+      <p class="text">Vous avez demandé la réinitialisation de votre mot de passe sur <strong>{$siteName}</strong>. Cliquez sur le bouton ci-dessous pour choisir un nouveau mot de passe :</p>
+      <div class="btn-wrap">
+        <a href="{$resetUrl}" class="btn">🔑 Réinitialiser mon mot de passe</a>
+      </div>
+      <div class="divider"></div>
+      <p class="small">Ce lien est valable <strong>1 heure</strong>. Si vous n'avez pas fait cette demande, ignorez simplement cet email — votre mot de passe ne sera pas modifié.</p>
+      <p class="small">Si le bouton ne fonctionne pas, copiez et collez ce lien dans votre navigateur :</p>
+      <div class="url-box">{$resetUrl}</div>
+    </div>
+    <div class="footer">© {$year} {$siteName} — Cet email a été envoyé automatiquement, merci de ne pas y répondre.</div>
+  </div>
+</div>
+</body>
+</html>
+HTML;
+    }
+
     public function sendContactNotification(
         string $prenom,
         string $nom,

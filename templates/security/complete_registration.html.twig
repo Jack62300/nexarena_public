@@ -72,9 +72,18 @@
                                 </div>
                             {% else %}
                                 <p class="mb-4" style="color:rgba(255,255,255,0.7);font-size:14px;">
-                                    Pour finaliser votre inscription, veuillez lire et accepter le règlement de Nexarena.
+                                    Pour finaliser votre inscription, définissez un mot de passe et acceptez le règlement de Nexarena.
                                 </p>
                             {% endif %}
+
+                            <div class="form-grp">
+                                <label for="password">Mot de passe</label>
+                                <input type="password" id="password" name="password" placeholder="Minimum 10 caractères" minlength="10" required>
+                            </div>
+                            <div class="form-grp">
+                                <label for="password_confirm">Confirmer le mot de passe</label>
+                                <input type="password" id="password_confirm" name="password_confirm" placeholder="Confirmez votre mot de passe" minlength="10" required>
+                            </div>
 
                             <div style="display:flex;align-items:flex-start;gap:10px;margin:16px 0;">
                                 <input type="checkbox" id="accept_terms" name="accept_terms" value="1" required

@@ -7,7 +7,9 @@ use App\Service\MailerService;
 use App\Service\SettingsService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 
@@ -70,7 +72,7 @@ class SecurityController extends AbstractController
 
     #[Route('/inscription/renvoyer-email', name: 'app_resend_verification_email', methods: ['POST'])]
     public function resendVerificationEmail(
-        \Symfony\Component\HttpFoundation\Request $request,
+        Request $request,
         UserRepository $userRepo,
         EntityManagerInterface $em,
         MailerService $mailerService,
@@ -91,6 +93,104 @@ class SecurityController extends AbstractController
 
         $this->addFlash('success', 'Si un compte existe avec cet email, un nouveau lien a été envoyé.');
         return $this->redirectToRoute('app_register_email_sent');
+    }
+
+    // ─── Mot de passe oublié ──────────────────────────────────────────────────
+
+    #[Route('/mot-de-passe-oublie', name: 'app_forgot_password', methods: ['GET', 'POST'])]
+    public function forgotPassword(
+        Request $request,
+        UserRepository $userRepo,
+        EntityManagerInterface $em,
+        MailerService $mailerService,
+    ): Response {
+        if ($this->getUser()) {
+            return $this->redirectToRoute('app_home');
+        }
+
+        if ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid('forgot_password', $request->request->get('_csrf_token'))) {
+                $this->addFlash('error', 'Jeton CSRF invalide.');
+                return $this->redirectToRoute('app_forgot_password');
+            }
+
+            $email = trim((string) $request->request->get('email'));
+            $user = $userRepo->findOneBy(['email' => $email]);
+
+            if ($user) {
+                $user->setPasswordResetToken(bin2hex(random_bytes(32)));
+                $user->setPasswordResetTokenExpiresAt(new \DateTimeImmutable('+1 hour'));
+                $em->flush();
+
+                try {
+                    $mailerService->sendPasswordResetEmail($user);
+                } catch (\Throwable) {}
+            }
+
+            $this->addFlash('success', 'Si un compte existe avec cet email, un lien de réinitialisation a été envoyé.');
+            return $this->redirectToRoute('app_login');
+        }
+
+        return $this->render('security/forgot_password.html.twig');
+    }
+
+    #[Route('/reinitialiser-mot-de-passe/{token}', name: 'app_reset_password', methods: ['GET', 'POST'])]
+    public function resetPassword(
+        string $token,
+        Request $request,
+        UserRepository $userRepo,
+        EntityManagerInterface $em,
+        UserPasswordHasherInterface $passwordHasher,
+    ): Response {
+        if ($this->getUser()) {
+            return $this->redirectToRoute('app_home');
+        }
+
+        $user = $userRepo->findOneBy(['passwordResetToken' => $token]);
+
+        if (!$user) {
+            $this->addFlash('error', 'Ce lien de réinitialisation est invalide.');
+            return $this->redirectToRoute('app_login');
+        }
+
+        if ($user->getPasswordResetTokenExpiresAt() < new \DateTimeImmutable()) {
+            $user->setPasswordResetToken(null);
+            $user->setPasswordResetTokenExpiresAt(null);
+            $em->flush();
+
+            $this->addFlash('error', 'Ce lien de réinitialisation a expiré. Veuillez en demander un nouveau.');
+            return $this->redirectToRoute('app_forgot_password');
+        }
+
+        if ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid('reset_password', $request->request->get('_csrf_token'))) {
+                $this->addFlash('error', 'Jeton CSRF invalide.');
+                return $this->redirectToRoute('app_reset_password', ['token' => $token]);
+            }
+
+            $password = (string) $request->request->get('password');
+            $passwordConfirm = (string) $request->request->get('password_confirm');
+
+            if (mb_strlen($password) < 10) {
+                $this->addFlash('error', 'Le mot de passe doit contenir au moins 10 caractères.');
+                return $this->render('security/reset_password.html.twig', ['token' => $token]);
+            }
+
+            if ($password !== $passwordConfirm) {
+                $this->addFlash('error', 'Les mots de passe ne correspondent pas.');
+                return $this->render('security/reset_password.html.twig', ['token' => $token]);
+            }
+
+            $user->setPassword($passwordHasher->hashPassword($user, $password));
+            $user->setPasswordResetToken(null);
+            $user->setPasswordResetTokenExpiresAt(null);
+            $em->flush();
+
+            $this->addFlash('success', 'Votre mot de passe a été réinitialisé avec succès. Vous pouvez maintenant vous connecter.');
+            return $this->redirectToRoute('app_login');
+        }
+
+        return $this->render('security/reset_password.html.twig', ['token' => $token]);
     }
 
 }

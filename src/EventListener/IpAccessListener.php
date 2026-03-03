@@ -39,6 +39,14 @@ class IpAccessListener
     /** User-Agent des bots de moteurs de recherche (bypass VPN/country) */
     private const BOT_PATTERNS = [
         'Googlebot',
+        'Google-InspectionTool',
+        'AdsBot-Google',
+        'Mediapartners-Google',
+        'APIs-Google',
+        'Google-Site-Verification',
+        'Storebot-Google',
+        'GoogleOther',
+        'Google Favicon',
         'Bingbot',
         'Slurp',
         'DuckDuckBot',

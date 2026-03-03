@@ -93,6 +93,11 @@ class OAuthRegistrationService
         return $user;
     }
 
+    public function flush(): void
+    {
+        $this->em->flush();
+    }
+
     private function setOAuthId(User $user, string $provider, string $oauthId): void
     {
         match ($provider) {
