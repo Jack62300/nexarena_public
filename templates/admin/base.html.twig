@@ -220,7 +220,7 @@
             </div>
 
             {# ── Technique ── #}
-            {% if is_granted('ROLE_DEVELOPPEUR') %}
+            {% if is_granted('webhooks.list') or is_granted('logs.view') or is_granted('logs.view_access') %}
             {% set blockedCount = blocked_access_count() %}
             {% set techActive = _r starts with 'admin_webhooks_' or _r starts with 'admin_logs_' or _r starts with 'admin_access_logs_' %}
             <div class="admin-sidebar__group admin-sidebar__group--red {{ techActive ? 'open' : '' }}">
@@ -232,18 +232,24 @@
                     <i class="fas fa-chevron-right admin-sidebar__arrow"></i>
                 </button>
                 <div class="admin-sidebar__items">
+                    {% if is_granted('webhooks.list') %}
                     <a href="{{ path('admin_webhooks_list') }}" class="admin-sidebar__link {{ _r starts with 'admin_webhooks_' ? 'active' : '' }}">
                         <i class="fas fa-plug"></i> Webhooks
                     </a>
+                    {% endif %}
+                    {% if is_granted('logs.view') %}
                     <a href="{{ path('admin_logs_list') }}" class="admin-sidebar__link {{ _r starts with 'admin_logs_' ? 'active' : '' }}">
                         <i class="fas fa-terminal"></i> Logs
                     </a>
+                    {% endif %}
+                    {% if is_granted('logs.view_access') %}
                     <a href="{{ path('admin_access_logs_index') }}" class="admin-sidebar__link {{ _r starts with 'admin_access_logs_' ? 'active' : '' }}">
                         <i class="fas fa-shield-alt"></i> Logs d'accès
                         {% if blockedCount > 0 %}
                             <span class="badge bg-danger ms-auto">{{ blockedCount }}</span>
                         {% endif %}
                     </a>
+                    {% endif %}
                 </div>
             </div>
             {% endif %}
