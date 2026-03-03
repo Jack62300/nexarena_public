@@ -768,21 +768,21 @@ document.addEventListener('DOMContentLoaded', function () {
                 ctx.textAlign = 'right';
                 ctx.textBaseline = 'middle';
                 if (isJP) {
-                    ctx.font = '900 16px "Segoe UI", system-ui, sans-serif';
+                    ctx.font = '900 19px "Segoe UI", system-ui, sans-serif';
                     ctx.fillStyle = '#0a1018';
                     ctx.shadowColor = 'rgba(0,0,0,0.5)';
                     ctx.shadowBlur = 4;
-                    ctx.fillText(prizes[i].label, R - 18, 0);
+                    ctx.fillText(prizes[i].label, R - 16, 0);
                     ctx.shadowBlur = 0;
                     ctx.fillStyle = 'rgba(255,215,0,0.9)';
-                    ctx.fillText(prizes[i].label, R - 18, 0);
+                    ctx.fillText(prizes[i].label, R - 16, 0);
                 } else {
                     var isLoss = prizes[i].nexbits === 0 && prizes[i].nexboost === 0;
-                    ctx.font = (isLoss ? '700 13px' : '700 13px') + ' "Segoe UI", system-ui, sans-serif';
-                    ctx.fillStyle = 'rgba(0,0,0,0.4)';
-                    ctx.fillText(prizes[i].label, R - 17, 1);
-                    ctx.fillStyle = isLoss ? 'rgba(255,255,255,0.7)' : '#fff';
-                    ctx.fillText(prizes[i].label, R - 18, 0);
+                    ctx.font = '800 16px "Segoe UI", system-ui, sans-serif';
+                    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+                    ctx.fillText(prizes[i].label, R - 15, 1);
+                    ctx.fillStyle = isLoss ? 'rgba(255,255,255,0.65)' : '#fff';
+                    ctx.fillText(prizes[i].label, R - 16, 0);
                 }
                 ctx.restore();
 
