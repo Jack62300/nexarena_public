@@ -1,17 +1,24 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}{{ server.name }} - {{ setting('site_name', 'Nexarena') }}{% endblock %}
-{% block meta_description %}{{ server.shortDescription }}{% endblock %}
+{% set _base_url = setting('seo_site_url', app.request.schemeAndHttpHost) %}
+{% set _gc_name = server.gameCategory ? server.gameCategory.name : server.category.name %}
+
+{% block title %}{{ server.name }} - Serveur {{ _gc_name }} | {{ setting('site_name', 'Nexarena') }}{% endblock %}
+{% block meta_description %}{{ server.shortDescription ? server.shortDescription : (server.name ~ ' est un serveur ' ~ _gc_name ~ ' disponible sur ' ~ setting('site_name', 'Nexarena') ~ '. Votes, avis et informations.') }}{% endblock %}
+
+{% block og_type %}article{% endblock %}
 
 {% block og_image %}
     {% if server.banner %}
     <meta property="og:image"        content="{{ app.request.schemeAndHttpHost ~ asset('uploads/servers/banners/' ~ server.banner) }}">
     <meta property="og:image:width"  content="1200">
     <meta property="og:image:height" content="630">
+    <meta property="og:image:alt"    content="{{ server.name }} - Serveur {{ _gc_name }}">
     {% elseif server.presentationImage %}
     <meta property="og:image"        content="{{ app.request.schemeAndHttpHost ~ asset('uploads/servers/presentations/' ~ server.presentationImage) }}">
     <meta property="og:image:width"  content="1200">
     <meta property="og:image:height" content="630">
+    <meta property="og:image:alt"    content="{{ server.name }} - Serveur {{ _gc_name }}">
     {% else %}{{ parent() }}{% endif %}
 {% endblock %}
 
@@ -25,37 +32,52 @@
 {% endblock %}
 
 {% block json_ld %}
-{% set _srv_url   = app.request.schemeAndHttpHost ~ path('server_show', {slug: server.slug}) %}
-{% set _cat_url   = app.request.schemeAndHttpHost ~ path('ranking_category', {slug: server.category.slug}) %}
+{% set _srv_url   = _base_url ~ path('server_show', {slug: server.slug}) %}
+{% set _cat_url   = _base_url ~ path('ranking_category', {slug: server.category.slug}) %}
+{% set _gc_url    = server.gameCategory ? (_base_url ~ path('ranking_game_category', {slug: server.gameCategory.slug})) : _cat_url %}
 {% set _img_url   = server.banner
     ? (app.request.schemeAndHttpHost ~ asset('uploads/servers/banners/' ~ server.banner))
     : (server.presentationImage ? (app.request.schemeAndHttpHost ~ asset('uploads/servers/presentations/' ~ server.presentationImage)) : null) %}
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
-  "@type": "ItemPage",
-  "name": {{ server.name|json_encode|raw }},
-  "description": {{ server.shortDescription|json_encode|raw }},
-  "url": {{ _srv_url|json_encode|raw }}{% if _img_url %},
-  "image": {{ _img_url|json_encode|raw }}{% endif %},
+  "@type": "WebPage",
+  "name": {{ (server.name ~ ' - Serveur ' ~ _gc_name)|json_encode|raw }},
+  "description": {{ (server.shortDescription ?? '')|json_encode|raw }},
+  "url": {{ _srv_url|json_encode|raw }},
+  "inLanguage": "fr-FR",
+  "isPartOf": {"@id": {{ (_base_url ~ '/#website')|json_encode|raw }}},
+  "datePublished": {{ server.createdAt ? server.createdAt|date('c')|json_encode|raw : '"2026-01-01"' }},
+  "dateModified": {{ server.updatedAt ? server.updatedAt|date('c')|json_encode|raw : (server.createdAt ? server.createdAt|date('c')|json_encode|raw : '"2026-01-01"') }}{% if _img_url %},
+  "primaryImageOfPage": {
+    "@type": "ImageObject",
+    "url": {{ _img_url|json_encode|raw }}
+  }{% endif %},
   "breadcrumb": {
     "@type": "BreadcrumbList",
     "itemListElement": [
-      {"@type":"ListItem","position":1,"name":"Accueil","item":{{ app.request.schemeAndHttpHost|json_encode|raw }}},
-      {"@type":"ListItem","position":2,"name":{{ server.category.name|json_encode|raw }},"item":{{ _cat_url|json_encode|raw }}},
-      {"@type":"ListItem","position":3,"name":{{ server.name|json_encode|raw }},"item":{{ _srv_url|json_encode|raw }}}
+      {"@type":"ListItem","position":1,"name":"Accueil","item":{{ _base_url|json_encode|raw }}},
+      {"@type":"ListItem","position":2,"name":{{ server.category.name|json_encode|raw }},"item":{{ _cat_url|json_encode|raw }}}
+      {% if server.gameCategory %},{"@type":"ListItem","position":3,"name":{{ server.gameCategory.name|json_encode|raw }},"item":{{ _gc_url|json_encode|raw }}}
+      ,{"@type":"ListItem","position":4,"name":{{ server.name|json_encode|raw }},"item":{{ _srv_url|json_encode|raw }}}
+      {% else %},{"@type":"ListItem","position":3,"name":{{ server.name|json_encode|raw }},"item":{{ _srv_url|json_encode|raw }}}
+      {% endif %}
     ]
   },
   "mainEntity": {
-    "@type": "SoftwareApplication",
-    "name": {{ server.name|json_encode|raw }},
-    "applicationCategory": {{ server.category.name|json_encode|raw }}{% if server.totalVotes > 0 %},
-    "aggregateRating": {
-      "@type": "AggregateRating",
-      "ratingValue": "5",
-      "ratingCount": {{ server.totalVotes }}
-    }{% endif %}
+    "@type": "VideoGame",
+    "name": {{ _gc_name|json_encode|raw }},
+    "gamePlatform": "PC"
   }
+  {% if server.averageRating and server.ratingCount > 0 %},
+  "review": {
+    "@type": "AggregateRating",
+    "ratingValue": {{ server.averageRating|number_format(1)|json_encode|raw }},
+    "bestRating": "5",
+    "worstRating": "1",
+    "ratingCount": {{ server.ratingCount }}
+  }
+  {% endif %}
 }
 </script>
 {% endblock %}

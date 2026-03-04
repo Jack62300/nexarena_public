@@ -1,6 +1,56 @@
 {% extends 'base.html.twig' %}
 
+{% set _base_url = setting('seo_site_url', app.request.schemeAndHttpHost) %}
+{% set _art_desc = article.content|striptags|slice(0, 155)|trim ~ '...' %}
+
 {% block title %}{{ article.title }} - {{ setting('site_name', 'Nexarena') }}{% endblock %}
+{% block meta_description %}{{ _art_desc }}{% endblock %}
+{% block og_type %}article{% endblock %}
+
+{% block og_image %}
+    {% if article.image %}
+    <meta property="og:image" content="{{ app.request.schemeAndHttpHost ~ asset('uploads/articles/' ~ article.image) }}">
+    <meta property="og:image:alt" content="{{ article.title }}">
+    {% elseif setting('seo_og_image') %}
+    <meta property="og:image" content="{{ app.request.schemeAndHttpHost ~ '/' ~ setting('seo_og_image') }}">
+    {% endif %}
+{% endblock %}
+
+{% block twitter_image %}
+    {% if article.image %}
+    <meta name="twitter:image" content="{{ app.request.schemeAndHttpHost ~ asset('uploads/articles/' ~ article.image) }}">
+    {% endif %}
+{% endblock %}
+
+{% block json_ld %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": {{ article.title|json_encode|raw }},
+  "description": {{ _art_desc|json_encode|raw }},
+  "url": {{ (_base_url ~ path('articles_show', {slug: article.slug}))|json_encode|raw }},
+  "inLanguage": "fr-FR",
+  "datePublished": {{ article.createdAt|date('c')|json_encode|raw }},
+  "dateModified": {{ (article.updatedAt ?? article.createdAt)|date('c')|json_encode|raw }},
+  "publisher": {
+    "@id": {{ (_base_url ~ '/#organization')|json_encode|raw }}
+  },
+  "isPartOf": {"@id": {{ (_base_url ~ '/#website')|json_encode|raw }}}
+  {% if article.image %},
+  "image": {{ (app.request.schemeAndHttpHost ~ asset('uploads/articles/' ~ article.image))|json_encode|raw }}
+  {% endif %},
+  "breadcrumb": {
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {"@type":"ListItem","position":1,"name":"Accueil","item":{{ _base_url|json_encode|raw }}},
+      {"@type":"ListItem","position":2,"name":"Actualites","item":{{ (_base_url ~ path('articles_list'))|json_encode|raw }}},
+      {"@type":"ListItem","position":3,"name":{{ article.title|json_encode|raw }},"item":{{ (_base_url ~ path('articles_show', {slug: article.slug}))|json_encode|raw }}}
+    ]
+  }
+}
+</script>
+{% endblock %}
 
 {% block body %}
 

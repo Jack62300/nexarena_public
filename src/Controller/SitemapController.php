@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Repository\ArticleRepository;
 use App\Repository\CategoryRepository;
 use App\Repository\GameCategoryRepository;
 use App\Repository\RecruitmentListingRepository;
@@ -20,6 +21,7 @@ class SitemapController extends AbstractController
         CategoryRepository $categoryRepo,
         GameCategoryRepository $gameCategoryRepo,
         RecruitmentListingRepository $recruitmentRepo,
+        ArticleRepository $articleRepo,
     ): Response {
         $base = $request->getSchemeAndHttpHost();
         $now  = new \DateTimeImmutable();
@@ -29,9 +31,10 @@ class SitemapController extends AbstractController
         // ── Static pages ──────────────────────────────────────────
         $statics = [
             ['loc' => $base . '/',                  'priority' => '1.0', 'changefreq' => 'daily'],
+            ['loc' => $base . '/actualites',         'priority' => '0.7', 'changefreq' => 'daily'],
             ['loc' => $base . '/recrutement',        'priority' => '0.7', 'changefreq' => 'daily'],
             ['loc' => $base . '/plugins',            'priority' => '0.6', 'changefreq' => 'weekly'],
-            ['loc' => $base . '/premium',            'priority' => '0.5', 'changefreq' => 'monthly'],
+            ['loc' => $base . '/contact',            'priority' => '0.3', 'changefreq' => 'monthly'],
         ];
         foreach ($statics as $s) {
             $urls[] = array_merge($s, ['lastmod' => $now->format('Y-m-d')]);
@@ -41,17 +44,17 @@ class SitemapController extends AbstractController
         foreach ($categoryRepo->findAll() as $cat) {
             $urls[] = [
                 'loc'        => $base . $this->generateUrl('ranking_category', ['slug' => $cat->getSlug()]),
-                'priority'   => '0.8',
+                'priority'   => '0.9',
                 'changefreq' => 'daily',
                 'lastmod'    => $now->format('Y-m-d'),
             ];
         }
 
-        // ── Game categories (/classement/{slug}) ──────────────────
+        // ── Game categories (/classement/{slug}) — highest priority landing pages ──
         foreach ($gameCategoryRepo->findAll() as $gc) {
             $urls[] = [
                 'loc'        => $base . $this->generateUrl('ranking_game_category', ['slug' => $gc->getSlug()]),
-                'priority'   => '0.7',
+                'priority'   => '0.9',
                 'changefreq' => 'daily',
                 'lastmod'    => $now->format('Y-m-d'),
             ];
@@ -60,11 +63,24 @@ class SitemapController extends AbstractController
         // ── Server pages (/serveur/{slug}) ────────────────────────
         $servers = $serverRepo->findBy(['isActive' => true, 'isApproved' => true]);
         foreach ($servers as $server) {
+            $lastmod = $server->getUpdatedAt() ?? $server->getCreatedAt() ?? $now;
             $urls[] = [
                 'loc'        => $base . $this->generateUrl('server_show', ['slug' => $server->getSlug()]),
-                'priority'   => '0.9',
+                'priority'   => '0.8',
                 'changefreq' => 'weekly',
-                'lastmod'    => $now->format('Y-m-d'),
+                'lastmod'    => $lastmod->format('Y-m-d'),
+            ];
+        }
+
+        // ── Articles (/actualites/{slug}) ─────────────────────────
+        $articles = $articleRepo->findBy([], ['createdAt' => 'DESC']);
+        foreach ($articles as $article) {
+            $lastmod = $article->getUpdatedAt() ?? $article->getCreatedAt() ?? $now;
+            $urls[] = [
+                'loc'        => $base . $this->generateUrl('articles_show', ['slug' => $article->getSlug()]),
+                'priority'   => '0.6',
+                'changefreq' => 'monthly',
+                'lastmod'    => $lastmod->format('Y-m-d'),
             ];
         }
 

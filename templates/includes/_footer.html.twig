@@ -49,6 +49,18 @@
         </nav>
         <div class="nx-footer__sep"></div>
 
+        {# ── SEO: Top Serveur category links ── #}
+        {% set _footer_categories = footer_game_categories() %}
+        {% if _footer_categories|length > 0 %}
+        <div class="nx-footer__categories">
+            <span class="nx-footer__categories-title">Top Serveur :</span>
+            {% for gc in _footer_categories %}
+                <a href="{{ path('ranking_game_category', {slug: gc.slug}) }}">{{ gc.name }}</a>{{ not loop.last ? ' · ' : '' }}
+            {% endfor %}
+        </div>
+        <div class="nx-footer__sep"></div>
+        {% endif %}
+
         {# ── Bottom: Copyright + Legal ── #}
         <div class="nx-footer__bottom">
             <p class="nx-footer__copy">

@@ -5,10 +5,24 @@ Allow: /
 Disallow: /admin/
 Disallow: /_profiler
 Disallow: /_wdt
-Disallow: /profil/
+
+# User private pages
+Disallow: /profil/modifier
+Disallow: /profil/supprimer
+Disallow: /mes-serveurs/
+Disallow: /mes-favoris
+Disallow: /mes-candidatures/
 Disallow: /serveur/*/gestion
 Disallow: /recrutement/*/candidatures
-Disallow: /premium/success
+
+# Premium checkout
+Disallow: /premium/succes
+Disallow: /premium/buy-nexbits
+Disallow: /premium/create-order
+Disallow: /premium/capture-order
+Disallow: /premium/crypto/
+Disallow: /premium/stripe/
+Disallow: /premium/paypal-webhook
 
 # Auth pages (no value for indexing)
 Disallow: /connexion
@@ -22,5 +36,11 @@ Disallow: /api/
 
 # Vote flow
 Disallow: /vote/
+
+# Search (noindex already set, but block crawl budget waste)
+Disallow: /recherche?
+
+# Boost booking (requires login)
+Disallow: /serveur/*/boost
 
 Sitemap: https://nexarena.eu/sitemap.xml

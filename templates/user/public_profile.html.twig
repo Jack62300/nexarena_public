@@ -1,6 +1,29 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}{{ profileUser.username }} - {{ setting('site_name', 'Nexarena') }}{% endblock %}
+{% block title %}{{ profileUser.username }} - Profil Joueur | {{ setting('site_name', 'Nexarena') }}{% endblock %}
+{% block meta_description %}Profil de {{ profileUser.username }} sur {{ setting('site_name', 'Nexarena') }}. Decouvrez ses serveurs, ses statistiques et ses contributions a la communaute.{% endblock %}
+
+{% block json_ld %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ProfilePage",
+  "name": {{ (profileUser.username ~ ' - Profil')|json_encode|raw }},
+  "url": {{ (setting('seo_site_url', app.request.schemeAndHttpHost) ~ path('profile_show', {username: profileUser.username}))|json_encode|raw }},
+  "mainEntity": {
+    "@type": "Person",
+    "name": {{ profileUser.username|json_encode|raw }}
+  },
+  "breadcrumb": {
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {"@type":"ListItem","position":1,"name":"Accueil","item":{{ setting('seo_site_url', app.request.schemeAndHttpHost)|json_encode|raw }}},
+      {"@type":"ListItem","position":2,"name":{{ profileUser.username|json_encode|raw }}}
+    ]
+  }
+}
+</script>
+{% endblock %}
 
 {% block stylesheets %}
 <link rel="stylesheet" href="{{ asset('assets/css/pages/profile.css') }}">

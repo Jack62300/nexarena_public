@@ -1,6 +1,28 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Actualites - {{ setting('site_name', 'Nexarena') }}{% endblock %}
+{% block title %}Actualites & News Jeux - {{ setting('site_name', 'Nexarena') }}{% endblock %}
+{% block meta_description %}Toute l'actualite des serveurs de jeux sur {{ setting('site_name', 'Nexarena') }}. News, mises a jour, evenements et annonces de la communaute.{% endblock %}
+
+{% block json_ld %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "Actualites",
+  "description": "Toute l'actualite des serveurs de jeux sur Nexarena.",
+  "url": {{ (setting('seo_site_url', app.request.schemeAndHttpHost) ~ path('articles_list'))|json_encode|raw }},
+  "inLanguage": "fr-FR",
+  "isPartOf": {"@id": {{ (setting('seo_site_url', app.request.schemeAndHttpHost) ~ '/#website')|json_encode|raw }}},
+  "breadcrumb": {
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {"@type":"ListItem","position":1,"name":"Accueil","item":{{ setting('seo_site_url', app.request.schemeAndHttpHost)|json_encode|raw }}},
+      {"@type":"ListItem","position":2,"name":"Actualites","item":{{ (setting('seo_site_url', app.request.schemeAndHttpHost) ~ path('articles_list'))|json_encode|raw }}}
+    ]
+  }
+}
+</script>
+{% endblock %}
 
 {% block body %}
 

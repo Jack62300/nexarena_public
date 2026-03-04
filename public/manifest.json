@@ -1,0 +1,16 @@
+{
+    "name": "Nexarena - Top Serveur de Jeux",
+    "short_name": "Nexarena",
+    "description": "Classement, votes et avis sur les meilleurs serveurs de jeux. Minecraft, GTA, FiveM, ARK, DayZ, Rust et plus.",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#0a1018",
+    "theme_color": "#0a1018",
+    "icons": [
+        {
+            "src": "/assets/img/logo/new_logo_hd.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}

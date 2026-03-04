@@ -1,23 +1,75 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Classement {{ title }} - {{ setting('site_name', 'Nexarena') }}{% endblock %}
-{% block meta_description %}Découvrez le classement des meilleurs serveurs {{ title }} sur {{ setting('site_name', 'Nexarena') }}. Votez pour votre serveur préféré et rejoignez la communauté.{% endblock %}
+{% set _year = 'now'|date('Y') %}
+{% set _base_url = setting('seo_site_url', app.request.schemeAndHttpHost) %}
+
+{% block title %}Top Serveur {{ title }} {{ _year }} - Classement & Votes | {{ setting('site_name', 'Nexarena') }}{% endblock %}
+{% block meta_description %}Top serveur {{ title }} {{ _year }} : classement des meilleurs serveurs {{ title }}, votes en temps reel, avis joueurs. Trouvez et comparez les serveurs {{ title }} les mieux notes sur {{ setting('site_name', 'Nexarena') }}.{% endblock %}
+
+{% block canonical %}{{ _base_url ~ path('ranking_game_category', {slug: gameCategory.slug}) }}{% endblock %}
+
+{% if current_page > 1 %}
+{% block robots %}<meta name="robots" content="noindex, follow">{% endblock %}
+{% endif %}
+
+{% block prev_next %}
+    {% if current_page > 1 %}
+    <link rel="prev" href="{{ _base_url ~ path('ranking_game_category', {slug: gameCategory.slug}) }}{{ current_page > 2 ? '?page=' ~ (current_page - 1) : '' }}">
+    {% endif %}
+    {% if current_page < total_pages %}
+    <link rel="next" href="{{ _base_url ~ path('ranking_game_category', {slug: gameCategory.slug}) ~ '?page=' ~ (current_page + 1) }}">
+    {% endif %}
+{% endblock %}
+
+{% block og_image %}
+    {% if gameCategory.image %}
+    <meta property="og:image" content="{{ app.request.schemeAndHttpHost ~ asset('uploads/categories/' ~ gameCategory.image) }}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Top Serveur {{ title }}">
+    {% elseif setting('seo_og_image') %}
+    <meta property="og:image" content="{{ app.request.schemeAndHttpHost ~ '/' ~ setting('seo_og_image') }}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    {% endif %}
+{% endblock %}
 
 {% block json_ld %}
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "CollectionPage",
-  "name": {{ ('Classement ' ~ title ~ ' - ' ~ setting('site_name', 'Nexarena'))|json_encode|raw }},
-  "description": {{ ('Classement des meilleurs serveurs ' ~ title)|json_encode|raw }},
-  "url": {{ (app.request.schemeAndHttpHost ~ app.request.requestUri)|json_encode|raw }},
+  "name": {{ ('Top Serveur ' ~ title ~ ' ' ~ _year ~ ' - Classement')|json_encode|raw }},
+  "description": {{ ('Classement des meilleurs serveurs ' ~ title ~ '. Votez, comparez et trouvez votre serveur ' ~ title ~ ' ideal.')|json_encode|raw }},
+  "url": {{ (_base_url ~ path('ranking_game_category', {slug: gameCategory.slug}))|json_encode|raw }},
+  "inLanguage": "fr-FR",
+  "isPartOf": {"@id": {{ (_base_url ~ '/#website')|json_encode|raw }}},
   "breadcrumb": {
     "@type": "BreadcrumbList",
     "itemListElement": [
-      {"@type":"ListItem","position":1,"name":"Accueil","item":{{ app.request.schemeAndHttpHost|json_encode|raw }}},
-      {"@type":"ListItem","position":2,"name":{{ ('Classement ' ~ title)|json_encode|raw }},"item":{{ (app.request.schemeAndHttpHost ~ app.request.requestUri)|json_encode|raw }}}
+      {"@type":"ListItem","position":1,"name":"Accueil","item":{{ _base_url|json_encode|raw }}}
+      {% if parentCategory %},{"@type":"ListItem","position":2,"name":{{ parentCategory.name|json_encode|raw }},"item":{{ (_base_url ~ path('ranking_category', {slug: parentCategory.slug}))|json_encode|raw }}}
+      ,{"@type":"ListItem","position":3,"name":{{ ('Top Serveur ' ~ title)|json_encode|raw }},"item":{{ (_base_url ~ path('ranking_game_category', {slug: gameCategory.slug}))|json_encode|raw }}}
+      {% else %},{"@type":"ListItem","position":2,"name":{{ ('Top Serveur ' ~ title)|json_encode|raw }},"item":{{ (_base_url ~ path('ranking_game_category', {slug: gameCategory.slug}))|json_encode|raw }}}
+      {% endif %}
     ]
   }
+  {% if servers|length > 0 %},
+  "mainEntity": {
+    "@type": "ItemList",
+    "numberOfItems": {{ total_servers }},
+    "itemListElement": [
+      {% for server in servers|slice(0, 10) %}
+      {
+        "@type": "ListItem",
+        "position": {{ (current_page - 1) * per_page + loop.index }},
+        "name": {{ server.name|json_encode|raw }},
+        "url": {{ (_base_url ~ path('server_show', {slug: server.slug}))|json_encode|raw }}
+      }{{ not loop.last ? ',' : '' }}
+      {% endfor %}
+    ]
+  }
+  {% endif %}
 }
 </script>
 {% endblock %}
@@ -53,7 +105,7 @@
                         {% endif %}
                     </div>
                     <div>
-                        <h1 class="nx-rk-header__title">{{ title }}</h1>
+                        <h1 class="nx-rk-header__title">Top Serveur {{ title }}</h1>
                         {% if description %}
                             <p class="nx-rk-header__desc">{{ description }}</p>
                         {% endif %}

@@ -110,6 +110,35 @@
     color: #45f882;
 }
 
+/* ─── SEO Categories ─── */
+.nx-footer__categories {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 4px 6px;
+    padding: 18px 0;
+    text-align: center;
+}
+.nx-footer__categories-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.4);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-family: var(--tg-heading-font-family);
+    margin-right: 6px;
+}
+.nx-footer__categories a {
+    font-size: 12px;
+    color: rgba(255,255,255,0.3);
+    transition: color 0.2s;
+    white-space: nowrap;
+}
+.nx-footer__categories a:hover {
+    color: #45f882;
+}
+
 /* ─── Bottom ─── */
 .nx-footer__bottom {
     display: flex;
@@ -154,4 +183,6 @@
     .nx-footer__nav a { font-size: 11px; letter-spacing: 1px; }
     .nx-footer__bottom { flex-direction: column; gap: 8px; text-align: center; }
     .nx-footer__legal { justify-content: center; }
+    .nx-footer__categories { padding: 14px 0; gap: 3px 5px; }
+    .nx-footer__categories-title { display: block; width: 100%; margin-bottom: 4px; margin-right: 0; }
 }

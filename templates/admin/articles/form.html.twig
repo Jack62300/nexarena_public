@@ -25,7 +25,6 @@
         transition: border-color 0.2s;
     }
     .form-control-admin:focus { outline: none; border-color: var(--accent); }
-    textarea.form-control-admin { min-height: 200px; resize: vertical; }
     .form-check-admin {
         display: flex;
         align-items: center;
@@ -44,10 +43,156 @@
         margin-top: 10px;
         object-fit: cover;
     }
+
+    /* ── Quill Editor (article) ── */
+    .ql-toolbar.ql-snow {
+        background: var(--bg-darker);
+        border-color: var(--border-color) !important;
+        border-radius: 6px 6px 0 0;
+        flex-wrap: wrap;
+    }
+    .ql-toolbar.ql-snow .ql-stroke { stroke: #8b949e; }
+    .ql-toolbar.ql-snow .ql-fill { fill: #8b949e; }
+    .ql-toolbar.ql-snow .ql-picker-label { color: #8b949e; }
+    .ql-toolbar.ql-snow button:hover .ql-stroke,
+    .ql-toolbar.ql-snow .ql-picker-label:hover { stroke: var(--accent); color: var(--accent); }
+    .ql-toolbar.ql-snow button:hover .ql-fill { fill: var(--accent); }
+    .ql-toolbar.ql-snow button.ql-active .ql-stroke { stroke: var(--accent); }
+    .ql-toolbar.ql-snow button.ql-active .ql-fill { fill: var(--accent); }
+    .ql-toolbar.ql-snow .ql-picker-item.ql-selected { color: var(--accent); }
+    .ql-toolbar.ql-snow .ql-picker-label.ql-active { color: var(--accent); }
+    .ql-container.ql-snow {
+        background: var(--bg-darker);
+        border-color: var(--border-color) !important;
+        border-radius: 0 0 6px 6px;
+        min-height: 400px;
+        font-size: 15px;
+    }
+    .ql-editor {
+        color: #e4e6eb;
+        min-height: 400px;
+        line-height: 1.7;
+    }
+    .ql-editor.ql-blank::before {
+        color: #5a5c69;
+        font-style: normal;
+    }
+    .ql-snow .ql-picker-options {
+        background: var(--bg-card);
+        border-color: var(--border-color);
+    }
+    .ql-snow .ql-picker-item { color: #8b949e; }
+    .ql-snow .ql-picker-item:hover { color: #e4e6eb; }
+    .ql-snow .ql-tooltip {
+        background: var(--bg-card);
+        border-color: var(--border-color);
+        color: #e4e6eb;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    }
+    .ql-snow .ql-tooltip input[type=text] {
+        background: var(--bg-darker);
+        border-color: var(--border-color);
+        color: #e4e6eb;
+    }
+    .ql-snow .ql-tooltip a { color: var(--accent); }
+    .ql-editor a { color: var(--accent); }
+    .ql-editor h1, .ql-editor h2, .ql-editor h3,
+    .ql-editor h4, .ql-editor h5, .ql-editor h6 { color: #e4e6eb; }
+    .ql-editor blockquote {
+        border-left: 4px solid var(--accent);
+        color: #8b949e;
+        padding-left: 16px;
+        margin: 10px 0;
+    }
+    .ql-editor pre.ql-syntax {
+        background: #0f1923;
+        color: #e4e6eb;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+    }
+    .ql-editor img {
+        max-width: 100%;
+        border-radius: 6px;
+    }
+    .ql-editor hr {
+        border: none;
+        border-top: 1px solid var(--border-color);
+        margin: 20px 0;
+    }
+    .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="serif"]::before,
+    .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="serif"]::before { content: 'Serif'; font-family: Georgia, serif; }
+    .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="monospace"]::before,
+    .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="monospace"]::before { content: 'Monospace'; font-family: monospace; }
+    .ql-snow .ql-picker.ql-size .ql-picker-label::before,
+    .ql-snow .ql-picker.ql-size .ql-picker-item::before { content: 'Normal'; }
+    .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="small"]::before,
+    .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="small"]::before { content: 'Petit'; }
+    .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="large"]::before,
+    .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="large"]::before { content: 'Grand'; }
+    .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="huge"]::before,
+    .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="huge"]::before { content: 'Tres grand'; }
+    .article-editor__actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 8px;
+    }
+    .article-editor__actions button {
+        background: none;
+        border: 1px solid var(--border-color);
+        color: #8b949e;
+        padding: 6px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .article-editor__actions button:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+    }
+    .article-editor__actions button.active {
+        border-color: var(--accent);
+        color: var(--accent);
+        background: rgba(69,248,130,0.08);
+    }
+    .article-editor__wordcount {
+        margin-left: auto;
+        font-size: 12px;
+        color: #5a5c69;
+    }
+    .article-editor--fullscreen {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        z-index: 9999;
+        background: var(--bg-body);
+        display: flex;
+        flex-direction: column;
+        padding: 20px;
+    }
+    .article-editor--fullscreen .ql-toolbar.ql-snow { border-radius: 6px 6px 0 0; flex-shrink: 0; }
+    .article-editor--fullscreen .ql-container.ql-snow { flex: 1; min-height: 0; border-radius: 0 0 6px 6px; }
+    .article-editor--fullscreen .ql-editor { min-height: 100%; }
+    .article-source-editor {
+        display: none;
+        width: 100%;
+        min-height: 400px;
+        padding: 16px;
+        background: var(--bg-darker);
+        border: 1px solid var(--border-color);
+        border-radius: 0 0 6px 6px;
+        color: #e4e6eb;
+        font-family: 'Fira Code', 'Consolas', monospace;
+        font-size: 13px;
+        line-height: 1.6;
+        resize: vertical;
+        border-top: none;
+    }
+    .article-source-editor:focus { outline: none; border-color: var(--accent); }
 {% endblock %}
 
 {% block admin_body %}
-    <div style="max-width:800px;">
+    <div style="max-width:900px;">
         <div class="admin-table">
             <div class="admin-table__header">
                 <h3>{{ article ? "Modifier l'article" : 'Créer un article' }}</h3>
@@ -56,7 +201,7 @@
                 </a>
             </div>
             <div style="padding:25px;">
-                {{ form_start(form, {'attr': {'enctype': 'multipart/form-data'}}) }}
+                {{ form_start(form, {'attr': {'enctype': 'multipart/form-data', 'id': 'article-form'}}) }}
 
                     <div class="form-group">
                         <label for="{{ form.title.vars.id }}">Titre</label>
@@ -65,9 +210,19 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="{{ form.content.vars.id }}">Contenu</label>
-                        {{ form_widget(form.content, {'attr': {'class': 'form-control-admin'}}) }}
+                        <label>Contenu</label>
+                        <div id="article-editor-wrap">
+                            <div id="article-quill-toolbar"></div>
+                            <div id="article-quill-editor"></div>
+                            <textarea id="article-source-editor" class="article-source-editor"></textarea>
+                        </div>
+                        {{ form_widget(form.content, {'attr': {'style': 'display:none;', 'id': 'article-content-hidden'}}) }}
                         {{ form_errors(form.content) }}
+                        <div class="article-editor__actions">
+                            <button type="button" id="btn-source" title="Code source HTML"><i class="fas fa-code"></i> Source</button>
+                            <button type="button" id="btn-fullscreen" title="Plein ecran"><i class="fas fa-expand"></i> Plein ecran</button>
+                            <span class="article-editor__wordcount" id="wordcount">0 mots</span>
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -98,4 +253,120 @@
             </div>
         </div>
     </div>
+
+    {# ── Quill.js CDN ── #}
+    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
+
+    <script nonce="{{ csp_nonce() }}">
+    (function() {
+        var hiddenTextarea = document.getElementById('article-content-hidden');
+        var sourceEditor = document.getElementById('article-source-editor');
+        var editorWrap = document.getElementById('article-editor-wrap');
+        var btnSource = document.getElementById('btn-source');
+        var btnFullscreen = document.getElementById('btn-fullscreen');
+        var wordcountEl = document.getElementById('wordcount');
+        var isSourceMode = false;
+        var isFullscreen = false;
+
+        // ── Initialize Quill with full toolbar ──
+        var quill = new Quill('#article-quill-editor', {
+            theme: 'snow',
+            placeholder: 'Redigez votre article ici...',
+            modules: {
+                toolbar: [
+                    [{ 'font': [] }, { 'size': ['small', false, 'large', 'huge'] }],
+                    [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ 'color': [] }, { 'background': [] }],
+                    [{ 'script': 'sub' }, { 'script': 'super' }],
+                    [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'list': 'check' }],
+                    [{ 'indent': '-1' }, { 'indent': '+1' }],
+                    [{ 'align': [] }],
+                    ['blockquote', 'code-block'],
+                    ['link', 'image', 'video'],
+                    [{ 'direction': 'rtl' }],
+                    ['clean']
+                ]
+            }
+        });
+
+        // ── Load existing content ──
+        if (hiddenTextarea.value && hiddenTextarea.value.trim() !== '') {
+            quill.root.innerHTML = hiddenTextarea.value;
+        }
+
+        // ── Sync content on change ──
+        function syncContent() {
+            var html = quill.root.innerHTML;
+            if (html === '<p><br></p>') html = '';
+            hiddenTextarea.value = html;
+        }
+
+        quill.on('text-change', function() {
+            syncContent();
+            updateWordCount();
+        });
+
+        // ── Word count ──
+        function updateWordCount() {
+            var text = quill.getText().trim();
+            var words = text ? text.split(/\s+/).length : 0;
+            var chars = text.length;
+            wordcountEl.textContent = words + ' mot' + (words !== 1 ? 's' : '') + ' · ' + chars + ' car.';
+        }
+        updateWordCount();
+
+        // ── Source code toggle ──
+        var quillContainer = document.querySelector('#article-quill-editor');
+        var quillToolbar = document.querySelector('.ql-toolbar');
+
+        btnSource.addEventListener('click', function() {
+            isSourceMode = !isSourceMode;
+            if (isSourceMode) {
+                sourceEditor.value = quill.root.innerHTML;
+                quillContainer.style.display = 'none';
+                sourceEditor.style.display = 'block';
+                btnSource.classList.add('active');
+            } else {
+                quill.root.innerHTML = sourceEditor.value;
+                hiddenTextarea.value = sourceEditor.value;
+                quillContainer.style.display = '';
+                sourceEditor.style.display = 'none';
+                btnSource.classList.remove('active');
+                updateWordCount();
+            }
+        });
+
+        // ── Fullscreen toggle ──
+        btnFullscreen.addEventListener('click', function() {
+            isFullscreen = !isFullscreen;
+            if (isFullscreen) {
+                editorWrap.classList.add('article-editor--fullscreen');
+                btnFullscreen.innerHTML = '<i class="fas fa-compress"></i> Quitter';
+            } else {
+                editorWrap.classList.remove('article-editor--fullscreen');
+                btnFullscreen.innerHTML = '<i class="fas fa-expand"></i> Plein ecran';
+            }
+        });
+
+        // Escape exits fullscreen
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && isFullscreen) {
+                isFullscreen = false;
+                editorWrap.classList.remove('article-editor--fullscreen');
+                btnFullscreen.innerHTML = '<i class="fas fa-expand"></i> Plein ecran';
+            }
+        });
+
+        // ── Sync before submit ──
+        document.getElementById('article-form').addEventListener('submit', function() {
+            if (isSourceMode) {
+                hiddenTextarea.value = sourceEditor.value;
+            } else {
+                syncContent();
+            }
+        });
+    })();
+    </script>
 {% endblock %}

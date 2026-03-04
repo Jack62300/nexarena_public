@@ -4,15 +4,17 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0a1018">
 
     {# ── Title & description ───────────────────────────────── #}
-    <title>{% block title %}{{ setting('seo_title', 'Nexarena - Classement de Serveurs de Jeux') }}{% endblock %}</title>
-    <meta name="description" content="{% block meta_description %}{{ setting('seo_description', 'Nexarena - Classement et listing de serveurs prives de jeux videos') }}{% endblock %}">
+    <title>{% block title %}{{ setting('seo_title', 'Top Serveur - Classement de Serveurs de Jeux | Nexarena') }}{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}{{ setting('seo_description', 'Nexarena, le top serveur francais : classement, votes et avis sur les meilleurs serveurs de jeux. Minecraft, GTA, FiveM, ARK, DayZ, Rust et plus.') }}{% endblock %}">
     {% if setting('seo_keywords') %}<meta name="keywords" content="{{ setting('seo_keywords') }}">{% endif %}
-    {% block robots %}<meta name="robots" content="index, follow">{% endblock %}
+    {% block robots %}<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">{% endblock %}
 
     {# ── Canonical ─────────────────────────────────────────── #}
     <link rel="canonical" href="{% block canonical %}{{ setting('seo_site_url', app.request.schemeAndHttpHost) ~ app.request.pathInfo }}{% endblock %}">
+    {% block prev_next %}{% endblock %}
 
     {# ── Open Graph (Discord, Facebook, LinkedIn…) ─────────── #}
     <meta property="og:site_name"   content="{{ setting('site_name', 'Nexarena') }}">
@@ -26,14 +28,19 @@
         <meta property="og:image"        content="{{ app.request.schemeAndHttpHost ~ '/' ~ setting('seo_og_image') }}">
         <meta property="og:image:width"  content="1200">
         <meta property="og:image:height" content="630">
+        <meta property="og:image:alt"    content="{{ setting('site_name', 'Nexarena') }} - Top Serveur de Jeux">
         {% endif %}
     {% endblock %}
 
     {# ── Twitter / X Card ──────────────────────────────────── #}
-    <meta name="twitter:card"        content="{% block twitter_card %}summary{% endblock %}">
+    <meta name="twitter:card"        content="{% block twitter_card %}summary_large_image{% endblock %}">
     <meta name="twitter:title"       content="{{ block('title') }}">
     <meta name="twitter:description" content="{{ block('meta_description') }}">
-    {% block twitter_image %}{% endblock %}
+    {% block twitter_image %}
+        {% if setting('seo_og_image') %}
+        <meta name="twitter:image" content="{{ app.request.schemeAndHttpHost ~ '/' ~ setting('seo_og_image') }}">
+        {% endif %}
+    {% endblock %}
 
     {# ── Google verification (Search Console) ─────────────── #}
     {% if setting('google_verification') %}
@@ -41,29 +48,50 @@
     {% endif %}
 
     {# ── Favicon ───────────────────────────────────────────── #}
-    <link rel="icon" type="image/png" href="{{ asset('assets/img/logo/new_logo_hd.png') }}">
-    <link rel="apple-touch-icon" href="{{ asset('assets/img/logo/new_logo_hd.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('assets/img/logo/new_logo_hd.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('assets/img/logo/new_logo_hd.png') }}">
+    <link rel="manifest" href="{{ asset('manifest.json') }}">
+
+    {# ── Preconnect ───────────────────────────────────────── #}
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com">
 
     {# ── JSON-LD structured data ────────────────────────────── #}
     {% block json_ld %}
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "WebSite",
-      "name": {{ setting('site_name', 'Nexarena')|json_encode|raw }},
-      "url": {{ setting('seo_site_url', app.request.schemeAndHttpHost)|json_encode|raw }},
-      "description": {{ setting('seo_description', '')|json_encode|raw }},
-      "potentialAction": {
-        "@type": "SearchAction",
-        "target": {
-          "@type": "EntryPoint",
-          "urlTemplate": {{ (setting('seo_site_url', app.request.schemeAndHttpHost) ~ '/classement?q={search_term_string}')|json_encode|raw }}
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": {{ (setting('seo_site_url', app.request.schemeAndHttpHost) ~ '/#website')|json_encode|raw }},
+          "name": {{ setting('site_name', 'Nexarena')|json_encode|raw }},
+          "url": {{ setting('seo_site_url', app.request.schemeAndHttpHost)|json_encode|raw }},
+          "description": {{ setting('seo_description', '')|json_encode|raw }},
+          "inLanguage": "fr-FR",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+              "@type": "EntryPoint",
+              "urlTemplate": {{ (setting('seo_site_url', app.request.schemeAndHttpHost) ~ '/recherche?q={search_term_string}')|json_encode|raw }}
+            },
+            "query-input": "required name=search_term_string"
+          }
         },
-        "query-input": "required name=search_term_string"
-      }
+        {
+          "@type": "Organization",
+          "@id": {{ (setting('seo_site_url', app.request.schemeAndHttpHost) ~ '/#organization')|json_encode|raw }},
+          "name": {{ setting('site_name', 'Nexarena')|json_encode|raw }},
+          "url": {{ setting('seo_site_url', app.request.schemeAndHttpHost)|json_encode|raw }},
+          "logo": {
+            "@type": "ImageObject",
+            "url": {{ (app.request.schemeAndHttpHost ~ asset('assets/img/logo/new_logo_hd.png'))|json_encode|raw }}
+          }
+        }
+      ]
     }
     </script>
     {% endblock %}
+    {% block json_ld_breadcrumb %}{% endblock %}
 
     {# CSS #}
     <link rel="stylesheet" href="{{ asset('assets/css/bootstrap.min.css') }}">

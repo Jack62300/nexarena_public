@@ -3,6 +3,7 @@
 namespace App\Twig;
 
 use App\Repository\CategoryRepository;
+use App\Repository\GameCategoryRepository;
 use App\Repository\ServerRepository;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
@@ -14,6 +15,7 @@ class NavigationExtension extends AbstractExtension
     public function __construct(
         private CategoryRepository $categoryRepository,
         private ServerRepository $serverRepository,
+        private GameCategoryRepository $gameCategoryRepository,
     ) {
     }
 
@@ -21,7 +23,31 @@ class NavigationExtension extends AbstractExtension
     {
         return [
             new TwigFunction('nav_categories', [$this, 'getNavCategories']),
+            new TwigFunction('footer_game_categories', [$this, 'getFooterGameCategories']),
         ];
+    }
+
+    /**
+     * Returns top game categories for footer SEO links (sorted by server count).
+     * @return \App\Entity\GameCategory[]
+     */
+    public function getFooterGameCategories(): array
+    {
+        $allGc = $this->gameCategoryRepository->findBy(['isActive' => true]);
+        $counts = $this->serverRepository->countActiveByGameCategory();
+
+        usort($allGc, function ($a, $b) use ($counts) {
+            return ($counts[$b->getId()] ?? 0) <=> ($counts[$a->getId()] ?? 0);
+        });
+
+        $result = [];
+        foreach ($allGc as $gc) {
+            if (($counts[$gc->getId()] ?? 0) > 0 && count($result) < 15) {
+                $result[] = $gc;
+            }
+        }
+
+        return $result;
     }
 
     /**

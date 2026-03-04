@@ -15,6 +15,25 @@
 # Hide Apache version from error pages
 ServerSignature Off
 
+# ── SEO: Browser caching for static assets ──
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType image/webp "access plus 1 year"
+    ExpiresByType image/avif "access plus 1 year"
+    ExpiresByType image/svg+xml "access plus 1 year"
+    ExpiresByType image/x-icon "access plus 1 year"
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+    ExpiresByType application/x-javascript "access plus 1 month"
+    ExpiresByType font/woff2 "access plus 1 year"
+    ExpiresByType font/woff "access plus 1 year"
+    ExpiresByType application/font-woff2 "access plus 1 year"
+    ExpiresByType application/font-woff "access plus 1 year"
+</IfModule>
+
 # ── Symfony Front Controller ──
 <IfModule mod_rewrite.c>
     RewriteEngine On
@@ -23,9 +42,14 @@ ServerSignature Off
     RewriteCond %{HTTPS} off
     RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
-    # Remove www (optional, uncomment if needed)
-    # RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
-    # RewriteRule ^ https://%1%{REQUEST_URI} [L,R=301]
+    # Remove www (SEO: avoid duplicate content)
+    RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+    RewriteRule ^ https://%1%{REQUEST_URI} [L,R=301]
+
+    # Remove trailing slash (SEO: avoid duplicate URLs)
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} (.+)/$
+    RewriteRule ^ %1 [L,R=301]
 
     # Pass all requests to index.php (Symfony front controller)
     RewriteCond %{REQUEST_FILENAME} !-f
@@ -35,6 +59,14 @@ ServerSignature Off
 # ── PHP Settings ──
 <IfModule mod_php.c>
     php_flag expose_php Off
+</IfModule>
+
+# ── GZIP Compression ──
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/css
+    AddOutputFilterByType DEFLATE application/javascript application/x-javascript
+    AddOutputFilterByType DEFLATE application/json application/xml text/xml
+    AddOutputFilterByType DEFLATE image/svg+xml application/font-woff application/font-woff2
 </IfModule>
 
 # ── Disable directory listing ──
