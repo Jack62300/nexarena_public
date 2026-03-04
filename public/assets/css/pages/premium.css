@@ -2019,6 +2019,32 @@
     margin-top: 4px;
 }
 
+.boutique-spreadsheet-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, rgba(69,248,130,0.1), rgba(69,248,130,0.04));
+    border: 1px solid rgba(69,248,130,0.2);
+    border-radius: 10px;
+    color: #45f882;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all .25s;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.boutique-spreadsheet-link:hover {
+    background: #45f882;
+    color: #0e151c;
+    border-color: #45f882;
+}
+.boutique-spreadsheet-link i {
+    font-size: 14px;
+}
+
 /* Boutique plans grid */
 .boutique-plans {
     display: grid;
@@ -2361,6 +2387,9 @@
     .boutique-header {
         flex-direction: column;
         text-align: center;
+    }
+    .boutique-spreadsheet-link {
+        margin-left: 0;
     }
 }
 

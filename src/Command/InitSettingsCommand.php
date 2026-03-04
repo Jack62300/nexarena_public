@@ -183,6 +183,7 @@ class InitSettingsCommand extends Command
         ['key' => 'donation_daily_limit_nexboost', 'value' => '10', 'type' => 'number', 'label' => 'Limite don quotidien NexBoost par utilisateur', 'description' => 'Nombre maximum de NexBoost qu\'un utilisateur peut donner a des serveurs en une journee (0 = illimite)', 'category' => 'premium', 'position' => 28],
         ['key' => 'premium_stats_cost', 'value' => '100', 'type' => 'number', 'label' => 'Cout deblocage Statistiques (NexBits)', 'description' => 'Nombre de NexBits pour debloquer les statistiques avancees sur un serveur', 'category' => 'premium', 'position' => 29],
         ['key' => 'premium_stats_gate_enabled', 'value' => '1', 'type' => 'boolean', 'label' => 'Statistiques avancees payantes', 'description' => 'Si desactive, les statistiques avancees sont gratuites pour tous les proprietaires', 'category' => 'premium', 'position' => 30],
+        ['key' => 'premium_spreadsheet_url', 'value' => '', 'type' => 'text', 'label' => 'Lien spreadsheet boutique', 'description' => 'URL vers le spreadsheet (Google Sheets, etc.) affiche dans la boutique. Laisser vide pour masquer le lien.', 'category' => 'premium', 'position' => 31],
 
         // ========== DISCORD ==========
         ['key' => 'discord_bot_url', 'value' => 'http://localhost:3050', 'type' => 'text', 'label' => 'URL de l\'API du bot Discord', 'description' => 'URL de l\'API Express du bot Discord (ex: http://localhost:3050)', 'category' => 'discord', 'position' => 0],

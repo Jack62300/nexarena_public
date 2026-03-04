@@ -539,6 +539,12 @@
                 <div class="boutique-header__title">BOUTIQUE</div>
                 <div class="boutique-header__sub">Rechargez votre solde NexBits et NexBoost pour acceder aux fonctionnalites</div>
             </div>
+            {% set spreadsheet_url = setting('premium_spreadsheet_url', '') %}
+            {% if spreadsheet_url %}
+                <a href="{{ spreadsheet_url }}" target="_blank" rel="noopener noreferrer" class="boutique-spreadsheet-link">
+                    <i class="fas fa-table"></i> Voir le spreadsheet
+                </a>
+            {% endif %}
         </div>
 
         {% if defaultPlans|length > 0 %}
