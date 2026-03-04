@@ -33,10 +33,12 @@ class ArticleController extends AbstractController
         }
 
         $relatedArticles = $articleRepository->findRelated($article, 3);
+        $recentArticles = $articleRepository->findLatestPublished(4);
 
         return $this->render('articles/show.html.twig', [
             'article' => $article,
             'relatedArticles' => $relatedArticles,
+            'recentArticles' => $recentArticles,
         ]);
     }
 }
