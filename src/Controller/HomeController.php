@@ -9,7 +9,6 @@ use App\Repository\FeaturedBookingRepository;
 use App\Repository\GameCategoryRepository;
 use App\Repository\PartnerRepository;
 use App\Repository\ServerRepository;
-use App\Service\DailyRandomBoostService;
 use App\Service\SettingsService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -24,13 +23,9 @@ class HomeController extends AbstractController
         ServerRepository $serverRepository,
         PartnerRepository $partnerRepository,
         FeaturedBookingRepository $bookingRepo,
-        DailyRandomBoostService $dailyRandomBoostService,
         SettingsService $settingsService,
         ActivityLogRepository $activityLogRepo,
     ): Response {
-        // Ensure daily random boost exists (lazy)
-        $dailyRandomBoostService->ensureTodayBoost();
-
         // Admin-featured servers (isFeatured flag set by admins)
         $adminFeaturedServers = $serverRepository->findFeatured();
 
