@@ -128,6 +128,9 @@ class InitPermissionsCommand extends Command
         // Wheel
         ['code' => 'wheel.list',   'label' => 'Voir les lots de la roue',  'category' => 'wheel'],
         ['code' => 'wheel.manage', 'label' => 'Gerer les lots de la roue', 'category' => 'wheel'],
+
+        // API Tester
+        ['code' => 'api_tester.use', 'label' => 'Utiliser l\'API Tester', 'category' => 'technique'],
     ];
 
     private const DEFAULT_ROLES = [
@@ -255,6 +258,7 @@ class InitPermissionsCommand extends Command
                 'webhooks.list', 'webhooks.manage',
                 'logs.view', 'logs.access', 'logs.purge',
                 'wheel.list', 'wheel.manage',
+                'api_tester.use',
             ],
         ],
         [

@@ -220,7 +220,7 @@
             </div>
 
             {# ── Technique ── #}
-            {% if is_granted('webhooks.list') or is_granted('logs.view') or is_granted('logs.access') or is_granted('ROLE_FONDATEUR') %}
+            {% if is_granted('webhooks.list') or is_granted('logs.view') or is_granted('logs.access') or is_granted('api_tester.use') %}
             {% set blockedCount = blocked_access_count() %}
             {% set techActive = _r starts with 'admin_webhooks_' or _r starts with 'admin_logs_' or _r starts with 'admin_access_logs_' or _r starts with 'admin_api_tester_' %}
             <div class="admin-sidebar__group admin-sidebar__group--red {{ techActive ? 'open' : '' }}">
@@ -250,7 +250,7 @@
                         {% endif %}
                     </a>
                     {% endif %}
-                    {% if is_granted('ROLE_FONDATEUR') %}
+                    {% if is_granted('api_tester.use') %}
                     <a href="{{ path('admin_api_tester_index') }}" class="admin-sidebar__link {{ _r starts with 'admin_api_tester_' ? 'active' : '' }}">
                         <i class="fas fa-vial"></i> API Tester
                     </a>

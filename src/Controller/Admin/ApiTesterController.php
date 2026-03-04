@@ -11,7 +11,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 #[Route('/admin/api-tester', name: 'admin_api_tester_')]
-#[IsGranted('ROLE_FONDATEUR')]
+#[IsGranted('api_tester.use')]
 class ApiTesterController extends AbstractController
 {
     public function __construct(
