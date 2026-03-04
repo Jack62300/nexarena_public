@@ -96,8 +96,10 @@
                     {% endif %}
 
                     {# Body #}
-                    <div class="nx-art-body">
-                        {{ article.content|raw }}
+                    <div class="nx-art-body ql-snow">
+                        <div class="ql-editor">
+                            {{ article.content|raw }}
+                        </div>
                     </div>
 
                     {# Footer #}
@@ -116,5 +118,6 @@
 {% endblock %}
 
 {% block stylesheets %}
-<link rel="stylesheet" href="{{ asset('assets/css/pages/articles-show.css') }}">
+<link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
+<link rel="stylesheet" href="{{ asset('assets/css/pages/articles-show.css') }}?v=2">
 {% endblock %}

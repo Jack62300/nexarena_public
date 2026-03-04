@@ -82,6 +82,19 @@
     font-size: 16px;
     line-height: 1.85;
 }
+/* Reset Quill editor styles for display */
+.nx-art-body.ql-snow {
+    border: none !important;
+}
+.nx-art-body .ql-editor {
+    padding: 0;
+    overflow: visible;
+    min-height: auto;
+    color: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    tab-size: 4;
+}
 .nx-art-body h1,
 .nx-art-body h2,
 .nx-art-body h3,
