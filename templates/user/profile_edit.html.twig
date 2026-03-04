@@ -457,6 +457,63 @@
 
                 </form>
 
+                {# ── Zone Danger — Suppression de compte ── #}
+                <div class="ep-card" style="margin-top:32px;border-color:rgba(220,53,69,0.3);background:linear-gradient(135deg,#1a1218 0%,#162231 100%);">
+                    <div class="ep-card__title" style="border-bottom-color:rgba(220,53,69,0.2);">
+                        <i class="fas fa-exclamation-triangle" style="color:#dc3545;"></i>
+                        <span style="color:#dc3545;">Zone dangereuse</span>
+                    </div>
+                    <p style="font-size:13px;color:#8b949e;line-height:1.6;margin-bottom:16px;">
+                        La suppression de votre compte est definitive. Toutes vos donnees (serveurs, votes, commentaires, favoris) seront supprimees de facon irreversible.
+                    </p>
+                    <button type="button" id="btnDeleteAccount"
+                            style="display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;background:rgba(220,53,69,0.1);color:#dc3545;border:1px solid rgba(220,53,69,0.3);transition:all .2s;"
+                            onmouseover="this.style.background='rgba(220,53,69,0.2)'" onmouseout="this.style.background='rgba(220,53,69,0.1)'">
+                        <i class="fas fa-trash-alt"></i> Supprimer mon compte
+                    </button>
+                </div>
+
+                {# Modal de confirmation de suppression #}
+                <div id="deleteAccountModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;">
+                    <div style="background:#162231;border:1px solid rgba(220,53,69,0.3);border-radius:16px;max-width:460px;width:90%;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+                        <div style="text-align:center;margin-bottom:20px;">
+                            <div style="width:56px;height:56px;border-radius:50%;background:rgba(220,53,69,0.12);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
+                                <i class="fas fa-exclamation-triangle" style="font-size:24px;color:#dc3545;"></i>
+                            </div>
+                            <h4 style="font-size:18px;font-weight:700;color:#e6edf3;margin-bottom:6px;">Supprimer votre compte ?</h4>
+                            <p style="font-size:13px;color:#8b949e;line-height:1.6;">Cette action est <strong style="color:#dc3545;">irreversible</strong>. Toutes vos donnees seront definitivement supprimees.</p>
+                        </div>
+                        <form method="post" action="{{ path('user_profile_delete') }}">
+                            <input type="hidden" name="_token" value="{{ csrf_token('delete_account') }}">
+                            <div style="margin-bottom:14px;">
+                                <label style="display:block;font-size:12px;font-weight:600;color:#8b949e;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:8px;">
+                                    <i class="fas fa-lock" style="margin-right:4px;"></i> Confirmez votre mot de passe
+                                </label>
+                                <input type="password" name="password" required placeholder="Votre mot de passe actuel"
+                                       style="width:100%;background:#0d1b2d;border:1px solid #1e3048;border-radius:8px;padding:10px 14px;color:#e6edf3;font-size:14px;">
+                            </div>
+                            <div style="margin-bottom:18px;">
+                                <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:13px;color:#c9d1d9;">
+                                    <input type="checkbox" id="deleteConfirmCheck" required
+                                           style="margin-top:2px;width:16px;height:16px;accent-color:#dc3545;flex-shrink:0;">
+                                    Je comprends que cette action est irreversible et que toutes mes donnees seront supprimees.
+                                </label>
+                            </div>
+                            <div style="display:flex;gap:10px;">
+                                <button type="button" id="btnCancelDelete"
+                                        style="flex:1;padding:10px;border-radius:8px;background:transparent;border:1px solid #1e3048;color:#8b949e;font-size:13px;font-weight:600;cursor:pointer;">
+                                    Annuler
+                                </button>
+                                <button type="submit" id="btnConfirmDelete"
+                                        style="flex:1;padding:10px;border-radius:8px;background:#dc3545;border:none;color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:background .2s;"
+                                        onmouseover="this.style.background='#c82333'" onmouseout="this.style.background='#dc3545'">
+                                    <i class="fas fa-trash-alt"></i> Supprimer definitivement
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
             </div>
 
             {# ══════════ SIDEBAR ══════════ #}
@@ -728,6 +785,22 @@ function updateUsernamePreview(val) {
 document.addEventListener('DOMContentLoaded', function() {
     var inp = document.getElementById('usernameInput');
     if (inp) updateUsernamePreview(inp.value);
+
+    // ── Delete account modal ──
+    var btnOpen = document.getElementById('btnDeleteAccount');
+    var modal = document.getElementById('deleteAccountModal');
+    var btnCancel = document.getElementById('btnCancelDelete');
+    if (btnOpen && modal) {
+        btnOpen.addEventListener('click', function() {
+            modal.style.display = 'flex';
+        });
+        btnCancel.addEventListener('click', function() {
+            modal.style.display = 'none';
+        });
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) modal.style.display = 'none';
+        });
+    }
 });
 
 </script>

@@ -556,6 +556,80 @@
                         <div class="sv-vote__msg" id="voteMessage"></div>
                     </div>
 
+                    {# Favorite button #}
+                    {% if app.user %}
+                        <form method="post" action="{{ path('app_server_favorite_toggle', {slug: server.slug}) }}" id="favoriteForm" style="margin-bottom:16px;">
+                            <input type="hidden" name="_token" value="{{ csrf_token('favorite_' ~ server.id) }}">
+                            <button type="submit" id="favoriteBtn" style="width:100%;background:rgba(var(--sv-bg-card-rgb),0.85);border:1px solid rgba(var(--sv-border-rgb),0.3);border-radius:12px;padding:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600;color:{{ isFavorite ? '#ef4444' : 'rgba(255,255,255,0.6)' }};transition:all .2s;">
+                                <i class="fas {{ isFavorite ? 'fa-heart' : 'fa-heart' }}" style="{{ isFavorite ? 'color:#ef4444;' : 'color:rgba(255,255,255,0.35);' }}"></i>
+                                {{ isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris' }}
+                            </button>
+                        </form>
+                    {% endif %}
+
+                    {# Rating widget #}
+                    <div style="background:rgba(var(--sv-bg-card-rgb),0.85);border:1px solid rgba(var(--sv-border-rgb),0.3);border-radius:12px;padding:16px;margin-bottom:16px;text-align:center;">
+                        <div style="font-size:12px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Note</div>
+                        {% if server.averageRating %}
+                            <div style="font-size:24px;font-weight:700;color:var(--sv-accent);margin-bottom:4px;">{{ server.averageRating|number_format(1) }}<span style="font-size:14px;color:rgba(255,255,255,0.4);">/5</span></div>
+                            <div style="margin-bottom:4px;">
+                                {% for i in 1..5 %}
+                                    <i class="fas fa-star" style="font-size:14px;color:{{ i <= server.averageRating|round ? '#fbbf24' : 'rgba(255,255,255,0.15)' }};"></i>
+                                {% endfor %}
+                            </div>
+                            <div style="font-size:12px;color:rgba(255,255,255,0.4);">{{ server.ratingCount }} avis</div>
+                        {% else %}
+                            <div style="margin-bottom:4px;">
+                                {% for i in 1..5 %}
+                                    <i class="fas fa-star" style="font-size:14px;color:rgba(255,255,255,0.15);"></i>
+                                {% endfor %}
+                            </div>
+                            <div style="font-size:12px;color:rgba(255,255,255,0.4);">Pas encore note</div>
+                        {% endif %}
+
+                        {% if app.user %}
+                            <form method="post" action="{{ path('app_server_rate', {slug: server.slug}) }}" id="ratingForm" style="margin-top:12px;">
+                                <input type="hidden" name="_token" value="{{ csrf_token('rate_' ~ server.id) }}">
+                                <input type="hidden" name="rating" id="ratingValue" value="{{ userRating ?? 0 }}">
+                                <div id="ratingStars" style="cursor:pointer;display:inline-flex;gap:4px;">
+                                    {% for i in 1..5 %}
+                                        <i class="fas fa-star rating-star" data-value="{{ i }}" style="font-size:20px;color:{{ userRating is not null and i <= userRating ? '#fbbf24' : 'rgba(255,255,255,0.2)' }};transition:color .15s;"></i>
+                                    {% endfor %}
+                                </div>
+                                {% if userRating %}
+                                    <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:4px;">Votre note : {{ userRating }}/5</div>
+                                {% else %}
+                                    <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:4px;">Cliquez pour noter</div>
+                                {% endif %}
+                            </form>
+                            <script nonce="{{ csp_nonce() }}">
+                            document.addEventListener('DOMContentLoaded', function() {
+                                var stars = document.querySelectorAll('#ratingStars .rating-star');
+                                var input = document.getElementById('ratingValue');
+                                var form = document.getElementById('ratingForm');
+                                stars.forEach(function(star) {
+                                    star.addEventListener('mouseenter', function() {
+                                        var v = parseInt(this.dataset.value);
+                                        stars.forEach(function(s) {
+                                            s.style.color = parseInt(s.dataset.value) <= v ? '#fbbf24' : 'rgba(255,255,255,0.2)';
+                                        });
+                                    });
+                                    star.addEventListener('mouseleave', function() {
+                                        var cur = parseInt(input.value) || 0;
+                                        stars.forEach(function(s) {
+                                            s.style.color = parseInt(s.dataset.value) <= cur ? '#fbbf24' : 'rgba(255,255,255,0.2)';
+                                        });
+                                    });
+                                    star.addEventListener('click', function() {
+                                        input.value = this.dataset.value;
+                                        form.submit();
+                                    });
+                                });
+                            });
+                            </script>
+                        {% endif %}
+                    </div>
+
                     {# Donation widget #}
                     {% if app.user %}
                         <div class="sv-donate-widget">

@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\FeaturedBooking;
+use App\Repository\ActivityLogRepository;
 use App\Repository\CategoryRepository;
 use App\Repository\FeaturedBookingRepository;
 use App\Repository\GameCategoryRepository;
@@ -25,6 +26,7 @@ class HomeController extends AbstractController
         FeaturedBookingRepository $bookingRepo,
         DailyRandomBoostService $dailyRandomBoostService,
         SettingsService $settingsService,
+        ActivityLogRepository $activityLogRepo,
     ): Response {
         // Ensure daily random boost exists (lazy)
         $dailyRandomBoostService->ensureTodayBoost();
@@ -48,6 +50,7 @@ class HomeController extends AbstractController
             'partners' => $partnerRepository->findActiveByType('partner'),
             'services' => $partnerRepository->findActiveByType('service'),
             'bannerSlides' => $bannerSlides,
+            'activityFeed' => $activityLogRepo->findPublicFeed(10),
         ]);
     }
 }

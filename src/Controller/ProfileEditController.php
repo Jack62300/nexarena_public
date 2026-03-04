@@ -6,10 +6,12 @@ use App\Entity\ActivityLog;
 use App\Repository\UserRepository;
 use App\Service\ActivityLogService;
 use App\Service\PremiumService;
+use App\Service\UserDeletionService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -90,6 +92,36 @@ class ProfileEditController extends AbstractController
         $this->addFlash('success', 'Abonnement Twitch Live annulé. Il reste actif jusqu\'à son expiration.');
 
         return $this->redirectToRoute('user_profile_edit');
+    }
+
+    #[Route('/profil/supprimer', name: 'user_profile_delete', methods: ['POST'])]
+    public function deleteAccount(
+        Request $request,
+        UserPasswordHasherInterface $passwordHasher,
+        UserDeletionService $deletionService,
+    ): Response {
+        if (!$this->isCsrfTokenValid('delete_account', $request->request->get('_token'))) {
+            $this->addFlash('error', 'Token CSRF invalide.');
+            return $this->redirectToRoute('user_profile_edit');
+        }
+
+        /** @var \App\Entity\User $user */
+        $user = $this->getUser();
+
+        $password = (string) $request->request->get('password', '');
+        if (!$user->getPassword() || !$passwordHasher->isPasswordValid($user, $password)) {
+            $this->addFlash('error', 'Mot de passe incorrect.');
+            return $this->redirectToRoute('user_profile_edit');
+        }
+
+        $this->activityLog->log('user.delete_self', ActivityLog::CAT_USER, 'User', $user->getId(), $user->getUsername());
+
+        $deletionService->deleteUser($user);
+
+        $request->getSession()->invalidate();
+
+        $this->addFlash('success', 'Votre compte a ete supprime avec succes.');
+        return $this->redirectToRoute('app_home');
     }
 
     private function handleForm(Request $request): Response

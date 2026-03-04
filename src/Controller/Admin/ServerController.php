@@ -8,9 +8,11 @@ use App\Form\Admin\AdminServerFormType;
 use App\Repository\CategoryRepository;
 use App\Repository\ServerRepository;
 use App\Service\ActivityLogService;
+use App\Service\MailerService;
 use App\Service\ServerService;
 use App\Service\WebhookService;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -26,6 +28,8 @@ class ServerController extends AbstractController
         private ServerService $serverService,
         private WebhookService $webhookService,
         private ActivityLogService $activityLog,
+        private MailerService $mailerService,
+        private LoggerInterface $logger,
     ) {
     }
 
@@ -79,27 +83,87 @@ class ServerController extends AbstractController
     #[IsGranted('servers.edit')]
     public function approve(Server $server, Request $request): Response
     {
-        if ($this->isCsrfTokenValid('approve_' . $server->getId(), $request->request->get('_token'))) {
-            $server->setIsApproved(!$server->isApproved());
-            $this->em->flush();
-            $status = $server->isApproved() ? 'approuvé' : 'désapprouvé';
-
-            if ($server->isApproved()) {
-                $this->webhookService->dispatch('server.approved', [
-                    'title' => 'Serveur approuvé',
-                    'fields' => [
-                        ['name' => 'Serveur', 'value' => $server->getName(), 'inline' => true],
-                        ['name' => 'Approuvé par', 'value' => $this->getUser()->getUsername(), 'inline' => true],
-                    ],
-                ]);
-            }
-
-            $this->activityLog->log('server.approve', ActivityLog::CAT_SERVER, 'Server', $server->getId(), $server->getName(), [
-                'approved' => $server->isApproved(),
-            ]);
-            $this->addFlash('success', "Serveur {$status}.");
+        if (!$this->isCsrfTokenValid('approve_' . $server->getId(), $request->request->get('_token'))) {
+            $this->addFlash('error', 'Token CSRF invalide.');
+            return $this->redirectToRoute('admin_servers_list');
         }
 
+        $server->setIsApproved(true);
+        $this->em->flush();
+
+        $this->webhookService->dispatch('server.approved', [
+            'title' => 'Serveur approuvé',
+            'fields' => [
+                ['name' => 'Serveur', 'value' => $server->getName(), 'inline' => true],
+                ['name' => 'Approuvé par', 'value' => $this->getUser()->getUsername(), 'inline' => true],
+            ],
+        ]);
+
+        $this->activityLog->log('server.approve', ActivityLog::CAT_SERVER, 'Server', $server->getId(), $server->getName(), [
+            'approved' => true,
+        ]);
+
+        $owner = $server->getOwner();
+        if ($owner && $owner->getEmail()) {
+            try {
+                $this->mailerService->sendServerApprovedEmail($owner, $server);
+            } catch (\Throwable $e) {
+                $this->logger->error('Failed to send server approved email', [
+                    'server' => $server->getId(),
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        $this->addFlash('success', 'Serveur approuvé.');
+        return $this->redirectToRoute('admin_servers_list');
+    }
+
+    #[Route('/{id}/reject', name: 'reject', methods: ['POST'])]
+    #[IsGranted('servers.edit')]
+    public function reject(Server $server, Request $request): Response
+    {
+        if (!$this->isCsrfTokenValid('reject_' . $server->getId(), $request->request->get('_token'))) {
+            $this->addFlash('error', 'Token CSRF invalide.');
+            return $this->redirectToRoute('admin_servers_list');
+        }
+
+        $reason = trim($request->request->get('rejection_reason', ''));
+        if ($reason === '') {
+            $this->addFlash('error', 'Vous devez indiquer une raison pour le refus du serveur.');
+            return $this->redirectToRoute('admin_servers_list');
+        }
+
+        $server->setIsApproved(false);
+        $this->em->flush();
+
+        $this->webhookService->dispatch('server.rejected', [
+            'title' => 'Serveur refusé',
+            'fields' => [
+                ['name' => 'Serveur', 'value' => $server->getName(), 'inline' => true],
+                ['name' => 'Refusé par', 'value' => $this->getUser()->getUsername(), 'inline' => true],
+                ['name' => 'Raison', 'value' => mb_substr($reason, 0, 200), 'inline' => false],
+            ],
+        ]);
+
+        $this->activityLog->log('server.reject', ActivityLog::CAT_SERVER, 'Server', $server->getId(), $server->getName(), [
+            'approved' => false,
+            'reason' => $reason,
+        ]);
+
+        $owner = $server->getOwner();
+        if ($owner && $owner->getEmail()) {
+            try {
+                $this->mailerService->sendServerRejectedEmail($owner, $server, $reason);
+            } catch (\Throwable $e) {
+                $this->logger->error('Failed to send server rejected email', [
+                    'server' => $server->getId(),
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        $this->addFlash('success', 'Serveur refusé. Le propriétaire a été notifié par email.');
         return $this->redirectToRoute('admin_servers_list');
     }
 

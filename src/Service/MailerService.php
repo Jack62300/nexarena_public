@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Entity\Server;
 use App\Entity\User;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
@@ -292,6 +293,132 @@ HTML;
       <div class="msg-box">{$safeMessage}</div>
     </div>
     <div class="footer">© {$year} {$safeSiteName} — Message reçu via le formulaire de contact public.</div>
+  </div>
+</div>
+</body>
+</html>
+HTML;
+    }
+
+    public function sendServerApprovedEmail(User $owner, Server $server): void
+    {
+        $siteName  = $this->settings->get('site_name', 'Nexarena') ?? 'Nexarena';
+        $siteEmail = $this->settings->get('site_email', 'noreply@nexarena.com') ?? 'noreply@nexarena.com';
+
+        $serverUrl = $this->urlGenerator->generate(
+            'server_show',
+            ['slug' => $server->getSlug()],
+            UrlGeneratorInterface::ABSOLUTE_URL
+        );
+
+        $html = $this->renderServerStatusTemplate(
+            $owner->getUsername() ?? '',
+            $server->getName() ?? '',
+            $serverUrl,
+            $siteName,
+            true,
+            null
+        );
+
+        $email = (new Email())
+            ->from(sprintf('%s <%s>', $siteName, $siteEmail))
+            ->to($owner->getEmail() ?? '')
+            ->subject('Votre serveur a ete approuve ! — ' . $siteName)
+            ->html($html);
+
+        $this->mailer->send($email);
+    }
+
+    public function sendServerRejectedEmail(User $owner, Server $server, string $reason): void
+    {
+        $siteName  = $this->settings->get('site_name', 'Nexarena') ?? 'Nexarena';
+        $siteEmail = $this->settings->get('site_email', 'noreply@nexarena.com') ?? 'noreply@nexarena.com';
+
+        $html = $this->renderServerStatusTemplate(
+            $owner->getUsername() ?? '',
+            $server->getName() ?? '',
+            '',
+            $siteName,
+            false,
+            $reason
+        );
+
+        $email = (new Email())
+            ->from(sprintf('%s <%s>', $siteName, $siteEmail))
+            ->to($owner->getEmail() ?? '')
+            ->subject('Votre serveur n\'a pas ete approuve — ' . $siteName)
+            ->html($html);
+
+        $this->mailer->send($email);
+    }
+
+    private function renderServerStatusTemplate(string $username, string $serverName, string $serverUrl, string $siteName, bool $approved, ?string $reason): string
+    {
+        $username   = htmlspecialchars($username, ENT_QUOTES);
+        $serverName = htmlspecialchars($serverName, ENT_QUOTES);
+        $serverUrl  = htmlspecialchars($serverUrl, ENT_QUOTES);
+        $siteName   = htmlspecialchars($siteName, ENT_QUOTES);
+        $year       = date('Y');
+
+        if ($approved) {
+            $icon    = '✅';
+            $title   = "Serveur approuve !";
+            $message = "Bonne nouvelle ! Votre serveur <strong>{$serverName}</strong> a ete approuve par notre equipe. Il est maintenant visible dans le classement de <strong>{$siteName}</strong>.";
+            $button  = "<div class=\"btn-wrap\"><a href=\"{$serverUrl}\" class=\"btn\">🎮 Voir mon serveur</a></div>";
+        } else {
+            $icon    = '❌';
+            $title   = "Serveur non approuve";
+            $safeReason = htmlspecialchars($reason ?? '', ENT_QUOTES);
+            $message = "Votre serveur <strong>{$serverName}</strong> n'a pas ete approuve par notre equipe.";
+            $message .= "<br><br><div style=\"background:rgba(220,53,69,0.08);border:1px solid rgba(220,53,69,0.2);border-radius:10px;padding:16px 20px;margin:8px 0;\">";
+            $message .= "<strong style=\"color:#e74a3b;\">Raison du refus :</strong><br><span style=\"color:rgba(200,214,232,0.85);\">{$safeReason}</span></div>";
+            $message .= "<br>N'hesitez pas a modifier votre serveur en tenant compte de cette remarque, puis a le soumettre a nouveau.";
+            $button = '';
+        }
+
+        return <<<HTML
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{$title} — {$siteName}</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #080e17; font-family: 'Segoe UI', Arial, sans-serif; color: #c8d6e8; }
+  .wrapper { max-width: 580px; margin: 40px auto; padding: 0 16px; }
+  .card { background: #0d1b2d; border: 1px solid rgba(69,248,130,0.15); border-radius: 16px; overflow: hidden; }
+  .header { background: linear-gradient(135deg, #0d1b2d 0%, #0a2015 100%); padding: 40px 40px 32px; text-align: center; border-bottom: 1px solid rgba(69,248,130,0.12); }
+  .logo { font-size: 28px; font-weight: 800; color: #45f882; letter-spacing: -0.5px; margin-bottom: 6px; }
+  .logo span { color: #fff; }
+  .check { font-size: 48px; margin-bottom: 10px; }
+  .alert-title { font-size: 18px; font-weight: 700; color: #45f882; }
+  .body { padding: 40px; }
+  .greeting { font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 16px; }
+  .text { font-size: 15px; line-height: 1.7; color: rgba(200,214,232,0.75); margin-bottom: 24px; }
+  .btn-wrap { text-align: center; margin: 32px 0; }
+  .btn { display: inline-block; background: #45f882; color: #050d18; font-size: 16px; font-weight: 700; padding: 15px 40px; border-radius: 10px; text-decoration: none; letter-spacing: 0.3px; }
+  .divider { height: 1px; background: rgba(69,248,130,0.1); margin: 28px 0; }
+  .small { font-size: 12px; color: rgba(200,214,232,0.4); line-height: 1.6; }
+  .footer { background: rgba(0,0,0,0.2); padding: 20px 40px; text-align: center; font-size: 12px; color: rgba(200,214,232,0.35); border-top: 1px solid rgba(69,248,130,0.08); }
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="card">
+    <div class="header">
+      <div class="logo">Nex<span>arena</span></div>
+      <div class="check">{$icon}</div>
+      <div class="alert-title">{$title}</div>
+    </div>
+    <div class="body">
+      <div class="greeting">Bonjour {$username} 👋</div>
+      <p class="text">{$message}</p>
+      {$button}
+      <div class="divider"></div>
+      <p class="small">Si vous avez des questions, n'hesitez pas a nous contacter via la page de contact.</p>
+    </div>
+    <div class="footer">© {$year} {$siteName} — Cet email a ete envoye automatiquement, merci de ne pas y repondre.</div>
   </div>
 </div>
 </body>

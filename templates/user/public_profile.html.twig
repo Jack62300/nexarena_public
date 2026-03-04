@@ -621,6 +621,38 @@
                 </div>
                 {% endif %}
 
+                {# Parrainage (propre profil) #}
+                {% if isOwnProfile and profileUser.referralCode %}
+                <div class="pub-sidebar-card" style="border-color:rgba(69,248,130,0.25);">
+                    <div class="pub-sidebar-title">
+                        <i class="fas fa-user-friends" style="color:#45f882;"></i> Parrainage
+                    </div>
+                    <div style="text-align:center;padding:8px 0 14px;">
+                        <div style="font-size:13px;color:#8b949e;margin-bottom:10px;">Votre code de parrainage</div>
+                        <div style="display:flex;align-items:center;gap:8px;background:#0d1b2d;border:1px solid rgba(69,248,130,0.2);border-radius:8px;padding:10px 14px;">
+                            <code id="referralCode" style="flex:1;font-size:16px;font-weight:700;color:#45f882;letter-spacing:1px;">{{ profileUser.referralCode }}</code>
+                            <button type="button" id="btnCopyReferral"
+                                    style="background:rgba(69,248,130,0.1);border:1px solid rgba(69,248,130,0.25);border-radius:6px;padding:6px 10px;color:#45f882;cursor:pointer;font-size:12px;font-weight:600;transition:all .2s;"
+                                    onmouseover="this.style.background='rgba(69,248,130,0.2)'" onmouseout="this.style.background='rgba(69,248,130,0.1)'">
+                                <i class="fas fa-copy"></i> Copier
+                            </button>
+                        </div>
+                        <div style="margin-top:10px;">
+                            <button type="button" id="btnCopyReferralLink"
+                                    style="width:100%;background:rgba(69,248,130,0.06);border:1px solid rgba(69,248,130,0.15);border-radius:8px;padding:8px;color:#45f882;cursor:pointer;font-size:12px;font-weight:600;transition:all .2s;"
+                                    data-url="{{ url('app_register') }}?ref={{ profileUser.referralCode }}"
+                                    onmouseover="this.style.background='rgba(69,248,130,0.12)'" onmouseout="this.style.background='rgba(69,248,130,0.06)'">
+                                <i class="fas fa-link"></i> Copier le lien d'invitation
+                            </button>
+                        </div>
+                        <div style="margin-top:14px;display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;color:#8b949e;">
+                            <i class="fas fa-users" style="color:#45f882;"></i>
+                            <strong style="color:#e6edf3;">{{ profileUser.referralCount }}</strong> filleul{{ profileUser.referralCount > 1 ? 's' : '' }}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
                 {# Actions rapides (propre profil) #}
                 {% if isOwnProfile %}
                 <div class="pub-sidebar-card">
@@ -649,6 +681,37 @@
 {% block javascripts %}
 <script nonce="{{ csp_nonce() }}">
 document.addEventListener('DOMContentLoaded', function () {
+    // ── Referral copy buttons ──
+    var btnCopyCode = document.getElementById('btnCopyReferral');
+    var btnCopyLink = document.getElementById('btnCopyReferralLink');
+    function copyToClipboard(text, btn, originalHtml) {
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(text).then(function() {
+                btn.innerHTML = '<i class="fas fa-check"></i> Copie !';
+                setTimeout(function() { btn.innerHTML = originalHtml; }, 2000);
+            });
+        } else {
+            var input = document.createElement('input');
+            input.value = text;
+            document.body.appendChild(input);
+            input.select();
+            document.execCommand('copy');
+            document.body.removeChild(input);
+            btn.innerHTML = '<i class="fas fa-check"></i> Copie !';
+            setTimeout(function() { btn.innerHTML = originalHtml; }, 2000);
+        }
+    }
+    if (btnCopyCode) {
+        btnCopyCode.addEventListener('click', function() {
+            copyToClipboard(document.getElementById('referralCode').textContent.trim(), this, '<i class="fas fa-copy"></i> Copier');
+        });
+    }
+    if (btnCopyLink) {
+        btnCopyLink.addEventListener('click', function() {
+            copyToClipboard(this.dataset.url, this, '<i class="fas fa-link"></i> Copier le lien d\'invitation');
+        });
+    }
+
     var btn = document.getElementById('btnShareProfile');
     if (btn) {
         btn.addEventListener('click', function () {

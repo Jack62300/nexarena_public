@@ -48,6 +48,65 @@
     }
     .badge-approved--yes { background: #1cc88a22; color: #1cc88a; border: 1px solid #1cc88a44; }
     .badge-approved--no { background: #f6c23e22; color: #f6c23e; border: 1px solid #f6c23e44; }
+    .badge-approved--rejected { background: #e74a3b22; color: #e74a3b; border: 1px solid #e74a3b44; }
+
+    /* Reject modal */
+    .reject-modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        background: rgba(0,0,0,0.65);
+        align-items: center;
+        justify-content: center;
+    }
+    .reject-modal-overlay.active { display: flex; }
+    .reject-modal {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 14px;
+        max-width: 480px;
+        width: 90%;
+        padding: 28px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+    .reject-modal__title {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .reject-modal__title i { color: var(--danger); }
+    .reject-modal__sub {
+        font-size: 13px;
+        color: var(--text-secondary);
+        margin-bottom: 18px;
+    }
+    .reject-modal textarea {
+        width: 100%;
+        background: var(--bg-darker);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 12px 14px;
+        color: var(--text-primary);
+        font-size: 14px;
+        min-height: 100px;
+        resize: vertical;
+        margin-bottom: 16px;
+        font-family: inherit;
+    }
+    .reject-modal textarea:focus {
+        outline: none;
+        border-color: var(--danger);
+    }
+    .reject-modal__actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+    }
 {% endblock %}
 
 {% block admin_body %}
@@ -159,12 +218,22 @@
                                 <a href="{{ path('admin_servers_edit', {id: server.id}) }}" class="btn-admin btn-admin--outline btn-admin--sm" title="Modifier">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <form method="post" action="{{ path('admin_servers_approve', {id: server.id}) }}" style="display:inline;">
-                                    <input type="hidden" name="_token" value="{{ csrf_token('approve_' ~ server.id) }}">
-                                    <button type="submit" class="btn-admin btn-admin--sm" style="background:{{ server.isApproved ? 'var(--warning)' : 'var(--success)' }};color:#fff;border:none;" title="{{ server.isApproved ? 'Desapprouver' : 'Approuver' }}">
-                                        <i class="fas {{ server.isApproved ? 'fa-times' : 'fa-check' }}"></i>
-                                    </button>
-                                </form>
+                                {% if not server.isApproved %}
+                                    <form method="post" action="{{ path('admin_servers_approve', {id: server.id}) }}" style="display:inline;">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('approve_' ~ server.id) }}">
+                                        <button type="submit" class="btn-admin btn-admin--sm" style="background:var(--success);color:#fff;border:none;" title="Approuver">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                    </form>
+                                {% endif %}
+                                <button type="button" class="btn-admin btn-admin--sm btn-reject-server"
+                                        style="background:{{ server.isApproved ? 'var(--danger)' : 'var(--warning)' }};color:#fff;border:none;"
+                                        title="Refuser"
+                                        data-server-id="{{ server.id }}"
+                                        data-server-name="{{ server.name }}"
+                                        data-csrf="{{ csrf_token('reject_' ~ server.id) }}">
+                                    <i class="fas {{ server.isApproved ? 'fa-times' : 'fa-ban' }}"></i>
+                                </button>
                                 <form method="post" action="{{ path('admin_servers_toggle_active', {id: server.id}) }}" style="display:inline;">
                                     <input type="hidden" name="_token" value="{{ csrf_token('toggle_' ~ server.id) }}">
                                     <button type="submit" class="btn-admin btn-admin--sm" style="background:{{ server.isActive ? 'var(--text-secondary)' : 'var(--info)' }};color:#fff;border:none;" title="{{ server.isActive ? 'Desactiver' : 'Activer' }}">
@@ -193,6 +262,61 @@
             </tbody>
         </table>
     </div>
+
+    {# ── Reject modal ── #}
+    <div class="reject-modal-overlay" id="rejectModal">
+        <div class="reject-modal">
+            <div class="reject-modal__title"><i class="fas fa-exclamation-triangle"></i> Refuser un serveur</div>
+            <div class="reject-modal__sub">
+                Serveur : <strong id="rejectServerName"></strong>
+            </div>
+            <form method="post" id="rejectForm" action="">
+                <input type="hidden" name="_token" id="rejectCsrfToken" value="">
+                <label style="display:block;font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:8px;">
+                    <i class="fas fa-comment-alt" style="margin-right:4px;"></i> Raison du refus <span style="color:var(--danger);">*</span>
+                </label>
+                <textarea name="rejection_reason" id="rejectReason" required minlength="10" maxlength="1000"
+                          placeholder="Expliquez la raison du refus (minimum 10 caracteres)..."></textarea>
+                <div class="reject-modal__actions">
+                    <button type="button" id="rejectCancel" class="btn-admin btn-admin--outline btn-admin--sm">Annuler</button>
+                    <button type="submit" class="btn-admin btn-admin--sm" style="background:var(--danger);color:#fff;border:none;">
+                        <i class="fas fa-ban"></i> Refuser le serveur
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {# Reject modal JS #}
+    <script nonce="{{ csp_nonce() }}">
+    (function() {
+        var modal = document.getElementById('rejectModal');
+        var form = document.getElementById('rejectForm');
+        var nameEl = document.getElementById('rejectServerName');
+        var tokenEl = document.getElementById('rejectCsrfToken');
+        var reasonEl = document.getElementById('rejectReason');
+        var cancelBtn = document.getElementById('rejectCancel');
+
+        document.querySelectorAll('.btn-reject-server').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var serverId = this.dataset.serverId;
+                nameEl.textContent = this.dataset.serverName;
+                form.action = '/admin/servers/' + serverId + '/reject';
+                tokenEl.value = this.dataset.csrf;
+                reasonEl.value = '';
+                modal.classList.add('active');
+                setTimeout(function() { reasonEl.focus(); }, 100);
+            });
+        });
+
+        cancelBtn.addEventListener('click', function() {
+            modal.classList.remove('active');
+        });
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) modal.classList.remove('active');
+        });
+    })();
+    </script>
 
     {# Player count AJAX #}
     {% set server_ids = [] %}

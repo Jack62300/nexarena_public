@@ -129,6 +129,12 @@ class Server
     #[ORM\Column]
     private int $boostTokenBalance = 0;
 
+    #[ORM\Column(nullable: true)]
+    private ?float $averageRating = null;
+
+    #[ORM\Column(options: ['default' => 0])]
+    private int $ratingCount = 0;
+
     /** @var Collection<int, Tag> */
     #[ORM\ManyToMany(targetEntity: Tag::class, inversedBy: 'servers')]
     #[ORM\JoinTable(name: 'server_tag')]
@@ -700,6 +706,28 @@ class Server
     public function hasEnoughBoostTokens(int $amount): bool
     {
         return $this->boostTokenBalance >= $amount;
+    }
+
+    public function getAverageRating(): ?float
+    {
+        return $this->averageRating;
+    }
+
+    public function setAverageRating(?float $averageRating): static
+    {
+        $this->averageRating = $averageRating;
+        return $this;
+    }
+
+    public function getRatingCount(): int
+    {
+        return $this->ratingCount;
+    }
+
+    public function setRatingCount(int $ratingCount): static
+    {
+        $this->ratingCount = $ratingCount;
+        return $this;
     }
 
     public function __toString(): string

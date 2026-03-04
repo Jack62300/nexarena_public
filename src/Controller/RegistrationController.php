@@ -13,6 +13,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use App\Service\ReferralService;
 use App\Service\WebhookService;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -32,6 +33,7 @@ class RegistrationController extends AbstractController
         MailerService $mailerService,
         LoggerInterface $logger,
         BlacklistService $blacklistService,
+        ReferralService $referralService,
     ): Response {
         if ($this->getUser()) {
             return $this->redirectToRoute('app_home');
@@ -95,8 +97,21 @@ class RegistrationController extends AbstractController
                 $user->setEmailVerificationToken(bin2hex(random_bytes(32)));
             }
 
+            // Generate referral code for new user
+            $user->setReferralCode($referralService->generateCode());
+
             $em->persist($user);
             $em->flush();
+
+            // Process referral if code provided
+            $referralCode = $request->request->get('referral_code', '') ?: $request->query->get('ref', '');
+            if ($referralCode) {
+                try {
+                    $referralService->processReferral($user, $referralCode);
+                } catch (\Throwable $e) {
+                    $logger->error('Referral processing failed', ['error' => $e->getMessage()]);
+                }
+            }
 
             $webhookService->dispatch('user.registered', [
                 'title' => 'Inscription formulaire',

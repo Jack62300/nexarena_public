@@ -324,6 +324,65 @@
     </section>
     {% endif %}
 
+    {# ============================================================
+       ACTIVITY FEED — dernieres activites publiques
+       ============================================================ #}
+    {% if activityFeed|length > 0 %}
+    <section class="nx-activity section-pt-90 section-pb-90">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-xl-6 col-lg-8">
+                    <div class="section__title text-center mb-60">
+                        <span class="sub-title tg__animate-text"><i class="fas fa-bolt me-1"></i> En direct</span>
+                        <h3 class="title">Activite recente</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="row justify-content-center">
+                <div class="col-xl-8 col-lg-10">
+                    <div class="nx-activity__timeline">
+                        {% for log in activityFeed %}
+                            <div class="nx-activity__item wow fadeInUp" data-wow-delay="{{ (loop.index0 * 0.05)|round(2) }}s">
+                                <div class="nx-activity__icon
+                                    {% if log.action == 'server.create' %} nx-activity__icon--server
+                                    {% elseif log.action == 'vote.cast' %} nx-activity__icon--vote
+                                    {% elseif log.action == 'user.register' %} nx-activity__icon--user
+                                    {% else %} nx-activity__icon--default{% endif %}">
+                                    {% if log.action == 'server.create' %}
+                                        <i class="fas fa-server"></i>
+                                    {% elseif log.action == 'vote.cast' %}
+                                        <i class="fas fa-vote-yea"></i>
+                                    {% elseif log.action == 'user.register' %}
+                                        <i class="fas fa-user-plus"></i>
+                                    {% else %}
+                                        <i class="fas fa-bolt"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="nx-activity__content">
+                                    <div class="nx-activity__text">
+                                        {% if log.action == 'server.create' %}
+                                            <strong>{{ log.username ?? 'Un utilisateur' }}</strong> a ajoute le serveur <strong>{{ log.objectLabel ?? 'un serveur' }}</strong>
+                                        {% elseif log.action == 'vote.cast' %}
+                                            <strong>{{ log.username ?? 'Un utilisateur' }}</strong> a vote pour <strong>{{ log.objectLabel ?? 'un serveur' }}</strong>
+                                        {% elseif log.action == 'user.register' %}
+                                            <strong>{{ log.username ?? 'Un nouveau membre' }}</strong> a rejoint Nexarena
+                                        {% else %}
+                                            <strong>{{ log.username ?? 'Un utilisateur' }}</strong> — {{ log.action }}
+                                        {% endif %}
+                                    </div>
+                                    <div class="nx-activity__time">
+                                        <i class="fas fa-clock"></i> {{ log.createdAt|time_ago }}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
 {% endblock %}
 
 {% block javascripts %}

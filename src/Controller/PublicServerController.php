@@ -5,8 +5,12 @@ namespace App\Controller;
 use App\Entity\Comment;
 use App\Entity\Server;
 use App\Entity\ServerDailyStat;
+use App\Entity\ServerFavorite;
+use App\Entity\ServerRating;
 use App\Repository\CommentRepository;
 use App\Repository\ServerDailyStatRepository;
+use App\Repository\ServerFavoriteRepository;
+use App\Repository\ServerRatingRepository;
 use App\Repository\ServerRepository;
 use App\Service\PremiumService;
 use App\Service\StatusService;
@@ -72,12 +76,27 @@ class PublicServerController extends AbstractController
             $hasTwitchLive = $this->premiumService->hasTwitchLiveActive($server);
         }
 
+        // Rating & Favorite data
+        $userRating = null;
+        $isFavorite = false;
+        $user = $this->getUser();
+        if ($user) {
+            $ratingRepo = $this->em->getRepository(ServerRating::class);
+            $existingRating = $ratingRepo->findByServerAndUser($server, $user);
+            $userRating = $existingRating?->getRating();
+
+            $favoriteRepo = $this->em->getRepository(ServerFavorite::class);
+            $isFavorite = $favoriteRepo->findOneByServerAndUser($server, $user) !== null;
+        }
+
         return $this->render('server/show.html.twig', [
             'server' => $server,
             'similarServers' => $similarServers,
             'comments' => $comments,
             'commentCount' => $commentCount,
             'has_twitch_live' => $hasTwitchLive,
+            'userRating' => $userRating,
+            'isFavorite' => $isFavorite,
         ]);
     }
 
@@ -273,6 +292,96 @@ class PublicServerController extends AbstractController
             $this->addFlash('success', 'Don de ' . implode(' et ', $parts) . ' envoye a ' . $server->getName() . '. Merci !');
         }
 
+        return $this->redirectToRoute('server_show', ['slug' => $slug]);
+    }
+
+    #[Route('/serveur/{slug}/noter', name: 'app_server_rate', methods: ['POST'], requirements: ['slug' => '[a-z0-9]+(?:-[a-z0-9]+)*'])]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
+    public function rate(string $slug, Request $request, ServerRepository $repo, ServerRatingRepository $ratingRepo): Response
+    {
+        $server = $repo->findOneBy(['slug' => $slug, 'isActive' => true, 'isApproved' => true]);
+        if (!$server) {
+            throw $this->createNotFoundException('Serveur introuvable.');
+        }
+
+        if (!$this->isCsrfTokenValid('rate_' . $server->getId(), $request->request->get('_token'))) {
+            $this->addFlash('error', 'Token CSRF invalide.');
+            return $this->redirectToRoute('server_show', ['slug' => $slug]);
+        }
+
+        $rating = (int) $request->request->get('rating', 0);
+        if ($rating < 1 || $rating > 5) {
+            $this->addFlash('error', 'La note doit etre entre 1 et 5.');
+            return $this->redirectToRoute('server_show', ['slug' => $slug]);
+        }
+
+        /** @var \App\Entity\User $user */
+        $user = $this->getUser();
+
+        $existing = $ratingRepo->findByServerAndUser($server, $user);
+        if ($existing) {
+            $existing->setRating($rating);
+        } else {
+            $newRating = new ServerRating();
+            $newRating->setServer($server);
+            $newRating->setUser($user);
+            $newRating->setRating($rating);
+            $this->em->persist($newRating);
+        }
+
+        $this->em->flush();
+
+        // Recalculate denormalized average
+        $stats = $ratingRepo->computeAverageForServer($server);
+        $server->setAverageRating($stats['avg'] > 0 ? $stats['avg'] : null);
+        $server->setRatingCount($stats['count']);
+        $this->em->flush();
+
+        $this->addFlash('success', 'Votre note a ete enregistree.');
+        return $this->redirect($this->generateUrl('server_show', ['slug' => $slug]) . '#comments');
+    }
+
+    #[Route('/serveur/{slug}/favori', name: 'app_server_favorite_toggle', methods: ['POST'], requirements: ['slug' => '[a-z0-9]+(?:-[a-z0-9]+)*'])]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
+    public function toggleFavorite(string $slug, Request $request, ServerRepository $repo, ServerFavoriteRepository $favoriteRepo): Response
+    {
+        $server = $repo->findOneBy(['slug' => $slug, 'isActive' => true, 'isApproved' => true]);
+        if (!$server) {
+            throw $this->createNotFoundException('Serveur introuvable.');
+        }
+
+        if (!$this->isCsrfTokenValid('favorite_' . $server->getId(), $request->request->get('_token'))) {
+            if ($request->headers->get('X-Requested-With') === 'XMLHttpRequest') {
+                return $this->json(['error' => 'CSRF invalide'], 403);
+            }
+            $this->addFlash('error', 'Token CSRF invalide.');
+            return $this->redirectToRoute('server_show', ['slug' => $slug]);
+        }
+
+        /** @var \App\Entity\User $user */
+        $user = $this->getUser();
+
+        $existing = $favoriteRepo->findOneByServerAndUser($server, $user);
+        if ($existing) {
+            $this->em->remove($existing);
+            $this->em->flush();
+            $isFavorite = false;
+            $message = 'Serveur retire de vos favoris.';
+        } else {
+            $favorite = new ServerFavorite();
+            $favorite->setServer($server);
+            $favorite->setUser($user);
+            $this->em->persist($favorite);
+            $this->em->flush();
+            $isFavorite = true;
+            $message = 'Serveur ajoute a vos favoris !';
+        }
+
+        if ($request->headers->get('X-Requested-With') === 'XMLHttpRequest') {
+            return $this->json(['isFavorite' => $isFavorite]);
+        }
+
+        $this->addFlash('success', $message);
         return $this->redirectToRoute('server_show', ['slug' => $slug]);
     }
 }

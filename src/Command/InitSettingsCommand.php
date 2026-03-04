@@ -232,6 +232,10 @@ class InitSettingsCommand extends Command
         ['key' => 'wheel_enabled', 'value' => '1', 'type' => 'boolean', 'label' => 'Roue communautaire activee', 'description' => 'Activer la roue de la fortune sur la page de profil', 'category' => 'roue', 'position' => 0],
         ['key' => 'wheel_spin_cost', 'value' => '10', 'type' => 'number', 'label' => 'Cout d\'un tour (NexBits)', 'description' => 'Nombre de NexBits pour un tour payant de la roue', 'category' => 'roue', 'position' => 1],
         ['key' => 'wheel_max_paid_spins_per_day', 'value' => '10', 'type' => 'number', 'label' => 'Max tours payants / jour', 'description' => 'Nombre maximum de tours payants par utilisateur par jour', 'category' => 'roue', 'position' => 2],
+
+        // ========== PARRAINAGE ==========
+        ['key' => 'referral_enabled', 'value' => '1', 'type' => 'boolean', 'label' => 'Parrainage active', 'description' => 'Activer le systeme de parrainage (chaque utilisateur peut partager son code)', 'category' => 'referral', 'position' => 0],
+        ['key' => 'referral_reward_nexbits', 'value' => '50', 'type' => 'number', 'label' => 'Recompense parrain (NexBits)', 'description' => 'Nombre de NexBits credites au parrain lorsqu\'un filleul s\'inscrit', 'category' => 'referral', 'position' => 1],
     ];
 
     private const CATEGORY_LABELS = [

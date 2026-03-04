@@ -1193,3 +1193,98 @@
     0% { transform: translateX(-100%); }
     50%, 100% { transform: translateX(100%); }
 }
+
+/* ===== ACTIVITY FEED ===== */
+.nx-activity {
+    background: #0a1018;
+}
+.nx-activity__timeline {
+    position: relative;
+    padding-left: 32px;
+}
+.nx-activity__timeline::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(180deg, rgba(69,248,130,0.3) 0%, rgba(69,248,130,0.05) 100%);
+    border-radius: 2px;
+}
+.nx-activity__item {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 14px 0;
+    position: relative;
+}
+.nx-activity__item + .nx-activity__item {
+    border-top: 1px solid rgba(255,255,255,0.04);
+}
+.nx-activity__icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 13px;
+    position: relative;
+    z-index: 1;
+    margin-left: -32px;
+}
+.nx-activity__icon--server {
+    background: rgba(69,248,130,0.15);
+    color: #45f882;
+    border: 2px solid rgba(69,248,130,0.3);
+}
+.nx-activity__icon--vote {
+    background: rgba(251,191,36,0.15);
+    color: #fbbf24;
+    border: 2px solid rgba(251,191,36,0.3);
+}
+.nx-activity__icon--user {
+    background: rgba(96,165,250,0.15);
+    color: #60a5fa;
+    border: 2px solid rgba(96,165,250,0.3);
+}
+.nx-activity__icon--default {
+    background: rgba(255,255,255,0.08);
+    color: #8b949e;
+    border: 2px solid rgba(255,255,255,0.12);
+}
+.nx-activity__content {
+    flex: 1;
+    min-width: 0;
+}
+.nx-activity__text {
+    font-size: 14px;
+    color: #c9d1d9;
+    line-height: 1.5;
+}
+.nx-activity__text strong {
+    color: #e6edf3;
+    font-weight: 600;
+}
+.nx-activity__time {
+    font-size: 12px;
+    color: #5a7a9c;
+    margin-top: 4px;
+}
+.nx-activity__time i {
+    margin-right: 4px;
+    font-size: 10px;
+}
+@media (max-width: 767px) {
+    .nx-activity__timeline {
+        padding-left: 28px;
+    }
+    .nx-activity__icon {
+        width: 28px;
+        height: 28px;
+        font-size: 11px;
+        margin-left: -28px;
+    }
+}

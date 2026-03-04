@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Repository\UserRepository;
 use App\Service\OAuthRegistrationService;
+use App\Service\ReferralService;
 use App\Service\SettingsService;
 use KnpU\OAuth2ClientBundle\Client\ClientRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -95,6 +96,7 @@ class OAuthController extends AbstractController
                 'username' => $username,
                 'avatar'   => $avatar,
                 'email'    => $email, // peut être vide (Steam)
+                'referral_code' => $request->query->get('ref', ''),
             ]);
             return $this->redirectToRoute('app_oauth_complete_registration');
         } catch (\Exception $e) {
@@ -111,6 +113,7 @@ class OAuthController extends AbstractController
         UserRepository $userRepository,
         UserPasswordHasherInterface $passwordHasher,
         Security $security,
+        ReferralService $referralService,
     ): Response {
         // Inscriptions bloquées pendant la maintenance
         if ($this->settings->getBool('maintenance_mode', false)) {
@@ -191,6 +194,20 @@ class OAuthController extends AbstractController
             if ($isNewAccount && mb_strlen($password) >= 10) {
                 $user->setPassword($passwordHasher->hashPassword($user, $password));
                 $oauthService->flush();
+            }
+
+            // Process referral for new accounts
+            if ($isNewAccount) {
+                if (!$user->getReferralCode()) {
+                    $user->setReferralCode($referralService->generateCode());
+                    $oauthService->flush();
+                }
+                $refCode = $pending['referral_code'] ?? '';
+                if ($refCode) {
+                    try {
+                        $referralService->processReferral($user, $refCode);
+                    } catch (\Throwable) {}
+                }
             }
 
             $session->remove('_oauth_pending');

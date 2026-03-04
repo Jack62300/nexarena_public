@@ -110,6 +110,17 @@
                             {# ── ACTIONS ── #}
                             <div class="tgmenu__action d-none d-md-flex">
                                 <ul class="list-wrap">
+                                    {# Search bar #}
+                                    <li class="d-none d-lg-block" style="margin-right:8px;">
+                                        <form action="{{ path('app_search') }}" method="GET" style="display:flex;">
+                                            <input type="text" name="q" placeholder="Rechercher..."
+                                                   style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:7px 14px;color:#fff;font-size:13px;width:180px;outline:none;transition:border-color .2s;"
+                                                   onfocus="this.style.borderColor='#45f882';this.style.width='220px'" onblur="this.style.borderColor='rgba(255,255,255,0.1)';this.style.width='180px'" minlength="2">
+                                            <button type="submit" style="background:none;border:none;color:rgba(255,255,255,0.4);margin-left:-32px;cursor:pointer;padding:0 8px;">
+                                                <i class="fas fa-search"></i>
+                                            </button>
+                                        </form>
+                                    </li>
                                     {% if app.user %}
                                         <li class="header-btn">
                                             <a href="{{ path('user_servers_new') }}" class="tg-border-btn">
@@ -182,6 +193,9 @@
                                                 </a>
                                                 <a href="{{ path('user_servers_list') }}" class="nx-dropdown__item">
                                                     <i class="fas fa-server"></i> Mes serveurs
+                                                </a>
+                                                <a href="{{ path('app_favorites') }}" class="nx-dropdown__item">
+                                                    <i class="fas fa-heart" style="color:#ef4444;"></i> Mes favoris
                                                 </a>
                                                 <a href="{{ path('user_recruitment_list') }}" class="nx-dropdown__item">
                                                     <i class="fas fa-bullhorn"></i> Mes recrutements
@@ -274,8 +288,10 @@
                         </div>
                     </div>
                     <div class="nx-mobile-user__links">
+                        <a href="{{ path('app_search') }}"><i class="fas fa-search"></i> Rechercher</a>
                         <a href="{{ path('user_servers_new') }}"><i class="fas fa-plus-circle"></i> Ajouter un serveur</a>
                         <a href="{{ path('user_servers_list') }}"><i class="fas fa-server"></i> Mes serveurs</a>
+                        <a href="{{ path('app_favorites') }}"><i class="fas fa-heart" style="color:#ef4444;"></i> Mes favoris</a>
                         <a href="{{ path('user_recruitment_list') }}"><i class="fas fa-bullhorn"></i> Mes recrutements</a>
                         <a href="{{ path('applicant_list') }}"><i class="fas fa-file-alt"></i> Mes candidatures</a>
                         {% if premium_enabled() %}

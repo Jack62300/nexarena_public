@@ -142,6 +142,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
         'servers' => true,
     ];
 
+    #[ORM\Column(length: 12, unique: true, nullable: true)]
+    private ?string $referralCode = null;
+
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(onDelete: 'SET NULL')]
+    private ?User $referredBy = null;
+
+    #[ORM\Column(options: ['default' => 0])]
+    private int $referralCount = 0;
+
     /** @var Collection<int, UserAchievement> */
     #[ORM\OneToMany(targetEntity: UserAchievement::class, mappedBy: 'user', orphanRemoval: true)]
     private Collection $userAchievements;
@@ -682,6 +692,45 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     public function setPasswordResetTokenExpiresAt(?\DateTimeImmutable $passwordResetTokenExpiresAt): static
     {
         $this->passwordResetTokenExpiresAt = $passwordResetTokenExpiresAt;
+        return $this;
+    }
+
+    public function getReferralCode(): ?string
+    {
+        return $this->referralCode;
+    }
+
+    public function setReferralCode(?string $referralCode): static
+    {
+        $this->referralCode = $referralCode;
+        return $this;
+    }
+
+    public function getReferredBy(): ?User
+    {
+        return $this->referredBy;
+    }
+
+    public function setReferredBy(?User $referredBy): static
+    {
+        $this->referredBy = $referredBy;
+        return $this;
+    }
+
+    public function getReferralCount(): int
+    {
+        return $this->referralCount;
+    }
+
+    public function setReferralCount(int $referralCount): static
+    {
+        $this->referralCount = $referralCount;
+        return $this;
+    }
+
+    public function incrementReferralCount(): static
+    {
+        $this->referralCount++;
         return $this;
     }
 

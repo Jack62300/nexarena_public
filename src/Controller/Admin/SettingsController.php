@@ -50,6 +50,7 @@ class SettingsController extends AbstractController
         'discord' => 'Discord',
         'legal' => 'Pages legales',
         'roue' => 'Roue communautaire',
+        'referral' => 'Parrainage',
     ];
 
     private const CATEGORY_ICONS = [
@@ -72,6 +73,7 @@ class SettingsController extends AbstractController
         'discord' => 'fab fa-discord',
         'legal' => 'fas fa-gavel',
         'roue' => 'fas fa-dharmachakra',
+        'referral' => 'fas fa-user-friends',
     ];
 
     public function __construct(

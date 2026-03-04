@@ -62,6 +62,24 @@ class ActivityLogRepository extends ServiceEntityRepository
         return [$logs, $total];
     }
 
+    /**
+     * @return ActivityLog[]
+     */
+    public function findPublicFeed(int $limit = 10): array
+    {
+        return $this->createQueryBuilder('l')
+            ->leftJoin('l.user', 'u')
+            ->addSelect('u')
+            ->where('l.category IN (:cats)')
+            ->andWhere('l.action IN (:actions)')
+            ->setParameter('cats', ['server', 'vote', 'user'])
+            ->setParameter('actions', ['server.create', 'vote.cast', 'user.register'])
+            ->orderBy('l.createdAt', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
+
     /** Delete logs older than $days days. Returns count deleted. */
     public function deleteOlderThan(int $days): int
     {

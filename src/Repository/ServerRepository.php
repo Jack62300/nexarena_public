@@ -316,4 +316,51 @@ class ServerRepository extends ServiceEntityRepository
             ->getQuery()
             ->getSingleScalarResult();
     }
+
+    /**
+     * @return array{servers: Server[], total: int, pages: int}
+     */
+    public function searchPaginated(string $query, int $page = 1, int $limit = 20): array
+    {
+        $qb = $this->createQueryBuilder('s')
+            ->leftJoin('s.category', 'c')
+            ->leftJoin('s.gameCategory', 'gc')
+            ->leftJoin('s.tags', 'tg')
+            ->addSelect('c', 'gc', 'tg')
+            ->where('s.isActive = true')
+            ->andWhere('s.isApproved = true')
+            ->andWhere(
+                $this->createQueryBuilder('sq')->expr()->orX(
+                    'LOWER(s.name) LIKE :q',
+                    'LOWER(s.shortDescription) LIKE :q'
+                )
+            )
+            ->setParameter('q', '%' . mb_strtolower($query) . '%')
+            ->orderBy('s.monthlyVotes', 'DESC');
+
+        $total = (int) $this->createQueryBuilder('s2')
+            ->select('COUNT(s2.id)')
+            ->where('s2.isActive = true')
+            ->andWhere('s2.isApproved = true')
+            ->andWhere(
+                $this->createQueryBuilder('sq2')->expr()->orX(
+                    'LOWER(s2.name) LIKE :q',
+                    'LOWER(s2.shortDescription) LIKE :q'
+                )
+            )
+            ->setParameter('q', '%' . mb_strtolower($query) . '%')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        $pages = max(1, (int) ceil($total / $limit));
+        $page = max(1, min($page, $pages));
+
+        $servers = $qb
+            ->setFirstResult(($page - 1) * $limit)
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+
+        return ['servers' => $servers, 'total' => $total, 'pages' => $pages];
+    }
 }
