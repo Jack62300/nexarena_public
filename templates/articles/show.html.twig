@@ -2,6 +2,9 @@
 
 {% set _base_url = setting('seo_site_url', app.request.schemeAndHttpHost) %}
 {% set _art_desc = article.content|striptags|slice(0, 155)|trim ~ '...' %}
+{% set _art_url = url('articles_show', {slug: article.slug}) %}
+{% set _word_count = article.content|striptags|split(' ')|length %}
+{% set _read_time = (_word_count / 200)|round(0, 'ceil') %}
 
 {% block title %}{{ article.title }} - {{ setting('site_name', 'Nexarena') }}{% endblock %}
 {% block meta_description %}{{ _art_desc }}{% endblock %}
@@ -54,70 +57,128 @@
 
 {% block body %}
 
-    {# ===== HEADER ===== #}
-    <section class="nx-art-header">
-        <div class="container">
-            <nav class="nx-art-breadcrumb">
-                <a href="{{ path('app_home') }}">Accueil</a>
-                <i class="fas fa-chevron-right"></i>
-                <a href="{{ path('articles_list') }}">Actualites</a>
-                <i class="fas fa-chevron-right"></i>
-                <span>{{ article.title|length > 50 ? article.title|slice(0, 50) ~ '...' : article.title }}</span>
-            </nav>
+    {# ===== HERO ===== #}
+    <section class="nxa-hero">
+        <div class="nxa-hero__bg">
+            {% if article.image %}
+                <img src="{{ asset('uploads/articles/' ~ article.image) }}" alt="{{ article.title }}">
+            {% endif %}
+            <div class="nxa-hero__overlay"></div>
+            <div class="nxa-hero__vignette"></div>
         </div>
+        <div class="nxa-hero__glow"></div>
+        <div class="container">
+            <div class="nxa-hero__inner">
+                <nav class="nxa-breadcrumb">
+                    <a href="{{ path('app_home') }}">Accueil</a>
+                    <span class="nxa-breadcrumb__sep"></span>
+                    <a href="{{ path('articles_list') }}">Actualites</a>
+                    <span class="nxa-breadcrumb__sep"></span>
+                    <span class="nxa-breadcrumb__current">{{ article.title|length > 45 ? article.title|slice(0, 45) ~ '...' : article.title }}</span>
+                </nav>
+                <h1 class="nxa-hero__title">{{ article.title }}</h1>
+                <div class="nxa-hero__meta">
+                    <span class="nxa-hero__meta-item">
+                        <i class="far fa-calendar-alt"></i> {{ article.createdAt|date('d/m/Y') }}
+                    </span>
+                    {% if article.updatedAt %}
+                    <span class="nxa-hero__meta-item">
+                        <i class="fas fa-pen"></i> Mis a jour le {{ article.updatedAt|date('d/m/Y') }}
+                    </span>
+                    {% endif %}
+                    <span class="nxa-hero__meta-item">
+                        <i class="far fa-clock"></i> {{ _read_time }} min de lecture
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="nxa-hero__accent"></div>
     </section>
 
-    {# ===== ARTICLE ===== #}
-    <section class="nx-art-content">
+    {# ===== CONTENT ===== #}
+    <section class="nxa-content">
         <div class="container">
             <div class="row justify-content-center">
                 <div class="col-xl-8 col-lg-10">
 
-                    {# Meta #}
-                    <div class="nx-art-meta">
-                        <span class="nx-art-meta__item">
-                            <i class="far fa-calendar-alt"></i> {{ article.createdAt|time_ago('d M Y') }}
-                        </span>
-                        {% if article.updatedAt %}
-                            <span class="nx-art-meta__item">
-                                <i class="fas fa-sync-alt"></i> Mis a jour le {{ article.updatedAt|time_ago('d/m/Y') }}
-                            </span>
-                        {% endif %}
-                    </div>
+                    {# Article card #}
+                    <article class="nxa-article">
+                        <div class="nxa-article__accent-line"></div>
 
-                    {# Title #}
-                    <h1 class="nx-art-title">{{ article.title }}</h1>
-
-                    {# Featured Image #}
-                    {% if article.image %}
-                        <div class="nx-art-hero">
-                            <img src="{{ asset('uploads/articles/' ~ article.image) }}" alt="{{ article.title }}">
+                        {# Body #}
+                        <div class="nxa-article__body ql-snow">
+                            <div class="ql-editor">
+                                {{ article.content|raw }}
+                            </div>
                         </div>
-                    {% endif %}
 
-                    {# Body #}
-                    <div class="nx-art-body ql-snow">
-                        <div class="ql-editor">
-                            {{ article.content|raw }}
+                        {# Share bar #}
+                        <div class="nxa-share">
+                            <span class="nxa-share__label"><i class="fas fa-share-alt"></i> Partager</span>
+                            <div class="nxa-share__links">
+                                <a href="https://twitter.com/intent/tweet?url={{ _art_url|url_encode }}&text={{ article.title|url_encode }}" target="_blank" rel="noopener" class="nxa-share__btn nxa-share__btn--x" title="Partager sur X">
+                                    <i class="fab fa-x-twitter"></i>
+                                </a>
+                                <a href="https://www.facebook.com/sharer/sharer.php?u={{ _art_url|url_encode }}" target="_blank" rel="noopener" class="nxa-share__btn nxa-share__btn--fb" title="Partager sur Facebook">
+                                    <i class="fab fa-facebook-f"></i>
+                                </a>
+                                <a href="https://www.reddit.com/submit?url={{ _art_url|url_encode }}&title={{ article.title|url_encode }}" target="_blank" rel="noopener" class="nxa-share__btn nxa-share__btn--reddit" title="Partager sur Reddit">
+                                    <i class="fab fa-reddit-alien"></i>
+                                </a>
+                                <button type="button" class="nxa-share__btn nxa-share__btn--copy" title="Copier le lien" onclick="navigator.clipboard.writeText('{{ _art_url }}');this.innerHTML='<i class=\'fas fa-check\'></i>';setTimeout(()=>{this.innerHTML='<i class=\'fas fa-link\'></i>'},2000)">
+                                    <i class="fas fa-link"></i>
+                                </button>
+                            </div>
                         </div>
-                    </div>
+                    </article>
 
-                    {# Footer #}
-                    <div class="nx-art-footer">
-                        <a href="{{ path('articles_list') }}" class="nx-art-back">
-                            <i class="fas fa-arrow-left"></i>
-                            Retour aux actualites
-                        </a>
-                    </div>
+                    {# Back #}
+                    <a href="{{ path('articles_list') }}" class="nxa-back">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>Toutes les actualites</span>
+                    </a>
 
                 </div>
             </div>
         </div>
     </section>
 
+    {# ===== RELATED ===== #}
+    {% if relatedArticles|length > 0 %}
+    <section class="nxa-related">
+        <div class="container">
+            <div class="nxa-related__header">
+                <div class="nxa-related__line"></div>
+                <h2 class="nxa-related__title">Articles similaires</h2>
+                <div class="nxa-related__line"></div>
+            </div>
+            <div class="row justify-content-center">
+                {% for related in relatedArticles %}
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <a href="{{ path('articles_show', {slug: related.slug}) }}" class="nxa-related-card">
+                        <div class="nxa-related-card__img">
+                            {% if related.image %}
+                                <img src="{{ asset('uploads/articles/' ~ related.image) }}" alt="{{ related.title }}" loading="lazy">
+                            {% else %}
+                                <div class="nxa-related-card__placeholder"><i class="fas fa-newspaper"></i></div>
+                            {% endif %}
+                            <div class="nxa-related-card__overlay"></div>
+                        </div>
+                        <div class="nxa-related-card__body">
+                            <span class="nxa-related-card__date">{{ related.createdAt|date('d/m/Y') }}</span>
+                            <h3 class="nxa-related-card__title">{{ related.title }}</h3>
+                        </div>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
 {% endblock %}
 
 {% block stylesheets %}
 <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
-<link rel="stylesheet" href="{{ asset('assets/css/pages/articles-show.css') }}?v=2">
+<link rel="stylesheet" href="{{ asset('assets/css/pages/articles-show.css') }}?v=3">
 {% endblock %}

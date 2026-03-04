@@ -32,6 +32,22 @@ class ArticleRepository extends ServiceEntityRepository
     }
 
     /**
+     * @return Article[]
+     */
+    public function findRelated(Article $article, int $limit = 3): array
+    {
+        return $this->createQueryBuilder('a')
+            ->where('a.isPublished = :published')
+            ->andWhere('a.id != :id')
+            ->setParameter('published', true)
+            ->setParameter('id', $article->getId())
+            ->orderBy('a.createdAt', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
      * @return array{articles: Article[], total: int, pages: int}
      */
     public function findPublishedPaginated(int $page = 1, int $perPage = 16): array

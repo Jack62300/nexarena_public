@@ -32,8 +32,11 @@ class ArticleController extends AbstractController
             throw $this->createNotFoundException('Article introuvable.');
         }
 
+        $relatedArticles = $articleRepository->findRelated($article, 3);
+
         return $this->render('articles/show.html.twig', [
             'article' => $article,
+            'relatedArticles' => $relatedArticles,
         ]);
     }
 }

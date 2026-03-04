@@ -216,7 +216,7 @@
                             <div id="article-quill-editor"></div>
                             <textarea id="article-source-editor" class="article-source-editor"></textarea>
                         </div>
-                        {{ form_widget(form.content, {'attr': {'style': 'display:none;', 'id': 'article-content-hidden'}}) }}
+                        {{ form_widget(form.content, {'attr': {'style': 'display:none'}}) }}
                         {{ form_errors(form.content) }}
                         <div class="article-editor__actions">
                             <button type="button" id="btn-source" title="Code source HTML"><i class="fas fa-code"></i> Source</button>
@@ -260,7 +260,7 @@
 
     <script nonce="{{ csp_nonce() }}">
     (function() {
-        var hiddenTextarea = document.getElementById('article-content-hidden');
+        var hiddenTextarea = document.getElementById('{{ form.content.vars.id }}');
         var sourceEditor = document.getElementById('article-source-editor');
         var editorWrap = document.getElementById('article-editor-wrap');
         var btnSource = document.getElementById('btn-source');
