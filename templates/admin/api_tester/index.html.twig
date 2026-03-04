@@ -1,0 +1,395 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block page_title %}API Tester{% endblock %}
+{% block title %}Nexarena Admin - API Tester{% endblock %}
+
+{% block admin_css %}
+.api-tester { display:flex; gap:0; height:calc(100vh - 120px); min-height:500px; }
+
+/* ── Sidebar endpoints ── */
+.api-sidebar { width:300px; min-width:260px; background:#0d1b2d; border-right:1px solid #1e3048; overflow-y:auto; flex-shrink:0; }
+.api-sidebar__group { border-bottom:1px solid #1e3048; }
+.api-sidebar__group-title { display:flex; align-items:center; gap:8px; padding:12px 16px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#5a7a9c; cursor:pointer; user-select:none; transition:color .15s; }
+.api-sidebar__group-title:hover { color:#c8d8e8; }
+.api-sidebar__group-title i { font-size:8px; transition:transform .2s; }
+.api-sidebar__group.open .api-sidebar__group-title i { transform:rotate(90deg); }
+.api-sidebar__items { display:none; padding:0 8px 8px; }
+.api-sidebar__group.open .api-sidebar__items { display:block; }
+.api-endpoint { display:flex; align-items:center; gap:8px; padding:7px 10px; border-radius:6px; cursor:pointer; transition:background .15s; font-size:12px; }
+.api-endpoint:hover { background:rgba(30,48,72,.5); }
+.api-endpoint.active { background:rgba(69,248,130,.08); }
+.api-method { font-size:9px; font-weight:800; padding:2px 6px; border-radius:3px; min-width:38px; text-align:center; font-family:monospace; letter-spacing:.03em; }
+.api-method--get { background:rgba(69,248,130,.15); color:#45f882; }
+.api-method--post { background:rgba(59,130,246,.15); color:#3b82f6; }
+.api-method--patch { background:rgba(251,191,36,.15); color:#fbbf24; }
+.api-method--put { background:rgba(168,85,247,.15); color:#a855f7; }
+.api-method--delete { background:rgba(239,68,68,.15); color:#ef4444; }
+.api-endpoint__path { color:#c8d8e8; font-size:11.5px; font-family:monospace; word-break:break-all; line-height:1.3; }
+.api-endpoint__desc { display:none; }
+
+/* ── Main panel ── */
+.api-main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+
+/* Request bar */
+.api-request-bar { display:flex; align-items:center; gap:0; padding:16px 20px; background:#0f1923; border-bottom:1px solid #1e3048; }
+.api-method-select { background:#162231; border:1px solid #1e3048; border-radius:6px 0 0 6px; color:#45f882; font-size:13px; font-weight:700; padding:9px 12px; outline:none; cursor:pointer; font-family:monospace; }
+.api-method-select option { background:#162231; color:#c8d8e8; }
+.api-url-input { flex:1; background:#162231; border:1px solid #1e3048; border-left:none; color:#e6edf3; font-size:13px; padding:9px 14px; font-family:monospace; outline:none; }
+.api-url-input:focus { border-color:rgba(69,248,130,.4); }
+.api-send-btn { background:#45f882; color:#0a1018; border:none; border-radius:0 6px 6px 0; padding:9px 20px; font-weight:700; font-size:13px; cursor:pointer; transition:background .15s; white-space:nowrap; }
+.api-send-btn:hover { background:#3de075; }
+.api-send-btn:disabled { opacity:.5; cursor:not-allowed; }
+.api-send-btn i { margin-right:4px; }
+
+/* Tabs */
+.api-tabs { display:flex; background:#0d1b2d; border-bottom:1px solid #1e3048; }
+.api-tab { padding:10px 20px; font-size:12px; font-weight:600; color:#5a7a9c; cursor:pointer; border-bottom:2px solid transparent; transition:all .15s; }
+.api-tab:hover { color:#c8d8e8; }
+.api-tab.active { color:#45f882; border-bottom-color:#45f882; }
+
+/* Panels */
+.api-panels { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+.api-panel { display:none; flex-direction:column; flex:1; overflow:hidden; }
+.api-panel.active { display:flex; }
+
+/* Headers editor */
+.api-headers { padding:16px 20px; overflow-y:auto; flex:1; }
+.api-header-row { display:flex; gap:8px; align-items:center; margin-bottom:8px; }
+.api-header-row input { flex:1; background:#162231; border:1px solid #1e3048; color:#e6edf3; border-radius:5px; padding:7px 10px; font-size:12px; font-family:monospace; outline:none; }
+.api-header-row input:focus { border-color:rgba(69,248,130,.4); }
+.api-header-row input::placeholder { color:#3d5068; }
+.api-header-remove { background:none; border:none; color:#ef4444; cursor:pointer; font-size:14px; padding:4px; opacity:.6; transition:opacity .15s; }
+.api-header-remove:hover { opacity:1; }
+.api-add-header { background:rgba(69,248,130,.08); border:1px dashed rgba(69,248,130,.3); color:#45f882; border-radius:5px; padding:6px 12px; font-size:12px; cursor:pointer; transition:all .15s; display:inline-flex; align-items:center; gap:4px; }
+.api-add-header:hover { background:rgba(69,248,130,.15); }
+
+/* Body editor */
+.api-body-editor { flex:1; padding:16px 20px; display:flex; flex-direction:column; }
+.api-body-editor textarea { flex:1; background:#162231; border:1px solid #1e3048; color:#e6edf3; border-radius:6px; padding:12px; font-size:12px; font-family:monospace; resize:none; outline:none; min-height:120px; }
+.api-body-editor textarea:focus { border-color:rgba(69,248,130,.4); }
+.api-body-hint { font-size:11px; color:#3d5068; margin-top:6px; }
+
+/* Response */
+.api-response { flex:1; overflow-y:auto; display:flex; flex-direction:column; }
+.api-response-bar { display:flex; align-items:center; gap:12px; padding:12px 20px; background:#0d1b2d; border-bottom:1px solid #1e3048; flex-shrink:0; }
+.api-status { font-weight:800; font-size:13px; font-family:monospace; padding:3px 10px; border-radius:4px; }
+.api-status--2xx { background:rgba(69,248,130,.12); color:#45f882; }
+.api-status--3xx { background:rgba(59,130,246,.12); color:#3b82f6; }
+.api-status--4xx { background:rgba(251,191,36,.12); color:#fbbf24; }
+.api-status--5xx { background:rgba(239,68,68,.12); color:#ef4444; }
+.api-status--err { background:rgba(239,68,68,.12); color:#ef4444; }
+.api-duration { font-size:12px; color:#5a7a9c; font-family:monospace; }
+.api-response-body { flex:1; padding:16px 20px; overflow:auto; }
+.api-response-body pre { margin:0; font-size:12px; line-height:1.6; white-space:pre-wrap; word-break:break-all; color:#c8d8e8; }
+.api-response-empty { display:flex; align-items:center; justify-content:center; flex:1; color:#3d5068; font-size:14px; }
+.api-response-empty i { font-size:32px; margin-bottom:12px; }
+
+/* Response headers */
+.api-resp-headers { padding:16px 20px; overflow:auto; flex:1; }
+.api-resp-headers table { width:100%; border-collapse:collapse; font-size:12px; }
+.api-resp-headers th { text-align:left; color:#5a7a9c; padding:6px 10px; border-bottom:1px solid #1e3048; font-size:10px; text-transform:uppercase; }
+.api-resp-headers td { padding:6px 10px; border-bottom:1px solid rgba(30,48,72,.4); color:#c8d8e8; font-family:monospace; font-size:11.5px; word-break:break-all; }
+
+/* JSON syntax */
+.json-key { color:#3b82f6; }
+.json-string { color:#45f882; }
+.json-number { color:#fbbf24; }
+.json-bool { color:#a855f7; }
+.json-null { color:#ef4444; }
+
+/* Loader */
+.api-loader { display:inline-block; width:14px; height:14px; border:2px solid rgba(69,248,130,.2); border-top-color:#45f882; border-radius:50%; animation:spin .6s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+{% endblock %}
+
+{% block admin_body %}
+<div class="api-tester">
+    {# ── Sidebar : endpoints prédéfinis ── #}
+    <div class="api-sidebar">
+        <div style="padding:14px 16px 10px;border-bottom:1px solid #1e3048;">
+            <div style="display:flex;align-items:center;gap:8px;">
+                <i class="fas fa-vial" style="color:#45f882;font-size:15px;"></i>
+                <span style="font-weight:700;font-size:14px;color:#e6edf3;">Endpoints</span>
+            </div>
+            <div style="font-size:11px;color:#3d5068;margin-top:4px;">Cliquez pour pré-remplir</div>
+        </div>
+        {% for group, items in endpoints %}
+        <div class="api-sidebar__group open">
+            <div class="api-sidebar__group-title">
+                <i class="fas fa-chevron-right"></i>
+                {{ group }}
+                <span style="margin-left:auto;font-size:10px;color:#3d5068;">{{ items|length }}</span>
+            </div>
+            <div class="api-sidebar__items">
+                {% for ep in items %}
+                <div class="api-endpoint" data-method="{{ ep.method }}" data-url="{{ ep.url }}" title="{{ ep.description }}">
+                    <span class="api-method api-method--{{ ep.method|lower }}">{{ ep.method }}</span>
+                    <span class="api-endpoint__path">{{ ep.url }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {# ── Main area ── #}
+    <div class="api-main">
+        {# Request bar #}
+        <div class="api-request-bar">
+            <select class="api-method-select" id="apiMethod">
+                <option value="GET">GET</option>
+                <option value="POST">POST</option>
+                <option value="PATCH">PATCH</option>
+                <option value="PUT">PUT</option>
+                <option value="DELETE">DELETE</option>
+            </select>
+            <input type="text" class="api-url-input" id="apiUrl" placeholder="/api/v1/servers/{token}/stats" autocomplete="off">
+            <button class="api-send-btn" id="apiSend"><i class="fas fa-paper-plane"></i> Envoyer</button>
+        </div>
+
+        {# Request / Response tabs #}
+        <div class="api-tabs">
+            <div class="api-tab active" data-tab="headers">Headers</div>
+            <div class="api-tab" data-tab="body">Body</div>
+            <div class="api-tab" data-tab="response">Réponse</div>
+            <div class="api-tab" data-tab="resp-headers">Headers réponse</div>
+        </div>
+
+        <div class="api-panels">
+            {# Headers panel #}
+            <div class="api-panel active" id="panel-headers">
+                <div class="api-headers">
+                    <div id="headerRows">
+                        <div class="api-header-row">
+                            <input type="text" placeholder="Header name" value="X-Api-Key" class="header-key">
+                            <input type="text" placeholder="Value" value="" class="header-val">
+                            <button class="api-header-remove" title="Supprimer"><i class="fas fa-times"></i></button>
+                        </div>
+                    </div>
+                    <button class="api-add-header" id="addHeader"><i class="fas fa-plus"></i> Ajouter un header</button>
+                </div>
+            </div>
+
+            {# Body panel #}
+            <div class="api-panel" id="panel-body">
+                <div class="api-body-editor">
+                    <textarea id="apiBody" placeholder='{"key": "value"}'></textarea>
+                    <div class="api-body-hint">JSON uniquement. Utilisé pour POST, PATCH, PUT, DELETE.</div>
+                </div>
+            </div>
+
+            {# Response panel #}
+            <div class="api-panel" id="panel-response">
+                <div id="responseContent">
+                    <div class="api-response-empty">
+                        <div style="text-align:center;">
+                            <i class="fas fa-satellite-dish" style="display:block;"></i>
+                            Envoyez une requête pour voir la réponse
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# Response headers panel #}
+            <div class="api-panel" id="panel-resp-headers">
+                <div class="api-resp-headers" id="respHeadersContent">
+                    <div class="api-response-empty">
+                        <div style="text-align:center;">
+                            <i class="fas fa-satellite-dish" style="display:block;"></i>
+                            Aucun header de réponse
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block admin_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const csrfToken = '{{ csrf_token("api_tester_execute") }}';
+    const executeUrl = '{{ path("admin_api_tester_execute") }}';
+
+    const methodSelect = document.getElementById('apiMethod');
+    const urlInput = document.getElementById('apiUrl');
+    const sendBtn = document.getElementById('apiSend');
+    const bodyTextarea = document.getElementById('apiBody');
+    const headerRows = document.getElementById('headerRows');
+    const responseContent = document.getElementById('responseContent');
+    const respHeadersContent = document.getElementById('respHeadersContent');
+
+    // ── Tab switching ──
+    document.querySelectorAll('.api-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            document.querySelectorAll('.api-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.api-panel').forEach(p => p.classList.remove('active'));
+            this.classList.add('active');
+            document.getElementById('panel-' + this.dataset.tab).classList.add('active');
+        });
+    });
+
+    // ── Sidebar group toggle ──
+    document.querySelectorAll('.api-sidebar__group-title').forEach(title => {
+        title.addEventListener('click', function() {
+            this.parentElement.classList.toggle('open');
+        });
+    });
+
+    // ── Endpoint click ──
+    document.querySelectorAll('.api-endpoint').forEach(ep => {
+        ep.addEventListener('click', function() {
+            document.querySelectorAll('.api-endpoint').forEach(e => e.classList.remove('active'));
+            this.classList.add('active');
+            methodSelect.value = this.dataset.method;
+            urlInput.value = this.dataset.url;
+            urlInput.focus();
+        });
+    });
+
+    // ── Add header row ──
+    document.getElementById('addHeader').addEventListener('click', function() {
+        addHeaderRow('', '');
+    });
+
+    function addHeaderRow(key, val) {
+        const row = document.createElement('div');
+        row.className = 'api-header-row';
+        row.innerHTML = '<input type="text" placeholder="Header name" class="header-key" value="' + escapeAttr(key) + '">' +
+                         '<input type="text" placeholder="Value" class="header-val" value="' + escapeAttr(val) + '">' +
+                         '<button class="api-header-remove" title="Supprimer"><i class="fas fa-times"></i></button>';
+        headerRows.appendChild(row);
+        bindRemoveButtons();
+    }
+
+    function escapeAttr(s) {
+        return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function bindRemoveButtons() {
+        document.querySelectorAll('.api-header-remove').forEach(btn => {
+            btn.onclick = function() { this.parentElement.remove(); };
+        });
+    }
+    bindRemoveButtons();
+
+    // ── Collect headers ──
+    function getHeaders() {
+        const headers = {};
+        headerRows.querySelectorAll('.api-header-row').forEach(row => {
+            const k = row.querySelector('.header-key').value.trim();
+            const v = row.querySelector('.header-val').value.trim();
+            if (k) headers[k] = v;
+        });
+        return headers;
+    }
+
+    // ── Send request ──
+    sendBtn.addEventListener('click', sendRequest);
+    urlInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') sendRequest();
+    });
+
+    function sendRequest() {
+        const method = methodSelect.value;
+        const url = urlInput.value.trim();
+        if (!url) { urlInput.focus(); return; }
+
+        sendBtn.disabled = true;
+        sendBtn.innerHTML = '<span class="api-loader"></span> Envoi...';
+
+        // Switch to response tab
+        document.querySelectorAll('.api-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.api-panel').forEach(p => p.classList.remove('active'));
+        document.querySelector('[data-tab="response"]').classList.add('active');
+        document.getElementById('panel-response').classList.add('active');
+
+        responseContent.innerHTML = '<div class="api-response-empty"><span class="api-loader" style="width:24px;height:24px;"></span></div>';
+
+        const formData = new FormData();
+        formData.append('_token', csrfToken);
+        formData.append('method', method);
+        formData.append('url', url);
+        formData.append('headers', JSON.stringify(getHeaders()));
+        formData.append('body', bodyTextarea.value);
+
+        fetch(executeUrl, { method: 'POST', body: formData })
+            .then(r => r.json())
+            .then(data => {
+                renderResponse(data);
+                renderResponseHeaders(data.headers || {});
+            })
+            .catch(err => {
+                responseContent.innerHTML = '<div class="api-response-bar"><span class="api-status api-status--err">ERROR</span></div>' +
+                    '<div class="api-response-body"><pre>' + escapeHtml(err.message) + '</pre></div>';
+            })
+            .finally(() => {
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Envoyer';
+            });
+    }
+
+    function renderResponse(data) {
+        if (data.error && !data.status) {
+            responseContent.innerHTML = '<div class="api-response-bar"><span class="api-status api-status--err">ERREUR</span></div>' +
+                '<div class="api-response-body"><pre>' + escapeHtml(data.error) + '</pre></div>';
+            return;
+        }
+
+        const statusClass = data.status >= 500 ? '5xx' : data.status >= 400 ? '4xx' : data.status >= 300 ? '3xx' : '2xx';
+        let html = '<div class="api-response" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">';
+        html += '<div class="api-response-bar">';
+        html += '<span class="api-status api-status--' + statusClass + '">' + data.status + '</span>';
+        html += '<span class="api-duration"><i class="fas fa-clock"></i> ' + data.duration + ' ms</span>';
+        html += '</div>';
+        html += '<div class="api-response-body" style="flex:1;overflow:auto;"><pre>' + formatJson(data.body || '') + '</pre></div>';
+        html += '</div>';
+        responseContent.innerHTML = html;
+    }
+
+    function renderResponseHeaders(headers) {
+        if (!headers || Object.keys(headers).length === 0) {
+            respHeadersContent.innerHTML = '<div class="api-response-empty"><div style="text-align:center;"><i class="fas fa-satellite-dish" style="display:block;"></i>Aucun header de réponse</div></div>';
+            return;
+        }
+        let html = '<table><thead><tr><th>Header</th><th>Valeur</th></tr></thead><tbody>';
+        for (const [k, v] of Object.entries(headers)) {
+            html += '<tr><td style="color:#3b82f6;font-weight:600;">' + escapeHtml(k) + '</td><td>' + escapeHtml(v) + '</td></tr>';
+        }
+        html += '</tbody></table>';
+        respHeadersContent.innerHTML = html;
+    }
+
+    // ── JSON formatting with syntax highlighting ──
+    function formatJson(str) {
+        try {
+            const obj = JSON.parse(str);
+            return syntaxHighlight(JSON.stringify(obj, null, 2));
+        } catch (e) {
+            return escapeHtml(str);
+        }
+    }
+
+    function syntaxHighlight(json) {
+        json = escapeHtml(json);
+        return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function(match) {
+            let cls = 'json-number';
+            if (/^"/.test(match)) {
+                cls = /:$/.test(match) ? 'json-key' : 'json-string';
+            } else if (/true|false/.test(match)) {
+                cls = 'json-bool';
+            } else if (/null/.test(match)) {
+                cls = 'json-null';
+            }
+            return '<span class="' + cls + '">' + match + '</span>';
+        });
+    }
+
+    function escapeHtml(s) {
+        if (!s) return '';
+        return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+});
+</script>
+{% endblock %}
