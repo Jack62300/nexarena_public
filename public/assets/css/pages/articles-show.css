@@ -156,6 +156,114 @@
     margin: 32px 0;
 }
 
+/* ── Quill: Alignment ── */
+.nx-art-body .ql-align-center { text-align: center; }
+.nx-art-body .ql-align-right { text-align: right; }
+.nx-art-body .ql-align-justify { text-align: justify; }
+
+/* ── Quill: Direction ── */
+.nx-art-body .ql-direction-rtl { direction: rtl; text-align: inherit; }
+
+/* ── Quill: Font sizes ── */
+.nx-art-body .ql-size-small { font-size: 0.75em; }
+.nx-art-body .ql-size-large { font-size: 1.5em; }
+.nx-art-body .ql-size-huge { font-size: 2.5em; }
+
+/* ── Quill: Font families ── */
+.nx-art-body .ql-font-serif { font-family: Georgia, 'Times New Roman', serif; }
+.nx-art-body .ql-font-monospace { font-family: 'Fira Code', Monaco, 'Courier New', monospace; }
+
+/* ── Quill: Indentation (1-8 levels) ── */
+.nx-art-body .ql-indent-1 { padding-left: 3em; }
+.nx-art-body .ql-indent-2 { padding-left: 6em; }
+.nx-art-body .ql-indent-3 { padding-left: 9em; }
+.nx-art-body .ql-indent-4 { padding-left: 12em; }
+.nx-art-body .ql-indent-5 { padding-left: 15em; }
+.nx-art-body .ql-indent-6 { padding-left: 18em; }
+.nx-art-body .ql-indent-7 { padding-left: 21em; }
+.nx-art-body .ql-indent-8 { padding-left: 24em; }
+
+/* ── Quill: Code block ── */
+.nx-art-body pre.ql-syntax {
+    background: rgba(0,0,0,0.4);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 8px;
+    padding: 18px 22px;
+    margin: 20px 0;
+    overflow-x: auto;
+    font-family: 'Fira Code', Monaco, 'Courier New', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #e4e6eb;
+}
+
+/* ── Quill: Video embed ── */
+.nx-art-body .ql-video,
+.nx-art-body iframe.ql-video {
+    display: block;
+    width: 100%;
+    max-width: 720px;
+    height: 405px;
+    margin: 24px auto;
+    border: none;
+    border-radius: 10px;
+}
+
+/* ── Quill: Checklist ── */
+.nx-art-body ul[data-checked="true"],
+.nx-art-body ul[data-checked="false"] {
+    list-style: none;
+    padding-left: 0;
+}
+.nx-art-body li[data-list="checked"],
+.nx-art-body li[data-list="unchecked"] {
+    list-style: none;
+    position: relative;
+    padding-left: 28px;
+}
+.nx-art-body li[data-list="checked"]::before,
+.nx-art-body li[data-list="unchecked"]::before {
+    position: absolute;
+    left: 0;
+    top: 2px;
+    font-family: 'Font Awesome 6 Free', 'Font Awesome 5 Free';
+    font-weight: 900;
+    font-size: 14px;
+}
+.nx-art-body li[data-list="checked"]::before {
+    content: '\f14a';
+    color: var(--tg-theme-primary);
+}
+.nx-art-body li[data-list="unchecked"]::before {
+    content: '\f0c8';
+    color: rgba(255,255,255,0.2);
+}
+/* Quill bullet & ordered inside list items */
+.nx-art-body li[data-list="bullet"] {
+    list-style-type: disc;
+}
+.nx-art-body li[data-list="ordered"] {
+    list-style-type: decimal;
+}
+
+/* ── Quill: Sub/superscript ── */
+.nx-art-body sub { vertical-align: sub; font-size: 0.75em; }
+.nx-art-body sup { vertical-align: super; font-size: 0.75em; }
+
+/* ── Quill: Strikethrough ── */
+.nx-art-body s { text-decoration: line-through; color: rgba(255,255,255,0.4); }
+
+/* ── Quill: Inline colors on dark bg readability ── */
+.nx-art-body strong { color: #fff; }
+
+/* ── Quill: Responsive video ── */
+@media (max-width: 575.98px) {
+    .nx-art-body .ql-video,
+    .nx-art-body iframe.ql-video {
+        height: 220px;
+    }
+}
+
 /* Footer */
 .nx-art-footer {
     margin-top: 48px;
