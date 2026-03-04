@@ -135,6 +135,9 @@ class Server
     #[ORM\Column(options: ['default' => 0])]
     private int $ratingCount = 0;
 
+    #[ORM\Column(type: Types::JSON, nullable: true)]
+    private ?array $widgetOrder = null;
+
     /** @var Collection<int, Tag> */
     #[ORM\ManyToMany(targetEntity: Tag::class, inversedBy: 'servers')]
     #[ORM\JoinTable(name: 'server_tag')]
@@ -727,6 +730,17 @@ class Server
     public function setRatingCount(int $ratingCount): static
     {
         $this->ratingCount = $ratingCount;
+        return $this;
+    }
+
+    public function getWidgetOrder(): ?array
+    {
+        return $this->widgetOrder;
+    }
+
+    public function setWidgetOrder(?array $widgetOrder): static
+    {
+        $this->widgetOrder = $widgetOrder;
         return $this;
     }
 

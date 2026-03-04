@@ -527,3 +527,61 @@
         letter-spacing: 0.5px;
         margin-bottom: 4px;
     }
+
+    /* Widget order section */
+    .widget-order-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .widget-order-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 14px;
+        background: #0d1b2a;
+        border: 1px solid #1e3048;
+        border-radius: 8px;
+        margin-bottom: 6px;
+        cursor: grab;
+        transition: background .15s, border-color .15s, transform .15s, opacity .15s;
+        user-select: none;
+    }
+    .widget-order-item:hover {
+        background: #142438;
+        border-color: #2a4060;
+    }
+    .widget-order-item--dragging {
+        opacity: 0.4;
+        transform: scale(0.97);
+    }
+    .widget-order-item--over {
+        border-color: #45f882;
+        background: rgba(69, 248, 130, 0.04);
+    }
+    .widget-order-item__grip {
+        color: #3d4250;
+        font-size: 14px;
+        cursor: grab;
+        flex-shrink: 0;
+    }
+    .widget-order-item:hover .widget-order-item__grip {
+        color: #8b949e;
+    }
+    .widget-order-item__icon {
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(69, 248, 130, 0.08);
+        border-radius: 6px;
+        color: #45f882;
+        font-size: 13px;
+        flex-shrink: 0;
+    }
+    .widget-order-item__label {
+        color: #c9d1d9;
+        font-size: 13px;
+        font-weight: 500;
+    }

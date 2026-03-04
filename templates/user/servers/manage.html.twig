@@ -1325,6 +1325,146 @@
                 </div>
                 {% endif %}
 
+                {# === ORDRE DES WIDGETS === #}
+                {% if can_edit_info %}
+                <div class="manage-card">
+                    <h4 class="manage-card__title"><i class="fas fa-th-list"></i> Ordre des widgets</h4>
+                    <p style="color:#8b949e;font-size:13px;margin-bottom:15px;">
+                        Reorganisez les widgets de la sidebar de votre page serveur par glisser-deposer.
+                    </p>
+                    <div class="widget-order-section">
+                        <ul class="widget-order-list" id="widgetOrderList">
+                            {% set default_order = ['vote','favorite','rating','donation','socials','discord','twitch','connection','similar'] %}
+                            {% set current_order = server.widgetOrder ?? default_order %}
+                            {% set widget_labels = {
+                                'vote': 'Vote (Discord/Steam)',
+                                'favorite': 'Bouton favoris',
+                                'rating': 'Note / etoiles',
+                                'donation': 'Soutenir (NexBits/NexBoost)',
+                                'socials': 'Reseaux sociaux',
+                                'discord': 'Widget Discord embed',
+                                'twitch': 'Widget Twitch',
+                                'connection': 'IP rapide / Rejoindre',
+                                'similar': 'Serveurs similaires'
+                            } %}
+                            {% set widget_icons = {
+                                'vote': 'fas fa-vote-yea',
+                                'favorite': 'fas fa-heart',
+                                'rating': 'fas fa-star',
+                                'donation': 'fas fa-hand-holding-heart',
+                                'socials': 'fas fa-share-alt',
+                                'discord': 'fab fa-discord',
+                                'twitch': 'fab fa-twitch',
+                                'connection': 'fas fa-plug',
+                                'similar': 'fas fa-server'
+                            } %}
+                            {% for slug in current_order %}
+                                <li class="widget-order-item" draggable="true" data-slug="{{ slug }}">
+                                    <span class="widget-order-item__grip"><i class="fas fa-grip-vertical"></i></span>
+                                    <span class="widget-order-item__icon"><i class="{{ widget_icons[slug] }}"></i></span>
+                                    <span class="widget-order-item__label">{{ widget_labels[slug] }}</span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                        <button type="button" class="btn-action btn-action--primary" id="saveWidgetOrderBtn" style="margin-top:12px;" disabled>
+                            <i class="fas fa-save"></i> Sauvegarder l'ordre
+                        </button>
+                        <span id="widgetOrderMsg" style="margin-left:10px;font-size:13px;display:none;"></span>
+                    </div>
+                </div>
+                <script nonce="{{ csp_nonce() }}">
+                document.addEventListener('DOMContentLoaded', function() {
+                    var list = document.getElementById('widgetOrderList');
+                    var saveBtn = document.getElementById('saveWidgetOrderBtn');
+                    var msg = document.getElementById('widgetOrderMsg');
+                    var dragItem = null;
+                    var initialOrder = getOrder();
+
+                    function getOrder() {
+                        return Array.from(list.querySelectorAll('.widget-order-item')).map(function(el) {
+                            return el.dataset.slug;
+                        });
+                    }
+
+                    function arraysEqual(a, b) {
+                        return a.length === b.length && a.every(function(v, i) { return v === b[i]; });
+                    }
+
+                    list.addEventListener('dragstart', function(e) {
+                        var item = e.target.closest('.widget-order-item');
+                        if (!item) return;
+                        dragItem = item;
+                        item.classList.add('widget-order-item--dragging');
+                        e.dataTransfer.effectAllowed = 'move';
+                    });
+
+                    list.addEventListener('dragend', function(e) {
+                        var item = e.target.closest('.widget-order-item');
+                        if (item) item.classList.remove('widget-order-item--dragging');
+                        dragItem = null;
+                        document.querySelectorAll('.widget-order-item--over').forEach(function(el) {
+                            el.classList.remove('widget-order-item--over');
+                        });
+                        saveBtn.disabled = arraysEqual(initialOrder, getOrder());
+                    });
+
+                    list.addEventListener('dragover', function(e) {
+                        e.preventDefault();
+                        e.dataTransfer.dropEffect = 'move';
+                        var target = e.target.closest('.widget-order-item');
+                        if (!target || target === dragItem) return;
+
+                        var items = Array.from(list.querySelectorAll('.widget-order-item'));
+                        items.forEach(function(el) { el.classList.remove('widget-order-item--over'); });
+                        target.classList.add('widget-order-item--over');
+
+                        var rect = target.getBoundingClientRect();
+                        var mid = rect.top + rect.height / 2;
+                        if (e.clientY < mid) {
+                            list.insertBefore(dragItem, target);
+                        } else {
+                            list.insertBefore(dragItem, target.nextSibling);
+                        }
+                    });
+
+                    saveBtn.addEventListener('click', function() {
+                        saveBtn.disabled = true;
+                        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sauvegarde...';
+                        msg.style.display = 'none';
+
+                        fetch('{{ path("user_servers_widget_order", {id: server.id}) }}', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest'},
+                            body: JSON.stringify({
+                                order: getOrder(),
+                                _token: '{{ csrf_token("widget_order_" ~ server.id) }}'
+                            })
+                        }).then(function(r) { return r.json(); }).then(function(data) {
+                            saveBtn.innerHTML = '<i class="fas fa-save"></i> Sauvegarder l\'ordre';
+                            if (data.success) {
+                                initialOrder = getOrder();
+                                msg.style.display = 'inline';
+                                msg.style.color = '#1cc88a';
+                                msg.textContent = 'Ordre sauvegarde !';
+                                setTimeout(function() { msg.style.display = 'none'; }, 3000);
+                            } else {
+                                msg.style.display = 'inline';
+                                msg.style.color = '#e74a3b';
+                                msg.textContent = data.error || 'Erreur';
+                                saveBtn.disabled = false;
+                            }
+                        }).catch(function() {
+                            saveBtn.innerHTML = '<i class="fas fa-save"></i> Sauvegarder l\'ordre';
+                            saveBtn.disabled = false;
+                            msg.style.display = 'inline';
+                            msg.style.color = '#e74a3b';
+                            msg.textContent = 'Erreur de connexion';
+                        });
+                    });
+                });
+                </script>
+                {% endif %}
+
                 {# === SUPPRIMER === #}
                 {% if can_delete_server %}
                 <div class="manage-card" style="border-color:rgba(231,74,59,0.2);">

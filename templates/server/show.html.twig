@@ -550,7 +550,8 @@
             <div class="col-lg-4">
                 <div class="sv-sidebar">
 
-                    {# Vote widget #}
+                    {# Capture each widget into a variable #}
+                    {% set w_vote %}
                     <div class="sv-vote-widget" id="voteCard">
                         <div class="sv-vote__label">Votes ce mois</div>
                         <div class="sv-vote__count" id="monthlyVotes">{{ server.monthlyVotes }}</div>
@@ -577,8 +578,9 @@
                         </div>
                         <div class="sv-vote__msg" id="voteMessage"></div>
                     </div>
+                    {% endset %}
 
-                    {# Favorite button #}
+                    {% set w_favorite %}
                     {% if app.user %}
                         <form method="post" action="{{ path('app_server_favorite_toggle', {slug: server.slug}) }}" id="favoriteForm" style="margin-bottom:16px;">
                             <input type="hidden" name="_token" value="{{ csrf_token('favorite_' ~ server.id) }}">
@@ -588,8 +590,9 @@
                             </button>
                         </form>
                     {% endif %}
+                    {% endset %}
 
-                    {# Rating widget #}
+                    {% set w_rating %}
                     <div style="background:rgba(var(--sv-bg-card-rgb),0.85);border:1px solid rgba(var(--sv-border-rgb),0.3);border-radius:12px;padding:16px;margin-bottom:16px;text-align:center;">
                         <div style="font-size:12px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Note</div>
                         {% if server.averageRating %}
@@ -651,8 +654,9 @@
                             </script>
                         {% endif %}
                     </div>
+                    {% endset %}
 
-                    {# Donation widget #}
+                    {% set w_donation %}
                     {% if app.user %}
                         <div class="sv-donate-widget">
                             <div class="sv-donate-widget__header">
@@ -697,8 +701,9 @@
                             </p>
                         </div>
                     {% endif %}
+                    {% endset %}
 
-                    {# Social icons #}
+                    {% set w_socials %}
                     {% set hasSocials = server.website or server.discordUrl or server.twitterUrl or server.youtubeUrl or server.instagramUrl or server.twitchChannel %}
                     {% if hasSocials %}
                         <div class="sv-socials">
@@ -734,8 +739,9 @@
                             {% endif %}
                         </div>
                     {% endif %}
+                    {% endset %}
 
-                    {# Discord widget #}
+                    {% set w_discord %}
                     {% if server.getDiscordServerId() %}
                         <div class="sv-discord-widget">
                             <div class="sv-discord-widget__header">
@@ -752,8 +758,9 @@
                             ></iframe>
                         </div>
                     {% endif %}
+                    {% endset %}
 
-                    {# Twitch sidebar widget #}
+                    {% set w_twitch %}
                     {% if server.twitchChannel %}
                         <div class="sv-twitch-widget" id="twitchSidebarWidget">
                             <div class="sv-twitch-widget__header">
@@ -781,8 +788,9 @@
                             </a>
                         </div>
                     {% endif %}
+                    {% endset %}
 
-                    {# Connection quick #}
+                    {% set w_connection %}
                     {% if server.ip %}
                         <div class="sv-connect">
                             <div class="sv-connect__title">Rejoindre</div>
@@ -794,8 +802,9 @@
                             </div>
                         </div>
                     {% endif %}
+                    {% endset %}
 
-                    {# Similar servers #}
+                    {% set w_similar %}
                     {% if similarServers|length > 0 %}
                         <div class="sv-similar">
                             <div class="sv-similar__title">Serveurs similaires</div>
@@ -810,6 +819,19 @@
                             {% endfor %}
                         </div>
                     {% endif %}
+                    {% endset %}
+
+                    {# Render widgets in custom or default order #}
+                    {% set default_order = ['vote','favorite','rating','donation','socials','discord','twitch','connection','similar'] %}
+                    {% set widget_order = server.widgetOrder ?? default_order %}
+                    {% set widgets = {
+                        'vote': w_vote, 'favorite': w_favorite, 'rating': w_rating,
+                        'donation': w_donation, 'socials': w_socials, 'discord': w_discord,
+                        'twitch': w_twitch, 'connection': w_connection, 'similar': w_similar
+                    } %}
+                    {% for key in widget_order %}
+                        {% if widgets[key] is defined %}{{ widgets[key]|raw }}{% endif %}
+                    {% endfor %}
                 </div>
             </div>
         </div>

@@ -39,6 +39,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -783,6 +784,34 @@ class UserServerController extends AbstractController
 
         $this->addFlash('success', 'Reservation annulee. ' . $refundAmount . ' NexBoost recredites sur le serveur.');
         return $this->redirectToRoute('user_servers_manage', ['id' => $server->getId()]);
+    }
+
+    #[Route('/serveur/{id}/widgets/order', name: 'user_servers_widget_order', methods: ['POST'])]
+    public function widgetOrder(Server $server, Request $request): JsonResponse
+    {
+        $this->requireAccess($server, 'edit_info');
+
+        $data = json_decode($request->getContent(), true);
+        if (!is_array($data)) {
+            return new JsonResponse(['error' => 'Donnees invalides'], 400);
+        }
+
+        $token = $data['_token'] ?? '';
+        if (!$this->isCsrfTokenValid('widget_order_' . $server->getId(), $token)) {
+            return new JsonResponse(['error' => 'Token CSRF invalide'], 403);
+        }
+
+        $order = $data['order'] ?? [];
+        $validSlugs = ['vote', 'favorite', 'rating', 'donation', 'socials', 'discord', 'twitch', 'connection', 'similar'];
+
+        if (!is_array($order) || array_diff($order, $validSlugs) || array_diff($validSlugs, $order)) {
+            return new JsonResponse(['error' => 'Liste de widgets invalide'], 400);
+        }
+
+        $server->setWidgetOrder(array_values($order));
+        $this->em->flush();
+
+        return new JsonResponse(['success' => true, 'message' => 'Ordre des widgets sauvegarde.']);
     }
 
     // ──────────────────────────────────────────────
