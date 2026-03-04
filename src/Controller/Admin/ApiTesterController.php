@@ -3,21 +3,14 @@
 namespace App\Controller\Admin;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 #[Route('/admin/api-tester', name: 'admin_api_tester_')]
 #[IsGranted('api_tester.use')]
 class ApiTesterController extends AbstractController
 {
-    public function __construct(
-        private HttpClientInterface $httpClient,
-    ) {}
-
     #[Route('', name: 'index')]
     public function index(): Response
     {
@@ -26,76 +19,6 @@ class ApiTesterController extends AbstractController
         return $this->render('admin/api_tester/index.html.twig', [
             'endpoints' => $endpoints,
         ]);
-    }
-
-    #[Route('/execute', name: 'execute', methods: ['POST'])]
-    public function execute(Request $request): JsonResponse
-    {
-        if (!$this->isCsrfTokenValid('api_tester_execute', $request->request->get('_token'))) {
-            return new JsonResponse(['error' => 'Token CSRF invalide.'], 403);
-        }
-
-        $method  = strtoupper($request->request->get('method', 'GET'));
-        $url     = $request->request->get('url', '');
-        $headers = json_decode($request->request->get('headers', '{}'), true) ?: [];
-        $body    = $request->request->get('body', '');
-
-        if (!in_array($method, ['GET', 'POST', 'PATCH', 'PUT', 'DELETE'])) {
-            return new JsonResponse(['error' => 'Méthode HTTP invalide.'], 400);
-        }
-
-        // Security: only allow /api/ paths
-        $parsedPath = parse_url($url, PHP_URL_PATH);
-        if (!$parsedPath || !str_starts_with($parsedPath, '/api/')) {
-            return new JsonResponse(['error' => 'Seules les URLs commençant par /api/ sont autorisées.'], 400);
-        }
-
-        // Build the full local URL
-        $scheme = $request->getScheme();
-        $host   = $request->getHttpHost();
-        $fullUrl = $scheme . '://' . $host . $url;
-
-        $options = [
-            'headers' => $headers,
-            'timeout' => 15,
-            'verify_peer' => false,
-            'verify_host' => false,
-        ];
-
-        if (in_array($method, ['POST', 'PATCH', 'PUT', 'DELETE']) && $body !== '') {
-            $options['body'] = $body;
-            if (!isset($headers['Content-Type'])) {
-                $options['headers']['Content-Type'] = 'application/json';
-            }
-        }
-
-        try {
-            $start = microtime(true);
-            $response = $this->httpClient->request($method, $fullUrl, $options);
-            $statusCode = $response->getStatusCode();
-            $responseHeaders = $response->getHeaders(false);
-            $responseBody = $response->getContent(false);
-            $duration = round((microtime(true) - $start) * 1000);
-
-            // Flatten headers
-            $flatHeaders = [];
-            foreach ($responseHeaders as $key => $values) {
-                $flatHeaders[$key] = implode(', ', $values);
-            }
-
-            return new JsonResponse([
-                'status'   => $statusCode,
-                'headers'  => $flatHeaders,
-                'body'     => $responseBody,
-                'duration' => $duration,
-            ]);
-        } catch (\Throwable $e) {
-            return new JsonResponse([
-                'error'    => $e->getMessage(),
-                'status'   => 0,
-                'duration' => 0,
-            ], 500);
-        }
     }
 
     private function getEndpoints(): array

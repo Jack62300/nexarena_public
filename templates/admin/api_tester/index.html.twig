@@ -209,9 +209,6 @@
 {% block admin_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const csrfToken = '{{ csrf_token("api_tester_execute") }}';
-    const executeUrl = '{{ path("admin_api_tester_execute") }}';
-
     const methodSelect = document.getElementById('apiMethod');
     const urlInput = document.getElementById('apiUrl');
     const sendBtn = document.getElementById('apiSend');
@@ -296,6 +293,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const url = urlInput.value.trim();
         if (!url) { urlInput.focus(); return; }
 
+        // Security: only /api/ paths
+        if (!url.startsWith('/api/')) {
+            renderError('Seules les URLs commençant par /api/ sont autorisées.');
+            return;
+        }
+
         sendBtn.disabled = true;
         sendBtn.innerHTML = '<span class="api-loader"></span> Envoi...';
 
@@ -307,22 +310,42 @@ document.addEventListener('DOMContentLoaded', function() {
 
         responseContent.innerHTML = '<div class="api-response-empty"><span class="api-loader" style="width:24px;height:24px;"></span></div>';
 
-        const formData = new FormData();
-        formData.append('_token', csrfToken);
-        formData.append('method', method);
-        formData.append('url', url);
-        formData.append('headers', JSON.stringify(getHeaders()));
-        formData.append('body', bodyTextarea.value);
+        // Build fetch options — direct browser call to the API
+        const fetchOpts = {
+            method: method,
+            headers: getHeaders(),
+            credentials: 'same-origin',
+        };
 
-        fetch(executeUrl, { method: 'POST', body: formData })
-            .then(r => r.json())
-            .then(data => {
-                renderResponse(data);
-                renderResponseHeaders(data.headers || {});
+        // Add body for non-GET methods
+        if (['POST', 'PATCH', 'PUT', 'DELETE'].includes(method) && bodyTextarea.value.trim()) {
+            fetchOpts.body = bodyTextarea.value.trim();
+            if (!fetchOpts.headers['Content-Type']) {
+                fetchOpts.headers['Content-Type'] = 'application/json';
+            }
+        }
+
+        const startTime = performance.now();
+
+        fetch(url, fetchOpts)
+            .then(response => {
+                const duration = Math.round(performance.now() - startTime);
+                const status = response.status;
+
+                // Collect response headers
+                const respHeaders = {};
+                response.headers.forEach((value, key) => {
+                    respHeaders[key] = value;
+                });
+
+                return response.text().then(body => {
+                    renderResponse(status, body, duration);
+                    renderResponseHeaders(respHeaders);
+                });
             })
             .catch(err => {
-                responseContent.innerHTML = '<div class="api-response-bar"><span class="api-status api-status--err">ERROR</span></div>' +
-                    '<div class="api-response-body"><pre>' + escapeHtml(err.message) + '</pre></div>';
+                const duration = Math.round(performance.now() - startTime);
+                renderError(err.message, duration);
             })
             .finally(() => {
                 sendBtn.disabled = false;
@@ -330,20 +353,26 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
 
-    function renderResponse(data) {
-        if (data.error && !data.status) {
-            responseContent.innerHTML = '<div class="api-response-bar"><span class="api-status api-status--err">ERREUR</span></div>' +
-                '<div class="api-response-body"><pre>' + escapeHtml(data.error) + '</pre></div>';
-            return;
-        }
-
-        const statusClass = data.status >= 500 ? '5xx' : data.status >= 400 ? '4xx' : data.status >= 300 ? '3xx' : '2xx';
+    function renderError(message, duration) {
         let html = '<div class="api-response" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">';
         html += '<div class="api-response-bar">';
-        html += '<span class="api-status api-status--' + statusClass + '">' + data.status + '</span>';
-        html += '<span class="api-duration"><i class="fas fa-clock"></i> ' + data.duration + ' ms</span>';
+        html += '<span class="api-status api-status--err">ERREUR</span>';
+        if (duration) html += '<span class="api-duration"><i class="fas fa-clock"></i> ' + duration + ' ms</span>';
         html += '</div>';
-        html += '<div class="api-response-body" style="flex:1;overflow:auto;"><pre>' + formatJson(data.body || '') + '</pre></div>';
+        html += '<div class="api-response-body" style="flex:1;overflow:auto;"><pre>' + escapeHtml(message) + '</pre></div>';
+        html += '</div>';
+        responseContent.innerHTML = html;
+    }
+
+    function renderResponse(status, body, duration) {
+        const statusClass = status >= 500 ? '5xx' : status >= 400 ? '4xx' : status >= 300 ? '3xx' : '2xx';
+        let html = '<div class="api-response" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">';
+        html += '<div class="api-response-bar">';
+        html += '<span class="api-status api-status--' + statusClass + '">' + status + '</span>';
+        html += '<span class="api-duration"><i class="fas fa-clock"></i> ' + duration + ' ms</span>';
+        html += '<span style="font-size:11px;color:#3d5068;margin-left:auto;">Appel direct depuis le navigateur</span>';
+        html += '</div>';
+        html += '<div class="api-response-body" style="flex:1;overflow:auto;"><pre>' + formatJson(body || '') + '</pre></div>';
         html += '</div>';
         responseContent.innerHTML = html;
     }
