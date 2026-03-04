@@ -8,9 +8,7 @@
 
 {% block canonical %}{{ _base_url ~ path('ranking_game_category', {slug: gameCategory.slug}) }}{% endblock %}
 
-{% if current_page > 1 %}
-{% block robots %}<meta name="robots" content="noindex, follow">{% endblock %}
-{% endif %}
+{% block robots %}{% if current_page > 1 %}<meta name="robots" content="noindex, follow">{% endif %}{% endblock %}
 
 {% block prev_next %}
     {% if current_page > 1 %}
