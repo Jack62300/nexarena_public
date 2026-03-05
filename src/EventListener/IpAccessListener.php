@@ -340,18 +340,25 @@ class IpAccessListener
 
         $safeIp      = htmlspecialchars($ip, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $safeCountry = htmlspecialchars($country, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $siteName    = $this->settings->get('site_name', 'Nexarena');
 
         if ($reason === 'vpn') {
-            $title   = 'Connexion refusée';
-            $message = 'Les connexions via <strong>VPN, proxy ou Tor</strong> ne sont pas autorisées sur ce site.';
-            $badge   = '⚠ VPN / PROXY / TOR DÉTECTÉ';
-            $detail  = '';
+            $title       = 'Connexion bloquee';
+            $subtitle    = 'VPN / Proxy / Tor detecte';
+            $message     = 'Les connexions via <strong>VPN, proxy ou reseau Tor</strong> ne sont pas autorisees sur cette plateforme. Veuillez desactiver votre VPN et recharger la page.';
+            $iconSvg     = '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#e74a3b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg>';
+            $accentColor = '#e74a3b';
+            $detail      = '';
         } else {
-            $title   = 'Accès non disponible';
-            $message = 'Ce service n\'est pas disponible dans votre région.';
-            $badge   = '⚠ PAYS NON AUTORISÉ';
-            $detail  = $safeCountry ? "<div class=\"detail\">Pays détecté : <strong>{$safeCountry}</strong></div>" : '';
+            $title       = 'Region non autorisee';
+            $subtitle    = 'Restriction geographique';
+            $message     = 'Ce service n\'est pas disponible dans votre region. L\'acces est restreint a certains pays uniquement.';
+            $iconSvg     = '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>';
+            $accentColor = '#f59e0b';
+            $detail      = $safeCountry ? "<div class=\"block-detail\"><span class=\"block-detail__label\">Pays detecte</span><span class=\"block-detail__value\">{$safeCountry}</span></div>" : '';
         }
+
+        $safeSiteName = htmlspecialchars($siteName, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 
         $html = <<<HTML
         <!DOCTYPE html>
@@ -359,70 +366,170 @@ class IpAccessListener
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>{$title}</title>
+            <meta name="robots" content="noindex, nofollow">
+            <title>{$title} — {$safeSiteName}</title>
+            <link rel="icon" type="image/png" href="/assets/img/logo/new_logo_hd.png">
             <style>
                 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
                 body {
                     min-height: 100vh;
-                    background: #0a1018;
-                    color: #fff;
-                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    background: #080c14;
+                    color: #e2e8f0;
+                    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
                     display: flex;
+                    flex-direction: column;
                     align-items: center;
                     justify-content: center;
                     padding: 24px;
                     position: relative;
                     overflow: hidden;
                 }
-                .bg-glow {
+                .bg-grid {
                     position: fixed; inset: 0; pointer-events: none;
-                    background: radial-gradient(ellipse at 50% 0%, rgba(231,74,59,.06) 0%, transparent 65%);
+                    background-image:
+                        linear-gradient(rgba(255,255,255,.015) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(255,255,255,.015) 1px, transparent 1px);
+                    background-size: 60px 60px;
                 }
-                .card {
+                .bg-glow {
+                    position: fixed; pointer-events: none;
+                    width: 600px; height: 600px;
+                    top: -200px; left: 50%; transform: translateX(-50%);
+                    background: radial-gradient(circle, {$accentColor}08 0%, transparent 70%);
+                }
+                .bg-glow-2 {
+                    position: fixed; pointer-events: none;
+                    width: 400px; height: 400px;
+                    bottom: -100px; right: -100px;
+                    background: radial-gradient(circle, rgba(69,248,130,.03) 0%, transparent 70%);
+                    border-radius: 50%;
+                }
+                .block-logo {
                     position: relative; z-index: 1;
-                    max-width: 460px; width: 100%;
-                    background: rgba(255,255,255,.03);
-                    border: 1px solid rgba(231,74,59,.2);
-                    border-radius: 22px;
-                    padding: 48px 40px 40px;
-                    text-align: center;
-                    box-shadow: 0 0 0 1px rgba(231,74,59,.04), 0 24px 64px rgba(0,0,0,.5);
+                    margin-bottom: 40px;
+                    display: flex; align-items: center; gap: 10px;
+                    text-decoration: none;
                 }
-                .icon {
-                    width: 76px; height: 76px;
-                    background: linear-gradient(135deg, rgba(231,74,59,.15), rgba(231,74,59,.04));
-                    border: 1px solid rgba(231,74,59,.25);
+                .block-logo img {
+                    width: 36px; height: 36px; border-radius: 8px;
+                }
+                .block-logo__text {
+                    font-size: 18px; font-weight: 700; color: #fff;
+                    letter-spacing: -.3px;
+                }
+                .block-card {
+                    position: relative; z-index: 1;
+                    max-width: 520px; width: 100%;
+                    background: linear-gradient(165deg, rgba(255,255,255,.04) 0%, rgba(255,255,255,.01) 100%);
+                    border: 1px solid rgba(255,255,255,.06);
                     border-radius: 20px;
+                    padding: 0;
+                    overflow: hidden;
+                    backdrop-filter: blur(20px);
+                    box-shadow: 0 1px 0 0 rgba(255,255,255,.03) inset, 0 32px 80px rgba(0,0,0,.4);
+                }
+                .block-card__accent {
+                    height: 3px;
+                    background: linear-gradient(90deg, transparent, {$accentColor}, transparent);
+                    opacity: .6;
+                }
+                .block-card__body {
+                    padding: 44px 40px 40px;
+                    text-align: center;
+                }
+                .block-icon {
+                    width: 72px; height: 72px;
+                    background: linear-gradient(145deg, {$accentColor}18, {$accentColor}06);
+                    border: 1px solid {$accentColor}30;
+                    border-radius: 18px;
                     display: flex; align-items: center; justify-content: center;
-                    font-size: 36px;
-                    margin: 0 auto 24px;
-                    box-shadow: 0 0 32px rgba(231,74,59,.1);
+                    margin: 0 auto 28px;
+                    box-shadow: 0 0 40px {$accentColor}0a;
                 }
-                h1 { font-size: 24px; font-weight: 800; margin-bottom: 12px; letter-spacing: -.4px; }
-                p { font-size: 14px; color: #9ca3af; line-height: 1.7; }
-                .badge {
-                    display: inline-flex; align-items: center; gap: 7px;
-                    margin-top: 28px;
-                    padding: 8px 18px;
-                    border-radius: 99px;
-                    background: rgba(231,74,59,.1);
-                    border: 1px solid rgba(231,74,59,.25);
-                    color: #e74a3b;
-                    font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase;
+                .block-title {
+                    font-size: 22px; font-weight: 800; color: #fff;
+                    margin-bottom: 6px; letter-spacing: -.4px;
                 }
-                .detail { margin-top: 12px; font-size: 12px; color: #6b7280; }
-                .ip { margin-top: 8px; font-size: 11px; color: #374151; }
+                .block-subtitle {
+                    font-size: 12px; font-weight: 600; color: {$accentColor};
+                    text-transform: uppercase; letter-spacing: 1.5px;
+                    margin-bottom: 20px;
+                }
+                .block-message {
+                    font-size: 14px; color: #94a3b8; line-height: 1.75;
+                    margin-bottom: 28px;
+                }
+                .block-message strong { color: #cbd5e1; font-weight: 600; }
+                .block-divider {
+                    height: 1px;
+                    background: linear-gradient(90deg, transparent, rgba(255,255,255,.06), transparent);
+                    margin: 0 0 20px;
+                }
+                .block-detail {
+                    display: inline-flex; align-items: center; gap: 8px;
+                    background: rgba(255,255,255,.03);
+                    border: 1px solid rgba(255,255,255,.06);
+                    border-radius: 10px;
+                    padding: 10px 18px;
+                    margin-bottom: 16px;
+                }
+                .block-detail__label {
+                    font-size: 11px; color: #64748b;
+                    text-transform: uppercase; letter-spacing: .5px; font-weight: 600;
+                }
+                .block-detail__value {
+                    font-size: 13px; font-weight: 700; color: #fff;
+                    font-family: 'SF Mono', 'Fira Code', monospace;
+                }
+                .block-ip {
+                    display: inline-flex; align-items: center; gap: 6px;
+                    font-size: 11px; color: #475569;
+                    font-family: 'SF Mono', 'Fira Code', monospace;
+                }
+                .block-ip::before {
+                    content: ''; display: block;
+                    width: 6px; height: 6px; border-radius: 50%;
+                    background: {$accentColor}; opacity: .5;
+                }
+                .block-footer {
+                    position: relative; z-index: 1;
+                    margin-top: 32px;
+                    font-size: 12px; color: #334155;
+                    text-align: center;
+                }
+                .block-footer a {
+                    color: #45f882; text-decoration: none; font-weight: 500;
+                }
+                .block-footer a:hover { text-decoration: underline; }
+                @media (max-width: 540px) {
+                    .block-card__body { padding: 32px 24px 28px; }
+                    .block-title { font-size: 19px; }
+                    .block-message { font-size: 13px; }
+                }
             </style>
         </head>
         <body>
+            <div class="bg-grid"></div>
             <div class="bg-glow"></div>
-            <div class="card">
-                <div class="icon">🛡️</div>
-                <h1>{$title}</h1>
-                <p>{$message}</p>
-                <div class="badge">{$badge}</div>
-                {$detail}
-                <div class="ip">{$safeIp}</div>
+            <div class="bg-glow-2"></div>
+            <a href="/" class="block-logo">
+                <img src="/assets/img/logo/new_logo_hd.png" alt="{$safeSiteName}">
+                <span class="block-logo__text">{$safeSiteName}</span>
+            </a>
+            <div class="block-card">
+                <div class="block-card__accent"></div>
+                <div class="block-card__body">
+                    <div class="block-icon">{$iconSvg}</div>
+                    <div class="block-subtitle">{$subtitle}</div>
+                    <h1 class="block-title">{$title}</h1>
+                    <p class="block-message">{$message}</p>
+                    <div class="block-divider"></div>
+                    {$detail}
+                    <div class="block-ip">{$safeIp}</div>
+                </div>
+            </div>
+            <div class="block-footer">
+                &copy; {$safeSiteName} — <a href="/">Retour a l'accueil</a>
             </div>
         </body>
         </html>
