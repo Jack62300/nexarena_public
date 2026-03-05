@@ -134,6 +134,46 @@
                             <i class="fas fa-save"></i> Enregistrer
                         </button>
                     </form>
+                    {% if server.webhookEnabled and server.webhookUrl %}
+                        <div style="margin-top:16px;padding-top:16px;border-top:1px solid #1e3048;">
+                            <button type="button" class="btn-action btn-action--outline" id="testWebhookBtn" onclick="testServerWebhook()">
+                                <i class="fas fa-paper-plane"></i> Tester le webhook
+                            </button>
+                            <span id="testWebhookMsg" style="margin-left:10px;font-size:13px;display:none;"></span>
+                        </div>
+                        <script nonce="{{ csp_nonce() }}">
+                        function testServerWebhook() {
+                            var btn = document.getElementById('testWebhookBtn');
+                            var msg = document.getElementById('testWebhookMsg');
+                            btn.disabled = true;
+                            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi...';
+                            msg.style.display = 'none';
+                            fetch('{{ path("user_servers_test_webhook", {id: server.id}) }}', {
+                                method: 'POST',
+                                headers: {'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest'},
+                                body: JSON.stringify({_token: '{{ csrf_token("test_webhook_" ~ server.id) }}'})
+                            }).then(function(r) { return r.json(); }).then(function(data) {
+                                btn.disabled = false;
+                                btn.innerHTML = '<i class="fas fa-paper-plane"></i> Tester le webhook';
+                                msg.style.display = 'inline';
+                                if (data.success) {
+                                    msg.style.color = '#1cc88a';
+                                    msg.textContent = 'Webhook envoye avec succes !';
+                                } else {
+                                    msg.style.color = '#e74a3b';
+                                    msg.textContent = data.error || 'Erreur lors de l\'envoi';
+                                }
+                                setTimeout(function() { msg.style.display = 'none'; }, 5000);
+                            }).catch(function() {
+                                btn.disabled = false;
+                                btn.innerHTML = '<i class="fas fa-paper-plane"></i> Tester le webhook';
+                                msg.style.display = 'inline';
+                                msg.style.color = '#e74a3b';
+                                msg.textContent = 'Erreur de connexion';
+                            });
+                        }
+                        </script>
+                    {% endif %}
                 </div>
                 {% endif %}
 

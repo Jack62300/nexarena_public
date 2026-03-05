@@ -43,29 +43,36 @@ class WebhookService
         }
         $pinnedIp = $resolvedIps[0];
 
-        $payload = [
-            'event' => 'vote',
-            'server_id' => $server->getId(),
-            'server_name' => $server->getName(),
-            'username' => $vote->getVoterUsername(),
-            'voted_at' => $vote->getVotedAt()?->format('c') ?? '',
-        ];
+        $isDiscord = $this->isDiscordWebhookUrl($url);
 
-        if ($this->settings->getBool('webhook_send_ip', true)) {
-            $payload['ip'] = $vote->getVoterIp();
-        }
+        if ($isDiscord) {
+            $payload = $this->buildDiscordVotePayload($server, $vote);
+            $headers = ['Content-Type' => 'application/json'];
+        } else {
+            $payload = [
+                'event' => 'vote',
+                'server_id' => $server->getId(),
+                'server_name' => $server->getName(),
+                'username' => $vote->getVoterUsername(),
+                'voted_at' => $vote->getVotedAt()?->format('c') ?? '',
+            ];
 
-        $voteUser = $vote->getUser();
-        if ($this->settings->getBool('webhook_send_email', false) && $voteUser) {
-            $payload['email'] = $voteUser->getEmail();
-        }
+            if ($this->settings->getBool('webhook_send_ip', true)) {
+                $payload['ip'] = $vote->getVoterIp();
+            }
 
-        $headers = ['Content-Type' => 'application/json'];
+            $voteUser = $vote->getUser();
+            if ($this->settings->getBool('webhook_send_email', false) && $voteUser) {
+                $payload['email'] = $voteUser->getEmail();
+            }
 
-        $secret = $this->settings->get('webhook_secret', '');
-        if ($secret) {
-            $signature = hash_hmac('sha256', (string) json_encode($payload), $secret);
-            $headers['X-Webhook-Signature'] = $signature;
+            $headers = ['Content-Type' => 'application/json'];
+
+            $secret = $this->settings->get('webhook_secret', '');
+            if ($secret) {
+                $signature = hash_hmac('sha256', (string) json_encode($payload), $secret);
+                $headers['X-Webhook-Signature'] = $signature;
+            }
         }
 
         try {
@@ -76,6 +83,96 @@ class WebhookService
                 'resolve' => [$host => $pinnedIp],
             ]);
         } catch (\Throwable) {
+        }
+    }
+
+    private function isDiscordWebhookUrl(string $url): bool
+    {
+        return (bool) preg_match('#^https://(discord\.com|discordapp\.com)/api/webhooks/#i', $url);
+    }
+
+    private function buildDiscordVotePayload(Server $server, Vote $vote): array
+    {
+        $username = $vote->getVoterUsername() ?: 'Anonyme';
+        $provider = $vote->getVoteProvider() ? ucfirst($vote->getVoteProvider()) : 'Inconnu';
+        $votedAt = $vote->getVotedAt()?->format('c') ?? (new \DateTimeImmutable())->format('c');
+
+        $fields = [
+            ['name' => 'Serveur', 'value' => $server->getName(), 'inline' => true],
+            ['name' => 'Votant', 'value' => $username, 'inline' => true],
+            ['name' => 'Methode', 'value' => $provider, 'inline' => true],
+            ['name' => 'Votes ce mois', 'value' => (string) $server->getMonthlyVotes(), 'inline' => true],
+            ['name' => 'Votes total', 'value' => (string) $server->getTotalVotes(), 'inline' => true],
+        ];
+
+        return [
+            'embeds' => [[
+                'title' => 'Nouveau vote !',
+                'color' => self::COLORS['green'],
+                'fields' => $fields,
+                'timestamp' => $votedAt,
+                'footer' => ['text' => 'Nexarena — Vote Webhook'],
+            ]],
+        ];
+    }
+
+    /**
+     * Send a test notification to the server's own webhook URL.
+     */
+    public function sendTestServerWebhook(Server $server): bool
+    {
+        $url = $server->getWebhookUrl();
+        if (!$url) {
+            return false;
+        }
+
+        if (!$this->networkValidation->isValidWebhookUrl($url)) {
+            return false;
+        }
+
+        $parsed = parse_url($url);
+        $host = $parsed['host'] ?? '';
+        $resolvedIps = gethostbynamel($host);
+        if (!$resolvedIps) {
+            return false;
+        }
+        $pinnedIp = $resolvedIps[0];
+
+        if ($this->isDiscordWebhookUrl($url)) {
+            $payload = [
+                'embeds' => [[
+                    'title' => 'Test Webhook — ' . $server->getName(),
+                    'description' => 'Ce message confirme que le webhook de votre serveur **' . $server->getName() . '** est correctement configure et fonctionnel.',
+                    'color' => self::COLORS['blue'],
+                    'fields' => [
+                        ['name' => 'Serveur', 'value' => $server->getName(), 'inline' => true],
+                        ['name' => 'Statut', 'value' => 'Fonctionnel', 'inline' => true],
+                    ],
+                    'timestamp' => (new \DateTimeImmutable())->format('c'),
+                    'footer' => ['text' => 'Nexarena — Test Webhook'],
+                ]],
+            ];
+        } else {
+            $payload = [
+                'event' => 'test',
+                'server_id' => $server->getId(),
+                'server_name' => $server->getName(),
+                'message' => 'Webhook test successful',
+                'timestamp' => (new \DateTimeImmutable())->format('c'),
+            ];
+        }
+
+        try {
+            $response = $this->httpClient->request('POST', $url, [
+                'json' => $payload,
+                'headers' => ['Content-Type' => 'application/json'],
+                'timeout' => 10,
+                'resolve' => [$host => $pinnedIp],
+            ]);
+
+            return $response->getStatusCode() >= 200 && $response->getStatusCode() < 300;
+        } catch (\Throwable) {
+            return false;
         }
     }
 

@@ -786,6 +786,29 @@ class UserServerController extends AbstractController
         return $this->redirectToRoute('user_servers_manage', ['id' => $server->getId()]);
     }
 
+    #[Route('/serveur/{id}/webhook/test', name: 'user_servers_test_webhook', methods: ['POST'])]
+    public function testWebhook(Server $server, Request $request): JsonResponse
+    {
+        $this->requireAccess($server, 'manage_webhooks');
+
+        $data = json_decode($request->getContent(), true);
+        $token = $data['_token'] ?? '';
+        if (!$this->isCsrfTokenValid('test_webhook_' . $server->getId(), $token)) {
+            return new JsonResponse(['error' => 'Token CSRF invalide'], 403);
+        }
+
+        if (!$server->isWebhookEnabled() || !$server->getWebhookUrl()) {
+            return new JsonResponse(['error' => 'Webhook non configure'], 400);
+        }
+
+        $success = $this->webhookService->sendTestServerWebhook($server);
+
+        return new JsonResponse($success
+            ? ['success' => true]
+            : ['success' => false, 'error' => 'Echec de l\'envoi. Verifiez l\'URL du webhook.']
+        );
+    }
+
     #[Route('/serveur/{id}/widgets/order', name: 'user_servers_widget_order', methods: ['POST'])]
     public function widgetOrder(Server $server, Request $request): JsonResponse
     {
