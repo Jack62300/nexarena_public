@@ -412,6 +412,11 @@ class UserServerController extends AbstractController
             'is_stats_gated' => $statsGated,
             'stats_cost' => $statsCost,
             'stats_data' => $statsData,
+            'has_premium_webhook' => !$premiumEnabled || $this->premiumService->hasWebhookEmbedActive($server),
+            'webhook_cost' => $this->premiumService->getWebhookCost(),
+            'webhook_payment_type' => $this->premiumService->getWebhookPaymentType(),
+            'webhook_gated' => $this->premiumService->isFeatureGated('webhook'),
+            'webhook_sub' => $this->premiumService->getWebhookSubscription($server),
         ]);
     }
 
@@ -492,7 +497,7 @@ class UserServerController extends AbstractController
         }
 
         $feature = $request->request->get('feature', '');
-        $validFeatures = ['theme', 'widget'];
+        $validFeatures = ['theme', 'widget', 'webhook'];
         if (!in_array($feature, $validFeatures, true)) {
             $this->addFlash('error', 'Fonctionnalite invalide.');
             return $this->redirectToRoute('user_servers_manage', ['id' => $server->getId()]);
@@ -502,7 +507,11 @@ class UserServerController extends AbstractController
         $result = $this->premiumService->unlockFeature($server, $user, $feature);
 
         if ($result) {
-            $label = $feature === 'theme' ? 'Theme personnalise' : 'Widget personnalise';
+            $label = match ($feature) {
+                'theme' => 'Theme personnalise',
+                'webhook' => 'Webhook Embed personnalise',
+                default => 'Widget personnalise',
+            };
             $this->addFlash('success', $label . ' debloque avec succes !');
         } else {
             $this->addFlash('error', 'NexBits insuffisants sur le serveur. Deposez des NexBits depuis l\'onglet Premium.');
@@ -807,6 +816,119 @@ class UserServerController extends AbstractController
             ? ['success' => true]
             : ['success' => false, 'error' => 'Echec de l\'envoi. Verifiez l\'URL du webhook.']
         );
+    }
+
+    #[Route('/serveur/{id}/webhook/embed', name: 'user_servers_webhook_embed', methods: ['POST'])]
+    public function webhookEmbed(Server $server, Request $request): JsonResponse
+    {
+        $this->requireAccess($server, 'manage_webhooks');
+
+        $data = json_decode($request->getContent(), true);
+        $token = $data['_token'] ?? '';
+        if (!$this->isCsrfTokenValid('webhook_embed_' . $server->getId(), $token)) {
+            return new JsonResponse(['error' => 'Token CSRF invalide'], 403);
+        }
+
+        if (!$this->premiumService->hasWebhookEmbedActive($server)) {
+            return new JsonResponse(['error' => 'Fonctionnalite non debloquee'], 403);
+        }
+
+        $config = $data['config'] ?? null;
+
+        if ($config === null) {
+            $server->setWebhookEmbedConfig(null);
+            $this->em->flush();
+            return new JsonResponse(['success' => true, 'message' => 'Configuration reinitialise.']);
+        }
+
+        if (!is_array($config)) {
+            return new JsonResponse(['error' => 'Configuration invalide'], 400);
+        }
+
+        // Validate and sanitize
+        $sanitized = [];
+        if (!empty($config['title'])) {
+            $sanitized['title'] = mb_substr(strip_tags((string) $config['title']), 0, 256);
+        }
+        if (!empty($config['description'])) {
+            $sanitized['description'] = mb_substr(strip_tags((string) $config['description']), 0, 2048);
+        }
+        if (!empty($config['color']) && preg_match('/^#[0-9a-fA-F]{6}$/', (string) $config['color'])) {
+            $sanitized['color'] = (string) $config['color'];
+        }
+        if (!empty($config['thumbnail_url'])) {
+            $url = filter_var((string) $config['thumbnail_url'], FILTER_VALIDATE_URL);
+            if ($url && preg_match('#^https://#i', $url)) {
+                $sanitized['thumbnail_url'] = $url;
+            }
+        }
+        if (!empty($config['footer_text'])) {
+            $sanitized['footer_text'] = mb_substr(strip_tags((string) $config['footer_text']), 0, 256);
+        }
+        if (!empty($config['fields']) && is_array($config['fields'])) {
+            $sanitized['fields'] = [];
+            $count = 0;
+            foreach ($config['fields'] as $field) {
+                if ($count >= 5) break;
+                if (!empty($field['name']) && isset($field['value'])) {
+                    $sanitized['fields'][] = [
+                        'name' => mb_substr(strip_tags((string) $field['name']), 0, 256),
+                        'value' => mb_substr(strip_tags((string) $field['value']), 0, 1024),
+                        'inline' => !empty($field['inline']),
+                    ];
+                    $count++;
+                }
+            }
+        }
+
+        $server->setWebhookEmbedConfig($sanitized ?: null);
+        $this->em->flush();
+
+        return new JsonResponse(['success' => true, 'message' => 'Configuration sauvegardee.']);
+    }
+
+    #[Route('/serveur/{id}/webhook/subscribe', name: 'user_servers_webhook_subscribe', methods: ['POST'])]
+    public function webhookSubscribe(Server $server, Request $request): Response
+    {
+        $this->requireAccess($server, 'manage_webhooks');
+
+        if (!$this->isCsrfTokenValid('webhook_subscribe', $request->request->get('_token'))) {
+            $this->addFlash('error', 'Token CSRF invalide.');
+            return $this->redirectToRoute('user_servers_manage', ['id' => $server->getId()]);
+        }
+
+        $autoRenew = $request->request->getBoolean('auto_renew');
+        $user = $this->getUser();
+
+        $result = $this->premiumService->subscribeWebhookWithTokens($server, $user);
+        if ($result) {
+            $sub = $this->premiumService->getWebhookSubscription($server);
+            if ($sub) {
+                $sub->setAutoRenew($autoRenew);
+                $this->em->flush();
+            }
+            $this->addFlash('success', 'Abonnement Webhook Embed active pour 30 jours !');
+        } else {
+            $this->addFlash('error', 'NexBits insuffisants sur le serveur. Il faut ' . $this->premiumService->getWebhookCost() . ' NexBits.');
+        }
+
+        return $this->redirectToRoute('user_servers_manage', ['id' => $server->getId()]);
+    }
+
+    #[Route('/serveur/{id}/webhook/cancel', name: 'user_servers_webhook_cancel', methods: ['POST'])]
+    public function webhookCancel(Server $server, Request $request): Response
+    {
+        $this->requireAccess($server, 'manage_webhooks');
+
+        if (!$this->isCsrfTokenValid('webhook_cancel', $request->request->get('_token'))) {
+            $this->addFlash('error', 'Token CSRF invalide.');
+            return $this->redirectToRoute('user_servers_manage', ['id' => $server->getId()]);
+        }
+
+        $this->premiumService->cancelWebhook($server);
+        $this->addFlash('success', 'Abonnement Webhook Embed annule. L\'acces reste actif jusqu\'a la date d\'expiration.');
+
+        return $this->redirectToRoute('user_servers_manage', ['id' => $server->getId()]);
     }
 
     #[Route('/serveur/{id}/widgets/order', name: 'user_servers_widget_order', methods: ['POST'])]

@@ -29,6 +29,7 @@ class PremiumExtension extends AbstractExtension
             new TwigFunction('premium_enabled', [$this, 'isPremiumEnabled']),
             new TwigFunction('premium_feature_gated', [$this, 'isFeatureGated']),
             new TwigFunction('server_has_twitch_live', [$this, 'serverHasTwitchLive']),
+            new TwigFunction('server_has_webhook_embed', [$this, 'serverHasWebhookEmbed']),
         ];
     }
 
@@ -66,5 +67,10 @@ class PremiumExtension extends AbstractExtension
         }
 
         return in_array($server->getId(), $this->twitchLiveIds, true);
+    }
+
+    public function serverHasWebhookEmbed(Server $server): bool
+    {
+        return $this->premiumService->hasWebhookEmbedActive($server);
     }
 }

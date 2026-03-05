@@ -97,6 +97,11 @@ class WebhookService
         $provider = $vote->getVoteProvider() ? ucfirst($vote->getVoteProvider()) : 'Inconnu';
         $votedAt = $vote->getVotedAt()?->format('c') ?? (new \DateTimeImmutable())->format('c');
 
+        $config = $server->getWebhookEmbedConfig();
+        if ($config) {
+            return $this->buildCustomDiscordPayload($config, $this->buildVariableMap($server, $username, $provider), $votedAt);
+        }
+
         $fields = [
             ['name' => 'Serveur', 'value' => $server->getName(), 'inline' => true],
             ['name' => 'Votant', 'value' => $username, 'inline' => true],
@@ -114,6 +119,70 @@ class WebhookService
                 'footer' => ['text' => 'Nexarena — Vote Webhook'],
             ]],
         ];
+    }
+
+    private function buildCustomDiscordPayload(array $config, array $variables, string $timestamp): array
+    {
+        $embed = [
+            'title' => $this->replaceVariables($config['title'] ?? 'Nouveau vote !', $variables),
+            'color' => isset($config['color']) ? $this->hexToDecimal($config['color']) : self::COLORS['green'],
+            'timestamp' => $timestamp,
+        ];
+
+        if (!empty($config['description'])) {
+            $embed['description'] = $this->replaceVariables($config['description'], $variables);
+        }
+
+        if (!empty($config['thumbnail_url'])) {
+            $embed['thumbnail'] = ['url' => $config['thumbnail_url']];
+        }
+
+        if (!empty($config['footer_text'])) {
+            $embed['footer'] = ['text' => $this->replaceVariables($config['footer_text'], $variables)];
+        } else {
+            $embed['footer'] = ['text' => 'Nexarena — Vote Webhook'];
+        }
+
+        if (!empty($config['fields']) && is_array($config['fields'])) {
+            $embed['fields'] = [];
+            foreach ($config['fields'] as $field) {
+                if (!empty($field['name']) && isset($field['value'])) {
+                    $embed['fields'][] = [
+                        'name' => $this->replaceVariables($field['name'], $variables),
+                        'value' => $this->replaceVariables($field['value'], $variables),
+                        'inline' => !empty($field['inline']),
+                    ];
+                }
+            }
+        }
+
+        return ['embeds' => [$embed]];
+    }
+
+    private function buildVariableMap(Server $server, string $username, string $provider): array
+    {
+        return [
+            '{username}' => $username,
+            '{server_name}' => $server->getName(),
+            '{votes_month}' => (string) $server->getMonthlyVotes(),
+            '{votes_total}' => (string) $server->getTotalVotes(),
+            '{provider}' => $provider,
+            '{date}' => (new \DateTimeImmutable())->format('d/m/Y H:i'),
+        ];
+    }
+
+    private function replaceVariables(string $text, array $variables): string
+    {
+        return str_replace(array_keys($variables), array_values($variables), $text);
+    }
+
+    private function hexToDecimal(string $hex): int
+    {
+        $hex = ltrim($hex, '#');
+        if (!preg_match('/^[0-9a-fA-F]{6}$/', $hex)) {
+            return self::COLORS['green'];
+        }
+        return (int) hexdec($hex);
     }
 
     /**
@@ -139,19 +208,25 @@ class WebhookService
         $pinnedIp = $resolvedIps[0];
 
         if ($this->isDiscordWebhookUrl($url)) {
-            $payload = [
-                'embeds' => [[
-                    'title' => 'Test Webhook — ' . $server->getName(),
-                    'description' => 'Ce message confirme que le webhook de votre serveur **' . $server->getName() . '** est correctement configure et fonctionnel.',
-                    'color' => self::COLORS['blue'],
-                    'fields' => [
-                        ['name' => 'Serveur', 'value' => $server->getName(), 'inline' => true],
-                        ['name' => 'Statut', 'value' => 'Fonctionnel', 'inline' => true],
-                    ],
-                    'timestamp' => (new \DateTimeImmutable())->format('c'),
-                    'footer' => ['text' => 'Nexarena — Test Webhook'],
-                ]],
-            ];
+            $config = $server->getWebhookEmbedConfig();
+            if ($config) {
+                $variables = $this->buildVariableMap($server, 'TestUser', 'Test');
+                $payload = $this->buildCustomDiscordPayload($config, $variables, (new \DateTimeImmutable())->format('c'));
+            } else {
+                $payload = [
+                    'embeds' => [[
+                        'title' => 'Test Webhook — ' . $server->getName(),
+                        'description' => 'Ce message confirme que le webhook de votre serveur **' . $server->getName() . '** est correctement configure et fonctionnel.',
+                        'color' => self::COLORS['blue'],
+                        'fields' => [
+                            ['name' => 'Serveur', 'value' => $server->getName(), 'inline' => true],
+                            ['name' => 'Statut', 'value' => 'Fonctionnel', 'inline' => true],
+                        ],
+                        'timestamp' => (new \DateTimeImmutable())->format('c'),
+                        'footer' => ['text' => 'Nexarena — Test Webhook'],
+                    ]],
+                ];
+            }
         } else {
             $payload = [
                 'event' => 'test',

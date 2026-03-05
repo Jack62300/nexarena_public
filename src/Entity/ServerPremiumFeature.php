@@ -15,6 +15,7 @@ class ServerPremiumFeature
     public const FEATURE_WIDGET = 'widget';
     public const FEATURE_TWITCH_LIVE = 'twitch_live';
     public const FEATURE_STATS = 'stats';
+    public const FEATURE_WEBHOOK = 'webhook';
 
     #[ORM\Id]
     #[ORM\GeneratedValue]

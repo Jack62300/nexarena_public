@@ -138,6 +138,9 @@ class Server
     #[ORM\Column(type: Types::JSON, nullable: true)]
     private ?array $widgetOrder = null;
 
+    #[ORM\Column(type: Types::JSON, nullable: true)]
+    private ?array $webhookEmbedConfig = null;
+
     /** @var Collection<int, Tag> */
     #[ORM\ManyToMany(targetEntity: Tag::class, inversedBy: 'servers')]
     #[ORM\JoinTable(name: 'server_tag')]
@@ -741,6 +744,17 @@ class Server
     public function setWidgetOrder(?array $widgetOrder): static
     {
         $this->widgetOrder = $widgetOrder;
+        return $this;
+    }
+
+    public function getWebhookEmbedConfig(): ?array
+    {
+        return $this->webhookEmbedConfig;
+    }
+
+    public function setWebhookEmbedConfig(?array $webhookEmbedConfig): static
+    {
+        $this->webhookEmbedConfig = $webhookEmbedConfig;
         return $this;
     }
 

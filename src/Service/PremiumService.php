@@ -11,12 +11,14 @@ use App\Entity\Transaction;
 use App\Entity\TwitchSubscription;
 use App\Entity\User;
 use App\Entity\UserTwitchSubscription;
+use App\Entity\WebhookSubscription;
 use App\Repository\FeaturedBookingRepository;
 use App\Repository\RecruitmentListingRepository;
 use App\Repository\ServerPremiumFeatureRepository;
 use App\Repository\TransactionRepository;
 use App\Repository\TwitchSubscriptionRepository;
 use App\Repository\UserTwitchSubscriptionRepository;
+use App\Repository\WebhookSubscriptionRepository;
 use App\Service\WebhookService;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -32,6 +34,7 @@ class PremiumService
         private TwitchSubscriptionRepository $twitchSubRepo,
         private UserTwitchSubscriptionRepository $userTwitchSubRepo,
         private WebhookService $webhookService,
+        private WebhookSubscriptionRepository $webhookSubRepo,
     ) {
     }
 
@@ -52,6 +55,7 @@ class PremiumService
             'recruitment' => $this->settings->getBool('premium_recruitment_gate_enabled', true),
             'twitch_live' => $this->settings->getBool('premium_twitch_live_gate_enabled', true),
             'stats' => $this->settings->getBool('premium_stats_gate_enabled', true),
+            'webhook' => $this->settings->getBool('premium_webhook_gate_enabled', true),
             default => true,
         };
     }
@@ -62,6 +66,7 @@ class PremiumService
             ServerPremiumFeature::FEATURE_THEME => $this->settings->getInt('premium_theme_cost', 50),
             ServerPremiumFeature::FEATURE_WIDGET => $this->settings->getInt('premium_widget_cost', 50),
             ServerPremiumFeature::FEATURE_STATS => $this->settings->getInt('premium_stats_cost', 100),
+            ServerPremiumFeature::FEATURE_WEBHOOK => $this->settings->getInt('premium_webhook_cost', 75),
             default => 0,
         };
     }
@@ -105,6 +110,7 @@ class PremiumService
         $featureLabel = match ($feature) {
             ServerPremiumFeature::FEATURE_THEME => 'Theme personnalise',
             ServerPremiumFeature::FEATURE_WIDGET => 'Widget personnalise',
+            ServerPremiumFeature::FEATURE_WEBHOOK => 'Webhook Embed personnalise',
             default => $feature,
         };
 
@@ -561,6 +567,136 @@ class PremiumService
             }
 
             $sub->setStatus(TwitchSubscription::STATUS_EXPIRED);
+            $results['expired']++;
+        }
+
+        $this->em->flush();
+        return $results;
+    }
+
+    // ──────────────────────────────────────────────
+    // Webhook Embed Subscription
+    // ──────────────────────────────────────────────
+
+    public function getWebhookPaymentType(): string
+    {
+        return $this->settings->get('premium_webhook_payment_type', 'one_time') ?? 'one_time';
+    }
+
+    public function getWebhookCost(): int
+    {
+        return $this->settings->getInt('premium_webhook_cost', 75);
+    }
+
+    public function hasWebhookEmbedActive(Server $server): bool
+    {
+        if (!$this->isFeatureGated('webhook')) {
+            return true;
+        }
+
+        $paymentType = $this->getWebhookPaymentType();
+        if ($paymentType === 'one_time') {
+            return $this->featureRepo->hasFeature($server, ServerPremiumFeature::FEATURE_WEBHOOK);
+        }
+
+        // monthly
+        $sub = $this->webhookSubRepo->findByServer($server);
+        return $sub !== null && $sub->isActive();
+    }
+
+    public function getWebhookSubscription(Server $server): ?WebhookSubscription
+    {
+        return $this->webhookSubRepo->findByServer($server);
+    }
+
+    public function subscribeWebhookWithTokens(Server $server, User $user): bool
+    {
+        $cost = $this->getWebhookCost();
+        if (!$server->hasEnoughTokens($cost)) {
+            return false;
+        }
+
+        $server->removeTokens($cost);
+
+        $sub = $this->webhookSubRepo->findByServer($server);
+        if ($sub) {
+            $expiresAt = $sub->isActive() ? $sub->getExpiresAt() : null;
+            $base = $expiresAt instanceof \DateTimeImmutable ? $expiresAt : new \DateTimeImmutable();
+            $sub->setExpiresAt($base->modify('+30 days'));
+            $sub->setStatus(WebhookSubscription::STATUS_ACTIVE);
+            $sub->setRenewedAt(new \DateTimeImmutable());
+        } else {
+            $sub = new WebhookSubscription();
+            $sub->setServer($server);
+            $sub->setSubscribedBy($user);
+            $sub->setExpiresAt((new \DateTimeImmutable())->modify('+30 days'));
+            $this->em->persist($sub);
+        }
+
+        $tx = new Transaction();
+        $tx->setUser($user);
+        $tx->setServer($server);
+        $tx->setType(Transaction::TYPE_SPEND);
+        $tx->setTokensAmount(-$cost);
+        $tx->setDescription('Abonnement Webhook Embed (30j) - ' . $server->getName());
+        $this->em->persist($tx);
+
+        $this->em->flush();
+
+        $this->webhookService->dispatch('premium.feature_unlocked', [
+            'title' => 'Abonnement Webhook Embed',
+            'fields' => [
+                ['name' => 'Serveur', 'value' => $server->getName(), 'inline' => true],
+                ['name' => 'Utilisateur', 'value' => $user->getUsername(), 'inline' => true],
+                ['name' => 'Cout', 'value' => $cost . ' NexBits', 'inline' => true],
+                ['name' => 'Expire le', 'value' => $sub->getExpiresAt()?->format('d/m/Y') ?? '', 'inline' => true],
+            ],
+        ]);
+
+        return true;
+    }
+
+    public function cancelWebhook(Server $server): void
+    {
+        $sub = $this->webhookSubRepo->findByServer($server);
+        if ($sub) {
+            $sub->setAutoRenew(false);
+            $sub->setStatus(WebhookSubscription::STATUS_CANCELLED);
+            $this->em->flush();
+        }
+    }
+
+    public function processExpiredWebhookSubscriptions(): array
+    {
+        $results = ['expired' => 0, 'renewed' => 0];
+
+        $expired = $this->webhookSubRepo->findExpired();
+        foreach ($expired as $sub) {
+            if ($sub->isAutoRenew()) {
+                $server = $sub->getServer();
+                $user = $sub->getSubscribedBy();
+                $cost = $this->getWebhookCost();
+
+                if ($server && $server->hasEnoughTokens($cost)) {
+                    $server->removeTokens($cost);
+                    $sub->setExpiresAt((new \DateTimeImmutable())->modify('+30 days'));
+                    $sub->setStatus(WebhookSubscription::STATUS_ACTIVE);
+                    $sub->setRenewedAt(new \DateTimeImmutable());
+
+                    $tx = new Transaction();
+                    $tx->setUser($user);
+                    $tx->setServer($server);
+                    $tx->setType(Transaction::TYPE_SPEND);
+                    $tx->setTokensAmount(-$cost);
+                    $tx->setDescription('Renouvellement Webhook Embed (auto) - ' . $server->getName());
+                    $this->em->persist($tx);
+
+                    $results['renewed']++;
+                    continue;
+                }
+            }
+
+            $sub->setStatus(WebhookSubscription::STATUS_EXPIRED);
             $results['expired']++;
         }
 

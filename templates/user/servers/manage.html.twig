@@ -175,6 +175,323 @@
                         </script>
                     {% endif %}
                 </div>
+
+                {# === WEBHOOK EMBED EDITOR === #}
+                {% set has_premium_webhook = has_premium_webhook is defined ? has_premium_webhook : false %}
+                {% set webhook_gated = webhook_gated is defined ? webhook_gated : true %}
+                {% set webhook_cost = webhook_cost is defined ? webhook_cost : 75 %}
+                {% set webhook_payment_type = webhook_payment_type is defined ? webhook_payment_type : 'one_time' %}
+                {% set webhook_sub = webhook_sub is defined ? webhook_sub : null %}
+                {% set embed_config = server.webhookEmbedConfig %}
+
+                <div class="manage-card">
+                    <h4 class="manage-card__title"><i class="fab fa-discord"></i> Personnaliser l'embed Discord</h4>
+                    <p style="color:#8b949e;font-size:13px;margin-bottom:15px;">
+                        Personnalisez l'apparence de l'embed Discord envoye a chaque vote.
+                        Variables disponibles : <code>{username}</code>, <code>{server_name}</code>, <code>{votes_month}</code>, <code>{votes_total}</code>, <code>{provider}</code>, <code>{date}</code>
+                    </p>
+
+                    {% if not has_premium_webhook and webhook_gated %}
+                        {# LOCKED STATE #}
+                        <div class="webhook-embed-locked">
+                            <div style="text-align:center;padding:30px 20px;">
+                                <i class="fas fa-lock" style="font-size:48px;color:#8b949e;margin-bottom:15px;"></i>
+                                <p style="color:#8b949e;margin-bottom:20px;">L'editeur d'embed Discord est une fonctionnalite premium.</p>
+
+                                {% if webhook_payment_type == 'one_time' %}
+                                    <form method="post" action="{{ path('user_servers_unlock_feature', {id: server.id}) }}">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('unlock_feature') }}">
+                                        <input type="hidden" name="feature" value="webhook">
+                                        <button type="submit" class="btn-action btn-action--primary" onclick="return confirm('Debloquer le Webhook Embed personnalise pour {{ webhook_cost }} NexBits ?');">
+                                            <i class="fas fa-unlock"></i> Debloquer pour {{ webhook_cost }} NexBits
+                                        </button>
+                                    </form>
+                                    <p style="color:#8b949e;font-size:12px;margin-top:10px;">Solde serveur : {{ server.tokenBalance }} NexBits</p>
+                                {% else %}
+                                    <form method="post" action="{{ path('user_servers_webhook_subscribe', {id: server.id}) }}">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('webhook_subscribe') }}">
+                                        <div class="form-group" style="display:inline-block;margin-bottom:10px;">
+                                            <label class="form-check-custom">
+                                                <input type="checkbox" name="auto_renew" value="1"> Renouvellement automatique
+                                            </label>
+                                        </div>
+                                        <br>
+                                        <button type="submit" class="btn-action btn-action--primary" onclick="return confirm('S\'abonner au Webhook Embed pour {{ webhook_cost }} NexBits / mois ?');">
+                                            <i class="fas fa-unlock"></i> S'abonner pour {{ webhook_cost }} NexBits / mois
+                                        </button>
+                                    </form>
+                                    <p style="color:#8b949e;font-size:12px;margin-top:10px;">Solde serveur : {{ server.tokenBalance }} NexBits</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% else %}
+                        {# UNLOCKED — EDITOR #}
+
+                        {# Monthly subscription info #}
+                        {% if webhook_payment_type == 'monthly' and webhook_sub %}
+                            <div style="background:#1a2332;border-radius:8px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+                                <div>
+                                    <span style="color:#45f882;"><i class="fas fa-check-circle"></i> Abonnement actif</span>
+                                    {% if webhook_sub.isActive %}
+                                        <span style="color:#8b949e;margin-left:10px;">Expire le {{ webhook_sub.expiresAt|date('d/m/Y') }} ({{ webhook_sub.daysRemaining }}j restants)</span>
+                                        {% if webhook_sub.autoRenew %}
+                                            <span style="color:#45f882;margin-left:5px;font-size:12px;"><i class="fas fa-sync-alt"></i> Auto-renew</span>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                                <form method="post" action="{{ path('user_servers_webhook_cancel', {id: server.id}) }}" style="margin:0;">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('webhook_cancel') }}">
+                                    <button type="submit" class="btn-action btn-action--outline" style="font-size:12px;padding:4px 12px;" onclick="return confirm('Annuler le renouvellement automatique ?');">
+                                        <i class="fas fa-times"></i> Annuler
+                                    </button>
+                                </form>
+                            </div>
+                        {% endif %}
+
+                        <div class="webhook-embed-editor">
+                            <div class="webhook-embed-editor__form">
+                                <div class="form-group">
+                                    <label for="embed_title">Titre</label>
+                                    <input type="text" id="embed_title" class="form-input" value="{{ embed_config.title|default('Nouveau vote sur {server_name} !') }}" maxlength="256" oninput="updateEmbedPreview()">
+                                </div>
+                                <div class="form-group">
+                                    <label for="embed_description">Description</label>
+                                    <textarea id="embed_description" class="form-input" rows="2" maxlength="2048" oninput="updateEmbedPreview()">{{ embed_config.description|default('{username} a vote via {provider}') }}</textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="embed_color">Couleur</label>
+                                    <div style="display:flex;align-items:center;gap:10px;">
+                                        <input type="color" id="embed_color" value="{{ embed_config.color|default('#45f882') }}" onchange="updateEmbedPreview()">
+                                        <input type="text" id="embed_color_text" class="form-input" style="width:100px;" value="{{ embed_config.color|default('#45f882') }}" maxlength="7" oninput="document.getElementById('embed_color').value = this.value; updateEmbedPreview();">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="embed_thumbnail">URL Thumbnail (HTTPS)</label>
+                                    <input type="url" id="embed_thumbnail" class="form-input" value="{{ embed_config.thumbnail_url|default('') }}" placeholder="https://example.com/logo.png" oninput="updateEmbedPreview()">
+                                </div>
+                                <div class="form-group">
+                                    <label for="embed_footer">Texte du footer</label>
+                                    <input type="text" id="embed_footer" class="form-input" value="{{ embed_config.footer_text|default('') }}" maxlength="256" placeholder="Mon serveur" oninput="updateEmbedPreview()">
+                                </div>
+
+                                <div style="margin-top:16px;">
+                                    <label style="display:block;margin-bottom:8px;font-weight:600;">Champs personnalises <span style="color:#8b949e;font-weight:400;">(max 5)</span></label>
+                                    <div id="embedFieldsContainer">
+                                        {% if embed_config.fields is defined and embed_config.fields %}
+                                            {% for field in embed_config.fields %}
+                                                <div class="embed-field-row">
+                                                    <input type="text" class="form-input embed-field-name" value="{{ field.name }}" placeholder="Nom" maxlength="256" oninput="updateEmbedPreview()">
+                                                    <input type="text" class="form-input embed-field-value" value="{{ field.value }}" placeholder="Valeur" maxlength="1024" oninput="updateEmbedPreview()">
+                                                    <label class="form-check-custom embed-field-inline">
+                                                        <input type="checkbox" {{ field.inline ? 'checked' : '' }} onchange="updateEmbedPreview()"> Inline
+                                                    </label>
+                                                    <button type="button" class="btn-action btn-action--outline" style="padding:4px 8px;" onclick="this.parentNode.remove(); updateEmbedPreview();">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </div>
+                                    <button type="button" class="btn-action btn-action--outline" style="margin-top:8px;font-size:12px;" onclick="addEmbedField()">
+                                        <i class="fas fa-plus"></i> Ajouter un champ
+                                    </button>
+                                </div>
+
+                                <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap;">
+                                    <button type="button" class="btn-action btn-action--primary" id="saveEmbedBtn" onclick="saveEmbedConfig()">
+                                        <i class="fas fa-save"></i> Sauvegarder
+                                    </button>
+                                    <button type="button" class="btn-action btn-action--outline" onclick="resetEmbedConfig()">
+                                        <i class="fas fa-undo"></i> Reinitialiser (defaut)
+                                    </button>
+                                </div>
+                                <span id="embedSaveMsg" style="display:none;margin-top:8px;font-size:13px;"></span>
+                            </div>
+
+                            <div class="webhook-embed-editor__preview">
+                                <label style="display:block;margin-bottom:8px;font-weight:600;color:#8b949e;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;">Apercu Discord</label>
+                                <div class="discord-embed-preview" id="discordPreview">
+                                    <div class="discord-embed-preview__border" id="previewBorder"></div>
+                                    <div class="discord-embed-preview__body">
+                                        <div class="discord-embed-preview__content">
+                                            <div class="discord-embed-preview__title" id="previewTitle"></div>
+                                            <div class="discord-embed-preview__description" id="previewDescription"></div>
+                                            <div class="discord-embed-preview__fields" id="previewFields"></div>
+                                        </div>
+                                        <div class="discord-embed-preview__thumbnail" id="previewThumbnail" style="display:none;">
+                                            <img id="previewThumbnailImg" src="" alt="">
+                                        </div>
+                                    </div>
+                                    <div class="discord-embed-preview__footer" id="previewFooter"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <script nonce="{{ csp_nonce() }}">
+                        var exampleVars = {
+                            '{username}': 'JoueurTest',
+                            '{server_name}': '{{ server.name|e('js') }}',
+                            '{votes_month}': '{{ server.monthlyVotes }}',
+                            '{votes_total}': '{{ server.totalVotes }}',
+                            '{provider}': 'Discord',
+                            '{date}': new Date().toLocaleDateString('fr-FR') + ' ' + new Date().toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit'})
+                        };
+
+                        function replaceVars(text) {
+                            for (var k in exampleVars) {
+                                text = text.split(k).join(exampleVars[k]);
+                            }
+                            return text;
+                        }
+
+                        function updateEmbedPreview() {
+                            var title = document.getElementById('embed_title').value;
+                            var desc = document.getElementById('embed_description').value;
+                            var color = document.getElementById('embed_color').value;
+                            var thumbnail = document.getElementById('embed_thumbnail').value;
+                            var footer = document.getElementById('embed_footer').value;
+
+                            document.getElementById('embed_color_text').value = color;
+                            document.getElementById('previewBorder').style.backgroundColor = color;
+                            document.getElementById('previewTitle').textContent = replaceVars(title);
+                            document.getElementById('previewDescription').textContent = replaceVars(desc);
+
+                            if (thumbnail) {
+                                document.getElementById('previewThumbnail').style.display = 'block';
+                                document.getElementById('previewThumbnailImg').src = thumbnail;
+                            } else {
+                                document.getElementById('previewThumbnail').style.display = 'none';
+                            }
+
+                            document.getElementById('previewFooter').textContent = footer ? replaceVars(footer) : 'Nexarena — Vote Webhook';
+
+                            var fieldsHtml = '';
+                            var rows = document.querySelectorAll('.embed-field-row');
+                            rows.forEach(function(row) {
+                                var name = row.querySelector('.embed-field-name').value;
+                                var value = row.querySelector('.embed-field-value').value;
+                                var inline = row.querySelector('.embed-field-inline input').checked;
+                                if (name) {
+                                    fieldsHtml += '<div class="discord-embed-preview__field' + (inline ? ' discord-embed-preview__field--inline' : '') + '">';
+                                    fieldsHtml += '<div class="discord-embed-preview__field-name">' + replaceVars(name).replace(/</g,'&lt;') + '</div>';
+                                    fieldsHtml += '<div class="discord-embed-preview__field-value">' + replaceVars(value).replace(/</g,'&lt;') + '</div>';
+                                    fieldsHtml += '</div>';
+                                }
+                            });
+                            document.getElementById('previewFields').innerHTML = fieldsHtml;
+                        }
+
+                        function addEmbedField() {
+                            var container = document.getElementById('embedFieldsContainer');
+                            if (container.querySelectorAll('.embed-field-row').length >= 5) {
+                                alert('Maximum 5 champs.');
+                                return;
+                            }
+                            var row = document.createElement('div');
+                            row.className = 'embed-field-row';
+                            row.innerHTML = '<input type="text" class="form-input embed-field-name" placeholder="Nom" maxlength="256" oninput="updateEmbedPreview()">'
+                                + '<input type="text" class="form-input embed-field-value" placeholder="Valeur" maxlength="1024" oninput="updateEmbedPreview()">'
+                                + '<label class="form-check-custom embed-field-inline"><input type="checkbox" onchange="updateEmbedPreview()"> Inline</label>'
+                                + '<button type="button" class="btn-action btn-action--outline" style="padding:4px 8px;" onclick="this.parentNode.remove(); updateEmbedPreview();"><i class="fas fa-trash"></i></button>';
+                            container.appendChild(row);
+                        }
+
+                        function gatherConfig() {
+                            var config = {};
+                            var title = document.getElementById('embed_title').value.trim();
+                            var desc = document.getElementById('embed_description').value.trim();
+                            var color = document.getElementById('embed_color').value;
+                            var thumbnail = document.getElementById('embed_thumbnail').value.trim();
+                            var footer = document.getElementById('embed_footer').value.trim();
+
+                            if (title) config.title = title;
+                            if (desc) config.description = desc;
+                            if (color) config.color = color;
+                            if (thumbnail) config.thumbnail_url = thumbnail;
+                            if (footer) config.footer_text = footer;
+
+                            var fields = [];
+                            document.querySelectorAll('.embed-field-row').forEach(function(row) {
+                                var name = row.querySelector('.embed-field-name').value.trim();
+                                var value = row.querySelector('.embed-field-value').value.trim();
+                                var inline = row.querySelector('.embed-field-inline input').checked;
+                                if (name) {
+                                    fields.push({name: name, value: value, inline: inline});
+                                }
+                            });
+                            if (fields.length > 0) config.fields = fields;
+
+                            return Object.keys(config).length > 0 ? config : null;
+                        }
+
+                        function saveEmbedConfig() {
+                            var btn = document.getElementById('saveEmbedBtn');
+                            var msg = document.getElementById('embedSaveMsg');
+                            btn.disabled = true;
+                            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sauvegarde...';
+
+                            fetch('{{ path("user_servers_webhook_embed", {id: server.id}) }}', {
+                                method: 'POST',
+                                headers: {'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest'},
+                                body: JSON.stringify({
+                                    _token: '{{ csrf_token("webhook_embed_" ~ server.id) }}',
+                                    config: gatherConfig()
+                                })
+                            }).then(function(r) { return r.json(); }).then(function(data) {
+                                btn.disabled = false;
+                                btn.innerHTML = '<i class="fas fa-save"></i> Sauvegarder';
+                                msg.style.display = 'block';
+                                if (data.success) {
+                                    msg.style.color = '#1cc88a';
+                                    msg.textContent = data.message || 'Sauvegarde !';
+                                } else {
+                                    msg.style.color = '#e74a3b';
+                                    msg.textContent = data.error || 'Erreur';
+                                }
+                                setTimeout(function() { msg.style.display = 'none'; }, 4000);
+                            }).catch(function() {
+                                btn.disabled = false;
+                                btn.innerHTML = '<i class="fas fa-save"></i> Sauvegarder';
+                                msg.style.display = 'block';
+                                msg.style.color = '#e74a3b';
+                                msg.textContent = 'Erreur de connexion';
+                            });
+                        }
+
+                        function resetEmbedConfig() {
+                            if (!confirm('Reinitialiser l\'embed aux valeurs par defaut ? La configuration actuelle sera supprimee.')) return;
+
+                            fetch('{{ path("user_servers_webhook_embed", {id: server.id}) }}', {
+                                method: 'POST',
+                                headers: {'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest'},
+                                body: JSON.stringify({
+                                    _token: '{{ csrf_token("webhook_embed_" ~ server.id) }}',
+                                    config: null
+                                })
+                            }).then(function(r) { return r.json(); }).then(function(data) {
+                                if (data.success) {
+                                    document.getElementById('embed_title').value = 'Nouveau vote sur {server_name} !';
+                                    document.getElementById('embed_description').value = '{username} a vote via {provider}';
+                                    document.getElementById('embed_color').value = '#45f882';
+                                    document.getElementById('embed_color_text').value = '#45f882';
+                                    document.getElementById('embed_thumbnail').value = '';
+                                    document.getElementById('embed_footer').value = '';
+                                    document.getElementById('embedFieldsContainer').innerHTML = '';
+                                    updateEmbedPreview();
+                                    var msg = document.getElementById('embedSaveMsg');
+                                    msg.style.display = 'block';
+                                    msg.style.color = '#1cc88a';
+                                    msg.textContent = 'Configuration reinitialise.';
+                                    setTimeout(function() { msg.style.display = 'none'; }, 4000);
+                                }
+                            });
+                        }
+
+                        // Init preview on page load
+                        document.addEventListener('DOMContentLoaded', function() { updateEmbedPreview(); });
+                        </script>
+                    {% endif %}
+                </div>
                 {% endif %}
 
                 {# === STATUS SERVEUR === #}
