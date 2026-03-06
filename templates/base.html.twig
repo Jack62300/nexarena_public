@@ -48,8 +48,8 @@
     {% endif %}
 
     {# ── Favicon ───────────────────────────────────────────── #}
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('assets/img/logo/new_logo_hd.png') }}">
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('assets/img/logo/new_logo_hd.png') }}">
+    <link rel="icon" sizes="32x32" href="{{ asset(setting('site_favicon', 'assets/img/logo/new_logo_hd.png')) }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset(setting('site_favicon', 'assets/img/logo/new_logo_hd.png')) }}">
     <link rel="manifest" href="{{ asset('manifest.json') }}">
 
     {# ── Preconnect ───────────────────────────────────────── #}
@@ -84,7 +84,7 @@
           "url": {{ setting('seo_site_url', app.request.schemeAndHttpHost)|json_encode|raw }},
           "logo": {
             "@type": "ImageObject",
-            "url": {{ (app.request.schemeAndHttpHost ~ asset('assets/img/logo/new_logo_hd.png'))|json_encode|raw }}
+            "url": {{ (app.request.schemeAndHttpHost ~ asset(setting('site_logo', 'assets/img/logo/new_logo_hd.png')))|json_encode|raw }}
           }
         }
       ]

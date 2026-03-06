@@ -4,8 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Nexarena Admin{% endblock %}</title>
-    <link rel="icon" type="image/png" href="{{ asset('assets/img/logo/new_logo_hd.png') }}">
-    <link rel="apple-touch-icon" href="{{ asset('assets/img/logo/new_logo_hd.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset(setting('site_favicon', 'assets/img/logo/new_logo_hd.png')) }}">
+    <link rel="apple-touch-icon" href="{{ asset(setting('site_favicon', 'assets/img/logo/new_logo_hd.png')) }}">
     <link rel="stylesheet" href="{{ asset('assets/css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/fontawesome-all.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/admin/base.css') }}">
@@ -17,7 +17,7 @@
     <aside class="admin-sidebar" id="adminSidebar">
         <div class="admin-sidebar__logo">
             <a href="{{ path('app_home') }}">
-                <img src="{{ asset('assets/img/logo/new_logo_hd.png') }}" alt="{{ setting('site_name', 'Nexarena') }}">
+                <img src="{{ asset(setting('site_logo', 'assets/img/logo/new_logo_hd.png')) }}" alt="{{ setting('site_name', 'Nexarena') }}">
             </a>
             <span>Administration</span>
         </div>
