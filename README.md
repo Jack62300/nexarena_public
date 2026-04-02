@@ -2,7 +2,6 @@
 
 **Plateforme de classement et gestion de serveurs de jeux vidéo** — similaire à top-serveurs.net.
 
-> Projet privé — Tous droits réservés.
 
 ---
 
@@ -622,4 +621,4 @@ nexarena/
 
 ## Licence
 
-Projet privé — Tous droits réservés © Nexarena.
+GNU GPL
