@@ -55,3 +55,16 @@ desktop.ini
 
 # Test files
 test_widget.html
+
+# Scripts de déploiement / maintenance (chemins serveur spécifiques)
+*.sh
+*.ps1
+
+# Redis dump
+dump.rdb
+
+# Fichiers systemd (chemins serveur spécifiques)
+*.service
+
+# Fichiers .env locaux non couverts par /.env.*.local
+/.env.local.dev
